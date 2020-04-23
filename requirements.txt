@@ -1,0 +1,8 @@
+boto3
+scanpy
+anndata
+scvelo
+python-igraph
+louvain
+black
+flake8
