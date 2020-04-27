@@ -29,25 +29,16 @@ def main():
     """
     Consumes and parses instructions from a message queue.
 
-    It takes the following environment variables: BROKER_URL
-    (for connection to an AMQP URL), WORK_QUEUE (the queue on the
-    server to join), WORK_TIMEOUT (the timeout for this session in
-    seconds, default: 60*20)
+    It takes the following environment variables: WORK_QUEUE (the SQS queue
+    to join), WORK_TIMEOUT (the timeout for this session in
+    seconds, default: 60*20).
     """
-    sqs = boto3.resource("sqs")
-    queue = sqs.get_queue_by_name(QueueName="queue.fifo")
-    print(queue.url)
 
-    # Set up logging.
+    queue = os.getenv("WORK_QUEUE", None)
 
-    # Set up connection parameters.
+    if not queue:
+        raise ValueError("No work queue specified.")
 
-    # Set up connection
-
-    # Select channels for transmitting and receiving. Create if
-    # it does not already exist.
-
-    # Time out after the specified amount of inactivity.
     try:
         timeout = int(os.getenv("WORK_TIMEOUT", default=DEFAULT_TIMEOUT))
     except Exception:
@@ -55,9 +46,10 @@ def main():
             "WORK_TIMEOUT is set to an invalid value (must be an integer)."
         )
 
+    sqs = boto3.resource("sqs")
+    queue = sqs.get_queue_by_name(QueueName=queue)
     print(f"Now listening, waiting for work to do...")
 
-    # Start consuming jobs from the queue.
     last_activity = datetime.datetime.now()
     adata = None
 
