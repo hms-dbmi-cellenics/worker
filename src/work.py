@@ -11,16 +11,13 @@ DEFAULT_TIMEOUT = 60 * 20
 
 
 def load_file(bucket, key):
-    """
     client = boto3.client("s3")
-    result = io.BytesIO()
 
+    result = io.BytesIO()
     client.download_fileobj(Bucket=bucket, Key=key, Fileobj=result)
     result.seek(0)
-    """
 
-    with open("../tgfb1-3-control.h5ad", "rb") as result:
-        adata = anndata.read_h5ad(result)
+    adata = anndata.read_h5ad(result)
 
     return adata
 
