@@ -15,7 +15,7 @@ stages:
     - cleanup
   
 variables:
-    ROLLOUT_STATUS_DISABLED: true
+    ROLLOUT_STATUS_DISABLED: "true"
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     STAGING_ENABLED: "true"
