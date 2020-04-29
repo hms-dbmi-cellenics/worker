@@ -5,7 +5,9 @@ The purpose of the worker is to carry out data analysis tasks, for example compu
 
 
 # Build and Deploy step
-The deployment step for this repository consits of deploying all resources needed for work to be carried out. Note that the deployment step in this repository does not start the work. Work gets started dynamically upon a user request by the API: https://gitlab.com/biomage/api
+The deployment step for this repository consits of deploying all resources needed for work to be carried out. Note that the deployment step in this repository does not start the work. Work gets started dynamically upon a user request by the API: https://gitlab.com/biomage/api.
+
+CI deployment needs two variables that need to be created on the CI/CD side: `GITLAB_DEPLOY_USER` and `GITLAB_DEPLOY_PASSWORD`. These need to specify a valid GitLab deploy key that has read rights to the Docker registry. This secret is used by dynamically generated jobs to automatically be able to pull the worker image.
 
 # Development
 
