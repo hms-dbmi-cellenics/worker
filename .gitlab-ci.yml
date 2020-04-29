@@ -20,6 +20,9 @@ variables:
     DOCKER_TLS_CERTDIR: ""
     STAGING_ENABLED: "true"
     K8S_SECRET_AWS_DEFAULT_REGION: "eu-west-2"
+    HELM_UPGRADE_EXTRA_ARGS: "--cleanup-on-fail --set gitlab_deploy_user=${GITLAB_DEPLOY_USER} gitlab_deploy_password=${GITLAB_DEPLOY_PASSWORD}"
+
+
 
 include:
     - template: Jobs/Build.gitlab-ci.yml
