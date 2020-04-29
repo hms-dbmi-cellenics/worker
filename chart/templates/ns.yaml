@@ -1,4 +1,12 @@
 apiVersion: v1
-kind: Namespace
+kind: Pod
 metadata:
-  name: random-namespace
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
