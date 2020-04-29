@@ -74,6 +74,7 @@ def main():
             details = body["details"]
         except Exception as e:
             print("Illegal request", e)
+            continue
 
         # Load file from S3 if not already present.
         if not adata:
@@ -89,6 +90,7 @@ def main():
             task_cls = TASK_MAP[task]
         except Exception as e:
             print("Task {} not recognized:".format(task), e)
+            continue
 
         # Run task.
         try:
