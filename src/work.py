@@ -31,7 +31,7 @@ def main():
     seconds, default: 60*20).
     """
 
-    queue = os.getenv("WORK_QUEUE", None)
+    queue = os.getenv("WORK_QUEUE", "test-queue")
 
     if not queue:
         raise ValueError("No work queue specified.")
