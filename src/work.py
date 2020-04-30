@@ -8,18 +8,39 @@ import anndata
 from tasks.task_map import TASK_MAP
 
 DEFAULT_TIMEOUT = 60 * 20
+TOPIC_NAME = "analysis-results"
+QUEUE_NAME = os.getenv("WORK_QUEUE", "test-queue")
+TIMEOUT = int(os.getenv("WORK_TIMEOUT", default=DEFAULT_TIMEOUT))
 
 
-def load_file(bucket, key):
-    client = boto3.client("s3")
+def load_file(count_matrix_path):
+    bucket, key = count_matrix_path.split("/", 1)
+    try:
+        client = boto3.client("s3")
+        result = io.BytesIO()
+        client.download_fileobj(Bucket=bucket, Key=key, Fileobj=result)
+        result.seek(0)
 
-    result = io.BytesIO()
-    client.download_fileobj(Bucket=bucket, Key=key, Fileobj=result)
-    result.seek(0)
-
-    adata = anndata.read_h5ad(result)
+        adata = anndata.read_h5ad(result)
+    except Exception as e:
+        print("Could not get file from S3", e)
+        raise e
 
     return adata
+
+
+def run_task(body, adata):
+    # Get the contents of the schema.
+    task = body["task"]
+    details = body["details"]
+    task_cls = TASK_MAP[task]
+
+    try:
+        result = task_cls(adata).consume(details)
+        return result
+    except Exception as e:
+        # do return this though to the api
+        raise e
 
 
 def main():
@@ -30,27 +51,19 @@ def main():
     to join), WORK_TIMEOUT (the timeout for this session in
     seconds, default: 60*20).
     """
-
     queue = os.getenv("WORK_QUEUE", "test-queue")
 
     if not queue:
         raise ValueError("No work queue specified.")
 
-    try:
-        timeout = int(os.getenv("WORK_TIMEOUT", default=DEFAULT_TIMEOUT))
-    except Exception:
-        raise ValueError(
-            "WORK_TIMEOUT is set to an invalid value (must be an integer)."
-        )
-
     sqs = boto3.resource("sqs")
-    queue = sqs.get_queue_by_name(QueueName=queue)
+    queue = sqs.get_queue_by_name(QueueName=QUEUE_NAME)
     print(f"Now listening, waiting for work to do...")
 
     last_activity = datetime.datetime.now()
     adata = None
 
-    while (datetime.datetime.now() - last_activity).total_seconds() <= timeout:
+    while (datetime.datetime.now() - last_activity).total_seconds() <= TIMEOUT:
         message = queue.receive_messages(WaitTimeSeconds=20)
 
         if not message:
@@ -61,44 +74,21 @@ def main():
         # Try to parse it as JSON
         try:
             body = json.loads(message.body)
-        except Exception:
-            print("Malformed JSON:", message.body)
+        except Exception as e:
+            print("Exception when loading json: ", e)
             continue
         finally:
             message.delete()
 
-        # Get the contents of the schema.
-        try:
-            count_matrix_path = body["count_matrix"]
-            task = body["task"]
-            details = body["details"]
-        except Exception as e:
-            print("Illegal request", e)
-            continue
-
         # Load file from S3 if not already present.
         if not adata:
-            try:
-                s3_path = count_matrix_path.split("/", 1)
-                adata = load_file(*s3_path)
-            except Exception as e:
-                print("Could not get file from S3", e)
-                raise e
-
-        # Find the task function from the map.
-        try:
-            task_cls = TASK_MAP[task]
-        except Exception as e:
-            print("Task {} not recognized:".format(task), e)
-            continue
+            count_matrix_path = body["count_matrix"]
+            adata = load_file(count_matrix_path)
 
         # Run task.
-        try:
-            result = task_cls(adata).consume(details)
-        except Exception as e:
-            # do return this though to the api
-            raise e
+        result = run_task(body, adata)
 
+        # Publish task results to SNS topic
         print(result)
 
         last_activity = datetime.datetime.now()
