@@ -54,7 +54,7 @@ def _load_file(count_matrix_path):
 def consume(adata):
     mssg_body = _read_sqs_message()
     if not mssg_body:
-        return None, adata
+        return adata, None
 
     if not adata:
         print("adata does not exist, I need to download it ...")

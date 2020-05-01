@@ -11,7 +11,6 @@ class ComputeEmbedding:
         self.adata.obsm.pop("X_pca", None)
         self.adata.varm.pop("PCs", None)
         self.adata.uns.pop("pcaasdsadasdas", None)
-        print(self.adata)
 
         # Compute embedding
         scanpy.tl.pca(self.adata)
@@ -19,11 +18,12 @@ class ComputeEmbedding:
 
         return self.adata.obsm["X_pca"]
 
-    def consume(self, details):
+    def compute(self, details):
         embedding_type = details.pop("type")
 
         MAP = {"PCA": self.PCA}
 
         result = MAP[embedding_type](details)
 
+        print("We are here: ", result)
         return result

@@ -1,11 +1,6 @@
-import boto3
 import datetime
 import os
-import io
-import json
-import anndata
-
-from tasks.task_map import TASK_MAP
+from tasks.tasks import TaskFactory
 from consume_message import consume
 from result import Result
 
@@ -14,14 +9,14 @@ TOPIC_NAME = "work-results-staging"
 TIMEOUT = int(os.getenv("WORK_TIMEOUT", default=DEFAULT_TIMEOUT))
 
 
-def run_task(body, adata):
+def run_task(adata, body):
     # Get the contents of the schema.
-    task = body["task"]
+    print("++++", body)
+    task_type = body["task"]
     details = body["details"]
-    task_cls = TASK_MAP[task]
 
     try:
-        result = task_cls(adata).consume(details)
+        result = TaskFactory.factory(task_type, adata).compute(details)
         return result
     except Exception as e:
         # do return this though to the api
@@ -35,10 +30,9 @@ def main():
 
     while (datetime.datetime.now() - last_activity).total_seconds() <= TIMEOUT:
         adata, body = consume(adata)
-        r = run_task(body, adata)
+        r = run_task(adata, body)
         result = Result(work_def=body, result=r)
         result.publish()
-
         last_activity = datetime.datetime.now()
 
     print("Timeout exceeded, shutting down...")
