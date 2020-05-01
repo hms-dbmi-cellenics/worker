@@ -5,7 +5,6 @@ from consume_message import consume
 from result import Result
 
 DEFAULT_TIMEOUT = 60 * 20
-TOPIC_NAME = "work-results-staging"
 TIMEOUT = int(os.getenv("WORK_TIMEOUT", default=DEFAULT_TIMEOUT))
 
 

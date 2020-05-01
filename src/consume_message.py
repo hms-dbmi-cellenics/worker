@@ -19,6 +19,7 @@ def _read_sqs_message():
     # Try to parse it as JSON
     try:
         message = message[0]
+        print(message.body)
         body = json.loads(message.body)
         print("Consumed a message from S3.")
     except Exception as e:

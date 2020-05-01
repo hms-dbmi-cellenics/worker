@@ -34,7 +34,7 @@ The "test-queue" is created specifically and only for local testing purposes. Go
 
     {
         "uuid": "1234",
-        "socketId: "567",
+        "socketId": "567",
         "count_matrix": "tgfb1-filtered-count-matrices/tgfb1-3-control.h5ad", 
         "task": "ComputeEmbedding", 
         "details": {
