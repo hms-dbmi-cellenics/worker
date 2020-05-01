@@ -30,10 +30,11 @@ def main():
 
     while (datetime.datetime.now() - last_activity).total_seconds() <= TIMEOUT:
         adata, body = consume(adata)
-        r = run_task(adata, body)
-        result = Result(work_def=body, result=r)
-        result.publish()
-        last_activity = datetime.datetime.now()
+        if body:
+            r = run_task(adata, body)
+            result = Result(work_def=body, result=r)
+            result.publish()
+            last_activity = datetime.datetime.now()
 
     print("Timeout exceeded, shutting down...")
 

@@ -15,6 +15,7 @@ class Result:
         return {
             "uuid": self.uuid,
             "socketId": self.socket_id,
+            "timeout": "2021-09-09T12:00:00Z",
             "results": [
                 {
                     "content-type": "application/json",
