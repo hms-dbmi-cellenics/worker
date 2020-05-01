@@ -33,6 +33,7 @@ To submit a task to `test-queue`
 The "test-queue" is created specifically and only for local testing purposes. Go to the AWS console, under queues and select it (if it doesn't exist, create one using the user interface). Submit a task (using the queue actions button) in the following format:
 
     {
+        "uuid": "1234",
         "count_matrix": "tgfb1-filtered-count-matrices/tgfb1-3-control.h5ad", 
         "task": "ComputeEmbedding", 
         "details": {
