@@ -1,6 +1,7 @@
 import os
 
 from .config import (
+    TestConfig,
     DevelopmentConfig,
     StagingConfig,
     ProductionConfig,
@@ -9,6 +10,7 @@ from .config import (
 config = {
     "default": DevelopmentConfig,
     "dev": DevelopmentConfig,
+    "testing": TestConfig,
     "staging": StagingConfig,
     "production": ProductionConfig,
 }

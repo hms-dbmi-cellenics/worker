@@ -9,6 +9,10 @@ class BaseConfig(object):
     TIMEOUT = int(os.getenv("WORK_TIMEOUT", default="1200"))
 
 
+class TestConfig:
+    ENVIRONMENT = "testing"
+
+
 class DevelopmentConfig(BaseConfig):
     ENVIRONMENT = "development"
 
