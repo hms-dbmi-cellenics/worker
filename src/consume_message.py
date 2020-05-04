@@ -1,17 +1,15 @@
 import boto3
-import os
 import io
 import json
 import anndata
+from config import get_config
 
-QUEUE_NAME = os.getenv("WORK_QUEUE", "test-queue")
-ENVIRONMENT = os.getenv("GITLAB_ENVIRONMENT_NAME", default="local")
-DYNAMO_TABLE = os.getenv("DYNAMODB_TABLE", default="experiments-staging")
+config = get_config()
 
 
 def _read_sqs_message():
     sqs = boto3.resource("sqs")
-    queue = sqs.get_queue_by_name(QueueName=QUEUE_NAME)
+    queue = sqs.get_queue_by_name(QueueName=config.QUEUE_NAME)
     message = queue.receive_messages(WaitTimeSeconds=20)
 
     if not message:
@@ -33,16 +31,18 @@ def _read_sqs_message():
 
 
 def _get_matrix_path(experiment_id):
-    dynamo = boto3.resource("dynamodb").Table(DYNAMO_TABLE)
-    matrix_path = dynamo.get_item(
+    dynamo = boto3.resource("dynamodb").Table(config.DYNAMO_TABLE)
+    # todo: the projectionexpression stopped working for some reason, fix it!
+    resp = dynamo.get_item(
         Key={"experimentId": experiment_id}, ProjectionExpression="matrixPath",
     )
+    matrix_path = resp["Item"]["matrixPath"]
     print("successfully got the matrix path from database.")
     return matrix_path
 
 
 def _load_file(matrix_path):
-    if ENVIRONMENT != "local":
+    if config.ENVIRONMENT != "base":
         bucket, key = matrix_path.split("/", 1)
         try:
             client = boto3.client("s3")

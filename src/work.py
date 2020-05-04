@@ -1,19 +1,17 @@
 import datetime
-import os
 from tasks.tasks import TaskFactory
 from consume_message import consume
 from result import Result
-
-DEFAULT_TIMEOUT = 60 * 20
-TIMEOUT = int(os.getenv("WORK_TIMEOUT", default=DEFAULT_TIMEOUT))
+from config import get_config
 
 
 def main():
+    config = get_config()
     last_activity = datetime.datetime.now()
     adata = None
     print("Now listening, waiting for work to do...")
 
-    while (datetime.datetime.now() - last_activity).total_seconds() <= TIMEOUT:
+    while (datetime.datetime.now() - last_activity).total_seconds() <= config.TIMEOUT:
         adata, mssg = consume(adata)
         if mssg:
             body = mssg["body"]

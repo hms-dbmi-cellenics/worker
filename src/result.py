@@ -1,6 +1,9 @@
 import boto3
 import json
-import os
+
+from config import get_config
+
+config = get_config()
 
 
 class Result:
@@ -8,7 +11,7 @@ class Result:
         self.uuid = work_def.get("uuid", "1234")
         self.socket_id = work_def.get("socketId", "567")
         self.result = {"result": result.tolist()}
-        self.s3_bucket = os.getenv("RESULTS_BUCKET", default="worker-results-staging")
+        self.s3_bucket = config.RESULTS_BUCKET
         self.s3_key = self.uuid
 
     def _get_response_schema(self):
