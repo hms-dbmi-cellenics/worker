@@ -6,6 +6,7 @@ import anndata
 
 QUEUE_NAME = os.getenv("WORK_QUEUE", "test-queue")
 ENVIRONMENT = os.getenv("GITLAB_ENVIRONMENT_NAME", default="local")
+DYNAMO_TABLE = os.getenv("DYNAMODB_TABLE", default="experiments-staging")
 
 
 def _read_sqs_message():
@@ -31,9 +32,18 @@ def _read_sqs_message():
     return body
 
 
-def _load_file(count_matrix_path):
+def _get_matrix_path(experiment_id):
+    dynamo = boto3.resource("dynamodb").Table(DYNAMO_TABLE)
+    matrix_path = dynamo.get_item(
+        Key={"experimentId": experiment_id}, ProjectionExpression="matrixPath",
+    )
+    print("successfully got the matrix path from database.")
+    return matrix_path
+
+
+def _load_file(matrix_path):
     if ENVIRONMENT != "local":
-        bucket, key = count_matrix_path.split("/", 1)
+        bucket, key = matrix_path.split("/", 1)
         try:
             client = boto3.client("s3")
             result = io.BytesIO()
@@ -54,12 +64,14 @@ def _load_file(count_matrix_path):
 
 def consume(adata):
     mssg_body = _read_sqs_message()
+
     if not mssg_body:
         return adata, None
 
     if not adata:
         print("adata does not exist, I need to download it ...")
-        adata = _load_file(mssg_body["count_matrix"])
+        matrix_path = _get_matrix_path(mssg_body["experimentId"])
+        adata = _load_file(matrix_path)
 
     print(mssg_body)
     return adata, mssg_body

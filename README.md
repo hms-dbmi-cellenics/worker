@@ -33,14 +33,13 @@ To submit a task to `test-queue`
 The "test-queue" is created specifically and only for local testing purposes. Go to the AWS console, under queues and select it (if it doesn't exist, create one using the user interface). Submit a task (using the queue actions button) in the following format:
 
     {
-        "uuid": "1234",
-        "socketId": "567",
-        "count_matrix": "tgfb1-filtered-count-matrices/tgfb1-3-control.h5ad", 
-        "task": "ComputeEmbedding", 
-        "details": {
-            "type": "PCA",
-            "cells": "all", 
-            "dimensions": 3
+        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
+        "socketId": "Y1poEygzBfrDmIWpAAAA",
+        "experimentId": "5e959f9c9f4b120771249001",
+        "timeout": "2021-01-01T00:00:00Z",
+        "body": {
+            "name": "GetEmbedding",
+            "type": "pca"
         }
     }
 

@@ -5,9 +5,8 @@ class ComputeEmbedding:
     def __init__(self, adata):
         self.adata = adata
 
-    def PCA(self, details):
+    def _PCA(self):
         # Remove pre-existing embeddings
-
         self.adata.obsm.pop("X_pca", None)
         self.adata.varm.pop("PCs", None)
         self.adata.uns.pop("pcaasdsadasdas", None)
@@ -16,14 +15,18 @@ class ComputeEmbedding:
         scanpy.tl.pca(self.adata)
         print(self.adata)
 
-        return self.adata.obsm["X_pca"]
+        result = self.adata.obsm["X_pca"]
 
-    def compute(self, details):
-        embedding_type = details.pop("type")
+        # Get first two PCs only.
+        result = result[:, :2]
 
-        MAP = {"PCA": self.PCA}
+        return result
 
-        result = MAP[embedding_type](details)
+    def compute(self, embedding_type):
+
+        MAP = {"pca": self._PCA}
+
+        result = MAP[embedding_type]()
 
         print("We are here: ", result)
         return result
