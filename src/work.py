@@ -14,9 +14,8 @@ def main():
     while (datetime.datetime.now() - last_activity).total_seconds() <= config.TIMEOUT:
         adata, mssg = consume(adata)
         if mssg:
-            body = mssg["body"]
-            r = TaskFactory().submit(body, adata)
-            result = Result(work_def=body, result=r)
+            r = TaskFactory().submit(mssg["body"], adata)
+            result = Result(work_def=mssg, result=r)
             result.publish()
             last_activity = datetime.datetime.now()
 

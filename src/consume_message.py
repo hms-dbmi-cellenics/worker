@@ -42,7 +42,9 @@ def _get_matrix_path(experiment_id):
 
 
 def _load_file(matrix_path):
-    if config.ENVIRONMENT != "base":
+    print(config.ENVIRONMENT)
+    if config.ENVIRONMENT != "development":
+        print("Have to download anndata file from s3")
         bucket, key = matrix_path.split("/", 1)
         try:
             client = boto3.client("s3")
