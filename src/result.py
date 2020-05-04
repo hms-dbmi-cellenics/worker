@@ -8,8 +8,8 @@ config = get_config()
 
 class Result:
     def __init__(self, work_def, result):
-        self.uuid = work_def.get("uuid", "1234")
-        self.socket_id = work_def.get("socketId", "567")
+        self.uuid = work_def["uuid"]
+        self.socket_id = work_def["socketId"]
         self.result = {"result": result.tolist()}
         self.s3_bucket = config.RESULTS_BUCKET
         self.s3_key = self.uuid
