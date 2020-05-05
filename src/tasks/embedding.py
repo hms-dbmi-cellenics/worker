@@ -30,4 +30,4 @@ class ComputeEmbedding:
         result = MAP[embedding_type]()
 
         print(datetime.datetime.now(), "We are here: ", result)
-        return result
+        return result.tolist()
