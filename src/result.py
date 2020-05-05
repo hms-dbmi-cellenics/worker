@@ -10,7 +10,7 @@ class Result:
     def __init__(self, work_def, result):
         self.uuid = work_def["uuid"]
         self.socket_id = work_def["socketId"]
-        self.result = {"result": result.tolist()}
+        self.result = result.tolist()
         self.s3_bucket = config.RESULTS_BUCKET
         self.s3_key = self.uuid
 
