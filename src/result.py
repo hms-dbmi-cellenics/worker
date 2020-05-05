@@ -58,7 +58,7 @@ class Result:
     def publish(self):
         # if the result is too big for SNS (bigger than 256KB), put it in S3 first. Note: I leave 4000 chars for the message schema
         chars_numb = len(str(self.result))
-        put_in_s3 = chars_numb / 1000 >= 252
+        put_in_s3 = chars_numb / 1000 >= 200
 
         if put_in_s3:
             self._upload()
