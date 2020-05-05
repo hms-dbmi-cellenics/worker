@@ -6,7 +6,7 @@ class TaskFactory:
         task_name = task_def["name"]
         details = task_def["type"]
 
-        print("******** ", task_name)
+        print(datetime.datetime.now(), "******** ", task_name)
         try:
             my_class = self._factory(task_name, adata)
             result = my_class.compute(details)

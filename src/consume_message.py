@@ -3,6 +3,7 @@ import io
 import json
 import anndata
 from config import get_config
+import datetime
 
 config = get_config()
 
@@ -18,11 +19,11 @@ def _read_sqs_message():
     # Try to parse it as JSON
     try:
         message = message[0]
-        print(message.body)
+        print(datetime.datetime.now(), message.body)
         body = json.loads(message.body)
-        print("Consumed a message from S3.")
+        print(datetime.datetime.now(), "Consumed a message from S3.")
     except Exception as e:
-        print("Exception when loading json: ", e)
+        print(datetime.datetime.now(), "Exception when loading json: ", e)
         return None
     finally:
         message.delete()
@@ -44,7 +45,7 @@ def _get_matrix_path(experiment_id):
 def _load_file(matrix_path):
     print(config.ENVIRONMENT)
     if config.ENVIRONMENT != "development":
-        print("Have to download anndata file from s3")
+        print(datetime.datetime.now(), "Have to download anndata file from s3")
         bucket, key = matrix_path.split("/", 1)
         try:
             client = boto3.client("s3")
@@ -54,13 +55,13 @@ def _load_file(matrix_path):
 
             adata = anndata.read_h5ad(result)
         except Exception as e:
-            print("Could not get file from S3", e)
+            print(datetime.datetime.now(), "Could not get file from S3", e)
             raise e
     else:
         with open("tgfb1-3-control.h5ad", "rb") as f:
             adata = anndata.read_h5ad(f)
 
-    print("File was loaded.")
+    print(datetime.datetime.now(), "File was loaded.")
     return adata
 
 
@@ -71,9 +72,11 @@ def consume(adata):
         return adata, None
 
     if not adata:
-        print("adata does not exist, I need to download it ...")
+        print(
+            datetime.datetime.now(), "adata does not exist, I need to download it ..."
+        )
         matrix_path = _get_matrix_path(mssg_body["experimentId"])
         adata = _load_file(matrix_path)
 
-    print(mssg_body)
+    print(datetime.datetime.now(), mssg_body)
     return adata, mssg_body

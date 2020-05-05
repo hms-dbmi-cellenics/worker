@@ -9,7 +9,7 @@ def main():
     config = get_config()
     last_activity = datetime.datetime.now()
     adata = None
-    print("Now listening, waiting for work to do...")
+    print(datetime.datetime.now(), "Now listening, waiting for work to do...")
 
     while (datetime.datetime.now() - last_activity).total_seconds() <= config.TIMEOUT:
         adata, mssg = consume(adata)
@@ -19,7 +19,7 @@ def main():
             result.publish()
             last_activity = datetime.datetime.now()
 
-    print("Timeout exceeded, shutting down...")
+    print(datetime.datetime.now(), "Timeout exceeded, shutting down...")
 
 
 if __name__ == "__main__":

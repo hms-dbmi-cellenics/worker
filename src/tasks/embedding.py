@@ -13,7 +13,7 @@ class ComputeEmbedding:
 
         # Compute embedding
         scanpy.tl.pca(self.adata)
-        print(self.adata)
+        print(datetime.datetime.now(), self.adata)
 
         result = self.adata.obsm["X_pca"]
 
@@ -28,5 +28,5 @@ class ComputeEmbedding:
 
         result = MAP[embedding_type]()
 
-        print("We are here: ", result)
+        print(datetime.datetime.now(), "We are here: ", result)
         return result

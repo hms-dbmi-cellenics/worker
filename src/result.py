@@ -1,5 +1,6 @@
 import boto3
 import json
+import datetime
 
 from config import get_config
 
@@ -33,7 +34,7 @@ class Result:
         client.put_object(
             Key=self.s3_key, Bucket=self.s3_bucket, Body=json.dumps(self.result)
         )
-        print("Result was successfully uploaded to s3.")
+        print(datetime.datetime.now(), "Result was successfully uploaded to s3.")
 
     def _send_notification(self):
         mssg = self._get_response_schema()
@@ -43,9 +44,11 @@ class Result:
             Message=json.dumps({"default": json.dumps(mssg)}),
             MessageStructure="json",
         )
-        print("Message {} successfully sent to sns".format(mssg))
+        print(
+            datetime.datetime.now(), "Message {} successfully sent to sns".format(mssg)
+        )
 
     def publish(self):
         self._upload()
         self._send_notification()
-        print("Result was published.")
+        print(datetime.datetime.now(), "Result was published.")
