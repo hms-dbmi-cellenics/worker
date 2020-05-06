@@ -5,6 +5,8 @@ import anndata
 from config import get_config
 import datetime
 
+from result import Result
+
 config = get_config()
 
 

@@ -1,5 +1,8 @@
 import scanpy
 import datetime
+import json
+
+from result import Result
 
 
 class ComputeEmbedding:
@@ -10,7 +13,7 @@ class ComputeEmbedding:
         # Remove pre-existing embeddings
         self.adata.obsm.pop("X_pca", None)
         self.adata.varm.pop("PCs", None)
-        self.adata.uns.pop("pcaasdsadasdas", None)
+        self.adata.uns.pop("pca", None)
 
         # Compute embedding
         scanpy.tl.pca(self.adata)
@@ -23,11 +26,19 @@ class ComputeEmbedding:
 
         return result
 
-    def compute(self, embedding_type):
+    def _format_result(self, result):
+        # Convert numpy array to list.
+        result = result.tolist()
 
+        # JSONify list.
+        result = json.dumps(result)
+
+        # Return a list of formatted results.
+        return [Result(result)]
+
+    def compute(self, embedding_type):
         MAP = {"pca": self._PCA}
 
         result = MAP[embedding_type]()
 
-        print(datetime.datetime.now(), "We are here: ", result)
-        return result.tolist()
+        return self._format_result(result)
