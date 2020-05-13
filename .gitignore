@@ -139,4 +139,6 @@ dmypy.json
 cython_debug/
 
 .vscode
+
 *.h5ad
+!test.h5ad
