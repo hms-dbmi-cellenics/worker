@@ -30,6 +30,8 @@ test:
         - python3 -m pip install -r requirements.txt
         - cd src/
         - python3 -m pytest --cov=.
+    variables:
+        AWS_DEFAULT_REGION: 'eu-west-2'
     rules:
         - if: '$TEST_DISABLED'
           when: never
