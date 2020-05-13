@@ -22,19 +22,18 @@ variables:
     K8S_SECRET_AWS_DEFAULT_REGION: "eu-west-2"
     HELM_UPGRADE_EXTRA_ARGS: "--cleanup-on-fail --set gitlab_deploy_user=${GITLAB_DEPLOY_USER} --set gitlab_deploy_password=${GITLAB_DEPLOY_PASSWORD} --set gitlab_registry_url=${CI_REGISTRY}"
 
-    test:
-        stage: test
-        image: gliderlabs/herokuish:latest
-        needs: []
-        script:
-          - cp -R . /tmp/app
-          - cd src/
-          - python3 -m pytest --cov=.
-        rules:
-          - if: '$TEST_DISABLED'
-            when: never
-          - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
-      
+test:
+    stage: test
+    image: gliderlabs/herokuish:latest
+    needs: []
+    script:
+        - cp -R . /tmp/app
+        - cd src/
+        - python3 -m pytest --cov=.
+    rules:
+        - if: '$TEST_DISABLED'
+        when: never
+        - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
 
 include:
     - template: Jobs/Build.gitlab-ci.yml
