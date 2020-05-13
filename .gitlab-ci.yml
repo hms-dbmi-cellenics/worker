@@ -24,7 +24,7 @@ variables:
 
 test:
     stage: test
-    image: gliderlabs/herokuish:latest
+    image: python:3.7-buster
     needs: []
     script:
         - python3 -m pip install -r requirements.txt
