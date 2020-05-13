@@ -18,7 +18,6 @@ class TaskFactory:
 
     @staticmethod
     def _factory(task_name, adata):
-        # return eval(type + "()")
         if task_name == "GetEmbedding":
             my_class = ComputeEmbedding(adata)
             return my_class

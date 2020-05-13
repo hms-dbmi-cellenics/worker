@@ -26,4 +26,5 @@ variables:
 
 include:
     - template: Jobs/Build.gitlab-ci.yml
+    - template: Jobs/Test.gitlab-ci.yml
     - template: Jobs/Deploy.gitlab-ci.yml

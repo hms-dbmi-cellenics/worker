@@ -28,6 +28,3 @@ class Result:
 
     def get_result_length(self):
         return len(json.dumps(self.get_result_object()))
-
-    def __repr__(self):
-        return json.dumps(self.get_result_object())

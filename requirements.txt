@@ -6,3 +6,7 @@ python-igraph
 louvain
 black
 flake8
+pytest
+pytest-cov
+moto
+pytest-mock

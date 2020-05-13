@@ -1,18 +1,35 @@
 import boto3
+from botocore.exceptions import ClientError
 import io
 import json
 import anndata
 from config import get_config
 import datetime
-
-from result import Result
+import time
 
 config = get_config()
 
 
 def _read_sqs_message():
     sqs = boto3.resource("sqs")
-    queue = sqs.get_queue_by_name(QueueName=config.QUEUE_NAME)
+
+    """
+    It is possible that the queue was not created by the time
+    the worker launches, because the work queue creation (if needed)
+    and the Job spawn are on separate promises and work asyncrhonously.
+    This is a performance improvement but sometimes it is worth doing.
+
+    If this is the case, we just return an empty response
+    as if we didn't receive a message in this time frame.
+    """
+    try:
+        queue = sqs.get_queue_by_name(QueueName=config.QUEUE_NAME)
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue":
+            return None
+        else:
+            raise e
+
     message = queue.receive_messages(WaitTimeSeconds=20)
 
     if not message:

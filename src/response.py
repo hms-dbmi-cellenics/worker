@@ -41,14 +41,20 @@ class Response:
 
     def _send_notification(self, mssg):
         sns = boto3.client("sns")
+
+        msg_to_send = json.dumps({"default": json.dumps(mssg)})
+
         r = sns.publish(
             TargetArn="arn:aws:sns:{}:{}:{}".format(
                 config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
             ),
-            Message=json.dumps({"default": json.dumps(mssg)}),
+            Message=msg_to_send,
             MessageStructure="json",
         )
+
         print(datetime.datetime.now(), "Message successfully sent to sns", r)
+
+        return msg_to_send
 
     def publish(self):
         # Get total length of all result objects:
@@ -69,4 +75,4 @@ class Response:
 
         print(response_msg)
 
-        self._send_notification(response_msg)
+        return self._send_notification(response_msg)
