@@ -18,19 +18,23 @@ class ComputeEmbedding:
         # Compute embedding
         scanpy.tl.pca(self.adata)
         print(datetime.datetime.now(), self.adata)
-
-        result = self.adata.obsm["X_pca"]
+        embeddings = self.adata.obsm["X_pca"]
 
         # Get first two PCs only.
-        result = result[:, :2]
+        embeddings = embeddings[:, :2]
+
+        result = {}
+
+        for index, data in zip(self.adata.obs.index, embeddings):
+            result[index] = data.tolist()
 
         return result
 
     def _format_result(self, result):
-        # Convert numpy array to list.
-        result = result.tolist()
 
-        # JSONify list.
+        print("we are dumping", result)
+
+        # JSONify result.
         result = json.dumps(result)
 
         # Return a list of formatted results.
