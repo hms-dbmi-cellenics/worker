@@ -26,10 +26,6 @@ class TestResult:
         with pytest.raises(KeyError):
             TaskFactory().submit({"type": "asd"}, self._adata)
 
-    def test_throws_exception_on_incomplete_type(self):
-        with pytest.raises(KeyError):
-            TaskFactory().submit({"name": "asd"}, self._adata)
-
     def test_throws_exception_on_non_existent_task(self):
         with pytest.raises(Exception):
             TaskFactory().submit(

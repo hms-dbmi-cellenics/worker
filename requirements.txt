@@ -4,6 +4,7 @@ anndata
 scvelo
 python-igraph
 louvain
+pandasql
 black
 flake8
 pytest

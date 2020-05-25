@@ -40,9 +40,9 @@ class ComputeEmbedding:
         # Return a list of formatted results.
         return [Result(result)]
 
-    def compute(self, embedding_type):
+    def compute(self, task_def):
         MAP = {"pca": self._PCA}
 
+        embedding_type = task_def["type"]
         result = MAP[embedding_type]()
-
         return self._format_result(result)

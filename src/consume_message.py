@@ -77,7 +77,7 @@ def _load_file(matrix_path):
             print(datetime.datetime.now(), "Could not get file from S3", e)
             raise e
     else:
-        with open("tgfb1-3-control.h5ad", "rb") as f:
+        with open("./tests/test.h5ad", "rb") as f:
             adata = anndata.read_h5ad(f)
 
     print(datetime.datetime.now(), "File was loaded.")
