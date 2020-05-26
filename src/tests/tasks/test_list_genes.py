@@ -49,12 +49,7 @@ class TestEmbedding:
 
         for data in res:
             for field in data.keys():
-                # We expect `gene_names` to always be present.
-                # This is checked in a separate test case.
-                assert (
-                    field in self.correct_task_def["selectFields"]
-                    or field == "gene_names"
-                )
+                assert field in self.correct_task_def["selectFields"]
 
     def test_list_gene_has_appropriate_number_of_results(self):
         res = ListGenes(self._adata).compute(self.correct_task_def)
