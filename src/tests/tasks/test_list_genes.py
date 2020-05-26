@@ -56,14 +56,6 @@ class TestEmbedding:
                     or field == "gene_names"
                 )
 
-    def test_list_gene_each_row_has_gene_names_included(self):
-        res = ListGenes(self._adata).compute(self.correct_task_def)
-        res = res[0].result
-        res = json.loads(res)
-
-        for data in res:
-            assert "gene_names" in data.keys()
-
     def test_list_gene_has_appropriate_number_of_results(self):
         res = ListGenes(self._adata).compute(self.correct_task_def)
         res = res[0].result

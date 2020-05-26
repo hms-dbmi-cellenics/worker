@@ -34,7 +34,7 @@ class ListGenes:
 
         # Set up SQL query and PandaSQL for efficient querying.
         query = """
-            SELECT gene_names, {}
+            SELECT {}
               FROM genes
           ORDER BY {} {}
              LIMIT {}, {}
