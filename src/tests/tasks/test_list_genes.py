@@ -35,19 +35,33 @@ class TestEmbedding:
         res = res[0].result
         json.loads(res)
 
-    def test_list_genes_returns_a_json_list(self):
+    def test_list_genes_returns_a_json_object(self):
         res = ListGenes(self._adata).compute(self.correct_task_def)
         res = res[0].result
         res = json.loads(res)
 
-        assert isinstance(res, list)
+        assert isinstance(res, dict)
+
+    def test_list_genes_result_object_has_total_which_is_int(self):
+        res = ListGenes(self._adata).compute(self.correct_task_def)
+        res = res[0].result
+        res = json.loads(res)
+
+        assert isinstance(res["total"], int)
+
+    def test_list_genes_result_object_has_total_results_which_is_list(self):
+        res = ListGenes(self._adata).compute(self.correct_task_def)
+        res = res[0].result
+        res = json.loads(res)
+
+        assert isinstance(res["rows"], list)
 
     def test_list_gene_selected_fiels_appear_in_all_results(self):
         res = ListGenes(self._adata).compute(self.correct_task_def)
         res = res[0].result
         res = json.loads(res)
 
-        for data in res:
+        for data in res["rows"]:
             for field in data.keys():
                 assert field in self.correct_task_def["selectFields"]
 
@@ -55,5 +69,6 @@ class TestEmbedding:
         res = ListGenes(self._adata).compute(self.correct_task_def)
         res = res[0].result
         res = json.loads(res)
+        res = res["rows"]
 
         assert len(res) <= self.correct_task_def["limit"]

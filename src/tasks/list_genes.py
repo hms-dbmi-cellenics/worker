@@ -1,15 +1,18 @@
 from pandasql import sqldf
 from result import Result
+import json
 
 
 class ListGenes:
     def __init__(self, adata):
         self.adata = adata
 
-    def _format_result(self, result):
+    def _format_result(self, result, no_genes):
 
         # JSONify result.
-        result = result.to_json(orient="records")
+        result = json.dumps(
+            {"total": no_genes, "rows": result.to_dict(orient="records")}
+        )
 
         # Return a list of formatted results.
         return [Result(result)]
@@ -46,4 +49,4 @@ class ListGenes:
         )
         result = execute_query(query)
 
-        return self._format_result(result)
+        return self._format_result(result, no_genes=len(genes))
