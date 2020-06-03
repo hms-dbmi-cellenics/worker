@@ -30,7 +30,9 @@ The next step is to send a task to the worker. To do that, you have to submit th
 
 To submit a task to `test-queue`
 
-The "test-queue" is created specifically and only for local testing purposes. Go to the AWS console, under queues and select it (if it doesn't exist, create one using the user interface). Submit a task (using the queue actions button) in the following format:
+The "test-queue" is created specifically and only for local testing purposes. Go to the AWS console, under queues and select it (if it doesn't exist, create one using the user interface). 
+
+To submit a GetEmbedding task, you can paste this in the SQS:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -42,6 +44,25 @@ The "test-queue" is created specifically and only for local testing purposes. Go
             "type": "pca"
         }
     }
+
+To submit a ListGenes task, you can paste this in the SQS:
+    {
+        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
+        "socketId": "Y1poEygzBfrDmIWpAAAA",
+        "experimentId": "5e959f9c9f4b120771249001",
+        "timeout": "2021-01-01T00:00:00Z",
+        "body": {
+            "name": "ListGenes",
+            "selectFields": ["highly_variable", "gene_names", "dispersions"],
+            <!-- "geneNamesFilter": "%IN%", add this to filter results so only gene_names that contain IN in their names appear -->
+            "orderBy": "dispersions",
+            "orderDirection": "desc",
+            "offset": 0,
+            "limit": 20
+        }
+    }
+
+it will be picked by the worker, the task will be computed and the results sent back via SNS.
 
 Where `count_matrix` is the S3 bucket and key of the anndata file you want processed.
 

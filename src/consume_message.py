@@ -5,7 +5,6 @@ import json
 import anndata
 from config import get_config
 import datetime
-import time
 
 config = get_config()
 

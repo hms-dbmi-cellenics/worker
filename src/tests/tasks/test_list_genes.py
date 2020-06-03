@@ -16,7 +16,7 @@ class TestEmbedding:
     def load_correct_definition(self):
         self.correct_task_def = {
             "name": "ListGenes",
-            "selectFields": ["highly_variable", "dispersions"],
+            "selectFields": ["highly_variable", "dispersions", "gene_names"],
             "orderBy": "dispersions",
             "orderDirection": "desc",
             "offset": 0,
@@ -72,3 +72,21 @@ class TestEmbedding:
         res = res["rows"]
 
         assert len(res) <= self.correct_task_def["limit"]
+
+    def test_filter_contains_pattern_gets_applied_to_results(self):
+        task_def = self.correct_task_def
+        task_def["geneNamesFilter"] = "%LIN%"
+        res = ListGenes(self._adata).compute(task_def)
+        res = json.loads(res[0].result)
+
+        for row in res["rows"]:
+            assert "LIN" in row["gene_names"]
+
+    def test_filter_starts_with_pattern_gets_applied_to_results(self):
+        task_def = self.correct_task_def
+        task_def["geneNamesFilter"] = "LIN%"
+        res = ListGenes(self._adata).compute(task_def)
+        res = json.loads(res[0].result)
+
+        for row in res["rows"]:
+            assert row["gene_names"].startswith("LIN")
