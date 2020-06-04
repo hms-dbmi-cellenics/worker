@@ -6,8 +6,10 @@ from result import Result
 
 
 class ComputeEmbedding:
-    def __init__(self, adata):
+    def __init__(self, msg, adata):
         self.adata = adata
+
+        self.task_def = msg["body"]
 
     def _PCA(self):
         # Remove pre-existing embeddings
@@ -40,9 +42,9 @@ class ComputeEmbedding:
         # Return a list of formatted results.
         return [Result(result)]
 
-    def compute(self, task_def):
+    def compute(self):
         MAP = {"pca": self._PCA}
 
-        embedding_type = task_def["type"]
+        embedding_type = self.task_def["type"]
         result = MAP[embedding_type]()
         return self._format_result(result)

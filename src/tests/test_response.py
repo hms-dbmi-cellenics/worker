@@ -55,7 +55,7 @@ class TestResponse:
 
         request = {
             "TargetArn": "arn:aws:sns:{}:{}:{}".format(
-                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
+                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.get_sns_topic()
             ),
             "Message": json.dumps({"default": json.dumps(result_object)}),
             "MessageStructure": "json",

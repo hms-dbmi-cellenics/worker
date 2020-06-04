@@ -16,7 +16,7 @@ def _read_sqs_message():
     It is possible that the queue was not created by the time
     the worker launches, because the work queue creation (if needed)
     and the Job spawn are on separate promises and work asyncrhonously.
-    This is a performance improvement but sometimes it is worth doing.
+    This is a performance improvement but it causes the race condition above.
 
     If this is the case, we just return an empty response
     as if we didn't receive a message in this time frame.
@@ -50,7 +50,8 @@ def _read_sqs_message():
 
 
 def _get_matrix_path(experiment_id):
-    dynamo = boto3.resource("dynamodb").Table(config.DYNAMO_TABLE)
+    dynamo = boto3.resource("dynamodb").Table(config.get_dynamo_table())
+
     # todo: the projectionexpression stopped working for some reason, fix it!
     resp = dynamo.get_item(
         Key={"experimentId": experiment_id}, ProjectionExpression="matrixPath",

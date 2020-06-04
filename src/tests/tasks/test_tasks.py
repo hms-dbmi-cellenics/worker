@@ -5,7 +5,7 @@ from tasks.tasks import TaskFactory
 from result import Result
 
 
-class TestResult:
+class TestTaskFactory:
     @pytest.fixture(autouse=True)
     def open_test_adata(self):
         self._adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
@@ -22,28 +22,28 @@ class TestResult:
         with pytest.raises(TypeError):
             TaskFactory().submit({})
 
-    def test_throws_exception_on_incomplete_name(self):
+    def test_throws_exception_on_incomplete_body(self):
         with pytest.raises(KeyError):
-            TaskFactory().submit({"type": "asd"}, self._adata)
+            TaskFactory().submit({"body": {}}, self._adata)
 
     def test_throws_exception_on_non_existent_task(self):
         with pytest.raises(Exception):
             TaskFactory().submit(
-                {"name": "ClearlyAnInvalidTaskName", "type": "asd"}, self._adata
+                {"body": {"name": "ClearlyAnInvalidTaskName"}}, self._adata
             )
 
     def test_creates_class_on_existent_task(self):
-        r = TaskFactory._factory("GetEmbedding", self._adata)
+        r = TaskFactory._factory({"body": {"name": "GetEmbedding"}}, self._adata)
         assert isinstance(r, object)
 
     def test_returns_result_list_with_properly_defined_task(self):
         results = TaskFactory().submit(
-            {"name": "GetEmbedding", "type": "pca"}, self._adata
+            {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
         )
         assert isinstance(results, list)
 
     def test_each_element_in_result_list_is_a_result_object(self):
         results = TaskFactory().submit(
-            {"name": "GetEmbedding", "type": "pca"}, self._adata
+            {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
         )
         assert all(isinstance(result, Result) for result in results)

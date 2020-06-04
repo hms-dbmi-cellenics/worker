@@ -14,7 +14,7 @@ def main():
     while (datetime.datetime.now() - last_activity).total_seconds() <= config.TIMEOUT:
         adata, msg = consume(adata)
         if msg:
-            results = TaskFactory().submit(msg["body"], adata)
+            results = TaskFactory().submit(msg, adata)
 
             response = Response(request=msg, results=results)
             response.publish()

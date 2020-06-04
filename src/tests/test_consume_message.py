@@ -1,7 +1,5 @@
 import boto3
-import botocore.session
 from botocore.stub import Stubber, ANY
-import pytest
 import mock
 from config import get_config
 from consume_message import _read_sqs_message, _get_matrix_path, _load_file
@@ -117,7 +115,7 @@ class TestConsumeMessage:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.DYNAMO_TABLE,
+                "TableName": config.get_dynamo_table(),
                 "Key": ANY,
                 "ProjectionExpression": ANY,
             },
@@ -136,7 +134,7 @@ class TestConsumeMessage:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.DYNAMO_TABLE,
+                "TableName": config.get_dynamo_table(),
                 "Key": {"experimentId": test_experiment_id},
                 "ProjectionExpression": ANY,
             },
@@ -155,7 +153,7 @@ class TestConsumeMessage:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.DYNAMO_TABLE,
+                "TableName": config.get_dynamo_table(),
                 "Key": ANY,
                 "ProjectionExpression": "matrixPath",
             },
