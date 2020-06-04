@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: api-can-spawn-workers
+  namespace: {{.Release.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: can-manage-jobs
+subjects:
+- kind: ServiceAccount
+  name: api-18445709-{{ template "trackableappname" . }}-service-account
+  namespace: api-18445709-{{ template "trackableappname" . }}
+
