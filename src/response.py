@@ -13,7 +13,7 @@ class Response:
         self.request = request
         self.results = results
 
-        self.s3_bucket = config.RESULTS_BUCKET
+        self.s3_bucket = config.get_results_bucket()
 
     def _get_response_msg(self, s3_keys=None):
         if s3_keys:
@@ -46,7 +46,7 @@ class Response:
 
         r = sns.publish(
             TargetArn="arn:aws:sns:{}:{}:{}".format(
-                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
+                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.get_sns_topic()
             ),
             Message=msg_to_send,
             MessageStructure="json",

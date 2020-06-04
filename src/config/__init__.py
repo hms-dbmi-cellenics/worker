@@ -1,7 +1,6 @@
 import os
 
 from .config import (
-    TestConfig,
     DevelopmentConfig,
     StagingConfig,
     ProductionConfig,
@@ -9,8 +8,6 @@ from .config import (
 
 config = {
     "default": DevelopmentConfig,
-    "dev": DevelopmentConfig,
-    "testing": TestConfig,
     "staging": StagingConfig,
     "production": ProductionConfig,
 }
@@ -18,4 +15,6 @@ config = {
 
 def get_config():
     env_name = os.getenv("GITLAB_ENVIRONMENT_NAME", "default")
-    return config[env_name]
+
+    config_class = config.get(env_name, config["default"])
+    return config_class()
