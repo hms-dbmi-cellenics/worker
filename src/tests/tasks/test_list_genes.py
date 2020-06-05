@@ -60,14 +60,18 @@ class TestListGenes:
 
         assert isinstance(res["rows"], list)
 
-    def test_list_gene_selected_fiels_appear_in_all_results(self):
+    def test_list_gene_selected_fields_appear_in_all_results(self):
         res = ListGenes(self.correct_request_skeleton, self._adata).compute()
         res = res[0].result
         res = json.loads(res)
 
         for data in res["rows"]:
             for field in data.keys():
-                assert field in self.correct_request_skeleton["body"]["selectFields"]
+                if field != "full_count":
+                    assert (
+                        field in self.correct_request_skeleton["body"]["selectFields"]
+                    )
+                assert "full_count" in data.keys()
 
     def test_list_gene_has_appropriate_number_of_results(self):
         res = ListGenes(self.correct_request_skeleton, self._adata).compute()
