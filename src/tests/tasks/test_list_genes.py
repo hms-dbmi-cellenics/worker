@@ -67,11 +67,7 @@ class TestListGenes:
 
         for data in res["rows"]:
             for field in data.keys():
-                if field != "full_count":
-                    assert (
-                        field in self.correct_request_skeleton["body"]["selectFields"]
-                    )
-                assert "full_count" in data.keys()
+                assert field in self.correct_request_skeleton["body"]["selectFields"]
 
     def test_list_gene_has_appropriate_number_of_results(self):
         res = ListGenes(self.correct_request_skeleton, self._adata).compute()
