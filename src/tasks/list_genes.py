@@ -8,11 +8,12 @@ class ListGenes:
         self.task_def = msg["body"]
         self.adata = adata
 
-    def _format_result(self, result, no_genes):
+    def _format_result(self, r):
+        results = r.to_dict(orient="records")
+        numb_results = results[0].get("full_count", 0)
+
         # JSONify result.
-        result = json.dumps(
-            {"total": no_genes, "rows": result.to_dict(orient="records")}
-        )
+        result = json.dumps({"total": numb_results, "rows": results})
 
         # Return a list of formatted results.
         return [Result(result)]
@@ -45,11 +46,12 @@ class ListGenes:
 
         # Set up SQL query and PandaSQL for efficient querying.
         query = """
-            SELECT {}
+            SELECT {}, count(*) OVER() AS full_count
               FROM genes
               {}
           ORDER BY {} {}
-             LIMIT {}, {}
+             LIMIT {}
+             OFFSET {}
         """
         execute_query = lambda q: sqldf(q, {"genes": genes})
 
@@ -58,9 +60,11 @@ class ListGenes:
             filter_query,
             order_by,
             order_direction,
-            offset,
             limit,
+            offset,
         )
         result = execute_query(query)
 
-        return self._format_result(result, no_genes=len(genes))
+        print(result)
+
+        return self._format_result(result)
