@@ -8,12 +8,12 @@ class ListGenes:
         self.task_def = msg["body"]
         self.adata = adata
 
-    def _format_result(self, r):
-        results = r.to_dict(orient="records")
-        numb_results = results[0].get("full_count", 0)
+    def _format_result(self, result, total):
+        # convert result to list of row dicts
+        result = result.to_dict(orient="records")
 
         # JSONify result.
-        result = json.dumps({"total": numb_results, "rows": results})
+        result = json.dumps({"total": total, "rows": result})
 
         # Return a list of formatted results.
         return [Result(result)]
@@ -65,6 +65,17 @@ class ListGenes:
         )
         result = execute_query(query)
 
-        print(result)
+        # Get total number of results if there are results
+        total = 0
 
-        return self._format_result(result)
+        if len(result) > 0:
+            total = result["full_count"][0]
+
+        # total returns numpy int64, convert to integer
+        # for serialization to JSON
+        total = int(total)
+
+        # Filter out aggregate
+        result = result[select_fields]
+
+        return self._format_result(result, total=total)
