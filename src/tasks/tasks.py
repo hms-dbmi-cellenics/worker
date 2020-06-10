@@ -1,6 +1,7 @@
 from .embedding import ComputeEmbedding
 from .list_genes import ListGenes
 from .differential_expression import DifferentialExpression
+from .gene_expression import GeneExpression
 import datetime
 
 
@@ -29,6 +30,9 @@ class TaskFactory:
             return my_class
         elif task_name == "DifferentialExpression":
             my_class = DifferentialExpression(msg, adata)
+            return my_class
+        elif task_name == "GeneExpression":
+            my_class = GeneExpression(msg, adata)
             return my_class
         else:
             raise Exception("Task class with name {} was not found".format(task_name))

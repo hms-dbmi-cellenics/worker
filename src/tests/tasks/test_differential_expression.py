@@ -87,30 +87,6 @@ class TestDifferentialExpression:
         m.return_value = dynamodb
         DifferentialExpression(self.correct_request, self._adata).compute()
 
-    def test_empty_cell_set_returns_no_cells(self):
-        de = DifferentialExpression(self.correct_request, self._adata)
-
-        assert de.find_cells_by_set_id("", []) == []
-
-    def test_empty_cell_set_returns_appropriate_results(self):
-        haystack = [
-            {"cellIds": [1, 2, 3], "key": "asd"},
-            {"cellIds": [4, 5, 6], "key": "fgh"},
-        ]
-        de = DifferentialExpression(self.correct_request, self._adata)
-
-        assert de.find_cells_by_set_id("asd", haystack) == [1, 2, 3]
-        assert de.find_cells_by_set_id("fgh", haystack) == [4, 5, 6]
-
-    def test_empty_cell_set_returns_appropriate_nested_results(self):
-        haystack = [
-            {"key": "asd", "children": [{"key": "fgh", "cellIds": [1, 2, 3]}]},
-            {"cellIds": [4, 5, 6], "key": "ijk"},
-        ]
-        de = DifferentialExpression(self.correct_request, self._adata)
-
-        assert de.find_cells_by_set_id("fgh", haystack) == [1, 2, 3]
-
     def test_works_with_request_and_adata(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb

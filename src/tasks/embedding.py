@@ -32,10 +32,28 @@ class ComputeEmbedding:
 
         return result
 
+    def _UMAP(self):
+        # Remove pre-existing embeddings
+        self.adata.obsm.pop("X_umap", None)
+        self.adata.uns.pop("neighbors", None)
+        self.adata.obsp.pop("distances", None)
+        self.adata.obsp.pop("connectivities", None)
+
+        # Compute the neighborhood graph and create UMAP
+        scanpy.pp.neighbors(self.adata, n_neighbors=10, n_pcs=40)
+        scanpy.tl.umap(self.adata)
+
+        print(datetime.datetime.now(), self.adata)
+        embeddings = self.adata.obsm["X_umap"]
+
+        result = {}
+
+        for index, data in zip(self.adata.obs.index, embeddings):
+            result[index] = data.tolist()
+
+        return result
+
     def _format_result(self, result):
-
-        print("we are dumping", result)
-
         # JSONify result.
         result = json.dumps(result)
 
@@ -43,7 +61,7 @@ class ComputeEmbedding:
         return [Result(result)]
 
     def compute(self):
-        MAP = {"pca": self._PCA}
+        MAP = {"pca": self._PCA, "umap": self._UMAP}
 
         embedding_type = self.task_def["type"]
         result = MAP[embedding_type]()
