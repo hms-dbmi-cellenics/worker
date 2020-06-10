@@ -5,6 +5,8 @@ import boto3
 from config import get_config
 from result import Result
 
+from tasks.helpers.find_cells_by_set_id import find_cells_by_set_id
+
 config = get_config()
 
 
@@ -15,19 +17,6 @@ class DifferentialExpression:
 
         self.task_def = msg["body"]
         self.experiment_id = msg["experimentId"]
-
-    def find_cells_by_set_id(self, needle, haystack):
-        for cell_set in haystack:
-            if cell_set["key"] == needle:
-                return cell_set["cellIds"]
-
-            if cell_set.get("children", None):
-                result = self.find_cells_by_set_id(needle, cell_set["children"])
-
-                if result:
-                    return result
-
-        return []
 
     def _format_result(self, result):
         # JSONify result.
@@ -54,7 +43,7 @@ class DifferentialExpression:
         resp = resp["Item"]["cellSets"]
 
         # try to find the right cells
-        de_base = self.find_cells_by_set_id(cell_set_base, resp)
+        de_base = find_cells_by_set_id(cell_set_base, resp)
         self.adata.obs["de_base"] = self.adata.obs.index.isin(de_base)
         self.adata.obs["de_base"] = pd.Categorical(
             self.adata.obs["de_base"], categories=[True]
@@ -62,7 +51,7 @@ class DifferentialExpression:
 
         # if `compareWith` is not 'rest', try create another group based on that set
         if cell_set_compare_with != "rest":
-            de_compare_with = self.find_cells_by_set_id(cell_set_compare_with, resp)
+            de_compare_with = find_cells_by_set_id(cell_set_compare_with, resp)
             self.adata.obs["de_compare_with"] = self.adata.obs.index.isin(
                 de_compare_with
             )
@@ -80,7 +69,7 @@ class DifferentialExpression:
             "pvals_adj": "adjustedpValues",
         }
         scanpy.tl.rank_genes_groups(
-            self.adata, "de_base", method="t-test", n_genes=n_genes
+            self.adata, "de_base", method="t-test", n_genes=n_genes, use_raw=False
         )
         de_result = self.adata.uns["rank_genes_groups"]
         result = {}

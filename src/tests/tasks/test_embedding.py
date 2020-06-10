@@ -29,7 +29,10 @@ class TestEmbedding:
         ComputeEmbedding(self.correct_request_skeleton, self._adata)
 
     def test_pca_edits_object_appropriately(self):
-        old = np.array(self._adata.obsm["X_pca"][:, :2])
+        try:
+            old = np.array(self._adata.obsm["X_pca"][:, :2])
+        except Exception:
+            old = []
 
         res = ComputeEmbedding(self.correct_request_skeleton, self._adata)._PCA()
 
