@@ -141,11 +141,12 @@ class TestDifferentialExpression:
         res = res[0].result
         res = json.loads(res)
 
-        assert res["genes"]
-        assert res["zScores"]
-        assert res["logFoldChanges"]
-        assert res["pValues"]
-        assert res["adjustedpValues"]
+        for row in res["rows"]:
+            keys = sorted(row.keys())
+            expected_keys = sorted(
+                ["gene_names", "scores", "logfoldchanges", "pvals", "pvals_adj"]
+            )
+            assert keys == expected_keys
 
     def test_appropriate_genes_returned_when_a_limit_is_specified(
         self, mock_dynamo_get
@@ -156,14 +157,14 @@ class TestDifferentialExpression:
 
         res = DifferentialExpression(request, self._adata).compute()
         res = res[0].result
-        res = json.loads(res)
+        res = json.loads(res)["rows"]
 
-        assert len(res["genes"]) <= request["body"]["maxNum"]
+        assert len(res) <= request["body"]["maxNum"]
 
     def test_all_genes_returned_when_no_limit_is_specified(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         res = DifferentialExpression(self.correct_request, self._adata).compute()
         res = res[0].result
-        res = json.loads(res)
+        res = json.loads(res)["rows"]
 
-        assert len(res["genes"]) == len(self._adata.var.index)
+        assert len(res) == len(self._adata.var.index)

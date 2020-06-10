@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import json
 import scanpy
 import boto3
@@ -30,8 +31,10 @@ class DifferentialExpression:
         return []
 
     def _format_result(self, result):
+        result = result.to_dict(orient="records")
+
         # JSONify result.
-        result = json.dumps(result)
+        result = json.dumps({"rows": result})
 
         # Return a list of formatted results.
         return [Result(result)]
@@ -71,21 +74,18 @@ class DifferentialExpression:
                 self.adata.obs["de_compare_with"], categories=[True]
             )
 
-        # compute differential expression
-        RESULT_MAPPINGS = {
-            "names": "genes",
-            "scores": "zScores",
-            "logfoldchanges": "logFoldChanges",
-            "pvals": "pValues",
-            "pvals_adj": "adjustedpValues",
-        }
         scanpy.tl.rank_genes_groups(
             self.adata, "de_base", method="t-test", n_genes=n_genes
         )
         de_result = self.adata.uns["rank_genes_groups"]
-        result = {}
 
-        for de_obj_key, result_key in RESULT_MAPPINGS.items():
-            result[result_key] = [item[0].tolist() for item in de_result[de_obj_key]]
+        de_result["gene_names"] = de_result["names"]
+        del de_result["names"]
+        del de_result["params"]
 
-        return self._format_result(result)
+        de_result = pd.DataFrame.from_dict(de_result)
+        de_result = de_result.apply(pd.Series.explode)
+
+        print(de_result)
+
+        return self._format_result(de_result)
