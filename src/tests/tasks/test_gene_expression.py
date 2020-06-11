@@ -3,7 +3,7 @@ import anndata
 import os
 from tasks.gene_expression import GeneExpression
 import json
-from botocore.stub import Stubber, ANY
+from botocore.stub import Stubber
 import mock
 import boto3
 from config import get_config

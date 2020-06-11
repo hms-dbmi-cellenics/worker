@@ -11,3 +11,4 @@ pytest
 pytest-cov
 moto
 pytest-mock
+diffxpy

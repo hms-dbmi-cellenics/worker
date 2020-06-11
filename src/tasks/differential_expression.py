@@ -5,6 +5,7 @@ import scanpy
 import boto3
 from config import get_config
 from result import Result
+import diffxpy.api as de
 
 from tasks.helpers.find_cells_by_set_id import find_cells_by_set_id
 
@@ -36,8 +37,7 @@ class DifferentialExpression:
         cell_set_compare_with = self.task_def["compareWith"]
 
         # get the top x number of genes to load:
-        MAX_NUM_GENES = 10e11
-        n_genes = self.task_def.get("maxNum", MAX_NUM_GENES)
+        n_genes = self.task_def.get("maxNum", None)
 
         # get cell sets from database
         resp = self.dynamo.get_item(
@@ -47,34 +47,49 @@ class DifferentialExpression:
 
         # try to find the right cells
         de_base = find_cells_by_set_id(cell_set_base, resp)
-        self.adata.obs["de_base"] = self.adata.obs.index.isin(de_base)
-        self.adata.obs["de_base"] = pd.Categorical(
-            self.adata.obs["de_base"], categories=[True]
-        )
 
-        # if `compareWith` is not 'rest', try create another group based on that set
-        if cell_set_compare_with != "rest":
+        # use raw values for this task
+        raw_adata = self.adata.raw.to_adata()
+
+        # do highly variable gene filtering
+        # TODO: this does not need to be here once pre-processing selects
+        # for this before raw data is returned
+        raw_adata = raw_adata[:, raw_adata.var.highly_variable]
+
+        if cell_set_compare_with == "rest":
+            # We have a simple condition. Everything in the base cluster is `first`,
+            # the rest is `second`.
+            raw_adata.obs["condition"] = "second"
+        else:
+            # We have a bit more complicated condition. Everything in the base cluster is `first`,
+            # in the second cluster `second`, the rest is `rest`.
             de_compare_with = find_cells_by_set_id(cell_set_compare_with, resp)
-            self.adata.obs["de_compare_with"] = self.adata.obs.index.isin(
-                de_compare_with
-            )
+            raw_adata.obs["condition"] = "rest"
 
-            self.adata.obs["de_compare_with"] = pd.Categorical(
-                self.adata.obs["de_compare_with"], categories=[True]
-            )
+            raw_adata.obs["condition"].loc[
+                raw_adata.obs.index.isin(de_compare_with)
+            ] = "second"
 
-        scanpy.tl.rank_genes_groups(
-            self.adata, "de_base", method="t-test", n_genes=n_genes, use_raw=False
+        raw_adata.obs["condition"].loc[raw_adata.obs.index.isin(de_base)] = "first"
+
+        # Do a pairwise t-test.
+
+        result = de.test.pairwise(
+            data=raw_adata,
+            grouping="condition",
+            test="t-test",
+            lazy=False,
+            noise_model=None,
         )
-        de_result = self.adata.uns["rank_genes_groups"]
 
-        de_result["gene_names"] = de_result["names"]
-        del de_result["names"]
-        del de_result["params"]
+        # massage into right format
+        result = result.summary_pairs(["first"], ["second"])
+        result = result[["gene", "pval", "qval", "log2fc"]]
+        result["gene_names"] = result["gene"]
+        del result["gene"]
 
-        de_result = pd.DataFrame.from_dict(de_result)
-        de_result = de_result.apply(pd.Series.explode)
+        # get top x most significant results, if parameter was supplied
+        if n_genes:
+            result = result.nsmallest(n_genes, ["qval"])
 
-        print(de_result)
-
-        return self._format_result(de_result)
+        return self._format_result(result)
