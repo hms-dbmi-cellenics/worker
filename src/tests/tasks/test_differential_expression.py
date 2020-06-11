@@ -3,10 +3,11 @@ import anndata
 import os
 from tasks.differential_expression import DifferentialExpression
 import json
-from botocore.stub import Stubber, ANY
+from botocore.stub import Stubber
 import mock
 import boto3
 from config import get_config
+from boto3.dynamodb.types import TypeSerializer
 
 config = get_config()
 
@@ -22,7 +23,7 @@ class TestDifferentialExpression:
             "experimentId": "5e959f9c9f4b120771249001",
             "body": {
                 "name": "DifferentialExpression",
-                "cellSet": "louvain-01",
+                "cellSet": "cluster1",
                 "compareWith": "rest",
             },
         }
@@ -34,13 +35,35 @@ class TestDifferentialExpression:
 
     @pytest.fixture
     def mock_dynamo_get(self):
+        ser = TypeSerializer()
+
+        response = [
+            {
+                "name": "my amazing cluster",
+                "key": "cluster1",
+                "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
+            },
+            {
+                "name": "my other amazing cluster",
+                "key": "cluster2",
+                "cellIds": [
+                    "TTGGAGACCAATCG-1",
+                    "TTGGGAACTGAACC-1",
+                    "TTGGTACTCTTAGG-1",
+                    "AAAGCAGATATCGG-1",
+                ],
+            },
+        ]
+
+        response = ser.serialize(response)
+
         test_experiment_id = self.correct_request["experimentId"]
 
         dynamodb = boto3.resource("dynamodb")
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
             "get_item",
-            {"Item": {"cellSets": {"L": []}}},
+            {"Item": {"cellSets": response}},
             {
                 "TableName": config.get_dynamo_table(),
                 "Key": {"experimentId": test_experiment_id},
@@ -71,7 +94,29 @@ class TestDifferentialExpression:
 
                     no_called += 1
 
-                    return {"Item": {"cellSets": []}}
+                    ser = TypeSerializer()
+
+                    response = [
+                        {
+                            "name": "my amazing cluster",
+                            "key": "cluster1",
+                            "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
+                        },
+                        {
+                            "name": "my other amazing cluster",
+                            "key": "cluster2",
+                            "cellIds": [
+                                "TTGGAGACCAATCG-1",
+                                "TTGGGAACTGAACC-1",
+                                "TTGGTACTCTTAGG-1",
+                                "AAAGCAGATATCGG-1",
+                            ],
+                        },
+                    ]
+
+                    # response = ser.serialize(response)
+
+                    return {"Item": {"cellSets": response}}
 
             class MockDynamoClass:
                 def Table(*args, **kwargs):
@@ -119,15 +164,15 @@ class TestDifferentialExpression:
 
         for row in res["rows"]:
             keys = sorted(row.keys())
-            expected_keys = sorted(
-                ["gene_names", "scores", "logfoldchanges", "pvals", "pvals_adj"]
-            )
+            expected_keys = sorted(["gene_names", "pval", "qval", "log2fc"])
             assert keys == expected_keys
 
     def test_appropriate_genes_returned_when_a_limit_is_specified(
         self, mock_dynamo_get
     ):
         m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
         request = self.correct_request
         request["body"]["maxNum"] = 2
 
@@ -139,6 +184,8 @@ class TestDifferentialExpression:
 
     def test_all_genes_returned_when_no_limit_is_specified(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
         res = DifferentialExpression(self.correct_request, self._adata).compute()
         res = res[0].result
         res = json.loads(res)["rows"]
