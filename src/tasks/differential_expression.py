@@ -15,7 +15,9 @@ config = get_config()
 class DifferentialExpression:
     def __init__(self, msg, adata):
         self.adata = adata
-        self.dynamo = boto3.resource("dynamodb").Table(config.get_dynamo_table())
+        self.dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
+            config.get_dynamo_table()
+        )
 
         self.task_def = msg["body"]
         self.experiment_id = msg["experimentId"]

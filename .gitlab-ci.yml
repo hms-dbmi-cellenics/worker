@@ -19,7 +19,6 @@ variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     STAGING_ENABLED: "true"
-    K8S_SECRET_AWS_DEFAULT_REGION: "eu-west-2"
     HELM_UPGRADE_EXTRA_ARGS: "--cleanup-on-fail --set gitlab_deploy_user=${GITLAB_DEPLOY_USER} --set gitlab_deploy_password=${GITLAB_DEPLOY_PASSWORD} --set gitlab_registry_url=${CI_REGISTRY}"
 
 test:

@@ -12,6 +12,14 @@ config = get_config()
 
 
 class TestResponse:
+    @pytest.fixture(autouse=True)
+    def load_correct_definition(self):
+        self.request = {
+            "experimentId": "random-experiment-id",
+            "timeout": "2099-12-31 00:00:00",
+            "uuid": "random-uuid",
+        }
+
     def test_throws_on_empty_response_init(self):
         with pytest.raises(TypeError):
             Response()
@@ -26,20 +34,19 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         r = Result("{ }")
-        resp = Response(request, [r])
+        resp = Response(self.request, [r])
         key = resp._upload(r)
         key_folder, *rest = key.split("/")
 
-        assert key_folder == request["uuid"]
+        assert key_folder == self.request["uuid"]
 
     @mock.patch("boto3.client")
     def test_send_notification_pushes_notification_to_sns(self, mocked_client):
         response = {
             "MessageId": "83a8d61a-1056-5e9c-972e-8134130e1d1b",
             "ResponseMetadata": {
-                "RequestId": "ac541ad0-560f-5cb4-8382-4dfe5557ff33",
+                "requestId": "ac541ad0-560f-5cb4-8382-4dfe5557ff33",
                 "HTTPStatusCode": 200,
                 "HTTPHeaders": {
                     "x-amzn-requestid": "ac541ad0-560f-5cb4-8382-4dfe5557ff33",
@@ -53,7 +60,7 @@ class TestResponse:
 
         result_object = {"obj_key": "obj_value"}
 
-        request = {
+        self.request = {
             "TargetArn": "arn:aws:sns:{}:{}:{}".format(
                 config.AWS_REGION, config.AWS_ACCOUNT_ID, config.get_sns_topic()
             ),
@@ -63,36 +70,33 @@ class TestResponse:
 
         stubbed_client = botocore.session.get_session().create_client("sns")
         stubber = Stubber(stubbed_client)
-        stubber.add_response("publish", response, request)
+        stubber.add_response("publish", response, self.request)
         stubber.activate()
         mocked_client.return_value = stubbed_client
 
-        request = {"uuid": "totally-random-uuid"}
-        resp = Response(request, [])
+        resp = Response(self.request, [])
 
         resp._send_notification(result_object)
         stubber.assert_no_pending_responses()
 
     def test_get_response_msg_returns_original_request_object(self):
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result({"result1key": "result1val"}),
             Result({"result2key": "result2val"}),
         ]
-        resp = Response(request, results)
+        resp = Response(self.request, results)
 
         print(resp._get_response_msg())
 
-        assert resp._get_response_msg()["request"] == request
+        assert resp._get_response_msg()["request"] == self.request
 
     def test_get_response_msg_returns_result_object_definitions(self):
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result({"result1key": "result1val"}, content_encoding="base64"),
             Result({"result2key": "result2val"}, content_encoding="base64"),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         results_msg = resp._get_response_msg()["results"]
 
         for msg in results_msg:
@@ -105,7 +109,6 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result(
                 "a" * 512 * 1024,
@@ -119,7 +122,7 @@ class TestResponse:
             ),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -133,7 +136,6 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result(
                 "a" * 512 * 1024,
@@ -145,7 +147,7 @@ class TestResponse:
             ),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -159,14 +161,13 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result(
                 "a", content_encoding="base64", content_type="application/octet-stream"
             ),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -180,7 +181,6 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result(
                 "a", content_encoding="base64", content_type="application/octet-stream"
@@ -190,7 +190,7 @@ class TestResponse:
             ),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -204,7 +204,6 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result(
                 "a", content_encoding="base64", content_type="application/octet-stream"
@@ -214,7 +213,7 @@ class TestResponse:
             ),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         result = resp.publish()
 
         assert "inline" in result
@@ -228,7 +227,6 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        request = {"uuid": "totally-random-uuid"}
         results = [
             Result(
                 "a" * 512 * 1024,
@@ -237,8 +235,28 @@ class TestResponse:
             ),
         ]
 
-        resp = Response(request, results)
+        resp = Response(self.request, results)
         result = resp.publish()
 
         assert "inline" not in result
         assert "s3-path" in result
+
+    @mock.patch("boto3.client")
+    def test_old_requests_do_not_get_sent(self, mocked_client, mocker):
+        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubber = Stubber(stubbed_client)
+        stubber.activate()
+
+        request = self.request
+        request["timeout"] = "2000-01-01 00:00:00"
+
+        results = [
+            Result(
+                "a", content_encoding="base64", content_type="application/octet-stream"
+            ),
+        ]
+
+        resp = Response(self.request, results)
+        result = resp.publish()
+
+        assert not result

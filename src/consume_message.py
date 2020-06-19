@@ -5,12 +5,14 @@ import json
 import anndata
 from config import get_config
 import datetime
+import dateutil
+import pytz
 
 config = get_config()
 
 
 def _read_sqs_message():
-    sqs = boto3.resource("sqs")
+    sqs = boto3.resource("sqs", region_name=config.AWS_REGION)
 
     """
     It is possible that the queue was not created by the time
@@ -50,7 +52,9 @@ def _read_sqs_message():
 
 
 def _get_matrix_path(experiment_id):
-    dynamo = boto3.resource("dynamodb").Table(config.get_dynamo_table())
+    dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
+        config.get_dynamo_table()
+    )
 
     # todo: the projectionexpression stopped working for some reason, fix it!
     resp = dynamo.get_item(
@@ -88,6 +92,21 @@ def consume(adata):
     mssg_body = _read_sqs_message()
 
     if not mssg_body:
+        return adata, None
+
+    timeout = mssg_body["timeout"]
+    timeout = dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
+
+    if timeout <= datetime.datetime.now():
+        print(
+            datetime.datetime.now(),
+            "Skipping sending task with uuid",
+            mssg_body["uuid"],
+            "as its timeout of",
+            timeout,
+            "has expired...",
+        )
+
         return adata, None
 
     if not adata:
