@@ -88,6 +88,9 @@ class DifferentialExpression:
         result["gene_names"] = result["gene"]
         del result["gene"]
 
+        # remove all NaNs
+        result = result.dropna()
+
         # get top x most significant results, if parameter was supplied
         if n_genes:
             result = result.nsmallest(n_genes, ["qval"])
