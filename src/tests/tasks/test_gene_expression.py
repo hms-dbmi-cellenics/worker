@@ -21,6 +21,7 @@ class TestGeneExpression:
     def load_correct_definition(self):
         self.correct_request = {
             "experimentId": "5e959f9c9f4b120771249001",
+            "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "GeneExpression",
                 "cellSets": ["cluster1"],

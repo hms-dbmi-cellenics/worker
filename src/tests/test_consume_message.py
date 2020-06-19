@@ -2,7 +2,7 @@ import boto3
 from botocore.stub import Stubber, ANY
 import mock
 from config import get_config
-from consume_message import _read_sqs_message, _get_matrix_path, _load_file
+from consume_message import _read_sqs_message, _get_matrix_path, _load_file, consume
 from moto import mock_s3
 
 config = get_config()
@@ -183,5 +183,17 @@ class TestConsumeMessage:
 
             assert "AnnData" in type(a).__name__
 
-    def test_load_file_loads_from_local_route_in_development(self, mocker):
-        pass
+    def test_request_with_expired_timeout_is_discarded(self):
+        request = {
+            "experimentId": "random-experiment-id",
+            "timeout": "2000-01-01 00:00:00",
+            "uuid": "random-uuid",
+        }
+
+        with open("tests/test.h5ad", "rb") as f, mock.patch(
+            "consume_message._read_sqs_message"
+        ) as m:
+            m.return_value = request
+            result = consume(f)
+
+            assert result == (f, None)

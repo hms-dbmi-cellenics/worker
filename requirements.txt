@@ -12,3 +12,4 @@ pytest-cov
 moto
 pytest-mock
 diffxpy
+python-dateutil
