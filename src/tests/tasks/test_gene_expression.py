@@ -196,3 +196,19 @@ class TestGeneExpression:
 
         for data in res["data"]:
             assert len(data["expression"]) == 2
+
+    def test_object_returns_correct_min_max_expression_data(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
+        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = res[0].result
+        res = json.loads(res)
+
+        expected_min = min([min(x["expression"]) for x in res["data"]])
+        expected_max = max([max(x["expression"]) for x in res["data"]])
+
+        assert res["minExpression"] == expected_min
+        assert res["maxExpression"] == expected_max
+        for data in res["data"]:
+            assert len(data["expression"]) == 2

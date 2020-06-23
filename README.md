@@ -45,7 +45,7 @@ To submit a GetEmbedding task, you can paste this in the SQS:
         }
     }
 
-To submit a ListGenes task, you can paste this in the SQS:
+To submit a ListGenes task, you can paste this in SQS:
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
         "socketId": "Y1poEygzBfrDmIWpAAAA",
@@ -59,6 +59,20 @@ To submit a ListGenes task, you can paste this in the SQS:
             "orderDirection": "desc",
             "offset": 0,
             "limit": 20
+        }
+    }
+
+To submit a GeneExpression task, you can paste this in SQS:
+
+    {
+        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
+        "socketId": "Y1poEygzBfrDmIWpAAAA",
+        "experimentId": "5e959f9c9f4b120771249001",
+        "timeout": "2099-12-31 00:00:00",
+        "body": {
+            "name": "GeneExpression",
+            "cellSets": ["louvain-1"],
+            "genes": ["TGFB1", "CST3"]
         }
     }
 
