@@ -1,6 +1,7 @@
 import json
 import scanpy
 import boto3
+import numpy as np
 from config import get_config
 from result import Result
 
@@ -73,11 +74,25 @@ class GeneExpression:
             scanpy.pp.scale(raw_adata, max_value=10)
 
         # compute result
-        result = {"cells": raw_adata.obs.index.tolist(), "data": []}
+        raw_adata = raw_adata.copy()
+        raw_adata.X = raw_adata.X.toarray()
 
+        min_expression = 0
+        max_expression = 0
+
+        if len(raw_adata.X) > 0:
+            min_expression = float(np.amin(raw_adata.X))
+            max_expression = float(np.amax(raw_adata.X))
+
+        result = {
+            "cells": raw_adata.obs.index.tolist(),
+            "data": [],
+            "minExpression": min_expression,
+            "maxExpression": max_expression,
+        }
         for gene in genes:
             view = raw_adata[:, raw_adata.var.index == gene]
-            expression = view.X.toarray().flatten().tolist()
+            expression = view.X.flatten().tolist()
 
             result["data"].append({"geneName": gene, "expression": expression})
 
