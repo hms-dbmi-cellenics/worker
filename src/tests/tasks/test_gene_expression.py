@@ -94,7 +94,16 @@ class TestGeneExpression:
 
                     no_called += 1
 
-                    return {"Item": {"cellSets": []}}
+                    return {
+                        "Item": {
+                            "cellSets": [
+                                {
+                                    "key": "cluster1",
+                                    "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
+                                }
+                            ]
+                        }
+                    }
 
             class MockDynamoClass:
                 def Table(*args, **kwargs):
