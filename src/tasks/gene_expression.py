@@ -2,6 +2,7 @@ import json
 import scanpy
 import boto3
 import numpy as np
+import pandas as pd
 from config import get_config
 from result import Result
 
@@ -27,12 +28,14 @@ class GeneExpression:
         )
         resp = resp["Item"]["cellSets"]
 
-        cells = set()
+        cells = {}
 
         for cell_set in cell_sets:
             cells_found = find_cells_by_set_id(cell_set, resp)
-            cells.update(cells_found)
 
+            if cells_found:
+                for cell in cells_found:
+                    cells[cell] = cell_set
         return cells
 
     def _format_result(self, result):
@@ -53,20 +56,29 @@ class GeneExpression:
         scale = self.task_def.get("scale", False)
 
         raw_adata = self.adata.raw.to_adata()
+        raw_adata = raw_adata.copy()
+        raw_adata.X = raw_adata.X.toarray()
+
+        cell_list = []
 
         # try to find all cells in the list
         if cell_sets == "all":
             raw_adata.obs["cells_to_compute"] = True
+            cell_list = raw_adata.obs.index.tolist()
         else:
             cells = self._aggregate_cells_from_cell_sets(cell_sets)
-            raw_adata.obs["cells_to_compute"] = raw_adata.obs.index.isin(cells)
+            obs_copy = raw_adata.obs.copy()
+            obs_copy["cells_to_compute"] = obs_copy.index.map(cells)
+            obs_copy["cell_ids"] = obs_copy.index
+            obs_copy.sort_values(by=["cells_to_compute", "cell_ids"], inplace=True)
+            obs_copy = obs_copy.dropna()
+            cell_list = obs_copy.index.tolist()
 
         # try to find all genes in the list
         raw_adata.var["genes_to_compute"] = raw_adata.var.index.isin(genes)
 
-        # filter matrix
         raw_adata = raw_adata[
-            raw_adata.obs["cells_to_compute"], raw_adata.var["genes_to_compute"]
+            cell_list, raw_adata.var["genes_to_compute"],
         ]
 
         # if feature scaling is desired, perform that now
@@ -74,9 +86,6 @@ class GeneExpression:
             scanpy.pp.scale(raw_adata, max_value=10)
 
         # compute result
-        raw_adata = raw_adata.copy()
-        raw_adata.X = raw_adata.X.toarray()
-
         min_expression = 0
         max_expression = 0
 
