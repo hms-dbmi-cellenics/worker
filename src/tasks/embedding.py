@@ -23,14 +23,14 @@ class ComputeEmbedding:
         embeddings = self.adata.obsm["X_pca"]
 
         # Get first two PCs only.
-        embeddings = embeddings[:, :2]
+        raw = embeddings[:, :2]
 
-        result = {}
+        processed = {}
 
-        for index, data in zip(self.adata.obs.index, embeddings):
-            result[index] = data.tolist()
+        for index, data in zip(self.adata.obs.index, raw):
+            processed[index] = data.tolist()
 
-        return result
+        return processed, raw
 
     def _UMAP(self):
         # Remove pre-existing embeddings
@@ -44,25 +44,26 @@ class ComputeEmbedding:
         scanpy.tl.umap(self.adata)
 
         print(datetime.datetime.now(), self.adata)
-        embeddings = self.adata.obsm["X_umap"]
+        raw = self.adata.obsm["X_umap"]
 
-        result = {}
+        processed = {}
 
-        for index, data in zip(self.adata.obs.index, embeddings):
-            result[index] = data.tolist()
+        for index, data in zip(self.adata.obs.index, raw):
+            processed[index] = data.tolist()
 
-        return result
+        return processed, raw
 
-    def _format_result(self, result):
+    def _format_result(self, processed, raw):
         # JSONify result.
-        result = json.dumps(result)
+        processed_result = json.dumps(processed)
+        raw_result = json.dumps(raw.tolist())
 
         # Return a list of formatted results.
-        return [Result(result)]
+        return [Result(processed_result), Result(raw_result)]
 
     def compute(self):
         MAP = {"pca": self._PCA, "umap": self._UMAP}
 
         embedding_type = self.task_def["type"]
-        result = MAP[embedding_type]()
-        return self._format_result(result)
+        processed, raw = MAP[embedding_type]()
+        return self._format_result(processed, raw)
