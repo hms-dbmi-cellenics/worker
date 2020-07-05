@@ -39,20 +39,11 @@ class TestGeneExpression:
         ser = TypeSerializer()
 
         response = [
-            {
-                "name": "my amazing cluster",
-                "key": "cluster1",
-                "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
-            },
+            {"name": "my amazing cluster", "key": "cluster1", "cellIds": [0, 1]},
             {
                 "name": "my other amazing cluster",
                 "key": "cluster2",
-                "cellIds": [
-                    "TTGGAGACCAATCG-1",
-                    "TTGGGAACTGAACC-1",
-                    "TTGGTACTCTTAGG-1",
-                    "AAAGCAGATATCGG-1",
-                ],
+                "cellIds": [2, 3, 4, 5],
             },
         ]
 
@@ -95,14 +86,7 @@ class TestGeneExpression:
                     no_called += 1
 
                     return {
-                        "Item": {
-                            "cellSets": [
-                                {
-                                    "key": "cluster1",
-                                    "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
-                                }
-                            ]
-                        }
+                        "Item": {"cellSets": [{"key": "cluster1", "cellIds": [0, 1]}]}
                     }
 
             class MockDynamoClass:

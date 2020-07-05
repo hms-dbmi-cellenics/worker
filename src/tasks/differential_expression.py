@@ -1,7 +1,4 @@
-import pandas as pd
-import numpy as np
 import json
-import scanpy
 import boto3
 from config import get_config
 from result import Result
@@ -53,29 +50,26 @@ class DifferentialExpression:
         # use raw values for this task
         raw_adata = self.adata.raw.to_adata()
 
-        # do highly variable gene filtering
-        # TODO: this does not need to be here once pre-processing selects
-        # for this before raw data is returned
-        raw_adata = raw_adata[:, raw_adata.var.highly_variable]
-
         if cell_set_compare_with == "rest":
             # We have a simple condition. Everything in the base cluster is `first`,
             # the rest is `second`.
             raw_adata.obs["condition"] = "second"
         else:
-            # We have a bit more complicated condition. Everything in the base cluster is `first`,
+            # We have a bit more complicated condition.
+            # Everything in the base cluster is `first`,
             # in the second cluster `second`, the rest is `rest`.
             de_compare_with = find_cells_by_set_id(cell_set_compare_with, resp)
             raw_adata.obs["condition"] = "rest"
 
             raw_adata.obs["condition"].loc[
-                raw_adata.obs.index.isin(de_compare_with)
+                raw_adata.obs["cell_ids"].isin(de_compare_with)
             ] = "second"
 
-        raw_adata.obs["condition"].loc[raw_adata.obs.index.isin(de_base)] = "first"
+        raw_adata.obs["condition"].loc[
+            raw_adata.obs["cell_ids"].isin(de_base)
+        ] = "first"
 
-        # Do a pairwise t-test.
-
+        # Do a pairwise wilcoxon test
         result = de.test.pairwise(
             data=raw_adata,
             grouping="condition",

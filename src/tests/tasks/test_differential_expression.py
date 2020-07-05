@@ -39,20 +39,11 @@ class TestDifferentialExpression:
         ser = TypeSerializer()
 
         response = [
-            {
-                "name": "my amazing cluster",
-                "key": "cluster1",
-                "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
-            },
+            {"name": "my amazing cluster", "key": "cluster1", "cellIds": [4, 5]},
             {
                 "name": "my other amazing cluster",
                 "key": "cluster2",
-                "cellIds": [
-                    "TTGGAGACCAATCG-1",
-                    "TTGGGAACTGAACC-1",
-                    "TTGGTACTCTTAGG-1",
-                    "AAAGCAGATATCGG-1",
-                ],
+                "cellIds": [0, 1, 2, 3],
             },
         ]
 
@@ -95,23 +86,16 @@ class TestDifferentialExpression:
 
                     no_called += 1
 
-                    ser = TypeSerializer()
-
                     response = [
                         {
                             "name": "my amazing cluster",
                             "key": "cluster1",
-                            "cellIds": ["AAACCGTGCTTCCG-1", "AAAGAGACGCGAGA-1"],
+                            "cellIds": [4, 5],
                         },
                         {
                             "name": "my other amazing cluster",
                             "key": "cluster2",
-                            "cellIds": [
-                                "TTGGAGACCAATCG-1",
-                                "TTGGGAACTGAACC-1",
-                                "TTGGTACTCTTAGG-1",
-                                "AAAGCAGATATCGG-1",
-                            ],
+                            "cellIds": [0, 1, 2, 3],
                         },
                     ]
 
@@ -191,4 +175,4 @@ class TestDifferentialExpression:
         res = res[0].result
         res = json.loads(res)["rows"]
 
-        assert len(res) == len(self._adata.var.index)
+        assert len(res) <= len(self._adata.raw.var.index)

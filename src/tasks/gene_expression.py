@@ -2,7 +2,6 @@ import json
 import scanpy
 import boto3
 import numpy as np
-import pandas as pd
 from config import get_config
 from result import Result
 
@@ -14,6 +13,7 @@ config = get_config()
 class GeneExpression:
     def __init__(self, msg, adata):
         self.adata = adata
+
         self.dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
             config.get_dynamo_table()
         )
@@ -59,6 +59,7 @@ class GeneExpression:
         raw_adata = raw_adata.copy()
         raw_adata.X = raw_adata.X.toarray()
 
+        # list of cell barcodes to process
         cell_list = []
 
         # try to find all cells in the list
@@ -67,9 +68,11 @@ class GeneExpression:
             cell_list = raw_adata.obs.index.tolist()
         else:
             cells = self._aggregate_cells_from_cell_sets(cell_sets)
+
             obs_copy = raw_adata.obs.copy()
-            obs_copy["cells_to_compute"] = obs_copy.index.map(cells)
-            obs_copy["cell_ids"] = obs_copy.index
+
+            obs_copy["cells_to_compute"] = obs_copy["cell_ids"].map(cells)
+
             obs_copy.sort_values(by=["cells_to_compute", "cell_ids"], inplace=True)
             obs_copy = obs_copy.dropna()
             cell_list = obs_copy.index.tolist()
@@ -94,7 +97,7 @@ class GeneExpression:
             max_expression = float(np.amax(raw_adata.X))
 
         result = {
-            "cells": raw_adata.obs.index.tolist(),
+            "cells": raw_adata.obs.cell_ids.tolist(),
             "data": [],
             "minExpression": min_expression,
             "maxExpression": max_expression,
