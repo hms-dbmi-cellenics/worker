@@ -17,7 +17,7 @@ class ComputeEmbedding:
         self.adata.varm.pop("PCs", None)
         self.adata.uns.pop("pca", None)
 
-        # Compute embedding
+        # compute embedding
         scanpy.tl.pca(self.adata)
         print(datetime.datetime.now(), self.adata)
         embeddings = self.adata.obsm["X_pca"]
@@ -26,8 +26,7 @@ class ComputeEmbedding:
         raw = embeddings[:, :2]
 
         processed = {}
-
-        for index, data in zip(self.adata.obs.index, raw):
+        for index, data in zip(self.adata.obs["cell_ids"], raw):
             processed[index] = data.tolist()
 
         return processed, raw
@@ -47,8 +46,7 @@ class ComputeEmbedding:
         raw = self.adata.obsm["X_umap"]
 
         processed = {}
-
-        for index, data in zip(self.adata.obs.index, raw):
+        for index, data in zip(self.adata.obs["cell_ids"], raw):
             processed[index] = data.tolist()
 
         return processed, raw
@@ -63,7 +61,14 @@ class ComputeEmbedding:
 
     def compute(self):
         MAP = {"pca": self._PCA, "umap": self._UMAP}
-
         embedding_type = self.task_def["type"]
+
+        # order cells by cell ids first to guarantee order
+        sorted_indices = self.adata.obs.sort_values(by=["cell_ids"]).index
+        self.adata = self.adata[sorted_indices, :]
+
+        # do the processing, get results
         processed, raw = MAP[embedding_type]()
+
+        # return results
         return self._format_result(processed, raw)

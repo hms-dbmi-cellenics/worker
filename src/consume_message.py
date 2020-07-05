@@ -85,6 +85,12 @@ def _load_file(matrix_path):
             adata = anndata.read_h5ad(f)
 
     print(datetime.datetime.now(), "File was loaded.")
+
+    if "cell_ids" not in adata.obs:
+        raise ValueError(
+            "You must have `cell_ids` in your anndata file for integer cell IDs."
+        )
+
     return adata
 
 
