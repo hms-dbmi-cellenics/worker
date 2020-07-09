@@ -1,10 +1,10 @@
 import json
-import boto3
 from config import get_config
 from result import Result
 import diffxpy.api as de
 
-from tasks.helpers.find_cells_by_set_id import find_cells_by_set_id
+from helpers.dynamo import get_item_from_dynamo
+from helpers.find_cells_by_set_id import find_cells_by_set_id
 
 config = get_config()
 
@@ -12,10 +12,6 @@ config = get_config()
 class DifferentialExpression:
     def __init__(self, msg, adata):
         self.adata = adata
-        self.dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
-            config.get_dynamo_table()
-        )
-
         self.task_def = msg["body"]
         self.experiment_id = msg["experimentId"]
 
@@ -39,10 +35,7 @@ class DifferentialExpression:
         n_genes = self.task_def.get("maxNum", None)
 
         # get cell sets from database
-        resp = self.dynamo.get_item(
-            Key={"experimentId": self.experiment_id}, ProjectionExpression="cellSets",
-        )
-        resp = resp["Item"]["cellSets"]
+        resp = get_item_from_dynamo(self.experiment_id, "cellSets")
 
         # try to find the right cells
         de_base = find_cells_by_set_id(cell_set_base, resp)

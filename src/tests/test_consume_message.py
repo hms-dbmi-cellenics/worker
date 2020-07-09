@@ -2,8 +2,7 @@ import boto3
 from botocore.stub import Stubber, ANY
 import mock
 from config import get_config
-from consume_message import _read_sqs_message, _get_matrix_path, _load_file, consume
-from moto import mock_s3
+from consume_message import _read_sqs_message, consume
 
 config = get_config()
 
@@ -44,8 +43,7 @@ class TestConsumeMessage:
 
         with mock.patch("boto3.resource") as m:
             m.return_value = sqs
-            r = _read_sqs_message()
-
+            r = consume()
             assert not r
 
     def test_read_sqs_message_returns_falsy_on_no_incoming_message(self):
@@ -108,81 +106,6 @@ class TestConsumeMessage:
 
             assert r == {"a": "b"}
 
-    def test_get_matrix_path_attempts_connection_to_appropriate_table(self):
-        dynamodb = boto3.resource("dynamodb")
-        stubber = Stubber(dynamodb.meta.client)
-        stubber.add_response(
-            "get_item",
-            {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
-            {
-                "TableName": config.get_dynamo_table(),
-                "Key": ANY,
-                "ProjectionExpression": ANY,
-            },
-        )
-        stubber.activate()
-
-        with mock.patch("boto3.resource") as m:
-            m.return_value = dynamodb
-            _get_matrix_path("my-very-serious-experiment")
-
-    def test_get_matrix_path_gets_correct_experiment_id_from_db(self):
-        test_experiment_id = "my-very-serious-experiment"
-        dynamodb = boto3.resource("dynamodb")
-        stubber = Stubber(dynamodb.meta.client)
-        stubber.add_response(
-            "get_item",
-            {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
-            {
-                "TableName": config.get_dynamo_table(),
-                "Key": {"experimentId": test_experiment_id},
-                "ProjectionExpression": ANY,
-            },
-        )
-        stubber.activate()
-
-        with mock.patch("boto3.resource") as m:
-            m.return_value = dynamodb
-            _get_matrix_path(test_experiment_id)
-
-    def test_get_matrix_path_gets_correct_field_from_db(self):
-        test_experiment_id = "my-very-serious-experiment"
-        dynamodb = boto3.resource("dynamodb")
-        stubber = Stubber(dynamodb.meta.client)
-        stubber.add_response(
-            "get_item",
-            {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
-            {
-                "TableName": config.get_dynamo_table(),
-                "Key": ANY,
-                "ProjectionExpression": "matrixPath",
-            },
-        )
-        stubber.activate()
-
-        with mock.patch("boto3.resource") as m:
-            m.return_value = dynamodb
-            _get_matrix_path(test_experiment_id)
-
-    @mock_s3
-    def test_load_file_returns_correct_adata_object_when_path_and_key_exist_in_non_development(
-        self,
-    ):
-        s3 = boto3.client("s3")
-        bucket = "my_custom_bucket_path"
-        key = "very/long/and/convoluted/path"
-        s3.create_bucket(Bucket=bucket)
-
-        with open("tests/test.h5ad", "rb") as f, mock.patch("config.get_config") as m:
-            mock_config = config
-            mock_config.ENVIRONMENT = "staging"
-            m.return_value = mock_config
-
-            s3.upload_fileobj(f, bucket, key)
-            a = _load_file(f"{bucket}/{key}")
-
-            assert "AnnData" in type(a).__name__
-
     def test_request_with_expired_timeout_is_discarded(self):
         request = {
             "experimentId": "random-experiment-id",
@@ -190,10 +113,25 @@ class TestConsumeMessage:
             "uuid": "random-uuid",
         }
 
-        with open("tests/test.h5ad", "rb") as f, mock.patch(
-            "consume_message._read_sqs_message"
-        ) as m:
+        with mock.patch("consume_message._read_sqs_message") as m:
             m.return_value = request
-            result = consume(f)
+            result = consume()
 
-            assert result == (f, None)
+            assert result == (None)
+
+    def test_consume_request_with_non_expired_timeout_successfully(self):
+        request = {
+            "experimentId": "random-experiment-id",
+            "timeout": "2900-01-01 00:00:00",
+            "uuid": "random-uuid",
+        }
+
+        with mock.patch("consume_message._read_sqs_message") as m:
+            m.return_value = request
+            result = consume()
+
+            assert result == {
+                "experimentId": "random-experiment-id",
+                "timeout": "2900-01-01 00:00:00",
+                "uuid": "random-uuid",
+            }

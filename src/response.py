@@ -86,9 +86,9 @@ class Response:
         # If we are over 80% of the limit (256 KB, 262144 bytes), upload to S3.
         # Otherwise, we can send the entire payload through the SNS topic.
         MAX_SNS_MESSAGE_LEN = 262144
-        load_to_s3 = message_length >= 0.8 * MAX_SNS_MESSAGE_LEN
+        upload_to_s3 = message_length >= 0.8 * MAX_SNS_MESSAGE_LEN
 
-        if load_to_s3:
+        if upload_to_s3:
             s3_keys = [self._upload(res) for res in self.results]
             response_msg = self._get_response_msg(s3_keys=s3_keys)
         else:

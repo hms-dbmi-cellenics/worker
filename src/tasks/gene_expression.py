@@ -1,11 +1,11 @@
 import json
 import scanpy
-import boto3
 import numpy as np
 from config import get_config
 from result import Result
 
-from tasks.helpers.find_cells_by_set_id import find_cells_by_set_id
+from helpers.find_cells_by_set_id import find_cells_by_set_id
+from helpers.dynamo import get_item_from_dynamo
 
 config = get_config()
 
@@ -13,20 +13,12 @@ config = get_config()
 class GeneExpression:
     def __init__(self, msg, adata):
         self.adata = adata
-
-        self.dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
-            config.get_dynamo_table()
-        )
-
         self.task_def = msg["body"]
         self.experiment_id = msg["experimentId"]
 
     def _aggregate_cells_from_cell_sets(self, cell_sets):
         # get cell sets from database
-        resp = self.dynamo.get_item(
-            Key={"experimentId": self.experiment_id}, ProjectionExpression="cellSets",
-        )
-        resp = resp["Item"]["cellSets"]
+        resp = get_item_from_dynamo(self.experiment_id, "cellSets")
 
         cells = {}
 

@@ -12,7 +12,7 @@ def main():
     print(datetime.datetime.now(), "Now listening, waiting for work to do...")
 
     while (datetime.datetime.now() - last_activity).total_seconds() <= config.TIMEOUT:
-        adata, msg = consume(adata)
+        msg = consume()
         if msg:
             results = TaskFactory().submit(msg, adata)
 

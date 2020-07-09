@@ -1,8 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
-import io
 import json
-import anndata
 from config import get_config
 import datetime
 import dateutil
@@ -51,54 +49,11 @@ def _read_sqs_message():
     return body
 
 
-def _get_matrix_path(experiment_id):
-    dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
-        config.get_dynamo_table()
-    )
-
-    # todo: the projectionexpression stopped working for some reason, fix it!
-    resp = dynamo.get_item(
-        Key={"experimentId": experiment_id}, ProjectionExpression="matrixPath",
-    )
-    matrix_path = resp["Item"]["matrixPath"]
-    print("successfully got the matrix path from database.")
-    return matrix_path
-
-
-def _load_file(matrix_path):
-    print(config.ENVIRONMENT)
-    if config.ENVIRONMENT != "development":
-        print(datetime.datetime.now(), "Have to download anndata file from s3")
-        bucket, key = matrix_path.split("/", 1)
-        try:
-            client = boto3.client("s3")
-            result = io.BytesIO()
-            client.download_fileobj(Bucket=bucket, Key=key, Fileobj=result)
-            result.seek(0)
-
-            adata = anndata.read_h5ad(result)
-        except Exception as e:
-            print(datetime.datetime.now(), "Could not get file from S3", e)
-            raise e
-    else:
-        with open("./tests/test.h5ad", "rb") as f:
-            adata = anndata.read_h5ad(f)
-
-    print(datetime.datetime.now(), "File was loaded.")
-
-    if "cell_ids" not in adata.obs:
-        raise ValueError(
-            "You must have `cell_ids` in your anndata file for integer cell IDs."
-        )
-
-    return adata
-
-
-def consume(adata):
+def consume():
     mssg_body = _read_sqs_message()
 
     if not mssg_body:
-        return adata, None
+        return None
 
     timeout = mssg_body["timeout"]
     timeout = dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
@@ -113,14 +68,7 @@ def consume(adata):
             "has expired...",
         )
 
-        return adata, None
-
-    if not adata:
-        print(
-            datetime.datetime.now(), "adata does not exist, I need to download it ..."
-        )
-        matrix_path = _get_matrix_path(mssg_body["experimentId"])
-        adata = _load_file(matrix_path)
+        return None
 
     print(datetime.datetime.now(), mssg_body)
-    return adata, mssg_body
+    return mssg_body
