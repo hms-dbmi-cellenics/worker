@@ -76,11 +76,26 @@ To submit a GeneExpression task, you can paste this in SQS:
         }
     }
 
+To submit a "transform to anndata" task, you can paste this in SQS:
+
+    {
+        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
+        "socketId": "Y1poEygzBfrDmIWpAAAA",
+        "experimentId": "1234",
+        "timeout": "2099-12-31 00:00:00",
+        "body": {
+            "name": "PrepareExperiment",
+            "sourceBucket": "biomage-source-originals",
+            "sourceMatrixPath": "pbmc_count_matrices/hg19/"
+        }
+    }
+
+
 it will be picked by the worker, the task will be computed and the results sent back via SNS.
 
 Where `count_matrix` is the S3 bucket and key of the anndata file you want processed.
 
 ### 3. Run the code
-After you have submitted a task, run:
+After you have submitted a task, go to the src/ and run:
 
-    python src/worker.py
+    python worker.py

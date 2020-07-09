@@ -4,6 +4,9 @@ import os
 from tasks.tasks import TaskFactory
 from result import Result
 
+from helpers import load_count_matrix
+from mock import Mock
+
 
 class TestTaskFactory:
     @pytest.fixture(autouse=True)
@@ -47,3 +50,35 @@ class TestTaskFactory:
             {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
         )
         assert all(isinstance(result, Result) for result in results)
+
+    def loads_adata_if_not_loaded(self):
+        load_count_matrix.get_adata = Mock(return_value=self._adata)
+
+        r = TaskFactory._factory(
+            {"body": {"name": "GetEmbedding"}, "experimentId": "1234"}, None
+        )
+        load_count_matrix.get_adata.assert_called_once_with(None, "1234")
+
+    def test_dont_load_adata_if_loaded(self):
+        load_count_matrix.get_adata = Mock()
+
+        r = TaskFactory._factory(
+            {"body": {"name": "GetEmbedding"}, "experimentId": "1234"}, self._adata
+        )
+        assert not load_count_matrix.get_adata.called
+
+    def test_dont_load_adata_if_not_needed(self):
+        load_count_matrix.get_adata = Mock()
+
+        r = TaskFactory._factory(
+            {
+                "body": {
+                    "name": "PrepareExperiment",
+                    "sourceMatrixPath": "my/path",
+                    "sourceBucket": "my-bucket",
+                },
+                "experimentId": "1234",
+            },
+            None,
+        )
+        assert not load_count_matrix.get_adata.called
