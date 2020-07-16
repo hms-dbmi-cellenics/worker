@@ -3,11 +3,7 @@ import anndata
 import os
 from tasks.gene_expression_new import GeneExpressionNew
 import json
-from botocore.stub import Stubber
-import mock
-import boto3
 from config import get_config
-from boto3.dynamodb.types import TypeSerializer
 
 config = get_config()
 
@@ -73,3 +69,13 @@ class TestGeneExpressionNew:
 
             assert minimum == min(v["expression"])
             assert maximum == max(v["expression"])
+
+    def test_task_handles_nonexistent_genes(self):
+
+        self.correct_request["body"]["genes"] = ["TGFB1", "non-existent-gene"]
+
+        res = GeneExpressionNew(self.correct_request, self._adata).compute()
+        res = res[0].result
+        res = json.loads(res)
+
+        assert len(res) == 1
