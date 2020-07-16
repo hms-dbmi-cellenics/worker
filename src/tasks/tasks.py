@@ -11,9 +11,11 @@ from helpers import load_count_matrix
 class TaskFactory:
     def submit(self, msg, adata):
         try:
+            if not adata and msg["body"]["name"] != "PrepareExperiment":
+                adata = load_count_matrix.get_adata(adata, msg["experimentId"])
             my_class = self._factory(msg, adata)
             result = my_class.compute()
-            return result
+            return result, adata
         except Exception as e:
             # do return this though to the api
             raise e
@@ -22,9 +24,6 @@ class TaskFactory:
     def _factory(msg, adata):
         task_def = msg["body"]
         task_name = task_def["name"]
-
-        if not adata and task_name != "PrepareExperiment":
-            adata = load_count_matrix.get_adata(adata, msg["experimentId"])
 
         if task_name == "GetEmbedding":
             my_class = ComputeEmbedding(msg, adata)
