@@ -14,8 +14,9 @@ def main():
     while (datetime.datetime.now() - last_activity).total_seconds() <= config.TIMEOUT:
         msg = consume()
         if msg:
-            results = TaskFactory().submit(msg, adata)
-
+            results, adata = TaskFactory().submit(msg, adata)
+            if not adata:
+                raise Exception("Adata file did not get loaded properly")
             response = Response(request=msg, results=results)
             response.publish()
 

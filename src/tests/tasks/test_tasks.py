@@ -40,21 +40,22 @@ class TestTaskFactory:
         assert isinstance(r, object)
 
     def test_returns_result_list_with_properly_defined_task(self):
-        results = TaskFactory().submit(
+        results, adata = TaskFactory().submit(
             {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
         )
         assert isinstance(results, list)
 
     def test_each_element_in_result_list_is_a_result_object(self):
-        results = TaskFactory().submit(
+        results, adata = TaskFactory().submit(
             {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
         )
+
         assert all(isinstance(result, Result) for result in results)
 
     def loads_adata_if_not_loaded(self):
         load_count_matrix.get_adata = Mock(return_value=self._adata)
 
-        r = TaskFactory._factory(
+        TaskFactory._factory(
             {"body": {"name": "GetEmbedding"}, "experimentId": "1234"}, None
         )
         load_count_matrix.get_adata.assert_called_once_with(None, "1234")
@@ -62,7 +63,7 @@ class TestTaskFactory:
     def test_dont_load_adata_if_loaded(self):
         load_count_matrix.get_adata = Mock()
 
-        r = TaskFactory._factory(
+        TaskFactory._factory(
             {"body": {"name": "GetEmbedding"}, "experimentId": "1234"}, self._adata
         )
         assert not load_count_matrix.get_adata.called
@@ -70,7 +71,7 @@ class TestTaskFactory:
     def test_dont_load_adata_if_not_needed(self):
         load_count_matrix.get_adata = Mock()
 
-        r = TaskFactory._factory(
+        TaskFactory._factory(
             {
                 "body": {
                     "name": "PrepareExperiment",

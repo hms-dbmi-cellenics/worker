@@ -71,7 +71,7 @@ To submit a GeneExpression task, you can paste this in SQS:
         "timeout": "2099-12-31 00:00:00",
         "body": {
             "name": "GeneExpression",
-            "cellSets": ["louvain-1"],
+            "cellSets": ["louvain-0", "louvain-1", "louvain-2", "louvain-3", "louvain-4", "louvain-5", "louvain-6"],
             "genes": ["TGFB1", "CST3"]
         }
     }
