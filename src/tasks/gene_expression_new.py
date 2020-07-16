@@ -52,7 +52,7 @@ class GeneExpressionNew:
 
         result = {}
 
-        for gene in genes:
+        for gene in raw_adata.var.index:
             view = raw_adata[:, raw_adata.var.index == gene]
 
             expression = view.X.flatten().tolist()
