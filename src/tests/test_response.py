@@ -242,7 +242,7 @@ class TestResponse:
         assert "s3-path" in result
 
     @mock.patch("boto3.client")
-    def test_old_requests_do_not_get_sent(self, mocked_client, mocker):
+    def test_old_requests_do_get_sent(self, mocked_client, mocker):
         stubbed_client = botocore.session.get_session().create_client("s3")
         stubber = Stubber(stubbed_client)
         stubber.activate()
@@ -259,4 +259,4 @@ class TestResponse:
         resp = Response(self.request, results)
         result = resp.publish()
 
-        assert not result
+        assert result

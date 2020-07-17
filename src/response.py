@@ -59,25 +59,6 @@ class Response:
         return msg_to_send
 
     def publish(self):
-        # Check if the timeout has elapsed.
-        timeout = self.request["timeout"]
-        timeout = (
-            dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
-        )
-
-        # Do not publish results whose timeout has expired.
-        if timeout <= datetime.datetime.now():
-            print(
-                datetime.datetime.now(),
-                "Skipping sending task with uuid",
-                self.request["uuid"],
-                "as its timeout of",
-                timeout,
-                "has expired...",
-            )
-
-            return
-
         # Get total length of all result objects:
         message_length = reduce(
             lambda acc, curr: acc + curr.get_result_length(), self.results, 0,

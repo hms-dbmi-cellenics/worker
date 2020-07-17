@@ -99,3 +99,8 @@ Where `count_matrix` is the S3 bucket and key of the anndata file you want proce
 After you have submitted a task, go to the src/ and run:
 
     python worker.py
+
+## Run tests
+Go to the src/ and run:
+
+    python3 -m pytest --cov=.
