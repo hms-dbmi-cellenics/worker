@@ -1,11 +1,7 @@
 import json
-import scanpy
 import numpy as np
 from config import get_config
 from result import Result
-
-from helpers.find_cells_by_set_id import find_cells_by_set_id
-from helpers.dynamo import get_item_from_dynamo
 
 config = get_config()
 
@@ -16,20 +12,6 @@ class GeneExpression:
         self.task_def = msg["body"]
         self.experiment_id = msg["experimentId"]
 
-    def _aggregate_cells_from_cell_sets(self, cell_sets):
-        # get cell sets from database
-        resp = get_item_from_dynamo(self.experiment_id, "cellSets")
-
-        cells = {}
-
-        for cell_set in cell_sets:
-            cells_found = find_cells_by_set_id(cell_set, resp)
-
-            if cells_found:
-                for cell in cells_found:
-                    cells[cell] = cell_set
-        return cells
-
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)
@@ -38,66 +20,49 @@ class GeneExpression:
         return [Result(result)]
 
     def compute(self):
-        # the cell sets to get expression data from
-        cell_sets = self.task_def.get("cellSets", [])
-
         # the genes to get expression data for
         genes = self.task_def["genes"]
 
         # whether to perform feature scaling (defaults to False)
         scale = self.task_def.get("scale", False)
 
+        # compute data on raw matrix
         raw_adata = self.adata.raw.to_adata()
         raw_adata = raw_adata.copy()
         raw_adata.X = raw_adata.X.toarray()
 
-        # list of cell barcodes to process
-        cell_list = []
-
-        # try to find all cells in the list
-        if cell_sets == "all":
-            raw_adata.obs["cells_to_compute"] = True
-            cell_list = raw_adata.obs.index.tolist()
-        else:
-            cells = self._aggregate_cells_from_cell_sets(cell_sets)
-
-            obs_copy = raw_adata.obs.copy()
-
-            obs_copy["cells_to_compute"] = obs_copy["cell_ids"].map(cells)
-
-            obs_copy.sort_values(by=["cells_to_compute", "cell_ids"], inplace=True)
-            obs_copy = obs_copy.dropna()
-            cell_list = obs_copy.index.tolist()
+        # create a proper ordering of cells by increasing IDs
+        obs_copy = raw_adata.obs.copy()
+        obs_copy.sort_values(by=["cell_ids"], inplace=True)
+        obs_copy = obs_copy.dropna()
+        cell_list = obs_copy.index.tolist()
 
         # try to find all genes in the list
         raw_adata.var["genes_to_compute"] = raw_adata.var.index.isin(genes)
 
+        # this orders and filters the matrix correctly for both cells and genes
         raw_adata = raw_adata[
             cell_list, raw_adata.var["genes_to_compute"],
         ]
 
         # if feature scaling is desired, perform that now
+        # we do not do this now.
         if scale:
-            scanpy.pp.scale(raw_adata, max_value=10)
+            pass
 
-        # compute result
-        min_expression = 0
-        max_expression = 0
+        result = {}
 
-        if len(raw_adata.X) > 0:
-            min_expression = float(np.amin(raw_adata.X))
-            max_expression = float(np.amax(raw_adata.X))
-
-        result = {
-            "cells": raw_adata.obs.cell_ids.tolist(),
-            "data": [],
-            "minExpression": min_expression,
-            "maxExpression": max_expression,
-        }
-        for gene in genes:
+        for gene in raw_adata.var.index:
             view = raw_adata[:, raw_adata.var.index == gene]
-            expression = view.X.flatten().tolist()
 
-            result["data"].append({"geneName": gene, "expression": expression})
+            expression = view.X.flatten().tolist()
+            minimum = float(np.amin(view.X))
+            maximum = float(np.amax(view.X))
+
+            result[gene] = {
+                "min": minimum,
+                "max": maximum,
+                "expression": expression,
+            }
 
         return self._format_result(result)
