@@ -66,7 +66,7 @@ class DifferentialExpression:
         result = de.test.pairwise(
             data=raw_adata,
             grouping="condition",
-            test="rank",
+            test="t-test",
             lazy=False,
             noise_model=None,
         )
