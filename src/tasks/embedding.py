@@ -25,11 +25,7 @@ class ComputeEmbedding:
         # Get first two PCs only.
         raw = embeddings[:, :2]
 
-        processed = {}
-        for index, data in zip(self.adata.obs["cell_ids"], raw):
-            processed[index] = data.tolist()
-
-        return processed, raw
+        return raw
 
     def _UMAP(self):
         # Remove pre-existing embeddings
@@ -45,19 +41,14 @@ class ComputeEmbedding:
         print(datetime.datetime.now(), self.adata)
         raw = self.adata.obsm["X_umap"]
 
-        processed = {}
-        for index, data in zip(self.adata.obs["cell_ids"], raw):
-            processed[index] = data.tolist()
+        return raw
 
-        return processed, raw
-
-    def _format_result(self, processed, raw):
+    def _format_result(self, raw):
         # JSONify result.
-        processed_result = json.dumps(processed)
         raw_result = json.dumps(raw.tolist())
 
         # Return a list of formatted results.
-        return [Result(processed_result), Result(raw_result)]
+        return [Result(raw_result), Result(raw_result)]
 
     def compute(self):
         MAP = {"pca": self._PCA, "umap": self._UMAP}
@@ -68,7 +59,5 @@ class ComputeEmbedding:
         self.adata = self.adata[sorted_indices, :]
 
         # do the processing, get results
-        processed, raw = MAP[embedding_type]()
-
-        # return results
-        return self._format_result(processed, raw)
+        raw = MAP[embedding_type]()
+        return self._format_result(raw)
