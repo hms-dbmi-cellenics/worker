@@ -47,11 +47,11 @@ class ListGenes:
         # Set up SQL query and PandaSQL for efficient querying.
         query = """
             SELECT {}, count(*) OVER() AS full_count
-              FROM genes
-              {}
-          ORDER BY {} {}
-             LIMIT {}
-             OFFSET {}
+            FROM genes
+            {}
+            ORDER BY {} {}
+            LIMIT {}
+            OFFSET {}
         """
         execute_query = lambda q: sqldf(q, {"genes": genes})
 
@@ -77,5 +77,8 @@ class ListGenes:
 
         # Filter out aggregate
         result = result[select_fields]
+
+        # replace NaNs with 0s
+        result = result.fillna(0)
 
         return self._format_result(result, total=total)
