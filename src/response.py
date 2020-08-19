@@ -15,7 +15,7 @@ class Response:
         self.request = request
         self.results = results
 
-        self.s3_bucket = config.get_results_bucket()
+        self.s3_bucket = config.RESULTS_BUCKET
 
     def _get_response_msg(self, s3_keys=None):
         if s3_keys:
@@ -34,7 +34,7 @@ class Response:
         return {"request": self.request, "results": list(result_objs)}
 
     def _upload(self, result):
-        client = boto3.client("s3")
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
         body = result.get_result_object()["body"]
 
@@ -42,19 +42,19 @@ class Response:
         return key
 
     def _send_notification(self, mssg):
-        sns = boto3.client("sns")
+        sns = boto3.client("sns", **config.BOTO_RESOURCE_KWARGS)
 
         msg_to_send = json.dumps({"default": json.dumps(mssg)})
 
         r = sns.publish(
             TargetArn="arn:aws:sns:{}:{}:{}".format(
-                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.get_sns_topic()
+                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
             ),
             Message=msg_to_send,
             MessageStructure="json",
         )
 
-        print(datetime.datetime.now(), "Message successfully sent to sns", r)
+        print(datetime.datetime.utcnow(), "Message successfully sent to sns", r)
 
         return msg_to_send
 

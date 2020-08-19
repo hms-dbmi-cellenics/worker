@@ -59,7 +59,7 @@ class TestPrepareExperiment:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": {"experimentId": self.correct_request_skeleton["experimentId"]},
                 "ProjectionExpression": "matrixPath",
             },
@@ -108,7 +108,7 @@ class TestPrepareExperiment:
             "get_item",
             {},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": {"experimentId": self.correct_request_skeleton["experimentId"]},
                 "ProjectionExpression": "matrixPath",
             },

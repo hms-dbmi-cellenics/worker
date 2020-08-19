@@ -17,7 +17,7 @@ class TestDynamo:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": ANY,
                 "ProjectionExpression": ANY,
             },
@@ -37,7 +37,7 @@ class TestDynamo:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": {"experimentId": test_experiment_id},
                 "ProjectionExpression": ANY,
             },
@@ -57,7 +57,7 @@ class TestDynamo:
             "get_item",
             {"Item": {"matrixPath": {"S": "very/genuine/path"}}},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": ANY,
                 "ProjectionExpression": "matrixPath",
             },
@@ -77,7 +77,7 @@ class TestDynamo:
             "get_item",
             {"Item": {}},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": ANY,
                 "ProjectionExpression": "matrixPath",
             },
@@ -97,7 +97,7 @@ class TestDynamo:
             "get_item",
             {},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": ANY,
                 "ProjectionExpression": "matrixPath",
             },

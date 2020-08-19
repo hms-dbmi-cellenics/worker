@@ -19,7 +19,7 @@ class ComputeEmbedding:
 
         # compute embedding
         scanpy.tl.pca(self.adata)
-        print(datetime.datetime.now(), self.adata)
+        print(datetime.datetime.utcnow(), self.adata)
         embeddings = self.adata.obsm["X_pca"]
 
         # Get first two PCs only.
@@ -38,7 +38,7 @@ class ComputeEmbedding:
         scanpy.pp.neighbors(self.adata, n_neighbors=10, n_pcs=40)
         scanpy.tl.umap(self.adata)
 
-        print(datetime.datetime.now(), self.adata)
+        print(datetime.datetime.utcnow(), self.adata)
         raw = self.adata.obsm["X_umap"]
 
         return raw

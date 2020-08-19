@@ -57,7 +57,7 @@ class TestDifferentialExpression:
             "get_item",
             {"Item": {"cellSets": response}},
             {
-                "TableName": config.get_dynamo_table(),
+                "TableName": config.DYNAMO_TABLE,
                 "Key": {"experimentId": test_experiment_id},
                 "ProjectionExpression": "cellSets",
             },
