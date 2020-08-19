@@ -10,7 +10,7 @@ config = get_config()
 
 
 def _read_sqs_message():
-    sqs = boto3.resource("sqs", region_name=config.AWS_REGION)
+    sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
 
     """
     It is possible that the queue was not created by the time
@@ -37,11 +37,11 @@ def _read_sqs_message():
     # Try to parse it as JSON
     try:
         message = message[0]
-        print(datetime.datetime.now(), message.body)
+        print(datetime.datetime.utcnow(), message.body)
         body = json.loads(message.body)
-        print(datetime.datetime.now(), "Consumed a message from S3.")
+        print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
     except Exception as e:
-        print(datetime.datetime.now(), "Exception when loading json: ", e)
+        print(datetime.datetime.utcnow(), "Exception when loading json: ", e)
         return None
     finally:
         message.delete()
@@ -58,9 +58,9 @@ def consume():
     timeout = mssg_body["timeout"]
     timeout = dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
 
-    if timeout <= datetime.datetime.now():
+    if timeout <= datetime.datetime.utcnow():
         print(
-            datetime.datetime.now(),
+            datetime.datetime.utcnow(),
             "Skipping sending task with uuid",
             mssg_body["uuid"],
             "as its timeout of",
@@ -70,5 +70,5 @@ def consume():
 
         return None
 
-    print(datetime.datetime.now(), mssg_body)
+    print(datetime.datetime.utcnow(), mssg_body)
     return mssg_body

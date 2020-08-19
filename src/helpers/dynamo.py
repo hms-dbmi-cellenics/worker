@@ -6,8 +6,8 @@ config = get_config()
 
 
 def get_item_from_dynamo(experiment_id, item_name):
-    dynamo = boto3.resource("dynamodb", region_name=config.AWS_REGION).Table(
-        config.get_dynamo_table()
+    dynamo = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS).Table(
+        config.DYNAMO_TABLE
     )
 
     resp = dynamo.get_item(

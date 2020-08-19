@@ -142,3 +142,5 @@ cython_debug/
 
 *.h5ad
 !test.h5ad
+
+.DS_Store

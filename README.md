@@ -1,5 +1,3 @@
-This repository contains 
-
 # Overview
 The purpose of the worker is to carry out data analysis tasks, for example computing an embedding. Data analysis tasks get received from a SQS queue and results will get submitted to a SNS topic the API is subscribed to.
 
@@ -26,13 +24,28 @@ To run this code locally, first make sure you start a python virtual environment
 The code in the worker requires an access to AWS resources, so make sure you have aws cli installed and your machine has access to aws.
 
 ### 2. Submit a task
-The next step is to send a task to the worker. To do that, you have to submit the desired task to the SQS queue it is subscribed to. By default, the name of the SQS queue used by the worker is stored in the environment variable `WORKER_QUEUE`. If `WORKER_QUEUE` is not defined, the default queue that will be polled is called `test-queue`.
+The next step is to send a task to the worker through SQS. What you will have to do depends on where you want to get data from:
 
-To submit a task to `test-queue`
+If you want to fetch and process data from a **local instance** using InfraMock, there is nothing to do. The worker is
+already configured to fetch data through it.
 
-The "test-queue" is created specifically and only for local testing purposes. Go to the AWS console, under queues and select it (if it doesn't exist, create one using the user interface). 
+If you want to fetch and process data from **the live** `staging` or `production` clusters, you need to set
+the `CLUSTER_ENV` environment variable to be either `staging` or `production`, respectively. The name of the SQS queue used
+by the worker to subsribe to work is stored in the `WORKER_QUEUE` environment variable. You can set it to any active queue
+that you know is currently being used, but it defaults to `development-queue.fifo`. This is created specifically and only
+for local testing purposes.
 
-To submit a GetEmbedding task, you can paste this in the SQS:
+For option #2, you can go to the AWS SQS console, and select it (if it doesn't exist, create one using the user interface). 
+
+In both cases, you can use the `aws-cli` to push work as well. For example, using InfraMock, you can do something like:
+
+    aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/queue/development-queue.fifo --message-body "$(< payload.json)" --message-group-id "$(date +%s)"
+
+which will push the payload in `payload.json` to a local worker. You can do something similar if you are connected to the
+live clusters by deleting the `--endpoint-url` argument and using the appropriate remote queue URL.
+
+### Sample tasks
+`GetEmbedding`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -45,7 +58,8 @@ To submit a GetEmbedding task, you can paste this in the SQS:
         }
     }
 
-To submit a ListGenes task, you can paste this in SQS:
+`ListGenes`:
+
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
         "socketId": "Y1poEygzBfrDmIWpAAAA",
@@ -62,7 +76,7 @@ To submit a ListGenes task, you can paste this in SQS:
         }
     }
 
-To submit a GeneExpression task, you can paste this in SQS:
+`GeneExpression`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -76,7 +90,7 @@ To submit a GeneExpression task, you can paste this in SQS:
         }
     }
 
-To submit a "transform to anndata" task, you can paste this in SQS:
+`PrepareExperiment`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -90,10 +104,8 @@ To submit a "transform to anndata" task, you can paste this in SQS:
         }
     }
 
-
-it will be picked by the worker, the task will be computed and the results sent back via SNS.
-
-Where `count_matrix` is the S3 bucket and key of the anndata file you want processed.
+It will be picked by the worker, the task will be computed and the results sent back via SNS. `count_matrix` is the S3 bucket
+and key of the anndata file you want processed.
 
 ### 3. Run the code
 After you have submitted a task, go to the src/ and run:
