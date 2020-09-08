@@ -22,7 +22,7 @@ class Response:
         else:
             self.cacheable = True
             for result in self.results:
-                self.cacheable = self.cacheable and result.error
+                self.cacheable = self.cacheable and result.cacheable
 
         self.s3_bucket = config.RESULTS_BUCKET
 
