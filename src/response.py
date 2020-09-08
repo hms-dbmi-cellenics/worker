@@ -4,8 +4,6 @@ import datetime
 from functools import reduce
 from config import get_config
 import uuid
-import dateutil
-import pytz
 
 config = get_config()
 
@@ -14,6 +12,17 @@ class Response:
     def __init__(self, request, results):
         self.request = request
         self.results = results
+
+        self.error = False
+        for result in self.results:
+            self.error = self.error or result.error
+
+        if self.error:
+            self.cacheable = False
+        else:
+            self.cacheable = True
+            for result in self.results:
+                self.cacheable = self.cacheable and result.error
 
         self.s3_bucket = config.RESULTS_BUCKET
 
@@ -31,7 +40,11 @@ class Response:
                 res.get_result_object(resp_format=True) for res in self.results
             ]
 
-        return {"request": self.request, "results": list(result_objs)}
+        return {
+            "request": self.request,
+            "results": list(result_objs),
+            "response": {"cacheable": self.cacheable, "error": self.error},
+        }
 
     def _upload(self, result):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
