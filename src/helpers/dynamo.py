@@ -30,3 +30,24 @@ def get_item_from_dynamo(experiment_id, item_name):
     )
     return {}
 
+
+def add_cell_set_group(experiment_id, group):
+    dynamo = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS).Table(
+        config.DYNAMO_TABLE
+    )
+
+    result = dynamo.update_item(
+        Key={"experimentId": experiment_id},
+        UpdateExpression="SET cellSets = list_append(cellSets, :i)",
+        ExpressionAttributeValues={":i": [group]},
+        ReturnValues="UPDATED_NEW",
+    )
+
+    try:
+        if (
+            result["ResponseMetadata"]["HTTPStatusCode"] == 200
+            and "Attributes" in result
+        ):
+            return result["Attributes"]["cellSets"]
+    finally:
+        raise ValueError(result)
