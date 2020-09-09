@@ -43,11 +43,7 @@ def add_cell_set_group(experiment_id, group):
         ReturnValues="UPDATED_NEW",
     )
 
-    try:
-        if (
-            result["ResponseMetadata"]["HTTPStatusCode"] == 200
-            and "Attributes" in result
-        ):
-            return result["Attributes"]["cellSets"]
-    finally:
+    if result["ResponseMetadata"]["HTTPStatusCode"] == 200 and "Attributes" in result:
+        return result["Attributes"]["cellSets"]
+    else:
         raise ValueError(result)
