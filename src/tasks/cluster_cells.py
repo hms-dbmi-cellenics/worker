@@ -42,7 +42,7 @@ class ClusterCells:
                     "key": f"{cell_set_key}-{cluster}",
                     "name": f"Cluster {cluster}",
                     "color": self.colors.pop(),
-                    "cellIds": view.tolist(),
+                    "cellIds": [int(id) for id in view.tolist()],
                 }
             )
 
