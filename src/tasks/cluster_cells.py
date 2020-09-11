@@ -3,7 +3,6 @@ import json
 
 from result import Result
 from helpers.color_pool import COLOR_POOL
-from helpers.dynamo import add_cell_set_group
 
 
 class ClusterCells:
@@ -41,12 +40,11 @@ class ClusterCells:
                 {
                     "key": f"{cell_set_key}-{cluster}",
                     "name": f"Cluster {cluster}",
-                    "color": self.colors.pop(),
+                    "color": self.colors.pop(0),
                     "cellIds": [int(id) for id in view.tolist()],
                 }
             )
 
-        add_cell_set_group(self.experiment_id, cell_set)
         return [Result(json.dumps(cell_set), cacheable=False)]
 
     def compute(self):
