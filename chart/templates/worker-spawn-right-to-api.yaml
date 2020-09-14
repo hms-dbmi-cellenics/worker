@@ -18,6 +18,5 @@ roleRef:
   name: can-create-jobs
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: api-18445709-{{ template "trackableappname" . }}
-
+  name: deployment-runner
+  namespace: api-refs-heads-master

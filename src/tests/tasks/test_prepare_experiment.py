@@ -20,7 +20,7 @@ class TestPrepareExperiment:
             "experimentId": "12345",
             "body": {
                 "name": "PrepareExperiment",
-                "sourceBucket": "biomage-source-originals",
+                "sourceBucket": "biomage-source-staging",
                 "sourceMatrixPath": "fake/",
             },
         }
