@@ -3,19 +3,19 @@ import types
 
 
 def get_config():
-    gitlab_env = os.getenv("GITLAB_ENVIRONMENT_NAME")
+    kube_env = os.getenv("K8S_ENV")
     cluster_env = os.getenv("CLUSTER_ENV")
     queue_name = os.getenv("WORK_QUEUE")
     timeout = int(os.getenv("WORK_TIMEOUT", default="1200"))
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
-    aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-2")
+    aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
 
     # set up cluster env based on gitlab env if one was not specified
-    # this is only run if `gitlab_env` is specified, i.e. when the system
+    # this is only run if `kube_env` is specified, i.e. when the system
     # is run in staging/production or in testing
-    if gitlab_env and not cluster_env:
-        if gitlab_env == "production":
+    if kube_env and not cluster_env:
+        if kube_env == "production":
             cluster_env = "production"
         else:
             cluster_env = "staging"

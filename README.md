@@ -99,7 +99,7 @@ live clusters by deleting the `--endpoint-url` argument and using the appropriat
         "timeout": "2099-12-31 00:00:00",
         "body": {
             "name": "PrepareExperiment",
-            "sourceBucket": "biomage-source-originals",
+            "sourceBucket": "biomage-source-staging",
             "sourceMatrixPath": "pbmc_count_matrices/hg19/"
         }
     }
