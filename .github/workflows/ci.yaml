@@ -116,7 +116,7 @@ jobs:
           push: false
 
       - id: push
-        if: github.ref == 'master'
+        if: github.ref == 'refs/heads/master'
         name: Push docker image to ECR
         run: |-
           echo Pushing image $IMAGE_NAME to ECR.
@@ -134,7 +134,7 @@ jobs:
     strategy:
       matrix:
         environment: ['production']
-    if: github.ref == 'master'
+    if: github.ref == 'refs/heads/master'
     steps:
       - id: checkout
         name: Check out source code
