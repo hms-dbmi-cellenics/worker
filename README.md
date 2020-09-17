@@ -3,7 +3,7 @@ The purpose of the worker is to carry out data analysis tasks, for example compu
 
 
 # Build and Deploy step
-The deployment step for this repository consits of deploying all resources needed for work to be carried out. Note that the deployment step in this repository does not start the work. Work gets started dynamically upon a user request by the API: https://gitlab.com/biomage/api.
+The deployment step for this repository consits of deploying all resources needed for work to be carried out. Note that the deployment step in this repository does not start the work. Work gets started dynamically upon a user request by the [API](https://github.com/biomage-ltd/api).
 
 CI deployment needs four variables that need to be created on the CI/CD side:
 
@@ -24,9 +24,7 @@ To run this code locally, first make sure you start a python virtual environment
 The code in the worker requires an access to AWS resources, so make sure you have aws cli installed and your machine has access to aws.
 
 ### 2. Submit a task
-The next step is to send a task to the worker through SQS. What you will have to do depends on where you want to get data from:
-
-If you want to fetch and process data from a **local instance** using InfraMock, there is nothing to do. The worker is
+* If you want to fetch and process data from a **local instance** using InfraMock, there is nothing to do. The worker is
 already configured to fetch data through it.
 
 If you want to fetch and process data from **the live** `staging` or `production` clusters, you need to set
@@ -35,17 +33,29 @@ by the worker to subsribe to work is stored in the `WORKER_QUEUE` environment va
 that you know is currently being used, but it defaults to `development-queue.fifo`. This is created specifically and only
 for local testing purposes.
 
-For option #2, you can go to the AWS SQS console, and select it (if it doesn't exist, create one using the user interface). 
+In order to push work to the worker you can either:
+* a) Submit work via the AWS console, using the SQS interface
+* b) Submit work from the terminal using `aws-cli`
 
-In both cases, you can use the `aws-cli` to push work as well. For example, using InfraMock, you can do something like:
+a) Just go to the AWS console, select the relevant queue and submit your work following the format described further in this section.
+
+b) Make sure you have `aws-cli` installed. Then, put the work in the correct format, described further in this section in 
+a file `payload.json`. Finally, use the `aws-cli` commands to send that payload to the desired SQS queue.
+Here is an example:
 
     aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/queue/development-queue.fifo --message-body "$(< payload.json)" --message-group-id "$(date +%s)"
 
 which will push the payload in `payload.json` to a local worker. You can do something similar if you are connected to the
 live clusters by deleting the `--endpoint-url` argument and using the appropriate remote queue URL.
 
+### Task formatting
+To see what tasks are available for submitting what what is the format of each of them, go to the [API schema](https://github.com/biomage-ltd/api/blob/master/src/specs/api.yaml) and look at
+`WorkRequest`. There, the schemas and parameters available and required are specified for all supported tasks.
+
 ### Sample tasks
-`GetEmbedding`:
+Here are some examples:
+
+* `GetEmbedding`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -58,7 +68,7 @@ live clusters by deleting the `--endpoint-url` argument and using the appropriat
         }
     }
 
-`ListGenes`:
+* `ListGenes`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -76,7 +86,7 @@ live clusters by deleting the `--endpoint-url` argument and using the appropriat
         }
     }
 
-`GeneExpression`:
+* `GeneExpression`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -90,7 +100,7 @@ live clusters by deleting the `--endpoint-url` argument and using the appropriat
         }
     }
 
-`PrepareExperiment`:
+* `PrepareExperiment`:
 
     {
         "uuid": "509520fe-d329-437d-8752-b5868ad59425",
@@ -99,18 +109,19 @@ live clusters by deleting the `--endpoint-url` argument and using the appropriat
         "timeout": "2099-12-31 00:00:00",
         "body": {
             "name": "PrepareExperiment",
-            "sourceBucket": "biomage-source-staging",
+            "sourceBucket": "biomage-source-originals",
             "sourceMatrixPath": "pbmc_count_matrices/hg19/"
         }
     }
 
-It will be picked by the worker, the task will be computed and the results sent back via SNS. `count_matrix` is the S3 bucket
-and key of the anndata file you want processed.
 
 ### 3. Run the code
-After you have submitted a task, go to the src/ and run:
+To run the worker locally, execute the following commands in a terminal:
 
-    python worker.py
+    cd src/
+    python work.py
+
+Note that the worker will automatically switch itself off if it doesn't receive any tasks for 20 minutes. In this case, simply rerun it again and it will start, as normal.
 
 ## Run tests
 Go to the src/ and run:
