@@ -7,6 +7,9 @@ import pickle
 import json
 from result import Result
 from helpers.dynamo import get_item_from_dynamo
+from config import get_config
+
+config = get_config()
 
 
 class PrepareExperiment:
@@ -24,7 +27,7 @@ class PrepareExperiment:
         return [Result(result)]
 
     def _download_file_to_dir(self):
-        client = boto3.client("s3")
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         objList = client.list_objects(
             Bucket=self.source_bucket, Prefix=self.directory_path
         )
@@ -46,7 +49,7 @@ class PrepareExperiment:
         matrix_path = get_item_from_dynamo(self.experiment_id, "matrixPath")
         bucket, key = matrix_path.split("/", 1)
 
-        client = boto3.client("s3")
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
 
         result = io.BytesIO()
         pickle.dump(adata, result)

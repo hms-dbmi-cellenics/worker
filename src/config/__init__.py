@@ -35,9 +35,11 @@ def get_config():
         SNS_TOPIC=f"work-results-{cluster_env}",
     )
 
-    if cluster_env == "development":
+    if cluster_env == "development" or cluster_env == "test":
         config.QUEUE_NAME = "development-queue.fifo"
         config.AWS_ACCOUNT_ID = "000000000000"
+
+    if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://localhost:4566"
 
     return config

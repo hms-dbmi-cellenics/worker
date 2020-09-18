@@ -10,7 +10,7 @@ config = get_config()
 
 def _download_obj(bucket, key):
     try:
-        client = boto3.client("s3")
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         result = io.BytesIO()
         client.download_fileobj(Bucket=bucket, Key=key, Fileobj=result)
         result.seek(0)
