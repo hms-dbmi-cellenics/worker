@@ -10,7 +10,7 @@ config = get_config()
 
 def _download_obj(bucket, key):
     try:
-        client = boto3.client("s3")
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         result = io.BytesIO()
         client.download_fileobj(Bucket=bucket, Key=key, Fileobj=result)
         result.seek(0)
@@ -41,5 +41,6 @@ def _load_file(matrix_path):
 def get_adata(adata, experiment_id):
     print(datetime.datetime.utcnow(), "adata does not exist, I need to download it ...")
     matrix_path = get_item_from_dynamo(experiment_id, "matrixPath")
+    print(matrix_path, "is our path!!")
     adata = _load_file(matrix_path)
     return adata
