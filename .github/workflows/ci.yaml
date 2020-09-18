@@ -54,6 +54,7 @@ jobs:
         python -m pytest --cov=.
       env:
         AWS_DEFAULT_REGION: 'eu-west-1'
+        CLUSTER_ENV: 'test'
 
   build-docker:
     name: Build Docker container
