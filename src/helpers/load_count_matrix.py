@@ -41,6 +41,5 @@ def _load_file(matrix_path):
 def get_adata(adata, experiment_id):
     print(datetime.datetime.utcnow(), "adata does not exist, I need to download it ...")
     matrix_path = get_item_from_dynamo(experiment_id, "matrixPath")
-    print(matrix_path, "is our path!!")
     adata = _load_file(matrix_path)
     return adata
