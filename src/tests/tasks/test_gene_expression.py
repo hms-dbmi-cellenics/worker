@@ -18,7 +18,10 @@ class TestGeneExpression:
         self.correct_request = {
             "experimentId": "5e959f9c9f4b120771249001",
             "timeout": "2099-12-31 00:00:00",
-            "body": {"name": "GeneExpression", "genes": ["TGFB1", "CST3"],},
+            "body": {
+                "name": "GeneExpression",
+                "genes": ["PPBP", "CST3"],
+            },
         }
 
     def test_throws_on_missing_parameters(self):
@@ -72,7 +75,7 @@ class TestGeneExpression:
 
     def test_task_handles_nonexistent_genes(self):
 
-        self.correct_request["body"]["genes"] = ["TGFB1", "non-existent-gene"]
+        self.correct_request["body"]["genes"] = ["PPBP", "non-existent-gene"]
 
         res = GeneExpression(self.correct_request, self._adata).compute()
         res = res[0].result
