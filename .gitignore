@@ -144,3 +144,5 @@ cython_debug/
 !test.h5ad
 
 .DS_Store
+
+outputs/
