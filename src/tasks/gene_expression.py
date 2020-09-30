@@ -31,11 +31,7 @@ class GeneExpression:
         else:
             correct_adata = self.adata.raw.to_adata()
             correct_adata = correct_adata.copy()
-
-        # compute data on raw matrix
-        correct_adata = self.adata.raw.to_adata()
-        correct_adata = correct_adata.copy()
-        correct_adata.X = correct_adata.X.toarray()
+            correct_adata.X = correct_adata.X.toarray()
 
         # create a proper ordering of cells by increasing IDs
         obs_copy = correct_adata.obs.copy()
