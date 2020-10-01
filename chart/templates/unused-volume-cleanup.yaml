@@ -4,7 +4,7 @@ metadata:
   name: unused-volume-cleanup
   namespace: {{ .Release.Namespace }}
 spec:
-  schedule: "*/1 * * * *"
+  schedule: "*/40 * * * *"
   concurrencyPolicy: Replace
   jobTemplate:
     spec:
