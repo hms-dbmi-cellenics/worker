@@ -1,6 +1,5 @@
 from moto import mock_s3
 import boto3
-
 from helpers.load_count_matrix import _load_file
 from config import get_config
 
@@ -15,6 +14,7 @@ class TestLoadCountMatrix:
         key = "very/long/and/convoluted/path"
         s3.create_bucket(
             Bucket=bucket,
+            CreateBucketConfiguration={"LocationConstraint": config.AWS_REGION},
         )
 
         with open("tests/test.h5ad", "rb") as f:

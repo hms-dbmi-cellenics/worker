@@ -45,7 +45,7 @@ class TestClusterCells:
         assert len(res["children"]) > 0
         assert len(res["children"][0]["cellIds"]) > 0
 
-    def test_louvain_clustering_works(self):
+    def test_leiden_clustering_works(self):
         alternative_request = {
             "experimentId": "5e959f9c9f4b120771249001",
             "timeout": "2099-12-31 00:00:00",
@@ -60,9 +60,6 @@ class TestClusterCells:
         res = ClusterCells(alternative_request, self._adata).compute()
         res = res[0].result
         res = json.loads(res)
-        import pdb
-
-        pdb.set_trace()
         assert isinstance(res, dict)
         assert res["key"] == "leiden"
         assert len(res["children"]) > 0
