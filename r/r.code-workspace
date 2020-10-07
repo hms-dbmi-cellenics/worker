@@ -12,6 +12,7 @@
 		},
 		"r.sessionWatcher": true,
 		"r.bracketedPaste": true,
+		"r.rterm.linux": "/usr/local/bin/radian",
 	}
 }
 
