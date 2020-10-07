@@ -11,3 +11,5 @@ app$add_get(
 
 backend <- BackendRserve$new()
 backend$start(app, http_port = 8080)
+
+print(paste("a", "b"))

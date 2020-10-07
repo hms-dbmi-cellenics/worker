@@ -10,7 +10,7 @@
 			"editor.formatOnPaste": true,
 			"editor.formatOnSave": true
 		},
-		"python.pythonPath": "venv/bin/python3",
+		"python.pythonPath": "python/venv/bin/python3",
 		"python.formatting.provider": "black",
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": false,
@@ -21,7 +21,10 @@
 			"editor.formatOnPaste": true,
 			"editor.formatOnSave": true
 		},
-		
-		
+		"r.sessionWatcher": true,
+		"r.bracketedPaste": true,
+		"r.rterm.mac": "./r/r_dockerized.sh",
+		// "r.rterm.mac": "/usr/local/bin/radian",		
 	}
 }
+

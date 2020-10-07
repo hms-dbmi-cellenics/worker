@@ -1,13 +1,16 @@
 R worker
 ========
 
-Development
------------
+Getting started
+---------------
 
-To develop on the R worker, you must have the following installed:
+Development is done inside a development container that is automatically built, run, and managed by Visual Studio Code. You **do not**
+need R or R Studio to be installed locally.
 
-    * R studio
-    * the VS Code [R](https://marketplace.visualstudio.com/items?itemName=Ikuyadeu.r) extension
-    * the vscode [R LSP Client](https://marketplace.visualstudio.com/items?itemName=REditorSupport.r-lsp) extension
+To develop on the R worker, you must have the following VS Code extensions installed:
 
-Follow the instructions to install both.
+    * the [R](https://marketplace.visualstudio.com/items?itemName=Ikuyadeu.r) extension
+    * the [R LSP Client](https://marketplace.visualstudio.com/items?itemName=REditorSupport.r-lsp) extension
+    * the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
+
+Quit VS Code and re-start for these plugins to be loaded.

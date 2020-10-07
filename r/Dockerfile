@@ -1,13 +1,25 @@
 # pull official base image
-FROM rexyai/restrserve:0.3.0
+FROM r-base:4.0.2
 
 # set working directory
 WORKDIR /src
 
-# install app dependencies
-COPY install_packages_or_die.R ./
-COPY requirements.txt ./
-RUN cat requirements.txt | xargs Rscript install_packages_or_die.R 
+# These are the default packages that we must have installed
+# for Rserve and RestRserve. They will not change so we want to
+# install them at the beginning of the image.
+COPY setup ./setup
+RUN ./setup/config_r.sh
+
+# install required debian packages to make R packages work.
+COPY requirements_debian.txt .
+RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
+
+# install pip and Radian for interactive R shell
+RUN pip install -U jedi radian
+
+# install required R packages for the worker.
+COPY requirements_r.txt .
+RUN cat requirements_r.txt | xargs Rscript setup/install_or_die.r && rm -r setup
 
 # add app
 COPY src ./
