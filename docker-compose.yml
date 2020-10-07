@@ -1,0 +1,16 @@
+version: '3.2'
+services:
+  r:
+    container_name: 'biomage-worker-r'
+    build:
+      context: r/
+      target: dev
+    volumes:
+      - ./r:/r:cached
+
+  python:
+    container_name: 'biomage-worker-python'
+    build:
+      context: python/
+    # volumes:
+    #   - ..:/workspace:cached

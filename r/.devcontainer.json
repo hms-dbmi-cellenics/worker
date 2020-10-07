@@ -1,0 +1,12 @@
+{
+	"name": "Biomage R Worker",
+	"workspaceFolder": "/r",
+    "dockerComposeFile": ["../docker-compose.yml"],
+    "service": "r",
+    "shutdownAction": "none",
+    "forwardPorts": [8080],
+	"extensions": [
+        "ikuyadeu.r",
+        "reditorsupport.r-lsp"
+    ]
+}

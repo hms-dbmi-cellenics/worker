@@ -5,6 +5,8 @@
 		}
 	],
 	"settings": {
+		"window.openFoldersInNewWindow": "on",
+		
 		// Python configurations
 		"[python]": {
 			"editor.formatOnPaste": true,

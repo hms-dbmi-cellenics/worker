@@ -1,0 +1,8 @@
+{
+	"name": "Biomage Python worker",
+	"workspaceFolder": "/src",
+    "dockerComposeFile": ["../docker-compose.yml"],
+    "service": "worker-r",
+    "shutdownAction": "none",
+	"extensions": []
+}
