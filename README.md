@@ -6,11 +6,10 @@ The single-cell pipeline work executor.
 Setup
 -----
 
-Open the worker VS Code project to get started. Do **not** open the folder directly,
-as this will cause issues later on.
+Open the worker VS Code project to get started. Do **not** open the folder directly.
 
 Development is done inside a development container that is automatically built,
-run, and managed by Visual Studio Code. You **do not** need R, R Studio, or a Python
+run, and managed by Visual Studio Code. You do not need R, R Studio, or a Python
 virtual environment to be installed locally.
 
 You must have the following VS Code extensions installed:
