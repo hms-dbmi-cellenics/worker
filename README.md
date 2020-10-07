@@ -14,11 +14,11 @@ virtual environment to be installed locally.
 
 You must have the following VS Code extensions installed:
 
+* the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 * the [R](https://marketplace.visualstudio.com/items?itemName=Ikuyadeu.r) extension
 * the [R LSP Client](https://marketplace.visualstudio.com/items?itemName=REditorSupport.r-lsp) extension
 * the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
-* the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 
 Quit VS Code and re-start for these plugins to be loaded. You should see a green icon
-in the leftmost part of the status bar.
-
+in the leftmost part of the status bar, which indicates that the remote container plugin
+has been installed.
