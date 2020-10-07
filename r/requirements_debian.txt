@@ -10,3 +10,4 @@ libssl-dev
 libxml2-dev
 python3-pip
 libfontconfig1-dev
+libharfbuzz-dev

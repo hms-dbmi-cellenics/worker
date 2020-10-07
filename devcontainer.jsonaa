@@ -1,0 +1,9 @@
+{
+    "name": "R worker",
+    "dockerFile": "r/Dockerfile",
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "forwardPorts": [8080],
+    "postCreateCommand": "pip install -U jedi radian"
+}
