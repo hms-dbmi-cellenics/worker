@@ -7,4 +7,6 @@ r-cran-jsonlite
 r-cran-rserve
 libcurl4-openssl-dev
 libssl-dev
+libxml2-dev
 python3-pip
+libfontconfig1-dev

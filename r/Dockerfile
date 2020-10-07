@@ -13,12 +13,12 @@ COPY setup ./setup
 COPY requirements_debian.txt .
 RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 
-# install pip and Radian for interactive R shell
+# install Radian for interactive R shell
 RUN pip install -U jedi radian
 
 # install required R packages for the worker.
 COPY requirements_r.txt .
-RUN cat requirements_r.txt | tr '\n' '\0' | xargs -0 -n1 xargs Rscript setup/install_or_die.r && rm -r setup
+RUN ./setup/install_r_packages.sh
 
 # add app
 COPY src ./
