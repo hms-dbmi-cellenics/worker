@@ -1,3 +1,10 @@
+r-cran-rcpp
+r-cran-uuid
+r-cran-r6
+r-cran-checkmate
+r-cran-mime
+r-cran-jsonlite
+r-cran-rserve
 libcurl4-openssl-dev
 libssl-dev
 python3-pip

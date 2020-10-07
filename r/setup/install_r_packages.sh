@@ -5,10 +5,12 @@
 # http://redsymbol.net/articles/unofficial-bash-strict-mode/ for
 # details.
 set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
 # Install required dependencies for Rserve.
-export R_CRAN_PKGS="Rcpp R6 uuid checkmate mime jsonlite"
-xargs Rscript setup/install_or_die.r $R_CRAN_PKGS
+apt-get update
+apt-get -y upgrade
+apt-get -y install --no-install-recommends r-cran-rcpp r-cran-uuid r-cran-r6 r-cran-checkmate r-cran-mime r-cran-jsonlite
 
 # Install Rserve.
 Rscript -e "install.packages('Rserve', repos = 'http://www.rforge.net/')"

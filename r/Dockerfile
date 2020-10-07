@@ -8,7 +8,6 @@ WORKDIR /src
 # for Rserve and RestRserve. They will not change so we want to
 # install them at the beginning of the image.
 COPY setup ./setup
-RUN ./setup/config_r.sh
 
 # install required debian packages to make R packages work.
 COPY requirements_debian.txt .
@@ -19,7 +18,7 @@ RUN pip install -U jedi radian
 
 # install required R packages for the worker.
 COPY requirements_r.txt .
-RUN cat requirements_r.txt | xargs Rscript setup/install_or_die.r && rm -r setup
+RUN cat requirements_r.txt | tr '\n' '\0' | xargs -0 -n1 xargs Rscript setup/install_or_die.r && rm -r setup
 
 # add app
 COPY src ./
