@@ -15,9 +15,11 @@ jobs:
     # python:3.7-buster docker image, this runs on
     # ubuntu-20.04. earlier versions of ubuntu will break the test
     runs-on: ubuntu-20.04
-    
     env:
       CI: "true"
+    defaults:
+      run:
+        working-directory: python
     steps:
     - id: checkout
       name: Check out source code
@@ -62,6 +64,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image-name: ${{ steps.push.outputs.image-name }}
+    defaults:
+      run:
+        working-directory: python
     steps:
       - id: checkout
         name: Check out source code
@@ -135,7 +140,6 @@ jobs:
     strategy:
       matrix:
         environment: ['production']
-    if: github.ref == 'refs/heads/master'
     steps:
       - id: checkout
         name: Check out source code
@@ -176,6 +180,7 @@ jobs:
           cat $DEPLOYMENT_NAME.yaml
 
       - id: disable-admin-enforcement
+        if: always()
         name: Temporarily disable admin enforcement
         uses: benjefferies/branch-protection-bot@master
         with:
@@ -184,6 +189,7 @@ jobs:
           repo: iac
 
       - name: Push changes to iac repo
+        if: github.ref == 'refs/heads/master'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
