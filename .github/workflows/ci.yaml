@@ -63,7 +63,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     outputs:
-      registry-name: ${{ steps.login-ecr.outputs.registry }}
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
     defaults:
@@ -154,6 +153,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
       - id: install-yq
         name: Install yq for modifying the deployment spec.
         run: |-
@@ -176,7 +179,7 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', needs.build-docker.outputs.registry-name, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: disable-admin-enforcement
         if: always()
