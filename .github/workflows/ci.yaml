@@ -186,7 +186,6 @@ jobs:
           echo "::set-output name=instance-values-name::$DEPLOYMENT_NAME-instance"
 
           yq w -d0 chart-instance/values.yaml namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
-          | yq w -d0 - metadata.namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
           | yq w -d0 - images.python "$IMAGE_NAME" \
           | yq w -d0 - images.r "$IMAGE_NAME" \
           > $DEPLOYMENT_NAME-instance.yaml
