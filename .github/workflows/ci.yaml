@@ -216,7 +216,7 @@ jobs:
           user_name: 'Biomage CI/CD'
 
       - name: Push instance base values to iac repo
-        # if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
