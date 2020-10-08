@@ -60,6 +60,8 @@ jobs:
     name: Build Docker container
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      image-name: ${{ steps.push.outputs.image-name }}
     steps:
       - id: checkout
         name: Check out source code
@@ -122,11 +124,9 @@ jobs:
         run: |-
           echo Pushing image $IMAGE_NAME to ECR.
           docker push $IMAGE_NAME
-          docker tag $IMAGE_NAME $IMAGE_NAME_LATEST
-          docker push $IMAGE_NAME_LATEST
+          echo "::set-output name=image-name::$IMAGE_NAME"
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag) }}
-          IMAGE_NAME_LATEST: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag-latest) }}
 
   deploy:
     name: Deploy to Kubernetes
@@ -168,6 +168,7 @@ jobs:
           yq w -d1 .flux.yaml metadata.name "$DEPLOYMENT_NAME" \
           | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
+          | yq w -d1 - spec.values.image.tag "${{ needs.build-docker.outputs.image-name }}" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-${{ matrix.environment }}" \
           | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$REF_DASHED" \
           > $DEPLOYMENT_NAME.yaml
