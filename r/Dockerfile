@@ -20,7 +20,7 @@ RUN Rscript setup/install_or_die.r languageserver
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
-FROM builder as prod
+FROM builder AS prod
 
 # add app
 COPY src ./
@@ -31,7 +31,7 @@ CMD ["Rscript", "work.r"]
 # ---------------------------------------------------
 # DEVELOPMENT BUILD
 # ---------------------------------------------------
-FROM builder as dev
+FROM builder AS dev
 
 # install Radian for interactive R shell
 # also install watchdog to automatically restart

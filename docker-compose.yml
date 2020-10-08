@@ -12,5 +12,6 @@ services:
     container_name: 'biomage-worker-python'
     build:
       context: python/
-    # volumes:
-    #   - ..:/workspace:cached
+      target: dev
+    volumes:
+      - ./python:/python:cached

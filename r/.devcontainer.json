@@ -4,7 +4,7 @@
     "dockerComposeFile": ["../docker-compose.yml"],
     "service": "r",
     "shutdownAction": "none",
-    "forwardPorts": [3000],
+    "forwardPorts": [4000],
 	"extensions": [
         "ikuyadeu.r",
         "reditorsupport.r-lsp"

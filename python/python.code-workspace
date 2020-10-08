@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		// Python configurations
+		"[python]": {
+			"editor.formatOnPaste": true,
+			"editor.formatOnSave": true
+		},
+		"python.pythonPath": "python3",
+		"python.formatting.provider": "black",
+		"python.linting.enabled": true,
+		"python.linting.pylintEnabled": false,
+		"python.linting.flake8Enabled": true,
+	}
+}
+

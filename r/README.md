@@ -8,7 +8,7 @@ Setup
 
 Open the r workspace:
 
-    code r/r.code-workspace
+    code r.code-workspace
 
 Development is done inside a development container that is automatically built,
 run, and managed by Visual Studio Code. You do not need R, R Studio, or a Python
@@ -21,6 +21,6 @@ You should be prompted to run the workspace inside a container. Accept this. Onc
 you see the folder structure, the worker is running and you have access to the
 R worker's container.
 
-To make sure everything works, try to access http://localhost:3000 from your browser.
+To make sure everything works, try to access http://localhost:4000 from your browser.
 The development container automatically forwards this port while you are attached
 to the container.
