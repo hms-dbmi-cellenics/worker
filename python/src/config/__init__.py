@@ -33,7 +33,7 @@ def get_config():
         DYNAMO_TABLE=f"experiments-{cluster_env}",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}",
-        R_WORKER_URL="http://unknown.com:4000",
+        R_WORKER_URL="http://localhost:4000",
     )
 
     if cluster_env == "development" or cluster_env == "test":

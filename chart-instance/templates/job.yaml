@@ -24,6 +24,8 @@ spec:
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
+        ports:
+        - containerPort: 4000
       volumes:
       - name: 'data'
         persistentVolumeClaim:
