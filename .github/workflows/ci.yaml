@@ -117,8 +117,8 @@ jobs:
         name: Build Docker image
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: python/Dockerfile
+          context: python/
+          file: Dockerfile
           platforms: linux/amd64
           tags: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag) }}
           push: false
