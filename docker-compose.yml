@@ -7,6 +7,8 @@ services:
       target: dev
     volumes:
       - ./r:/r:cached
+    expose:
+      - "4000"
 
   python:
     container_name: 'biomage-worker-python'

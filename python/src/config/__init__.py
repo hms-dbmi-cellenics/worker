@@ -33,13 +33,17 @@ def get_config():
         DYNAMO_TABLE=f"experiments-{cluster_env}",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}",
+        R_WORKER_URL="http://unknown.com:4000",
     )
 
     if cluster_env == "development" or cluster_env == "test":
         config.QUEUE_NAME = "development-queue.fifo"
         config.AWS_ACCOUNT_ID = "000000000000"
+        config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
+        config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
 
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://localhost:4566"
+        config.R_WORKER_URL = "http://r:4000"
 
     return config
