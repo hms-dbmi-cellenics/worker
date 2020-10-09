@@ -6,7 +6,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: 'worker-storage',
+  storageClassName: 'worker-storage'
   resources:
     requests:
       storage: '{{ .Values.storageSize }}'
