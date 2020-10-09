@@ -12,5 +12,5 @@ spec:
   releaseName: FILLED_IN_BY_CI
   chart:
     git: git@github.com:biomage-ltd/worker
-    path: chart/
+    path: chart-infra/
     ref: master
