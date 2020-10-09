@@ -121,4 +121,4 @@ Note that the worker will automatically switch itself off if it doesn't receive 
 ## Run tests
 Go to the src/ and run:
 
-    python3 -m pytest --cov=.
+    CLUSTER_ENV="test" python -m pytest --cov=.
