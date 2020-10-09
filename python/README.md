@@ -111,12 +111,13 @@ Here are some examples:
 
 
 ### 3. Run the code
-To run the worker locally, execute the following commands in a terminal:
+The worker is running locally by default when you launch the workspace inside the container as described in Step 1.
 
-    cd src/
-    python work.py
+To view the logs for the worker, you can use:
 
-Note that the worker will automatically switch itself off if it doesn't receive any tasks for 20 minutes. In this case, simply rerun it again and it will start, as normal.
+    docker-compose logs -f
+
+Note that the worker will automatically switch itself off if it doesn't receive any tasks for 20 minutes.
 
 ## Run tests
 Go to the src/ and run:

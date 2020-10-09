@@ -7,6 +7,7 @@
     "forwardPorts": [4000],
 	"extensions": [
         "ikuyadeu.r",
-        "reditorsupport.r-lsp"
+        "reditorsupport.r-lsp",
+        "GrapeCity.gc-excelviewer"
     ]
 }
