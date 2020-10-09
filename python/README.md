@@ -15,13 +15,8 @@ CI deployment needs four variables that need to be created on the CI/CD side:
 ## Run locally
 
 ### 1. Set up environment
-To run this code locally, first make sure you start a python virtual environment, activate it and install all the requirements:
 
-        python3.7 -m venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-
-The code in the worker requires an access to AWS resources, so make sure you have aws cli installed and your machine has access to aws.
+See the main README on how to run the worker containers in docker-compose.
 
 ### 2. Submit a task
 * If you want to fetch and process data from a **local instance** using InfraMock, there is nothing to do. The worker is
