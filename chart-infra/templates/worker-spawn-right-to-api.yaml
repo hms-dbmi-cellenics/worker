@@ -9,7 +9,7 @@ rules:
   verbs: ["create"]
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
-  verbs: ["create"]
+  verbs: ["create", "get", "watch", "list"]
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "watch", "list"]
