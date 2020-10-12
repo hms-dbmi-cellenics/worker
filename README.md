@@ -26,8 +26,7 @@ Similarly, to open the Python workspace, you can type `code python/python.code-w
 
 You should be prompted to run the workspace inside a container. Accept this. Once
 you see the folder structure, the worker is running and you have access to the
-R worker's container. In the bottom right corner you should see the name of the container
-VS Code is running in. If you get an error after trying to run the workspace inside a
+R worker's container. If you get an error after trying to run the workspace inside a
 container, try running `docker-compose up --build` to see where exactly the build breaks.
 Please check `Troubleshooting` section that lists commonly occuring problems.
  
@@ -70,5 +69,15 @@ Troubleshooting
 
         pip3 uninstall docker-compose
         pip3 install -U docker-compose
+
+2. `docker-compose up --build` fails due to rate limit errors.
+
+    To fix this one, make sure you create a personal access token in your Github account and
+    add it as an environment variable, called `GITHUB_PAT`:
+
+        1. Go to https://github.com/settings/tokens, create a new token. The token should be read only.
+        2. Set `GITHUB_PAT` to equal to the value of the token in a terminal.
+
+
 
     

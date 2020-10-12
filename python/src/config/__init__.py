@@ -43,7 +43,7 @@ def get_config():
         config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
 
     if cluster_env == "development":
-        config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://localhost:4566"
+        config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
         config.R_WORKER_URL = "http://r:4000"
 
     return config
