@@ -5,6 +5,8 @@ services:
     build:
       context: r/
       target: dev
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
     volumes:
       - ./r:/r:cached
     expose:

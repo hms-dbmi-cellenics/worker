@@ -13,6 +13,8 @@ RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 # these are sectioned as seen here so we can cache compiled code
 # NOTE: add new packages to the END of this list. this makes sure
 # previously installed packages don't get recompiled for no reason.
+ARG GITHUB_PAT
+ENV GITHUB_PAT $GITHUB_PAT
 RUN Rscript setup/install_or_die.r devtools
 RUN Rscript setup/install_or_die.r github rexyai/RestRserve
 RUN Rscript setup/install_or_die.r languageserver
