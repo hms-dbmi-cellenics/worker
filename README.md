@@ -38,8 +38,6 @@ These development environments should be pre-configured with the same requiremen
 produciton instances, as well as the necessary VS Code extensions required to debug and
 lint code.
 
-TODO: talk about the version bug and how to fix it.
-
 Managing the containers
 -----------------------
 
