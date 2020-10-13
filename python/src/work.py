@@ -11,8 +11,6 @@ def main():
 
     check_r_readiness()
 
-    tf = TaskFactory()
-
     last_activity = datetime.datetime.utcnow()
     adata = None
     print(datetime.datetime.utcnow(), "Now listening, waiting for work to do...")
@@ -22,7 +20,7 @@ def main():
     ).total_seconds() <= config.TIMEOUT:
         msg = consume()
         if msg:
-            results, adata = tf.submit(msg, adata)
+            results, adata = TaskFactory().submit(msg, adata)
             if not adata:
                 raise Exception("Adata file did not get loaded properly")
             response = Response(request=msg, results=results)
