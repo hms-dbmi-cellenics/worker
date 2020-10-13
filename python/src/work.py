@@ -9,7 +9,9 @@ from helpers.r_readiness import check_r_readiness
 def main():
     config = get_config()
 
-    # check_r_readiness()
+    check_r_readiness()
+
+    tf = TaskFactory()
 
     last_activity = datetime.datetime.utcnow()
     adata = None
@@ -20,7 +22,7 @@ def main():
     ).total_seconds() <= config.TIMEOUT:
         msg = consume()
         if msg:
-            results, adata = TaskFactory().submit(msg, adata)
+            results, adata = tf.submit(msg, adata)
             if not adata:
                 raise Exception("Adata file did not get loaded properly")
             response = Response(request=msg, results=results)
