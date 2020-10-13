@@ -83,7 +83,7 @@ jobs:
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
 
           # the final tag is something like:
-          # refs-heads-master-python-a4f8bc313dae
+          # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
           echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
 
