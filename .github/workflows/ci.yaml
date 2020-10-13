@@ -10,7 +10,6 @@ on:
 jobs:
   test:
     name: Run tests
-
     # to ensure compatibility with the sqlite found in the
     # python:3.7-buster docker image, this runs on
     # ubuntu-20.04. earlier versions of ubuntu will break the test
@@ -62,12 +61,15 @@ jobs:
     name: Build Docker container
     needs: test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ['python', 'r']
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
     defaults:
       run:
-        working-directory: python
+        working-directory: ${{ matrix.project }}
     steps:
       - id: checkout
         name: Check out source code
@@ -117,11 +119,11 @@ jobs:
         name: Build Docker image
         uses: docker/build-push-action@v2
         with:
-          context: python/
-          file: python/Dockerfile
+          context: ${{ matrix.project }}/
+          file: ${{ matrix.project }}/Dockerfile
           platforms: linux/amd64
           target: prod
-          tags: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag) }}
+          tags: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
           push: false
 
       - id: push
@@ -131,7 +133,7 @@ jobs:
           echo Pushing image $IMAGE_NAME to ECR.
           docker push $IMAGE_NAME
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
   deploy:
     name: Deploy to Kubernetes
@@ -187,8 +189,8 @@ jobs:
           echo "::set-output name=instance-values-name::$DEPLOYMENT_NAME-instance"
 
           yq w -d0 chart-instance/values.yaml namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
-          | yq w -d0 - images.python "$IMAGE_NAME" \
-          | yq w -d0 - images.r "$IMAGE_NAME" \
+          | yq w -d0 - images.python "$IMAGE_NAME-python" \
+          | yq w -d0 - images.r "$IMAGE_NAME-r" \
           > $DEPLOYMENT_NAME-instance.yaml
 
           cat $DEPLOYMENT_NAME-instance.yaml

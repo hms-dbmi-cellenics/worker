@@ -12,6 +12,8 @@ spec:
       - name: "{{ .Release.Name }}-worker-python"
         image: "{{ .Values.images.python }}"
         env:
+        - name: 'EXPERIMENT_ID'
+          value: "{{ .Values.experimentId }}"
         - name: 'WORK_QUEUE'
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
@@ -19,13 +21,13 @@ spec:
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
-      # - name: "{{ .Release.Name }}-worker-r"
-      #   image: "{{ .Values.images.r }}"
-      #   volumeMounts:
-      #   - name: 'data'
-      #     mountPath: '/data'
-      #   ports:
-      #   - containerPort: 4000
+      - name: "{{ .Release.Name }}-worker-r"
+        image: "{{ .Values.images.r }}"
+        volumeMounts:
+        - name: 'data'
+          mountPath: '/data'
+        ports:
+        - containerPort: 4000
       volumes:
       - name: 'data'
         persistentVolumeClaim:

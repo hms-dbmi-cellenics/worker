@@ -9,7 +9,7 @@ from helpers.r_readiness import check_r_readiness
 def main():
     config = get_config()
 
-    # check_r_readiness()
+    check_r_readiness()
 
     last_activity = datetime.datetime.utcnow()
     adata = None
