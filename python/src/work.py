@@ -3,13 +3,9 @@ from tasks.tasks import TaskFactory
 from consume_message import consume
 from response import Response
 from config import get_config
-from helpers.r_readiness import check_r_readiness
-
 
 def main():
     config = get_config()
-
-    check_r_readiness()
 
     last_activity = datetime.datetime.utcnow()
     adata = None

@@ -28,6 +28,12 @@ spec:
           mountPath: '/data'
         ports:
         - containerPort: 4000
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 10
       volumes:
       - name: 'data'
         persistentVolumeClaim:
