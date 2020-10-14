@@ -39,4 +39,5 @@ spec:
         persistentVolumeClaim:
           claimName: "{{ .Release.Name }}-pvc"
       restartPolicy: OnFailure
+      shareProcessNamespace: true
       serviceAccountName: 'deployment-runner'
