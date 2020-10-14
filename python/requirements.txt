@@ -16,3 +16,4 @@ python-dateutil
 cryptography
 leidenalg
 backoff
+psutil
