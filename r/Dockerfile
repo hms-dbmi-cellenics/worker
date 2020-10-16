@@ -28,6 +28,7 @@ FROM builder AS prod
 COPY src ./
 
 # start app
+ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
 CMD ["Rscript", "work.r"]
 
 # ---------------------------------------------------
