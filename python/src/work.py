@@ -3,7 +3,6 @@ from tasks.tasks import TaskFactory
 from consume_message import consume
 from response import Response
 from config import get_config
-from pathlib import Path
 
 def main():
     config = get_config()
@@ -24,10 +23,6 @@ def main():
             response.publish()
 
             last_activity = datetime.datetime.utcnow()
-
-    print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down...")
-    Path('/data/worker-shutdown').touch()
-
 
 if __name__ == "__main__":
     main()
