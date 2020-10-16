@@ -19,6 +19,7 @@ WORKDIR /src
 COPY src ./
 
 # start app
+ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
 CMD ["python3", "-u", "work.py"]
 
 # ---------------------------------------------------

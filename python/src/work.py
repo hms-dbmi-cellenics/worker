@@ -3,6 +3,7 @@ from tasks.tasks import TaskFactory
 from consume_message import consume
 from response import Response
 from config import get_config
+from pathlib import Path
 
 def main():
     config = get_config()
@@ -24,14 +25,8 @@ def main():
 
             last_activity = datetime.datetime.utcnow()
 
-    print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down R sidecar...")
-
-    for proc in psutil.process_iter():
-        if "RScript" in proc.name():
-            proc.kill()
-
-    print(datetime.datetime.utcnow(), "Now shutting down Python worker...")
-
+    print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down...")
+    Path('/data/worker-shutdown').touch()
 
 
 if __name__ == "__main__":
