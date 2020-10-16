@@ -43,10 +43,8 @@ def get_config():
     if cluster_env == "development" or cluster_env == "test":
         config.QUEUE_NAME = "development-queue.fifo"
         config.AWS_ACCOUNT_ID = "000000000000"
-        config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "AKIATRDSHSYDJBPOIMOX"
-        config.BOTO_RESOURCE_KWARGS[
-            "aws_secret_access_key"
-        ] = "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"
+        config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
+        config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
 
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
