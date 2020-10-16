@@ -6,10 +6,12 @@ def get_config():
     kube_env = os.getenv("K8S_ENV")
     cluster_env = os.getenv("CLUSTER_ENV")
     queue_name = os.getenv("WORK_QUEUE")
+    bucket_name = "biomage-source-production"
     timeout = int(os.getenv("WORK_TIMEOUT", default="1200"))
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
+    experiment_id = os.getenv("EXPERIMENT_ID", default="5e959f9c9f4b120771249001")
 
     # set up cluster env based on gitlab env if one was not specified
     # this is only run if `kube_env` is specified, i.e. when the system
@@ -26,6 +28,7 @@ def get_config():
     config = types.SimpleNamespace(
         CLUSTER_ENV=cluster_env,
         QUEUE_NAME=queue_name,
+        BUCKET_NAME=bucket_name,
         TIMEOUT=timeout,
         AWS_ACCOUNT_ID=aws_account_id,
         AWS_REGION=aws_region,
@@ -34,13 +37,16 @@ def get_config():
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}",
         R_WORKER_URL="http://localhost:4000",
+        EXPERIMENT_ID=experiment_id,
     )
 
     if cluster_env == "development" or cluster_env == "test":
         config.QUEUE_NAME = "development-queue.fifo"
         config.AWS_ACCOUNT_ID = "000000000000"
-        config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
-        config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
+        config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "AKIATRDSHSYDJBPOIMOX"
+        config.BOTO_RESOURCE_KWARGS[
+            "aws_secret_access_key"
+        ] = "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"
 
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
