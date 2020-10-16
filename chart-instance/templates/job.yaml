@@ -50,7 +50,7 @@ spec:
           claimName: "{{ .Release.Name }}-pvc"
       - name: watch-script
         configMap:
-          name: "{{ .Release.Name }}-watch-script"
+          name: "watch-script"
           items:
             - key: watcher.sh
               path: watcher.sh
