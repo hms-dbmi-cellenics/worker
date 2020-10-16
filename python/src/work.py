@@ -24,5 +24,7 @@ def main():
 
             last_activity = datetime.datetime.utcnow()
 
+    print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down...")
+
 if __name__ == "__main__":
     main()
