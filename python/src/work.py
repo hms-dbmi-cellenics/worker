@@ -24,15 +24,7 @@ def main():
 
             last_activity = datetime.datetime.utcnow()
 
-    print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down R sidecar...")
-
-    for proc in psutil.process_iter():
-        if "RScript" in proc.name():
-            proc.kill()
-
-    print(datetime.datetime.utcnow(), "Now shutting down Python worker...")
-
-
+    print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down...")
 
 if __name__ == "__main__":
     main()

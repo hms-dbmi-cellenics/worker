@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "watch-script"
+  namespace: "{{ .Values.namespace }}"
+data:
+  entrypoint.sh: |-
+    set -e
+
+    echo "starting job and waiting to terminate..."
+
+    exec "$@" &
+    exec bash /var/lib/watchfile/watcher.sh &
+
+    wait -n
+    if [ $? -eq 0 ]
+    then
+        echo "Processes termination successful"
+        touch /var/lib/shutdown-file/shutdown
+    else
+        echo "Error during process."
+        exit 1
+    fi
+  watcher.sh: |-
+    while [ ! -f "/var/lib/shutdown-file/shutdown" ]
+    do
+        sleep 5
+    done
+
+    echo 'Signal received to stop (/var/lib/shutdown-file/shutdown found).'
+    exit 0

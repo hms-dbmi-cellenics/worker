@@ -21,11 +21,21 @@ spec:
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
+        - name: watch-script
+          mountPath: /var/lib/watchfile
+          readOnly: true
+        - name: shutdown-file
+          mountPath: /var/lib/shutdown-file
       - name: "{{ .Release.Name }}-worker-r"
         image: "{{ .Values.images.r }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
+        - name: watch-script
+          mountPath: /var/lib/watchfile
+          readOnly: true
+        - name: shutdown-file
+          mountPath: /var/lib/shutdown-file
         ports:
         - containerPort: 4000
         livenessProbe:
@@ -38,6 +48,14 @@ spec:
       - name: 'data'
         persistentVolumeClaim:
           claimName: "{{ .Release.Name }}-pvc"
+      - name: watch-script
+        configMap:
+          name: "watch-script"
+          items:
+            - key: watcher.sh
+              path: watcher.sh
+            - key: entrypoint.sh
+              path: entrypoint.sh
+      - name: shutdown-file
       restartPolicy: OnFailure
-      shareProcessNamespace: true
       serviceAccountName: 'deployment-runner'
