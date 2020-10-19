@@ -10,9 +10,8 @@ def main():
     config = get_config()
 
     # check_r_readiness()
-    experiment_id = config.EXPERIMENT_ID
     last_activity = datetime.datetime.utcnow()
-    task_factory = TaskFactory(experiment_id)
+    task_factory = TaskFactory()
     print(datetime.datetime.utcnow(), "Now listening, waiting for work to do...")
 
     while (

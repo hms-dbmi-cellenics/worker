@@ -16,7 +16,7 @@ ADATA_FILE_NAME = "python.h5ad"
 
 
 class TaskFactory:
-    def __init__(self, experimentId):
+    def __init__(self):
         self.adata = None
         self.adata_path = f"{count_matrix.get_base_path()}/{ADATA_FILE_NAME}"
         count_matrix.download_files()
