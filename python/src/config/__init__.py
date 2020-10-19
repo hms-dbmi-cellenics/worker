@@ -24,17 +24,15 @@ def get_config():
     if not cluster_env:
         cluster_env = "development"
 
-    bucket_name = f"biomage-source-{cluster_env}"
-
     config = types.SimpleNamespace(
         CLUSTER_ENV=cluster_env,
         QUEUE_NAME=queue_name,
-        BUCKET_NAME=bucket_name,
         TIMEOUT=timeout,
         AWS_ACCOUNT_ID=aws_account_id,
         AWS_REGION=aws_region,
         BOTO_RESOURCE_KWARGS={"region_name": aws_region},
         DYNAMO_TABLE=f"experiments-{cluster_env}",
+        SOURCE_BUCKET=f"biomage-source-{cluster_env}",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}",
         R_WORKER_URL="http://localhost:4000",

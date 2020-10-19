@@ -1,6 +1,5 @@
 import traceback
 import json
-import anndata
 from .embedding import ComputeEmbedding
 from .list_genes import ListGenes
 from .differential_expression import DifferentialExpression
@@ -9,26 +8,15 @@ from .cluster_cells import ClusterCells
 from result import Result
 
 from config import get_config
-from helpers import count_matrix
+from helpers.count_matrix import CountMatrix
 
 config = get_config()
-ADATA_FILE_NAME = "python.h5ad"
 
 
 class TaskFactory:
     def __init__(self):
-        self.adata = None
-        self.adata_path = f"{count_matrix.get_base_path()}/{ADATA_FILE_NAME}"
-        count_matrix.download_files()
-        self._initialise_adata()
-
-    def _initialise_adata(self):
-        with open(self.adata_path, "rb+") as f:
-            self.adata = anndata.read_h5ad(f)
-            if "cell_ids" not in self.adata.obs:
-                raise ValueError(
-                    "You must have `cell_ids` in your anndata file for integer cell IDs."
-                )
+        self.count_matrix = CountMatrix()
+        self.count_matrix.sync()
 
     def submit(self, msg):
         my_class = self._factory(msg)
@@ -56,33 +44,26 @@ class TaskFactory:
             return result
 
     def _factory(self, msg):
-        print("before checking for change: ", self.adata_path)
-        if count_matrix.is_file_changed(self.adata_path):
-            print("There has been recent write to the file, have to download it again.")
-            # TODO: after introducing multiple-sample support, make this
-            #  more efficient by making it able to download only a specific file too.
-            count_matrix.download_files()
-            self._initialise_adata()
-        else:
-            print("The Anndata file is the same as before, no need to download it.")
+        self.count_matrix.sync()
+        adata = self.count_matrix.adata
 
         task_def = msg["body"]
         task_name = task_def["name"]
 
         if task_name == "GetEmbedding":
-            my_class = ComputeEmbedding(msg, self.adata)
+            my_class = ComputeEmbedding(msg, adata)
             return my_class
         elif task_name == "ListGenes":
-            my_class = ListGenes(msg, self.adata)
+            my_class = ListGenes(msg, adata)
             return my_class
         elif task_name == "DifferentialExpression":
-            my_class = DifferentialExpression(msg, self.adata)
+            my_class = DifferentialExpression(msg, adata)
             return my_class
         elif task_name == "GeneExpression":
-            my_class = GeneExpression(msg, self.adata)
+            my_class = GeneExpression(msg, adata)
             return my_class
         elif task_name == "ClusterCells":
-            my_class = ClusterCells(msg, self.adata)
+            my_class = ClusterCells(msg, adata)
             return my_class
         else:
             raise Exception("Task class with name {} was not found".format(task_name))
