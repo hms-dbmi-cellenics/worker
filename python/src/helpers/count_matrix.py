@@ -7,13 +7,6 @@ import hashlib
 config = get_config()
 
 PATH_TO_FILES = f"/data/{config.EXPERIMENT_ID}"
-ADATA_FILE_NAME = "python.h5ad"
-
-
-def _create_path_to_files():
-    if not os.path.exists(PATH_TO_FILES):
-        print("not existing, creating: ")
-        os.makedirs(PATH_TO_FILES)
 
 
 def _calculate_file_etag(file_path, chunk_size=8 * 1024 * 1024):
@@ -37,31 +30,34 @@ def _calculate_file_etag(file_path, chunk_size=8 * 1024 * 1024):
     return '"{}-{}"'.format(digests_md5.hexdigest(), len(md5s))
 
 
-def is_file_changed(adata, adata_path):
-    print("FILE NAME: ", adata_path)
+def is_file_changed(file_path):
     client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
-    file_name = adata_path.split("/")[-1]
-
-    print("key:    ", file_name)
+    file_name = file_path.split("/")[-1]
     resp = client.head_object(
         Bucket=config.BUCKET_NAME, Key=f"{config.EXPERIMENT_ID}/{file_name}"
     )
     s3_etag = resp["ETag"]
-    file_etag = _calculate_file_etag(adata_path)
+    file_etag = _calculate_file_etag(file_path)
 
     return s3_etag != file_etag
 
 
-def get_adata_path():
-    return f"{PATH_TO_FILES}/{ADATA_FILE_NAME}"
+def _create_base_path_dirs():
+    if not os.path.exists(PATH_TO_FILES):
+        print("not existing, creating: ")
+        os.makedirs(PATH_TO_FILES)
 
 
-def download_all_files():
+def get_base_path():
+    return PATH_TO_FILES
+
+
+def download_files():
     print(
         datetime.datetime.utcnow(),
         "Downloading all files from S3 ...",
     )
-    _create_path_to_files()
+    _create_base_path_dirs()
     try:
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         all_files = client.list_objects(

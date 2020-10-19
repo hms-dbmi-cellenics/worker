@@ -12,16 +12,17 @@ from config import get_config
 from helpers import count_matrix
 
 config = get_config()
+ADATA_FILE_NAME = "python.h5ad"
 
 
 class TaskFactory:
     def __init__(self, experimentId):
         self.adata = None
-        self.adata_path = count_matrix.get_adata_path()
+        self.adata_path = f"{count_matrix.get_base_path()}/{ADATA_FILE_NAME}"
+        count_matrix.download_files()
         self._initialise_adata()
 
     def _initialise_adata(self):
-        count_matrix.download_all_files()
         with open(self.adata_path, "rb+") as f:
             self.adata = anndata.read_h5ad(f)
             if "cell_ids" not in self.adata.obs:
@@ -56,10 +57,11 @@ class TaskFactory:
 
     def _factory(self, msg):
         print("before checking for change: ", self.adata_path)
-        if count_matrix.is_file_changed(self.adata, self.adata_path):
+        if count_matrix.is_file_changed(self.adata_path):
             print("There has been recent write to the file, have to download it again.")
             # TODO: after introducing multiple-sample support, make this
-            #  more efficient by downloading only a specific file that got changed.
+            #  more efficient by making it able to download only a specific file too.
+            count_matrix.download_files()
             self._initialise_adata()
         else:
             print("The Anndata file is the same as before, no need to download it.")
