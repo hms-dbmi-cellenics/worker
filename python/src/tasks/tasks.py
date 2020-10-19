@@ -16,17 +16,12 @@ config = get_config()
 
 class TaskFactory:
     def __init__(self, experimentId):
-        # check hash on s3
-        # if not exist in path, download
-        # if hash on s3 is same as hash saved locally in /data, don't download
-        # else download
         self.adata = None
-        self.adata_path = None
-        self.experimentId = experimentId
+        self.adata_path = count_matrix.get_adata_path()
         self._initialise_adata()
 
     def _initialise_adata(self):
-        self.adata_path = count_matrix.get_adata_path(self.experimentId)
+        count_matrix.download_all_files()
         with open(self.adata_path, "rb+") as f:
             self.adata = anndata.read_h5ad(f)
             if "cell_ids" not in self.adata.obs:
@@ -60,8 +55,11 @@ class TaskFactory:
             return result
 
     def _factory(self, msg):
-        if count_matrix.is_file_changed(self.adata, self.experimentId, self.adata_path):
+        print("before checking for change: ", self.adata_path)
+        if count_matrix.is_file_changed(self.adata, self.adata_path):
             print("There has been recent write to the file, have to download it again.")
+            # TODO: after introducing multiple-sample support, make this
+            #  more efficient by downloading only a specific file that got changed.
             self._initialise_adata()
         else:
             print("The Anndata file is the same as before, no need to download it.")

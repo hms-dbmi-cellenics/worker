@@ -6,7 +6,6 @@ def get_config():
     kube_env = os.getenv("K8S_ENV")
     cluster_env = os.getenv("CLUSTER_ENV")
     queue_name = os.getenv("WORK_QUEUE")
-    bucket_name = "biomage-source-production"
     timeout = int(os.getenv("WORK_TIMEOUT", default="1200"))
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
@@ -24,6 +23,8 @@ def get_config():
 
     if not cluster_env:
         cluster_env = "development"
+
+    bucket_name = f"biomage-source-{cluster_env}"
 
     config = types.SimpleNamespace(
         CLUSTER_ENV=cluster_env,

@@ -3,61 +3,20 @@ import boto3
 import datetime
 import os
 import hashlib
-from helpers.dynamo import get_item_from_dynamo
 
 config = get_config()
 
-
-def _download_obj(bucket, key):
-    try:
-        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
-        print("about to download file ", bucket, key)
-        experiment_files = client.list_objects(
-            Bucket="biomage-source-development", Prefix=key
-        )
-        path = f"/data/{key}"
-
-        print("MY PATH:    ", path)
-        if not os.path.exists(path):
-            print("not existing, creating: ")
-            os.makedirs(path)
-        for content in experiment_files["Contents"]:
-            print("RESP     ", content)
-            file_name = content["Key"].split("/", 1)[-1]
-            print("file name: ", file_name)
-            full_path = f"{path}/{file_name}"
-            print("FULL PATH:     ", full_path)
-            with open(full_path, "wb+") as f:
-                client.download_fileobj(
-                    Bucket="biomage-source-development",
-                    Key=content["Key"],
-                    Fileobj=f,
-                )
-                f.seek(0)
-    except Exception as e:
-        print(datetime.datetime.utcnow(), "Could not get file from S3", e)
-        raise e
-    print(datetime.datetime.utcnow(), "File was loaded.")
+PATH_TO_FILES = f"/data/{config.EXPERIMENT_ID}"
+ADATA_FILE_NAME = "python.h5ad"
 
 
-def _get_file_name(experiment_id):
-    file_name = "python.h5"
-    path = f"/data/{experiment_id}"
-    adata_file = f"{path}/{file_name}"
-    return adata_file
+def _create_path_to_files():
+    if not os.path.exists(PATH_TO_FILES):
+        print("not existing, creating: ")
+        os.makedirs(PATH_TO_FILES)
 
 
-def get_adata_path(experiment_id):
-    print(
-        datetime.datetime.utcnow(),
-        "adata does not exist or has changed, I need to download it ...",
-    )
-    adata_path = _get_file_name(experiment_id)
-    _download_obj(config.BUCKET_NAME, experiment_id)
-    return adata_path
-
-
-def calculate_file_etag(file_path, chunk_size=8 * 1024 * 1024):
+def _calculate_file_etag(file_path, chunk_size=8 * 1024 * 1024):
     md5s = []
 
     with open(file_path, "rb") as fp:
@@ -78,12 +37,48 @@ def calculate_file_etag(file_path, chunk_size=8 * 1024 * 1024):
     return '"{}-{}"'.format(digests_md5.hexdigest(), len(md5s))
 
 
-def is_file_changed(adata, experiment_id, adata_path):
+def is_file_changed(adata, adata_path):
+    print("FILE NAME: ", adata_path)
     client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
-    key = adata_path.strip("/data")
-    print("key:    ", key)
-    resp = client.head_object(Bucket="biomage-source-development", Key=key)
+    file_name = adata_path.split("/")[-1]
+
+    print("key:    ", file_name)
+    resp = client.head_object(
+        Bucket=config.BUCKET_NAME, Key=f"{config.EXPERIMENT_ID}/{file_name}"
+    )
     s3_etag = resp["ETag"]
-    file_etag = calculate_file_etag(adata_path)
+    file_etag = _calculate_file_etag(adata_path)
 
     return s3_etag != file_etag
+
+
+def get_adata_path():
+    return f"{PATH_TO_FILES}/{ADATA_FILE_NAME}"
+
+
+def download_all_files():
+    print(
+        datetime.datetime.utcnow(),
+        "Downloading all files from S3 ...",
+    )
+    _create_path_to_files()
+    try:
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
+        all_files = client.list_objects(
+            Bucket=config.BUCKET_NAME, Prefix=config.EXPERIMENT_ID
+        )
+        for file_info in all_files["Contents"]:
+            file_name = file_info["Key"].split("/", 1)[-1]
+            full_path = f"{PATH_TO_FILES}/{file_name}"
+            print(f"Downloading file {file_name} to {full_path}")
+            with open(full_path, "wb+") as f:
+                client.download_fileobj(
+                    Bucket=config.BUCKET_NAME,
+                    Key=file_info["Key"],
+                    Fileobj=f,
+                )
+                f.seek(0)
+    except Exception as e:
+        print(datetime.datetime.utcnow(), "Could not get files from S3: ", e)
+        raise e
+    print(datetime.datetime.utcnow(), "Files were downloaded.")
