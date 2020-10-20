@@ -51,6 +51,6 @@ def get_config():
         config.R_WORKER_URL = "http://r:4000"
     
     if cluster_env == "test":
-        config.LOCAL_PATH="./test_data"
+        config.LOCAL_DIR = "./test_data"
 
     return config
