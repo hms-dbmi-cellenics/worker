@@ -51,7 +51,7 @@ class TestDifferentialExpression:
 
         test_experiment_id = self.correct_request["experimentId"]
 
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
             "get_item",

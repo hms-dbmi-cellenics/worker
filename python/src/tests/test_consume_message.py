@@ -9,7 +9,7 @@ config = get_config()
 
 class TestConsumeMessage:
     def test_read_sqs_message_fetches_messages_from_the_correct_queue(self):
-        sqs = boto3.resource("sqs")
+        sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(sqs.meta.client)
         stubber.add_response(
             "get_queue_url",
@@ -24,14 +24,13 @@ class TestConsumeMessage:
                 "WaitTimeSeconds": ANY,
             },
         )
-        stubber.activate()
 
-        with mock.patch("boto3.resource") as m:
+        with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             _read_sqs_message()
 
     def test_read_sqs_message_returns_falsy_on_non_existent_queue(self):
-        sqs = boto3.resource("sqs")
+        sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(sqs.meta.client)
         stubber.add_client_error(
             "get_queue_url",
@@ -39,15 +38,14 @@ class TestConsumeMessage:
             http_status_code=400,
             expected_params={"QueueName": config.QUEUE_NAME},
         )
-        stubber.activate()
 
-        with mock.patch("boto3.resource") as m:
+        with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             r = consume()
             assert not r
 
     def test_read_sqs_message_returns_falsy_on_no_incoming_message(self):
-        sqs = boto3.resource("sqs")
+        sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(sqs.meta.client)
         stubber.add_response(
             "get_queue_url",
@@ -62,16 +60,15 @@ class TestConsumeMessage:
                 "WaitTimeSeconds": ANY,
             },
         )
-        stubber.activate()
 
-        with mock.patch("boto3.resource") as m:
+        with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             r = _read_sqs_message()
 
             assert not r
 
     def test_read_sqs_message_returns_falsy_on_badly_formatted_message(self):
-        sqs = boto3.resource("sqs")
+        sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(sqs.meta.client)
         stubber.add_response(
             "get_queue_url",
@@ -98,9 +95,8 @@ class TestConsumeMessage:
                 "ReceiptHandle": "ewrwe",
             },
         )
-        stubber.activate()
 
-        with mock.patch("boto3.resource") as m:
+        with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             r = _read_sqs_message()
 

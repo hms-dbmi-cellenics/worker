@@ -30,7 +30,9 @@ class TestResponse:
 
     @mock.patch("boto3.client")
     def test_upload_returns_key_with_uuid_as_folder_when_uploading(self, mocked_client):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -68,7 +70,9 @@ class TestResponse:
             "MessageStructure": "json",
         }
 
-        stubbed_client = botocore.session.get_session().create_client("sns")
+        stubbed_client = botocore.session.get_session().create_client(
+            "sns", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.add_response("publish", response, self.request)
         stubber.activate()
@@ -105,7 +109,9 @@ class TestResponse:
 
     @mock.patch("boto3.client")
     def test_publishing_long_responses_get_pushed_to_s3(self, mocked_client, mocker):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -132,7 +138,9 @@ class TestResponse:
     def test_publishing_one_long_response_results_in_both_being_pushed_to_s3(
         self, mocked_client, mocker
     ):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -157,7 +165,9 @@ class TestResponse:
     def test_publishing_one_short_file_results_in_no_s3_uploads(
         self, mocked_client, mocker
     ):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -177,7 +187,9 @@ class TestResponse:
     def test_publishing_multiple_short_files_results_in_no_s3_uploads(
         self, mocked_client, mocker
     ):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -200,7 +212,9 @@ class TestResponse:
     def test_publishing_a_short_file_results_in_inlined_response(
         self, mocked_client, mocker
     ):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -223,7 +237,9 @@ class TestResponse:
     def test_publishing_a_long_file_reuslts_in_s3_path_response(
         self, mocked_client, mocker
     ):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
@@ -243,7 +259,9 @@ class TestResponse:
 
     @mock.patch("boto3.client")
     def test_old_requests_do_get_sent(self, mocked_client, mocker):
-        stubbed_client = botocore.session.get_session().create_client("s3")
+        stubbed_client = botocore.session.get_session().create_client(
+            "s3", **config.BOTO_RESOURCE_KWARGS
+        )
         stubber = Stubber(stubbed_client)
         stubber.activate()
 

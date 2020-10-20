@@ -10,7 +10,6 @@ class GeneExpression:
     def __init__(self, msg, adata):
         self.adata = adata
         self.task_def = msg["body"]
-        self.experiment_id = msg["experimentId"]
 
     def _format_result(self, result):
         # JSONify result.

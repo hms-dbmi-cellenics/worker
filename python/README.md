@@ -95,31 +95,16 @@ Here are some examples:
         }
     }
 
-* `PrepareExperiment`:
-
-    {
-        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
-        "socketId": "Y1poEygzBfrDmIWpAAAA",
-        "experimentId": "1234",
-        "timeout": "2099-12-31 00:00:00",
-        "body": {
-            "name": "PrepareExperiment",
-            "sourceBucket": "biomage-source-originals",
-            "sourceMatrixPath": "pbmc_count_matrices/hg19/"
-        }
-    }
-
-
 ### 3. Run the code
 The worker is running locally by default when you launch the workspace inside the container as described in Step 1.
 
-To view the logs for the worker, you can use:
+To view the logs for the worker, run this under the `worker/` root folder:
 
     docker-compose logs -f
 
 Note that the worker will automatically switch itself off if it doesn't receive any tasks for 20 minutes.
 
 ## Run tests
-Go to the src/ and run:
+Go to `src/` and run:
 
     CLUSTER_ENV="test" python -m pytest --cov=.

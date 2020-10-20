@@ -13,7 +13,7 @@ class DifferentialExpression:
     def __init__(self, msg, adata):
         self.adata = adata
         self.task_def = msg["body"]
-        self.experiment_id = msg["experimentId"]
+        self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
         result = result.to_dict(orient="records")

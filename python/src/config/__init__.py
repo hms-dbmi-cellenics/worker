@@ -10,6 +10,7 @@ def get_config():
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
+    experiment_id = os.getenv("EXPERIMENT_ID", default="5e959f9c9f4b120771249001")
 
     # set up cluster env based on gitlab env if one was not specified
     # this is only run if `kube_env` is specified, i.e. when the system
@@ -31,9 +32,12 @@ def get_config():
         AWS_REGION=aws_region,
         BOTO_RESOURCE_KWARGS={"region_name": aws_region},
         DYNAMO_TABLE=f"experiments-{cluster_env}",
+        SOURCE_BUCKET=f"biomage-source-{cluster_env}",
+        LOCAL_DIR="/data",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}",
         R_WORKER_URL="http://localhost:4000",
+        EXPERIMENT_ID=experiment_id,
     )
 
     if cluster_env == "development" or cluster_env == "test":
@@ -45,5 +49,8 @@ def get_config():
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
         config.R_WORKER_URL = "http://r:4000"
+    
+    if cluster_env == "test":
+        config.LOCAL_DIR = "./test_data"
 
     return config
