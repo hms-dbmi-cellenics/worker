@@ -99,10 +99,10 @@ class CountMatrix:
             print(
                 datetime.datetime.utcnow(),
                 "Path",
-                path,
+                self.local_path,
                 "does not yet exist, creating it...",
             )
-            os.makedirs(path)
+            os.makedirs(self.local_path)
 
         # get object in bucket and their etags
         objects = self.get_objects()
