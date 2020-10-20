@@ -4,6 +4,9 @@ import datetime
 import os
 import hashlib
 import anndata
+from config import get_config
+
+config = get_config()
 
 
 class CountMatrix:
