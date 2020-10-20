@@ -52,7 +52,7 @@ jobs:
       name: Run unit tests
       run: |-
         cd src/
-        sudo CLUSTER_ENV="test" python -m pytest --cov=.
+        CLUSTER_ENV="test" python -m pytest --cov=.
       env:
         AWS_DEFAULT_REGION: 'eu-west-1'
         CLUSTER_ENV: 'test'
