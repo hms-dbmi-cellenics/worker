@@ -18,7 +18,9 @@ class CountMatrix:
         objects = self.s3.list_objects_v2(
             Bucket=self.config.SOURCE_BUCKET, Prefix=self.config.EXPERIMENT_ID
         )
-        objects = objects["Contents"]
+        objects = objects.get("Contents")
+        if not objects:
+            return {}
         objects = {o["Key"]: o["ETag"] for o in objects}
 
         return objects

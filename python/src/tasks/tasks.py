@@ -47,8 +47,11 @@ class TaskFactory:
         self.count_matrix.sync()
         adata = self.count_matrix.adata
 
-        task_def = msg["body"]
-        task_name = task_def["name"]
+        if not adata:
+            raise Exception("Adata is missing, no tasks can be performed.")
+
+        task_def = msg.get("body", {})
+        task_name = task_def.get("name")
 
         if task_name == "GetEmbedding":
             my_class = ComputeEmbedding(msg, adata)

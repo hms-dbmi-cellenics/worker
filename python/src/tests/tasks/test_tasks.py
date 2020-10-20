@@ -4,82 +4,66 @@ import os
 from tasks.tasks import TaskFactory
 from result import Result
 
-from helpers import load_count_matrix
-from mock import Mock
+from mock import Mock, patch
 
 
 class TestTaskFactory:
     @pytest.fixture(autouse=True)
-    def open_test_adata(self):
-        self._adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
+    def set_mock_count_matrix_instance(self):
+        adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
+        with patch("tasks.tasks.CountMatrix") as MockCountMatrix:
+            instance = MockCountMatrix.return_value
+            instance.sync.return_value = Mock()
+            instance.adata.return_value = adata
+            self.task_factory = TaskFactory()
+            self.task_factory.count_matrix = instance
 
     def test_throws_typeerror_on_empty_taskfactory_submission(self):
         with pytest.raises(TypeError):
-            TaskFactory().submit()
+            self.task_factory.submit()
 
     def test_throws_exception_on_missing_anndata(self):
-        with pytest.raises(TypeError):
-            TaskFactory().submit({})
+        self.task_factory.count_matrix.adata = None
+        with pytest.raises(Exception) as e:
+            self.task_factory.submit({})
+        assert e.value.args[0] == "Adata is missing, no tasks can be performed."
 
     def test_throws_exception_on_empty_task_definition(self):
-        with pytest.raises(TypeError):
-            TaskFactory().submit({})
-
-    def test_throws_exception_on_incomplete_body(self):
-        with pytest.raises(KeyError):
-            TaskFactory().submit({"body": {}}, self._adata)
+        with pytest.raises(Exception) as e:
+            self.task_factory.submit({})
+        assert e.value.args[0] == "Task class with name None was not found"
 
     def test_throws_exception_on_non_existent_task(self):
-        with pytest.raises(Exception):
-            TaskFactory().submit(
-                {"body": {"name": "ClearlyAnInvalidTaskName"}}, self._adata
-            )
+        with pytest.raises(Exception) as e:
+            self.task_factory.submit({"body": {"name": "ClearlyAnInvalidTaskName"}})
+        assert (
+            e.value.args[0]
+            == "Task class with name ClearlyAnInvalidTaskName was not found"
+        )
 
     def test_creates_class_on_existent_task(self):
-        r = TaskFactory._factory({"body": {"name": "GetEmbedding"}}, self._adata)
+        r = self.task_factory._factory({"body": {"name": "GetEmbedding"}})
         assert isinstance(r, object)
+        assert self.task_factory.count_matrix.sync.call_count == 2
 
-    def test_returns_result_list_with_properly_defined_task(self):
-        results, adata = TaskFactory().submit(
-            {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
-        )
+    @pytest.mark.parametrize(
+        "valid_task_name",
+        [
+            "GetEmbedding",
+            "ListGenes",
+            "DifferentialExpression",
+            "GeneExpression",
+            "ClusterCells",
+        ],
+    )
+    def test_returns_result_list_with_properly_defined_task(self, valid_task_name):
+        results = self.task_factory.submit({"body": {"name": valid_task_name}})
         assert isinstance(results, list)
+        assert self.task_factory.count_matrix.sync.call_count == 2
 
     def test_each_element_in_result_list_is_a_result_object(self):
-        results, adata = TaskFactory().submit(
-            {"body": {"name": "GetEmbedding", "type": "pca"}}, self._adata
+        results = self.task_factory.submit(
+            {"body": {"name": "GetEmbedding", "type": "pca"}}
         )
-
         assert all(isinstance(result, Result) for result in results)
-
-    def loads_adata_if_not_loaded(self):
-        load_count_matrix.get_adata = Mock(return_value=self._adata)
-
-        TaskFactory._factory(
-            {"body": {"name": "GetEmbedding"}, "experimentId": "1234"}, None
-        )
-        load_count_matrix.get_adata.assert_called_once_with(None, "1234")
-
-    def test_dont_load_adata_if_loaded(self):
-        load_count_matrix.get_adata = Mock()
-
-        TaskFactory._factory(
-            {"body": {"name": "GetEmbedding"}, "experimentId": "1234"}, self._adata
-        )
-        assert not load_count_matrix.get_adata.called
-
-    def test_dont_load_adata_if_not_needed(self):
-        load_count_matrix.get_adata = Mock()
-
-        TaskFactory._factory(
-            {
-                "body": {
-                    "name": "PrepareExperiment",
-                    "sourceMatrixPath": "my/path",
-                    "sourceBucket": "my-bucket",
-                },
-                "experimentId": "1234",
-            },
-            None,
-        )
-        assert not load_count_matrix.get_adata.called
+        assert self.task_factory.count_matrix.sync.call_count == 2

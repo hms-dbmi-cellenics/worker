@@ -8,8 +8,6 @@ from helpers.color_pool import COLOR_POOL
 class ClusterCells:
     def __init__(self, msg, adata):
         self.adata = adata
-
-        self.experiment_id = msg["experimentId"]
         self.task_def = msg["body"]
         self.colors = COLOR_POOL.copy()
 
