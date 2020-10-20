@@ -28,12 +28,15 @@ class CountMatrix:
     def calculate_file_etag(self, file_path, chunk_size=8 * 1024 * 1024):
         md5s = []
 
-        with open(file_path, "rb") as fp:
-            while True:
-                data = fp.read(chunk_size)
-                if not data:
-                    break
-                md5s.append(hashlib.md5(data))
+        try:
+            with open(file_path, "rb") as fp:
+                while True:
+                    data = fp.read(chunk_size)
+                    if not data:
+                        break
+                    md5s.append(hashlib.md5(data))
+        except OSError as e:
+            pass
 
         if len(md5s) < 1:
             return '"{}"'.format(hashlib.md5().hexdigest())
