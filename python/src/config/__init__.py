@@ -33,6 +33,7 @@ def get_config():
         BOTO_RESOURCE_KWARGS={"region_name": aws_region},
         DYNAMO_TABLE=f"experiments-{cluster_env}",
         SOURCE_BUCKET=f"biomage-source-{cluster_env}",
+        LOCAL_DIR="/data",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}",
         R_WORKER_URL="http://localhost:4000",
@@ -48,5 +49,8 @@ def get_config():
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
         config.R_WORKER_URL = "http://r:4000"
+    
+    if cluster_env == "test":
+        config.LOCAL_PATH="./test_data"
 
     return config

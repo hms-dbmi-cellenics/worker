@@ -14,6 +14,10 @@ class TestCountMatrix:
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         bucket = config.SOURCE_BUCKET
         self.key = f"{config.EXPERIMENT_ID}/python.h5ad"
+        self.local_path = os.path.join(config.LOCAL_DIR, config.EXPERIMENT_ID)
+        self.adata_path = os.path.join(config.LOCAL_DIR, self.key)
+
+
         s3.create_bucket(
             Bucket=bucket,
             CreateBucketConfiguration={"LocationConstraint": config.AWS_REGION},
@@ -37,7 +41,7 @@ class TestCountMatrix:
     def test_download_object_does_not_exist(self):
         self.get_count_matrix_instance()
         self.count_matrix.path_exists = False
-        Path(f"/data/{config.EXPERIMENT_ID}").mkdir(parents=True, exist_ok=True)
+        Path(self.local_path).mkdir(parents=True, exist_ok=True)
         is_downloaded = self.count_matrix.download_object(self.key, "567")
         assert is_downloaded
 
@@ -45,7 +49,7 @@ class TestCountMatrix:
     def test_download_object_previously_existing_etag_doesnt_match(self):
         self.get_count_matrix_instance()
         self.count_matrix.path_exists = True
-        Path(f"/data/{config.EXPERIMENT_ID}").mkdir(parents=True, exist_ok=True)
+        Path(self.local_path).mkdir(parents=True, exist_ok=True)
         is_downloaded = self.count_matrix.download_object(self.key, "567")
         assert is_downloaded
 
@@ -53,7 +57,7 @@ class TestCountMatrix:
     def test_download_object_previously_existing_etag_does_match(self):
         self.get_count_matrix_instance()
         self.count_matrix.path_exists = True
-        Path(f"/data/{config.EXPERIMENT_ID}").mkdir(parents=True, exist_ok=True)
+        Path(self.local_path).mkdir(parents=True, exist_ok=True)
         is_downloaded = self.count_matrix.download_object(
             self.key, self.count_matrix.calculate_file_etag("tests/test.h5ad")
         )
@@ -63,35 +67,37 @@ class TestCountMatrix:
     def test_sync_no_previous_data(self):
         self.get_count_matrix_instance()
         self.count_matrix.path_exists = True
-        shutil.rmtree(f"/data/{config.EXPERIMENT_ID}", ignore_errors=True)
+        shutil.rmtree(self.local_path, ignore_errors=True)
 
         self.count_matrix.sync()
         assert "AnnData" in type(self.count_matrix.adata).__name__
         assert not self.count_matrix.path_exists
-        assert Path(f"/data/{config.EXPERIMENT_ID}").exists()
+        assert Path(self.local_path).exists()
         assert self.count_matrix.calculate_file_etag(
-            f"/data/{self.key}"
-        ) == self.count_matrix.calculate_file_etag("tests/test.h5ad")
+            self.adata_path
+        ) == self.count_matrix.calculate_file_etag(
+            "tests/test.h5ad"
+        )
 
     @mock_s3
     def test_sync_previous_data_changed(self):
         self.get_count_matrix_instance()
         self.count_matrix.path_exists = True
 
-        shutil.rmtree(f"/data/{config.EXPERIMENT_ID}", ignore_errors=True)
-        Path(f"/data/{config.EXPERIMENT_ID}").mkdir(parents=True, exist_ok=True)
-        Path(f"/data/{self.key}").touch(exist_ok=True)
+        shutil.rmtree(self.local_path, ignore_errors=True)
+        Path(self.local_path).mkdir(parents=True, exist_ok=True)
+        Path(self.adata_path).touch(exist_ok=True)
 
         assert self.count_matrix.calculate_file_etag(
-            f"/data/{self.key}"
+            self.adata_path
         ) != self.count_matrix.calculate_file_etag("tests/test.h5ad")
 
         self.count_matrix.sync()
         assert "AnnData" in type(self.count_matrix.adata).__name__
         assert self.count_matrix.path_exists
-        assert Path(f"/data/{config.EXPERIMENT_ID}").exists()
+        assert Path(self.local_path).exists()
         assert self.count_matrix.calculate_file_etag(
-            f"/data/{self.key}"
+            self.adata_path
         ) == self.count_matrix.calculate_file_etag("tests/test.h5ad")
 
     @mock_s3
@@ -99,13 +105,13 @@ class TestCountMatrix:
         self.get_count_matrix_instance()
         self.count_matrix.path_exists = True
 
-        Path(f"/data/{config.EXPERIMENT_ID}").mkdir(parents=True, exist_ok=True)
-        shutil.copy("tests/test.h5ad", f"/data/{self.key}")
+        Path(self.local_path).mkdir(parents=True, exist_ok=True)
+        shutil.copy("tests/test.h5ad", self.adata_path)
 
         self.count_matrix.sync()
         assert "AnnData" in type(self.count_matrix.adata).__name__
         assert self.count_matrix.path_exists
-        assert Path(f"/data/{config.EXPERIMENT_ID}").exists()
+        assert Path(self.local_path).exists()
         assert self.count_matrix.calculate_file_etag(
-            f"/data/{self.key}"
+            self.adata_path
         ) == self.count_matrix.calculate_file_etag("tests/test.h5ad")

@@ -9,7 +9,7 @@ import anndata
 class CountMatrix:
     def __init__(self):
         self.config = get_config()
-        self.local_path = os.path.join(os.sep, "data", self.config.EXPERIMENT_ID)
+        self.local_path = os.path.join(self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
 
         self.adata = None
@@ -49,7 +49,7 @@ class CountMatrix:
         return '"{}-{}"'.format(digests_md5.hexdigest(), len(md5s))
 
     def download_object(self, key, etag):
-        path = os.path.join(os.sep, "data", key)
+        path = os.path.join(config.LOCAL_DIR, key)
 
         if self.path_exists:
             print("We have files from previous runs, comparing checksums to etag...")
@@ -90,7 +90,6 @@ class CountMatrix:
 
     def sync(self):
         # check if path existed before running this
-        path = os.path.join(os.sep, "data", self.config.EXPERIMENT_ID)
         self.path_exists = os.path.exists(self.local_path)
 
         if not self.path_exists:
