@@ -109,5 +109,5 @@ class CountMatrix:
 
         synced = {key: self.download_object(key, etag) for key, etag in objects.items()}
 
-        adata_path = os.path.join(path, "python.h5ad")
+        adata_path = os.path.join(self.local_path, "python.h5ad")
         self.update_anndata(synced, adata_path)
