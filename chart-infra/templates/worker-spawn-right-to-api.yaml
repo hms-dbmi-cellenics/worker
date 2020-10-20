@@ -1,4 +1,4 @@
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: can-create-jobs
@@ -6,10 +6,13 @@ metadata:
 rules:
 - apiGroups: ["batch"]
   resources: ["jobs"]
-  verbs: ["create"]
+  verbs: ["create", "get", "watch", "list", "update"]
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
-  verbs: ["create"]
+  verbs: ["create", "get", "watch", "list", "update"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "get", "watch", "list", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding

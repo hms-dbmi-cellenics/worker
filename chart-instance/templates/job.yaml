@@ -12,6 +12,8 @@ spec:
       - name: "{{ .Release.Name }}-worker-python"
         image: "{{ .Values.images.python }}"
         env:
+        - name: 'EXPERIMENT_ID'
+          value: "{{ .Values.experimentId }}"
         - name: 'WORK_QUEUE'
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
@@ -19,16 +21,41 @@ spec:
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
-      # - name: "{{ .Release.Name }}-worker-r"
-      #   image: "{{ .Values.images.r }}"
-      #   volumeMounts:
-      #   - name: 'data'
-      #     mountPath: '/data'
-      #   ports:
-      #   - containerPort: 4000
+        - name: watch-script
+          mountPath: /var/lib/watchfile
+          readOnly: true
+        - name: shutdown-file
+          mountPath: /var/lib/shutdown-file
+      - name: "{{ .Release.Name }}-worker-r"
+        image: "{{ .Values.images.r }}"
+        volumeMounts:
+        - name: 'data'
+          mountPath: '/data'
+        - name: watch-script
+          mountPath: /var/lib/watchfile
+          readOnly: true
+        - name: shutdown-file
+          mountPath: /var/lib/shutdown-file
+        ports:
+        - containerPort: 4000
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 10
       volumes:
       - name: 'data'
         persistentVolumeClaim:
           claimName: "{{ .Release.Name }}-pvc"
+      - name: watch-script
+        configMap:
+          name: "watch-script"
+          items:
+            - key: watcher.sh
+              path: watcher.sh
+            - key: entrypoint.sh
+              path: entrypoint.sh
+      - name: shutdown-file
       restartPolicy: OnFailure
       serviceAccountName: 'deployment-runner'
