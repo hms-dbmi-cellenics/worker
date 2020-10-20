@@ -1,7 +1,7 @@
+import os
+import shutil
 import boto3
 from moto import mock_s3
-
-import shutil
 from pathlib import Path
 from helpers.count_matrix import CountMatrix
 from config import get_config
