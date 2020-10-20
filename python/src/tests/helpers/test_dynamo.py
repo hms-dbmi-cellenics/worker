@@ -10,7 +10,7 @@ config = get_config()
 
 class TestDynamo:
     def test_get_matrix_path_attempts_connection_to_appropriate_table(self):
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
 
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
@@ -31,7 +31,7 @@ class TestDynamo:
 
     def test_get_matrix_path_gets_correct_experiment_id_from_db(self):
         test_experiment_id = "my-very-serious-experiment"
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
             "get_item",
@@ -51,7 +51,7 @@ class TestDynamo:
 
     def test_get_matrix_path_gets_correct_field_from_db(self):
         test_experiment_id = "my-very-serious-experiment"
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
             "get_item",
@@ -71,7 +71,7 @@ class TestDynamo:
 
     def test_get_non_existing_field_from_db(self):
         test_experiment_id = "my-very-serious-experiment"
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
             "get_item",
@@ -91,7 +91,7 @@ class TestDynamo:
 
     def test_get_non_existing_experiment_from_db(self):
         test_experiment_id = "my-very-serious-experiment"
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(dynamodb.meta.client)
         stubber.add_response(
             "get_item",
@@ -108,4 +108,3 @@ class TestDynamo:
             m.return_value = dynamodb
             resp = get_item_from_dynamo(test_experiment_id, "matrixPath")
             assert resp == {}
-
