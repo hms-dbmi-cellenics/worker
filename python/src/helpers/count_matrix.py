@@ -81,10 +81,13 @@ class CountMatrix:
         if not self.adata:
             print("AnnData does not exist in memory, creating it now...")
             self.adata = anndata.read_h5ad(adata_path)
-
-        if self.adata and synced[adata_key]:
+        elif self.adata and synced[adata_key]:
             print("AnnData has been updated, reloading...")
             self.adata = anndata.read_h5ad(adata_path)
+        else:
+            raise ValueError(
+                "AnnData could not be loaded due to an unknown error."
+            )
 
         if "cell_ids" not in self.adata.obs:
             raise ValueError(

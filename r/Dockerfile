@@ -18,6 +18,14 @@ ENV GITHUB_PAT $GITHUB_PAT
 RUN Rscript setup/install_or_die.r devtools
 RUN Rscript setup/install_or_die.r github rexyai/RestRserve
 RUN Rscript setup/install_or_die.r languageserver
+RUN Rscript setup/install_or_die.r BiocManager
+
+RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "DESeq2", "pcaMethods"))'
+RUN Rscript setup/install_or_die.r github kharchenkolab/pagoda2
+RUN Rscript setup/install_or_die.r github kharchenkolab/conos
+
+RUN R -e 'install.packages("gprofiler2")'
+RUN R -e 'install.packages("RJSONIO")'
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -40,6 +48,9 @@ FROM builder AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+
+ARG EXPERIMENT_ID
+ENV EXPERIMENT_ID $EXPERIMENT_ID
 
 WORKDIR /r
 CMD watchmedo auto-restart --directory=./src/ --pattern=* --recursive -- Rscript src/work.r
