@@ -93,6 +93,8 @@ create_app <- function(data) {
             res$set_body(result)
         }
     )
+
+    return(app)
 }
 
 data <- load_data()
