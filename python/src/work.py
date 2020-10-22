@@ -4,6 +4,7 @@ from consume_message import consume
 from response import Response
 from config import get_config
 
+
 def main():
     config = get_config()
     last_activity = datetime.datetime.utcnow()
@@ -22,6 +23,7 @@ def main():
             last_activity = datetime.datetime.utcnow()
 
     print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down...")
+
 
 if __name__ == "__main__":
     main()

@@ -51,6 +51,7 @@ jobs:
     - id: test
       name: Run unit tests
       run: |-
+        gunzip -k ../../data/test/python.h5ad
         cd src/
         CLUSTER_ENV="test" python -m pytest --cov=.
       env:

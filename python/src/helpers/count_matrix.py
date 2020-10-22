@@ -1,4 +1,3 @@
-from config import get_config
 import boto3
 import datetime
 import os
@@ -38,7 +37,7 @@ class CountMatrix:
                     if not data:
                         break
                     md5s.append(hashlib.md5(data))
-        except OSError as e:
+        except OSError:
             pass
 
         if len(md5s) < 1:
@@ -84,10 +83,6 @@ class CountMatrix:
         elif self.adata and synced[adata_key]:
             print("AnnData has been updated, reloading...")
             self.adata = anndata.read_h5ad(adata_path)
-        else:
-            raise ValueError(
-                "AnnData could not be loaded due to an unknown error."
-            )
 
         if "cell_ids" not in self.adata.obs:
             raise ValueError(

@@ -107,4 +107,5 @@ Note that the worker will automatically switch itself off if it doesn't receive 
 ## Run tests
 Go to `src/` and run:
 
+    gunzip -k ../../data/test/python.h5ad
     CLUSTER_ENV="test" python -m pytest --cov=.

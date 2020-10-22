@@ -17,13 +17,12 @@ class TestCountMatrix:
         self.local_path = os.path.join(config.LOCAL_DIR, config.EXPERIMENT_ID)
         self.adata_path = os.path.join(config.LOCAL_DIR, self.key)
 
-
         s3.create_bucket(
             Bucket=bucket,
             CreateBucketConfiguration={"LocationConstraint": config.AWS_REGION},
         )
 
-        with open("tests/test.h5ad", "rb") as f:
+        with open(os.path.join(config.LOCAL_DIR, "test", "python.h5ad"), "rb") as f:
             s3.upload_fileobj(Fileobj=f, Bucket=bucket, Key=self.key)
 
         self.count_matrix = CountMatrix()
@@ -59,7 +58,10 @@ class TestCountMatrix:
         self.count_matrix.path_exists = True
         Path(self.local_path).mkdir(parents=True, exist_ok=True)
         is_downloaded = self.count_matrix.download_object(
-            self.key, self.count_matrix.calculate_file_etag("tests/test.h5ad")
+            self.key,
+            self.count_matrix.calculate_file_etag(
+                os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+            ),
         )
         assert not is_downloaded
 
@@ -76,7 +78,7 @@ class TestCountMatrix:
         assert self.count_matrix.calculate_file_etag(
             self.adata_path
         ) == self.count_matrix.calculate_file_etag(
-            "tests/test.h5ad"
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
         )
 
     @mock_s3
@@ -90,7 +92,9 @@ class TestCountMatrix:
 
         assert self.count_matrix.calculate_file_etag(
             self.adata_path
-        ) != self.count_matrix.calculate_file_etag("tests/test.h5ad")
+        ) != self.count_matrix.calculate_file_etag(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        )
 
         self.count_matrix.sync()
         assert "AnnData" in type(self.count_matrix.adata).__name__
@@ -98,7 +102,9 @@ class TestCountMatrix:
         assert Path(self.local_path).exists()
         assert self.count_matrix.calculate_file_etag(
             self.adata_path
-        ) == self.count_matrix.calculate_file_etag("tests/test.h5ad")
+        ) == self.count_matrix.calculate_file_etag(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        )
 
     @mock_s3
     def test_sync_previous_data_not_changed(self):
@@ -106,7 +112,10 @@ class TestCountMatrix:
         self.count_matrix.path_exists = True
 
         Path(self.local_path).mkdir(parents=True, exist_ok=True)
-        shutil.copy("tests/test.h5ad", self.adata_path)
+        shutil.copy(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad"),
+            self.adata_path,
+        )
 
         self.count_matrix.sync()
         assert "AnnData" in type(self.count_matrix.adata).__name__
@@ -114,4 +123,6 @@ class TestCountMatrix:
         assert Path(self.local_path).exists()
         assert self.count_matrix.calculate_file_etag(
             self.adata_path
-        ) == self.count_matrix.calculate_file_etag("tests/test.h5ad")
+        ) == self.count_matrix.calculate_file_etag(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        )

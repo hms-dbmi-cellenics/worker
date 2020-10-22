@@ -63,12 +63,3 @@ app$add_post(
 
 backend <- BackendRserve$new()
 backend$start(app, http_port = 4000)
-
-# data <- readRDS("/data/5e959f9c9f4b120771249001/r.rds")
-# counts <- t(data$misc$rawCounts)
-# condition <- data$clusters$PCA$community
-# cols <- data.frame(condition)
-# dataset <- DESeqDataSetFromMatrix(
-#     countData = counts, colData = cols, design = ~condition
-# )
-#  DESeqDataSetFromMatrix(t(data$misc$rawCounts), DataFrame(rownames(data$misc$rawCounts)), ~ data$clusters$PCA$community)
