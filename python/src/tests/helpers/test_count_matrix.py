@@ -33,7 +33,7 @@ class TestCountMatrix:
         self.get_count_matrix_instance()
         objs = self.count_matrix.get_objects()
         assert objs == {
-            "5e959f9c9f4b120771249001/python.h5ad": '"ad429334fb2de1b0eb8077ba7e222941-5"'
+            "5e959f9c9f4b120771249001/python.h5ad": '"864fb08f98f18cb19c7dd04409d90405-18"'
         }
 
     @mock_s3

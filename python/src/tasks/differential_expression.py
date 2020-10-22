@@ -78,6 +78,9 @@ class DifferentialExpression:
             data=json.dumps(request),
         )
 
+        with open("/data/result.json", "w") as f:
+            json.dump(r.json(), f)
+
         result = pandas.DataFrame.from_dict(r.json())
         result = result[["Z", "M", "Gene"]]
         result = result.rename(
@@ -91,6 +94,6 @@ class DifferentialExpression:
 
         # get top x most significant results, if parameter was supplied
         if n_genes:
-            result = result.nsmallest(n_genes, ["qval"])
+            result = result.nsmallest(n_genes, ["abszscore"])
 
         return self._format_result(result)

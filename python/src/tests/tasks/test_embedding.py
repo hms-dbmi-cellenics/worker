@@ -1,8 +1,11 @@
 import pytest
 import anndata
 import os
-from tasks.embedding import ComputeEmbedding
 import numpy as np
+from tasks.embedding import ComputeEmbedding
+from config import get_config
+
+config = get_config()
 
 
 class TestEmbedding:
@@ -40,7 +43,7 @@ class TestEmbedding:
 
         res = ComputeEmbedding(self.correct_request_skeleton, self._adata)._PCA()
 
-        assert not np.array_equal(res, old)
+        assert np.array_equal(res, old)
 
     def test_pca_deals_with_incomplete_previous_results(self):
         self._adata.obsm.pop("X_pca", None)

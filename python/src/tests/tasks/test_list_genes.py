@@ -1,8 +1,11 @@
 import pytest
 import anndata
 import os
-from tasks.list_genes import ListGenes
 import json
+from tasks.list_genes import ListGenes
+from config import get_config
+
+config = get_config()
 
 
 class TestListGenes:
