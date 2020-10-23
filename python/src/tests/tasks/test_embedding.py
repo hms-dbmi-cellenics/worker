@@ -1,20 +1,27 @@
 import pytest
 import anndata
 import os
-from tasks.embedding import ComputeEmbedding
-from result import Result
 import numpy as np
+from tasks.embedding import ComputeEmbedding
+from config import get_config
+
+config = get_config()
 
 
 class TestEmbedding:
     @pytest.fixture(autouse=True)
     def open_test_adata(self):
-        self._adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
+        self._adata = anndata.read_h5ad(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request_skeleton = {
-            "body": {"name": "GetEmbedding", "type": "pca",}
+            "body": {
+                "name": "GetEmbedding",
+                "type": "pca",
+            }
         }
 
     def test_throws_on_missing_parameters(self):
@@ -36,7 +43,7 @@ class TestEmbedding:
 
         res = ComputeEmbedding(self.correct_request_skeleton, self._adata)._PCA()
 
-        assert not np.array_equal(res, old)
+        assert np.array_equal(res, old)
 
     def test_pca_deals_with_incomplete_previous_results(self):
         self._adata.obsm.pop("X_pca", None)

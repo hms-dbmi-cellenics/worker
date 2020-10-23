@@ -1,2 +1,8 @@
 .DS_Store
 .vscode/
+
+data/**
+
+!data/test
+data/test/**
+!data/test/*.gz

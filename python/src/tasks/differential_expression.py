@@ -1,7 +1,8 @@
 import json
 from config import get_config
 from result import Result
-import diffxpy.api as de
+import pandas
+import requests
 
 from helpers.dynamo import get_item_from_dynamo
 from helpers.find_cells_by_set_id import find_cells_by_set_id
@@ -62,26 +63,26 @@ class DifferentialExpression:
             raw_adata.obs["cell_ids"].isin(de_base)
         ] = "first"
 
-        # Do a pairwise wilcoxon test
-        result = de.test.pairwise(
-            data=raw_adata,
-            grouping="condition",
-            test="t-test",
-            lazy=False,
-            noise_model=None,
+        request = {
+            "baseCells": raw_adata.obs.index[
+                raw_adata.obs["condition"] == "first"
+            ].tolist(),
+            "backgroundCells": raw_adata.obs.index[
+                raw_adata.obs["condition"] == "second"
+            ].tolist(),
+        }
+
+        r = requests.post(
+            f"{config.R_WORKER_URL}/v0/DifferentialExpression",
+            headers={"content-type": "application/json"},
+            data=json.dumps(request),
         )
 
-        # massage into right format
-        result = result.summary_pairs(["first"], ["second"])
-        result = result[["gene", "pval", "qval", "log2fc"]]
-        result["gene_names"] = result["gene"]
-        del result["gene"]
-
-        # remove all NaNs
-        result = result.dropna()
+        result = pandas.DataFrame.from_dict(r.json())
+        result.dropna(inplace=True)
 
         # get top x most significant results, if parameter was supplied
         if n_genes:
-            result = result.nsmallest(n_genes, ["qval"])
+            result = result.nsmallest(n_genes, ["abszscore"])
 
         return self._format_result(result)

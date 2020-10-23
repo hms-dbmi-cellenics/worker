@@ -6,6 +6,7 @@ import json
 from botocore.stub import Stubber
 import mock
 import boto3
+import responses
 from config import get_config
 from boto3.dynamodb.types import TypeSerializer
 
@@ -15,7 +16,9 @@ config = get_config()
 class TestDifferentialExpression:
     @pytest.fixture(autouse=True)
     def open_test_adata(self):
-        self._adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
+        self._adata = anndata.read_h5ad(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -28,6 +31,15 @@ class TestDifferentialExpression:
                 "compareWith": "rest",
             },
         }
+
+        with open(os.path.join("tests", "de_result.json")) as f:
+            data = json.load(f)
+            responses.add(
+                responses.POST,
+                f"{config.R_WORKER_URL}/v0/DifferentialExpression",
+                json=data,
+                status=200,
+            )
 
     """
     Mocks the DynamoDB query for fetching cell sets. Returns an
@@ -67,14 +79,17 @@ class TestDifferentialExpression:
         with mock.patch("boto3.resource") as m:
             yield (m, dynamodb)
 
+    @responses.activate
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             DifferentialExpression()
 
+    @responses.activate
     def test_throws_on_missing_adata(self):
         with pytest.raises(TypeError):
             DifferentialExpression(self.correct_request)
 
+    @responses.activate
     def test_dynamodb_call_is_made_once_when_vs_rest(self):
         with mock.patch("boto3.resource") as m:
             global no_called
@@ -112,16 +127,19 @@ class TestDifferentialExpression:
 
             assert no_called == 1
 
+    @responses.activate
     def test_cell_sets_get_queried_appropriately(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
         DifferentialExpression(self.correct_request, self._adata).compute()
 
+    @responses.activate
     def test_works_with_request_and_adata(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
         DifferentialExpression(self.correct_request, self._adata)
 
+    @responses.activate
     def test_returns_json(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
@@ -130,6 +148,7 @@ class TestDifferentialExpression:
         res = res[0].result
         json.loads(res)
 
+    @responses.activate
     def test_returns_a_json_object(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
@@ -139,6 +158,7 @@ class TestDifferentialExpression:
         res = json.loads(res)
         assert isinstance(res, dict)
 
+    @responses.activate
     def test_object_has_all_required_columns(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
@@ -149,9 +169,10 @@ class TestDifferentialExpression:
 
         for row in res["rows"]:
             keys = sorted(row.keys())
-            expected_keys = sorted(["gene_names", "pval", "qval", "log2fc"])
+            expected_keys = sorted(["gene_names", "zscore", "abszscore", "qval", "log2fc", "_row"])
             assert keys == expected_keys
 
+    @responses.activate
     def test_appropriate_genes_returned_when_a_limit_is_specified(
         self, mock_dynamo_get
     ):
@@ -167,6 +188,7 @@ class TestDifferentialExpression:
 
         assert len(res) <= request["body"]["maxNum"]
 
+    @responses.activate
     def test_all_genes_returned_when_no_limit_is_specified(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb

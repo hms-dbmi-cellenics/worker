@@ -52,6 +52,7 @@ jobs:
       name: Run unit tests
       run: |-
         cd src/
+        gunzip -k ../../data/test/python.h5ad.gz
         CLUSTER_ENV="test" python -m pytest --cov=.
       env:
         AWS_DEFAULT_REGION: 'eu-west-1'

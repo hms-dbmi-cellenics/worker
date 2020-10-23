@@ -15,4 +15,5 @@ diffxpy
 python-dateutil
 cryptography
 leidenalg
-backoff
+requests
+responses

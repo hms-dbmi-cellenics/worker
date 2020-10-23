@@ -15,6 +15,3 @@ coverage.xml
 *,cover
 *.log
 .git
-
-*.h5ad
-!test.h5ad

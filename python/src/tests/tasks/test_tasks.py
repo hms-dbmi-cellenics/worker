@@ -3,14 +3,17 @@ import anndata
 import os
 from tasks.tasks import TaskFactory
 from result import Result
-
+from config import get_config
 from mock import Mock, patch
+
+config = get_config()
 
 
 class TestTaskFactory:
     @pytest.fixture(autouse=True)
     def set_mock_count_matrix_instance(self):
-        adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
+        adata = anndata.read_h5ad(os.path.join(config.LOCAL_DIR, "test", "python.h5ad"))
+
         with patch("tasks.tasks.CountMatrix") as MockCountMatrix:
             instance = MockCountMatrix.return_value
             instance.sync.return_value = Mock()

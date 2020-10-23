@@ -11,7 +11,9 @@ config = get_config()
 class TestGeneExpression:
     @pytest.fixture(autouse=True)
     def open_test_adata(self):
-        self._adata = anndata.read_h5ad(os.path.join("tests", "test.h5ad"))
+        self._adata = anndata.read_h5ad(
+            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):

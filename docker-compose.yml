@@ -7,11 +7,14 @@ services:
       target: dev
       args:
         - GITHUB_PAT=${GITHUB_PAT}
+        - EXPERIMENT_ID=5e959f9c9f4b120771249001
     volumes:
       - ./r:/r:cached
+      - ./data:/data:cached
     expose:
       - "4000"
-
+    ports:
+      - "4000:4000"
   python:
     container_name: 'biomage-worker-python'
     build:
@@ -19,3 +22,4 @@ services:
       target: dev
     volumes:
       - ./python:/python:cached
+      - ./data:/data:cached

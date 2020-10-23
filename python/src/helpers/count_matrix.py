@@ -1,4 +1,3 @@
-from config import get_config
 import boto3
 import datetime
 import os
@@ -28,39 +27,73 @@ class CountMatrix:
 
         return objects
 
-    def calculate_file_etag(self, file_path, chunk_size=8 * 1024 * 1024):
-        md5s = []
+    def md5_full_file(self, file_path):
+        hash_md5 = hashlib.md5()
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+
+    def megabyte_chunks(self, filesize, num_parts):
+        x = filesize / int(num_parts)
+        y = x % 1048576
+        return int(x + 1048576 - y)
+
+    def validate_etag(self, file_path, etag):
+
+        # get the size of the file. if it doesn't exist,
+        # the etags definitely don't match
+        try:
+            filesize = os.path.getsize(file_path)
+        except OSError:
+            return False
+
+        # get the number of parts. if this doesn't exist,
+        # the etag has no parts, so it is just the md5 digest
+        etag = etag.replace('"', "")
 
         try:
-            with open(file_path, "rb") as fp:
-                while True:
-                    data = fp.read(chunk_size)
-                    if not data:
-                        break
-                    md5s.append(hashlib.md5(data))
-        except OSError as e:
-            pass
+            num_parts = int(etag.split("-")[1])
+        except IndexError:
+            return etag == self.md5_full_file(file_path)
 
-        if len(md5s) < 1:
-            return '"{}"'.format(hashlib.md5().hexdigest())
+        # these are some common part sizes used. the last one
+        # is the file size divided by the number of parts,
+        # rounded to the nearest megabyte.
+        partsizes = [
+            8388608,
+            15728640,
+            self.megabyte_chunks(filesize, num_parts),
+        ]
 
-        if len(md5s) == 1:
-            return '"{}"'.format(md5s[0].hexdigest())
+        valid_sizes = lambda partsize: (
+            partsize < filesize and (float(filesize) / float(partsize)) <= num_parts
+        )
 
-        digests = b"".join(m.digest() for m in md5s)
-        digests_md5 = hashlib.md5(digests)
-        return '"{}-{}"'.format(digests_md5.hexdigest(), len(md5s))
+        for partsize in filter(valid_sizes, partsizes):
+            md5_digests = []
+
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(partsize), b""):
+                    md5_digests.append(hashlib.md5(chunk).digest())
+
+            candidate = (
+                hashlib.md5(b"".join(md5_digests)).hexdigest()
+                + "-"
+                + str(len(md5_digests))
+            )
+
+            if candidate == etag:
+                return True
+
+        return False
 
     def download_object(self, key, etag):
         path = os.path.join(config.LOCAL_DIR, key)
 
-        if self.path_exists:
-            print("We have files from previous runs, comparing checksums to etag...")
-            local_etag = self.calculate_file_etag(path)
-
-            if local_etag == etag:
-                print("Skipping downloads as etags match.")
-                return False
+        if self.path_exists and self.validate_etag(path, etag):
+            print("Skipping downloads as etags match.")
+            return False
 
         print(f"Downloading {key} (etag: {etag}) from S3 to {path}...")
 
@@ -81,8 +114,7 @@ class CountMatrix:
         if not self.adata:
             print("AnnData does not exist in memory, creating it now...")
             self.adata = anndata.read_h5ad(adata_path)
-
-        if self.adata and synced[adata_key]:
+        elif self.adata and synced[adata_key]:
             print("AnnData has been updated, reloading...")
             self.adata = anndata.read_h5ad(adata_path)
 
