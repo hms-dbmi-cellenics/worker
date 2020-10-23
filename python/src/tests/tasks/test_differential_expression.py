@@ -169,7 +169,7 @@ class TestDifferentialExpression:
 
         for row in res["rows"]:
             keys = sorted(row.keys())
-            expected_keys = sorted(["gene_names", "zscore", "abszscore", "log2fc", "_row"])
+            expected_keys = sorted(["gene_names", "zscore", "abszscore", "qval", "log2fc", "_row"])
             assert keys == expected_keys
 
     @responses.activate
