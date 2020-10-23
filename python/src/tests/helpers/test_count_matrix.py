@@ -74,7 +74,7 @@ class TestCountMatrix:
         Path(self.local_path).mkdir(parents=True, exist_ok=True)
         is_downloaded = self.count_matrix.download_object(
             self.key,
-            ''"864fb08f98f18cb19c7dd04409d90405-18"'
+            '"864fb08f98f18cb19c7dd04409d90405-18"'
         )
         assert not is_downloaded
 
