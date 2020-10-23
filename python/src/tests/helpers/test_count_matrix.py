@@ -5,9 +5,24 @@ from moto import mock_s3
 from pathlib import Path
 from helpers.count_matrix import CountMatrix
 from config import get_config
+import hashlib
 
 config = get_config()
 
+def md5_for_file(path, block_size=256*128, hr=False):
+    '''
+    Block size directly depends on the block size of your filesystem
+    to avoid performances issues
+    Here I have blocks of 4096 octets (Default NTFS)
+    '''
+    md5 = hashlib.md5()
+    with open(path,'rb') as f: 
+        for chunk in iter(lambda: f.read(block_size), b''): 
+             md5.update(chunk)
+    if hr:
+        return md5.hexdigest()
+
+    return md5.digest()
 
 class TestCountMatrix:
     def get_count_matrix_instance(self):
@@ -75,9 +90,9 @@ class TestCountMatrix:
         assert "AnnData" in type(self.count_matrix.adata).__name__
         assert not self.count_matrix.path_exists
         assert Path(self.local_path).exists()
-        assert self.count_matrix.calculate_file_etag(
+        assert md5_for_file(
             self.adata_path
-        ) == self.count_matrix.calculate_file_etag(
+        ) == md5_for_file(
             os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
         )
 
@@ -90,19 +105,19 @@ class TestCountMatrix:
         Path(self.local_path).mkdir(parents=True, exist_ok=True)
         Path(self.adata_path).touch(exist_ok=True)
 
-        assert self.count_matrix.calculate_file_etag(
-            self.adata_path
-        ) != self.count_matrix.calculate_file_etag(
-            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
+        assert md5_for_file(
+                self.adata_path
+        ) != md5_for_file(
+                os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
         )
 
         self.count_matrix.sync()
         assert "AnnData" in type(self.count_matrix.adata).__name__
         assert self.count_matrix.path_exists
         assert Path(self.local_path).exists()
-        assert self.count_matrix.calculate_file_etag(
+        assert md5_for_file(
             self.adata_path
-        ) == self.count_matrix.calculate_file_etag(
+        ) == md5_for_file(
             os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
         )
 
@@ -121,8 +136,8 @@ class TestCountMatrix:
         assert "AnnData" in type(self.count_matrix.adata).__name__
         assert self.count_matrix.path_exists
         assert Path(self.local_path).exists()
-        assert self.count_matrix.calculate_file_etag(
+        assert md5_for_file(
             self.adata_path
-        ) == self.count_matrix.calculate_file_etag(
+        ) == md5_for_file(
             os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
         )
