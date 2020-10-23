@@ -74,9 +74,7 @@ class TestCountMatrix:
         Path(self.local_path).mkdir(parents=True, exist_ok=True)
         is_downloaded = self.count_matrix.download_object(
             self.key,
-            self.count_matrix.calculate_file_etag(
-                os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
-            ),
+            ''"864fb08f98f18cb19c7dd04409d90405-18"'
         )
         assert not is_downloaded
 
