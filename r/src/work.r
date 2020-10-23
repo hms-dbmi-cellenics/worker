@@ -18,7 +18,7 @@ load_data <- function() {
             {
                 f <- readRDS(
                     paste(
-                        "/data", "5e959f9c9f4b120771249001", "rb.rds",
+                        "/data", experiment_id, "r.rds",
                         sep = "/"
                     )
                 )
@@ -90,12 +90,31 @@ create_app <- function(data) {
                 match(result$Gene, data$misc$gene_annotations$input), "name"
             ]
 
+            result <- result[c("Z", "M", "Gene")]
+            colnames(result) <- c("zscore", "log2fc", "gene_names")
+
+            # compute absolute Z score from Z score
+            result["abszscore"] <- abs(result["zscore"])
+
+            # compute q-value from absolute z score
+            result["qval"] <- lapply(
+                result["abszscore"], function(x) 2 * pnorm(-x)
+            )
+
+            result["qval"] <- apply(
+                result["qval"], 1, function(x) format(x, scientific = TRUE)
+            )
+
+            message("yolo")
+
             res$set_body(result)
         }
     )
 
     return(app)
 }
+
+# apply(hist_data, 2, function(x) pnorm(x, mean=mean(x), sd=sd(x)))
 
 data <- load_data()
 backend <- BackendRserve$new()

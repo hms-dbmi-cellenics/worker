@@ -78,18 +78,9 @@ class DifferentialExpression:
             data=json.dumps(request),
         )
 
-        with open("/data/result.json", "w") as f:
-            json.dump(r.json(), f)
-
         result = pandas.DataFrame.from_dict(r.json())
-        result = result[["Z", "M", "Gene"]]
-        result = result.rename(
-            columns={"Z": "zscore", "M": "log2fc", "Gene": "gene_names"}
-        )
 
-        result["abszscore"] = result["zscore"].abs()
-
-        # remove all NaNs
+        print(result)
         result.dropna(inplace=True)
 
         # get top x most significant results, if parameter was supplied
