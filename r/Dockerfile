@@ -20,9 +20,14 @@ RUN Rscript setup/install_or_die.r github rexyai/RestRserve
 RUN Rscript setup/install_or_die.r languageserver
 RUN Rscript setup/install_or_die.r BiocManager
 
-RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "DESeq2", "pcaMethods"))'
-RUN Rscript setup/install_or_die.r github kharchenkolab/pagoda2
-RUN Rscript setup/install_or_die.r github kharchenkolab/conos
+RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaMethods", "org.Dr.eg.db", "org.Hs.eg.db", "org.Mm.eg.db"))'
+
+RUN apt-get install --yes libglpk-dev
+RUN R -e 'devtools::install_github("eddelbuettel/rcppspdlog")'
+RUN R -e 'devtools::install_github("kharchenkolab/pagoda2")'
+
+RUN apt-get install --yes libxt-dev
+RUN R -e 'devtools::install_github("kharchenkolab/conos@v1.3.1")'
 
 RUN R -e 'install.packages("gprofiler2")'
 RUN R -e 'install.packages("RJSONIO")'
