@@ -20,7 +20,7 @@ class TestListGenes:
         self.correct_request_skeleton = {
             "body": {
                 "name": "ListGenes",
-                "selectFields": ["gene_names", "highly_variable", "dispersions"],
+                "selectFields": ["gene_names", "dispersions"],
                 "orderBy": "dispersions",
                 "orderDirection": "desc",
                 "offset": 0,

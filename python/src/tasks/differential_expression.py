@@ -79,8 +79,6 @@ class DifferentialExpression:
         )
 
         result = pandas.DataFrame.from_dict(r.json())
-
-        print(result)
         result.dropna(inplace=True)
 
         # get top x most significant results, if parameter was supplied
