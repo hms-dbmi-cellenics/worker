@@ -105,8 +105,6 @@ create_app <- function(data) {
                 result["qval"], 1, function(x) format(x, scientific = TRUE)
             )
 
-            message("yolo")
-
             res$set_body(result)
         }
     )
