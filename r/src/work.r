@@ -3,7 +3,6 @@ library(pagoda2)
 library(conos)
 library(Matrix)
 require(data.table)
-library(DESeq2)
 library(RJSONIO)
 
 load_data <- function() {
