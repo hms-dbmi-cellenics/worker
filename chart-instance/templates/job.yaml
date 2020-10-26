@@ -28,6 +28,9 @@ spec:
           mountPath: /var/lib/shutdown-file
       - name: "{{ .Release.Name }}-worker-r"
         image: "{{ .Values.images.r }}"
+        env:
+        - name: 'EXPERIMENT_ID'
+          value: "{{ .Values.experimentId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
