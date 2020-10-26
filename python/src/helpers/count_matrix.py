@@ -18,12 +18,14 @@ class CountMatrix:
 
     def get_objects(self):
         objects = self.s3.list_objects_v2(
-            Bucket=self.config.SOURCE_BUCKET, Prefix=self.config.EXPERIMENT_ID
+            Bucket=self.config.SOURCE_BUCKET, Prefix=f"{self.config.EXPERIMENT_ID}/"
         )
         objects = objects.get("Contents")
+
         if not objects:
             return {}
-        objects = {o["Key"]: o["ETag"] for o in objects}
+        
+        objects = {o["Key"]: o["ETag"] for o in objects if o['Size'] > 0}
 
         return objects
 
@@ -91,11 +93,13 @@ class CountMatrix:
     def download_object(self, key, etag):
         path = os.path.join(config.LOCAL_DIR, key)
 
+        print(f"Now checking {key} (etag: {etag}) in S3 against {path}...")
+
         if self.path_exists and self.validate_etag(path, etag):
             print("Skipping downloads as etags match.")
             return False
 
-        print(f"Downloading {key} (etag: {etag}) from S3 to {path}...")
+        print(f"Downloading {key} (etag: {etag})...")
 
         with open(path, "wb+") as f:
             self.s3.download_fileobj(
@@ -138,6 +142,8 @@ class CountMatrix:
 
         # get object in bucket and their etags
         objects = self.get_objects()
+
+        print(datetime.datetime.utcnow(), "Found", len(objects), "objects matching experiment.")
 
         synced = {key: self.download_object(key, etag) for key, etag in objects.items()}
 
