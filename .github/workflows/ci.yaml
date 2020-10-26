@@ -94,10 +94,21 @@ jobs:
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
 
-      - id: ref-target
-        name: Format docker tag and repository name for mainline image.
-        if: github.event_name == 'pull_request'
+      - id: ref-previous
+        name: Format docker tag and repository name for the previous pushed image.
         run: |-
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "This is a pull request, base ref and sha set to the target branch."
+            BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "This is a push, base ref and sha set to the previous commit."
+            BASE_REF=$GITHUB_REF
+            BASE_SHA=${{ github.event.push.before }}
+          fi
+
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $BASE_REF | sed 's/\//-/g')
@@ -106,9 +117,6 @@ jobs:
           # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
           echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - id: set-up-creds
         name: Configure AWS credentials
@@ -139,7 +147,7 @@ jobs:
           echo Pulling $IMAGE_NAME from ECR.
           docker pull $IMAGE_NAME
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-target.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
       
       - id: build
         name: Build Docker image
