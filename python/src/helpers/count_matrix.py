@@ -18,7 +18,7 @@ class CountMatrix:
 
     def get_objects(self):
         objects = self.s3.list_objects_v2(
-            Bucket=self.config.SOURCE_BUCKET, Prefix=f"{self.config.EXPERIMENT_ID}/"
+            Bucket=self.config.SOURCE_BUCKET, Prefix=self.config.EXPERIMENT_ID
         )
         objects = objects.get("Contents")
 
