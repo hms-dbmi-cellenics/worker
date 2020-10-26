@@ -24,6 +24,8 @@ spec:
       containers:
       - args:
         - --namespace={{.Release.Namespace}}
+        - -keep-successful=0
+        - -keep-failures=0
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
         name: cleanup-operator
