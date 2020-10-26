@@ -148,7 +148,6 @@ jobs:
       
       - id: build
         name: Build Docker images
-        uses: docker/build-push-action@v2
         run: |-
           docker build --target builder \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
