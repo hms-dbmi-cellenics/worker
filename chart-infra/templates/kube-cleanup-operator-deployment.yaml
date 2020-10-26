@@ -24,8 +24,13 @@ spec:
       containers:
       - args:
         - --namespace={{.Release.Namespace}}
+
+        # delete successful and failed jobs immediately.
+        # this is so failed jobs don't prevent us from running
+        # new workers in its place
         - -keep-successful=0
         - -keep-failures=0
+
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
         name: cleanup-operator
