@@ -77,7 +77,7 @@ jobs:
         uses: actions/checkout@v2
 
       - id: ref
-        name: Format docker tag and repository name.
+        name: Format docker tag and repository name for current image.
         run: |-
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
@@ -93,6 +93,21 @@ jobs:
           # ECR repository.
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
+
+      - id: ref-target
+        name: Format docker tag and repository name for mainline image.
+        run: |-
+          # This will take a ref like `refs/heads/master`
+          # and turn it into `refs-heads-master`
+          REF_ID=$(echo $BASE_REF | sed 's/\//-/g')
+
+          # the final tag is something like:
+          # refs-heads-master-a4f8bc313dae
+          # this is what we push to ECR
+          echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - id: set-up-creds
         name: Configure AWS credentials
@@ -116,6 +131,15 @@ jobs:
         env:
           REPO_NAME: ${{ steps.ref.outputs.repo-name }}
 
+      - id: pull-latest-image
+        name: Pull latest Docker image from mainline
+        continue-on-error: true
+        run: |-
+          echo Pulling $IMAGE_NAME from ECR.
+          docker pull $IMAGE_NAME
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-target.outputs.tag, matrix.project) }}
+      
       - id: build
         name: Build Docker image
         uses: docker/build-push-action@v2
