@@ -177,8 +177,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-docker
     strategy:
+      max-parallel: 1
       matrix:
-        environment: ['production']
+        environment: ['production', 'staging']
     steps:
       - id: checkout
         name: Check out source code
@@ -235,13 +236,14 @@ jobs:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: disable-admin-enforcement
-        if: always()
         name: Temporarily disable admin enforcement
         uses: benjefferies/branch-protection-bot@master
         with:
           access-token: ${{ secrets.API_TOKEN_GITHUB }}
           owner: biomage-ltd
           repo: iac
+          enforce_admins: false
+          retries: 8
 
       - name: Push HelmRelease to iac repo
         if: github.ref == 'refs/heads/master'
@@ -275,3 +277,5 @@ jobs:
           access-token: ${{ secrets.API_TOKEN_GITHUB }}
           owner: biomage-ltd
           repo: iac
+          enforce_admins: true
+          retries: 8
