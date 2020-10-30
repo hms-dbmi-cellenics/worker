@@ -6,7 +6,8 @@ def get_config():
     kube_env = os.getenv("K8S_ENV")
     cluster_env = os.getenv("CLUSTER_ENV")
     queue_name = os.getenv("WORK_QUEUE")
-    timeout = int(os.getenv("WORK_TIMEOUT", default="1200"))
+    # timeout is in seconds, set to 1 hour
+    timeout = int(os.getenv("WORK_TIMEOUT", default="3600"))
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
