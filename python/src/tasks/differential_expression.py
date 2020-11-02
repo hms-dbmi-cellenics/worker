@@ -64,12 +64,12 @@ class DifferentialExpression:
         ] = "first"
 
         request = {
-            "baseCells": raw_adata.obs.index[
+            "baseCells": [str(s) for s in raw_adata.obs.index[
                 raw_adata.obs["condition"] == "first"
-            ].tolist(),
-            "backgroundCells": raw_adata.obs.index[
+            ].tolist()],
+            "backgroundCells": [str(s) for s in raw_adata.obs.index[
                 raw_adata.obs["condition"] == "second"
-            ].tolist(),
+            ].tolist()],
         }
 
         r = requests.post(
