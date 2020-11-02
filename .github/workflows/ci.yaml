@@ -210,7 +210,10 @@ jobs:
           echo "::set-output name=ref-dashed::$REF_DASHED"
 
           if [ "${{ matrix.environment }}" = "production" ]; then
-            SANDBOX_ID="default"
+            SANDBOX_ID="$REF_DASHED"
+
+            # TODO: this is to be enabled when the API is updated
+            # SANDBOX_ID="default"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
