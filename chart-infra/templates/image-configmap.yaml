@@ -4,6 +4,5 @@ metadata:
   name: instance-images
   namespace: {{.Release.Namespace}}
 data:
-  images:
-    r: "{{ .Values.images.r }}"
-    python: "{{ .Values.images.python }}"
+  r: "{{ .Values.images.r }}"
+  python: "{{ .Values.images.python }}"
