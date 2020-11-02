@@ -26,4 +26,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: deployment-runner
-  namespace: api-refs-heads-master
+  namespace: {{ .Release.Namespace | replace "worker" "api" }}

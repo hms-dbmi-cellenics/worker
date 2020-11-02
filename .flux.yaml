@@ -13,4 +13,4 @@ spec:
   chart:
     git: git@github.com:biomage-ltd/worker
     path: chart-infra/
-    ref: master
+    ref: FILLED_IN_BY_CI
