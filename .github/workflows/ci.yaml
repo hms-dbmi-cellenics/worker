@@ -210,15 +210,14 @@ jobs:
           echo "::set-output name=ref-dashed::$REF_DASHED"
 
           if [ "${{ matrix.environment }}" = "production" ]; then
-            SANDBOX_ID="$REF_DASHED"
-
-            # TODO: this is to be enabled when the API is updated
-            # SANDBOX_ID="default"
+            SANDBOX_ID="default"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
           fi
+
+          echo "::set-output name=sandbox-id::$SANDBOX_ID"
 
           yq w -d1 .flux.yaml metadata.name "$DEPLOYMENT_NAME" \
           | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
@@ -239,17 +238,17 @@ jobs:
       - id: fill-worker-instance
         name: Fill out worker instance base values
         run: |-
-          REF_DASHED=$(echo $GITHUB_REF | sed 's/\//-/g')
           DEPLOYMENT_NAME="$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')"
           echo "::set-output name=instance-values-name::$DEPLOYMENT_NAME-instance"
 
-          yq w -d0 chart-instance/values.yaml namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
+          yq w -d0 chart-instance/values.yaml namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d0 - images.python "$IMAGE_NAME-python" \
           | yq w -d0 - images.r "$IMAGE_NAME-r" \
           > $DEPLOYMENT_NAME-instance.yaml
 
           cat $DEPLOYMENT_NAME-instance.yaml
         env:
+          SANDBOX_ID: ${{ steps.fill-metadata.outputs.sandbox-id }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: disable-admin-enforcement
