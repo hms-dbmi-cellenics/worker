@@ -211,12 +211,10 @@ jobs:
 
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
-            CHART_REF="$GITHUB_SHA"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
-            CHART_REF="$GITHUB_REF"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
