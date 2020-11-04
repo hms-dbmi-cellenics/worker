@@ -3,6 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: "{{ .Release.Name }}-pvc"
   namespace: "{{ .Values.namespace }}"
+  labels:
+    experimentId: "{{ .Values.experimentId }}"
+    sandboxId: "{{ .Values.sandboxId }}"
 spec:
   accessModes:
     - ReadWriteOnce
