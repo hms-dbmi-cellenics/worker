@@ -5,6 +5,7 @@ metadata:
   namespace: "{{ .Values.namespace }}"
   labels:
     experimentId: "{{ .Values.experimentId }}"
+    sandboxId: "{{ .Values.sandboxId }}"
 spec:
   template:
     spec:
@@ -18,6 +19,8 @@ spec:
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
           value: "{{ .Values.clusterEnv }}"
+        - name: 'SANDBOX_ID'
+          value: "{{ .Values.sandboxId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -31,6 +34,8 @@ spec:
         env:
         - name: 'EXPERIMENT_ID'
           value: "{{ .Values.experimentId }}"
+        - name: 'SANDBOX_ID'
+          value: "{{ .Values.sandboxId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
