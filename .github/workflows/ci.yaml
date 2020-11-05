@@ -265,19 +265,6 @@ jobs:
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 
-      - name: Push instance base values to iac repo
-        if:
-          github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
-        uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-        with:
-          source_file: '${{ steps.fill-worker-instance.outputs.instance-values-name }}.yaml'
-          destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'charts/'
-          user_email: 'ci@biomage.net'
-          user_name: 'Biomage CI/CD'
-
       - name: Change name of deployment file for staging deployment
         if:
           matrix.environment == 'staging'
