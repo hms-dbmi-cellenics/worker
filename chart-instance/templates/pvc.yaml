@@ -9,7 +9,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: 'worker-storage'
+  storageClassName: 'worker-storage-{{.Release.Namespace}}'
   resources:
     requests:
       storage: '{{ .Values.storageSize }}'
