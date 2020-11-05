@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   labels:
     run: cleanup-operator
+    sandboxId: "{{ .Values.sandboxId }}"
   name: cleanup-operator
   namespace: {{.Release.Namespace}}
 spec:
@@ -10,6 +11,7 @@ spec:
   selector:
     matchLabels:
       run: cleanup-operator
+      sandboxId: "{{ .Values.sandboxId }}"
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -19,6 +21,7 @@ spec:
     metadata:
       labels:
         run: cleanup-operator
+        sandboxId: "{{ .Values.sandboxId }}"
     spec:
       serviceAccountName: cleanup-operator
       containers:

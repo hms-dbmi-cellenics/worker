@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: instance-images
   namespace: {{.Release.Namespace}}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
 data:
   r: "{{ .Values.images.r }}"
   python: "{{ .Values.images.python }}"

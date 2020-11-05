@@ -2,6 +2,8 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: worker-storage-{{.Release.Namespace}}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
 provisioner: ebs.csi.aws.com
 volumeBindingMode: WaitForFirstConsumer
 parameters:
