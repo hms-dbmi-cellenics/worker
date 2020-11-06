@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: "watch-script"
   namespace: "{{ .Values.namespace }}"
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
 data:
   entrypoint.sh: |-
     set -e

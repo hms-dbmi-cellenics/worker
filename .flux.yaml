@@ -2,15 +2,23 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: FILLED_IN_BY_CI
+  labels:
+    sandboxId: FILLED_IN_BY_CI
 ---
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: FILLED_IN_BY_CI
   namespace: FILLED_IN_BY_CI
+  annotations:
+    fluxcd.io/automated: "true"
+    filter.fluxcd.io/r: FILLED_IN_BY_CI
+    filter.fluxcd.io/python: FILLED_IN_BY_CI
+  labels:
+    sandboxId: FILLED_IN_BY_CI
 spec:
   releaseName: FILLED_IN_BY_CI
   chart:
     git: git@github.com:biomage-ltd/worker
     path: chart-infra/
-    ref: master
+    ref: FILLED_IN_BY_CI

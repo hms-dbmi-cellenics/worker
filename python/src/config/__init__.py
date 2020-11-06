@@ -6,12 +6,15 @@ def get_config():
     kube_env = os.getenv("K8S_ENV")
     cluster_env = os.getenv("CLUSTER_ENV")
     queue_name = os.getenv("WORK_QUEUE")
-    timeout = int(os.getenv("WORK_TIMEOUT", default="1200"))
+    sandbox_id = os.getenv("SANDBOX_ID", default="default")
+
+    # timeout is in seconds, set to 1 hour
+    timeout = int(os.getenv("WORK_TIMEOUT", default="3600"))
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
     experiment_id = os.getenv("EXPERIMENT_ID", default="5e959f9c9f4b120771249001")
-
+    
     # set up cluster env based on gitlab env if one was not specified
     # this is only run if `kube_env` is specified, i.e. when the system
     # is run in staging/production or in testing
@@ -34,7 +37,7 @@ def get_config():
         DYNAMO_TABLE=f"experiments-{cluster_env}",
         SOURCE_BUCKET=f"biomage-source-{cluster_env}",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
-        SNS_TOPIC=f"work-results-{cluster_env}",
+        SNS_TOPIC=f"work-results-{cluster_env}-{sandbox_id}",
         R_WORKER_URL="http://localhost:4000",
         EXPERIMENT_ID=experiment_id,
         # this works because in CI, `data/` is deployed under `worker/`
