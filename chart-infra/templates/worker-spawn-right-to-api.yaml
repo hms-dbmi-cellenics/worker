@@ -3,22 +3,26 @@ kind: Role
 metadata:
   name: can-create-jobs
   namespace: {{ .Release.Namespace }}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
 rules:
 - apiGroups: ["batch"]
   resources: ["jobs"]
-  verbs: ["create", "get", "watch", "list", "update"]
+  verbs: ["create", "get", "watch", "list", "update", "patch"]
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
-  verbs: ["create", "get", "watch", "list", "update"]
+  verbs: ["create", "get", "watch", "list", "update", "patch"]
 - apiGroups: [""]
   resources: ["secrets"]
-  verbs: ["create", "get", "watch", "list", "update"]
+  verbs: ["create", "get", "watch", "list", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
   name: api-can-spawn-workers
   namespace: {{.Release.Namespace}}
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -26,4 +30,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: deployment-runner
-  namespace: api-refs-heads-master
+  namespace: {{ .Release.Namespace | replace "worker" "api" }}

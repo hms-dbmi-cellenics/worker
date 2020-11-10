@@ -1,6 +1,7 @@
 experimentId: FILLED_IN_BY_API
 workQueueName: FILLED_IN_BY_API
 clusterEnv: FILLED_IN_BY_API
+sandboxId: FILLED_IN_BY_API
 storageSize: FILLED_IN_BY_API
 namespace: FILLED_IN_BY_CI
 images:

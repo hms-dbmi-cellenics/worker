@@ -63,6 +63,8 @@ class DifferentialExpression:
             raw_adata.obs["cell_ids"].isin(de_base)
         ] = "first"
 
+        raw_adata.obs = raw_adata.obs.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
+
         request = {
             "baseCells": raw_adata.obs.index[
                 raw_adata.obs["condition"] == "first"

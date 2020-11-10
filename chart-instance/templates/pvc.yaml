@@ -3,10 +3,13 @@ kind: PersistentVolumeClaim
 metadata:
   name: "{{ .Release.Name }}-pvc"
   namespace: "{{ .Values.namespace }}"
+  labels:
+    experimentId: "{{ .Values.experimentId }}"
+    sandboxId: "{{ .Values.sandboxId }}"
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: 'worker-storage'
+  storageClassName: 'worker-storage-{{.Release.Namespace}}'
   resources:
     requests:
       storage: '{{ .Values.storageSize }}'

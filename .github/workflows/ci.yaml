@@ -161,7 +161,6 @@ jobs:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
   
       - id: push
-        if: github.ref == 'refs/heads/master'
         name: Push docker images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-builder to ECR.
@@ -208,32 +207,43 @@ jobs:
           REF_DASHED=$(echo $GITHUB_REF | sed 's/\//-/g')
           DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
+          echo "::set-output name=ref-dashed::$REF_DASHED"
+
+          if [ "${{ matrix.environment }}" = "production" ]; then
+            SANDBOX_ID="default"
+          fi
+
+          if [ "${{ matrix.environment }}" = "staging" ]; then
+            SANDBOX_ID="STAGING_SANDBOX_ID"
+          fi
+
+          if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+            CHART_REF="$GITHUB_SHA"
+          else
+            CHART_REF="STAGING_CHART_REF"
+          fi
+
+          echo "::set-output name=sandbox-id::$SANDBOX_ID"
 
           yq w -d1 .flux.yaml metadata.name "$DEPLOYMENT_NAME" \
-          | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
-          | yq w -d1 - metadata.tags.githubSha "$GITHUB_SHA" \
+          | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
+          | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-${{ matrix.environment }}" \
-          | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$REF_DASHED" \
+          | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
+          | yq w -d1 - spec.values.python.image "$IMAGE_NAME-python" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-r" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/python]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-python" \
           > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
-
-      - id: fill-worker-instance
-        name: Fill out worker instance base values
-        run: |-
-          REF_DASHED=$(echo $GITHUB_REF | sed 's/\//-/g')
-          DEPLOYMENT_NAME="$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')"
-          echo "::set-output name=instance-values-name::$DEPLOYMENT_NAME-instance"
-
-          yq w -d0 chart-instance/values.yaml namespace "$DEPLOYMENT_NAME-$REF_DASHED" \
-          | yq w -d0 - images.python "$IMAGE_NAME-python" \
-          | yq w -d0 - images.r "$IMAGE_NAME-r" \
-          > $DEPLOYMENT_NAME-instance.yaml
-
-          cat $DEPLOYMENT_NAME-instance.yaml
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          IMAGE_TAG: ${{ needs.build-docker.outputs.tag }}
 
       - id: disable-admin-enforcement
         name: Temporarily disable admin enforcement
@@ -245,8 +255,9 @@ jobs:
           enforce_admins: false
           retries: 8
 
-      - name: Push HelmRelease to iac repo
-        if: github.ref == 'refs/heads/master'
+      - name: Push production deployment to iac for deployment
+        if:
+          github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
@@ -257,15 +268,25 @@ jobs:
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 
-      - name: Push instance base values to iac repo
-        if: github.ref == 'refs/heads/master'
+      - name: Change name of deployment file for staging deployment
+        if:
+          matrix.environment == 'staging'
+        env:
+          DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
+          REF_DASHED: ${{ steps.fill-metadata.outputs.ref-dashed }}
+        run: |-
+          mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
+      
+      - name: Push staging deployment template to iac
+        if:
+          matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: '${{ steps.fill-worker-instance.outputs.instance-values-name }}.yaml'
+          source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
           destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'charts/'
+          destination_folder: 'releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 

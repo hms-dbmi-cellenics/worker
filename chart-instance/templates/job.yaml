@@ -5,11 +5,12 @@ metadata:
   namespace: "{{ .Values.namespace }}"
   labels:
     experimentId: "{{ .Values.experimentId }}"
+    sandboxId: "{{ .Values.sandboxId }}"
 spec:
   template:
     spec:
       containers:
-      - name: "{{ .Release.Name }}-worker-python"
+      - name: "{{ .Release.Name }}"
         image: "{{ .Values.images.python }}"
         env:
         - name: 'EXPERIMENT_ID'
@@ -18,6 +19,8 @@ spec:
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
           value: "{{ .Values.clusterEnv }}"
+        - name: 'SANDBOX_ID'
+          value: "{{ .Values.sandboxId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -26,11 +29,13 @@ spec:
           readOnly: true
         - name: shutdown-file
           mountPath: /var/lib/shutdown-file
-      - name: "{{ .Release.Name }}-worker-r"
+      - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.images.r }}"
         env:
         - name: 'EXPERIMENT_ID'
           value: "{{ .Values.experimentId }}"
+        - name: 'SANDBOX_ID'
+          value: "{{ .Values.sandboxId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -46,7 +51,8 @@ spec:
             path: /health
             port: 4000
           initialDelaySeconds: 5
-          periodSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 3
       volumes:
       - name: 'data'
         persistentVolumeClaim:

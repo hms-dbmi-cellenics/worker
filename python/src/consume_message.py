@@ -61,7 +61,7 @@ def consume():
     if timeout <= datetime.datetime.utcnow():
         print(
             datetime.datetime.utcnow(),
-            "Skipping sending task with uuid",
+            "Skipping processing task with uuid",
             mssg_body["uuid"],
             "as its timeout of",
             timeout,
