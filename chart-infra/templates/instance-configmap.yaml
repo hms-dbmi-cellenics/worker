@@ -8,4 +8,4 @@ metadata:
 data:
   r: "{{ .Values.r.image }}"
   python: "{{ .Values.python.image }}"
-  ignoreTimeout: false
+  ignoreTimeout: "false"
