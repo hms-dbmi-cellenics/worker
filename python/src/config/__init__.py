@@ -10,6 +10,7 @@ def get_config():
 
     # timeout is in seconds, set to 1 hour
     timeout = int(os.getenv("WORK_TIMEOUT", default="3600"))
+    ignore_timeout = bool(os.getenv("IGNORE_TIMEOUT", default=False))
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
@@ -31,6 +32,7 @@ def get_config():
         CLUSTER_ENV=cluster_env,
         QUEUE_NAME=queue_name,
         TIMEOUT=timeout,
+        IGNORE_TIMEOUT=ignore_timeout,
         AWS_ACCOUNT_ID=aws_account_id,
         AWS_REGION=aws_region,
         BOTO_RESOURCE_KWARGS={"region_name": aws_region},

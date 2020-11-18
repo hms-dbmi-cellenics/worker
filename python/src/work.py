@@ -13,7 +13,7 @@ def main():
 
     while (
         datetime.datetime.utcnow() - last_activity
-    ).total_seconds() <= config.TIMEOUT or config.TIMEOUT <= 0:
+    ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
         msg = consume()
         if msg:
             results = task_factory.submit(msg)

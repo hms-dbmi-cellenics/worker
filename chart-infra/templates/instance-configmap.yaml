@@ -1,10 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: instance-images
+  name: instance-config
   namespace: {{.Release.Namespace}}
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 data:
   r: "{{ .Values.r.image }}"
   python: "{{ .Values.python.image }}"
+  doNotTimeout: false
