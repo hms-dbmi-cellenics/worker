@@ -21,6 +21,11 @@ spec:
           value: "{{ .Values.clusterEnv }}"
         - name: 'SANDBOX_ID'
           value: "{{ .Values.sandboxId }}"
+        - name: 'IGNORE_TIMEOUT'
+          valueFrom:
+            configMapKeyRef:
+              name: instance-config
+              key: ignoreTimeout
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
