@@ -28,7 +28,7 @@ class DifferentialExpression:
     def compute(self):
         # the cell set to compute differential expression on
         cell_sets = {
-            'first': self.task_def["cellSet"]
+            'first': self.task_def["cellSet"],
             'second': self.task_def["compareWith"]
         }
         
@@ -48,15 +48,15 @@ class DifferentialExpression:
         # values with the label, as the other one will be a cell set
         # and override the appropriate values. if between two cell sets,
         # make sure the cells not in either will be marked with `other`.
-        for label, name in cell_sets.values():
-            if name == "rest":
+        for label, name in cell_sets.items():
+            if name == "rest" or "all" in name:
                 raw_adata.obs["condition"].fillna(value=label, inplace=True)
             else:
                 cells = find_cells_by_set_id(name, resp)
 
                 raw_adata.obs["condition"].loc[
-                    raw_adata.obs["cell_ids"].isin(de_compare_with)
-                ] = "second"
+                    raw_adata.obs["cell_ids"].isin(cells)
+                ] = label
         
         raw_adata.obs["condition"].fillna(value="other", inplace=True)
 
@@ -70,6 +70,8 @@ class DifferentialExpression:
                 raw_adata.obs["condition"] == "second"
             ].tolist(),
         }
+
+        print(request)
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
