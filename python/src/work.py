@@ -11,6 +11,9 @@ def main():
     task_factory = TaskFactory()
     print(datetime.datetime.utcnow(), "Now listening, waiting for work to do...")
 
+    if config.IGNORE_TIMEOUT:
+        print(datetime.datetime.utcnow(), "Worker configured to ignore timeout, will run forever...")
+    
     while (
         datetime.datetime.utcnow() - last_activity
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
