@@ -10,7 +10,7 @@ def get_config():
 
     # timeout is in seconds, set to 1 hour
     timeout = int(os.getenv("WORK_TIMEOUT", default="3600"))
-    ignore_timeout = bool(os.getenv("IGNORE_TIMEOUT", default=False))
+    ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
