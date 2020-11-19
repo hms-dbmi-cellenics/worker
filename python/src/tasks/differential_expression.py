@@ -27,41 +27,38 @@ class DifferentialExpression:
 
     def compute(self):
         # the cell set to compute differential expression on
-        cell_set_base = self.task_def["cellSet"]
-
-        # the cell set we want to compare with (or `rest`)
-        cell_set_compare_with = self.task_def["compareWith"]
-
+        cell_sets = {
+            'first': self.task_def["cellSet"],
+            'second': self.task_def["compareWith"]
+        }
+        
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)
 
         # get cell sets from database
         resp = get_item_from_dynamo(self.experiment_id, "cellSets")
 
-        # try to find the right cells
-        de_base = find_cells_by_set_id(cell_set_base, resp)
-
         # use raw values for this task
         raw_adata = self.adata.raw.to_adata()
 
-        if cell_set_compare_with == "rest":
-            # We have a simple condition. Everything in the base cluster is `first`,
-            # the rest is `second`.
-            raw_adata.obs["condition"] = "second"
-        else:
-            # We have a bit more complicated condition.
-            # Everything in the base cluster is `first`,
-            # in the second cluster `second`, the rest is `rest`.
-            de_compare_with = find_cells_by_set_id(cell_set_compare_with, resp)
-            raw_adata.obs["condition"] = "rest"
+        # create a series to hold the conditions
+        raw_adata.obs["condition"] = None
 
-            raw_adata.obs["condition"].loc[
-                raw_adata.obs["cell_ids"].isin(de_compare_with)
-            ] = "second"
+        # fill in values appropriately. if `rest`, fill in all NaN
+        # values with the label, as the other one will be a cell set
+        # and override the appropriate values. if between two cell sets,
+        # make sure the cells not in either will be marked with `other`.
+        for label, name in cell_sets.items():
+            if name == "rest" or "all" in name.lower():
+                raw_adata.obs["condition"].fillna(value=label, inplace=True)
+            else:
+                cells = find_cells_by_set_id(name, resp)
 
-        raw_adata.obs["condition"].loc[
-            raw_adata.obs["cell_ids"].isin(de_base)
-        ] = "first"
+                raw_adata.obs["condition"].loc[
+                    raw_adata.obs["cell_ids"].isin(cells)
+                ] = label
+        
+        raw_adata.obs["condition"].fillna(value="other", inplace=True)
 
         raw_adata.obs = raw_adata.obs.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
 
@@ -73,6 +70,8 @@ class DifferentialExpression:
                 raw_adata.obs["condition"] == "second"
             ].tolist(),
         }
+
+        print(request)
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
