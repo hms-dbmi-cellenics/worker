@@ -71,8 +71,6 @@ class DifferentialExpression:
             ].tolist(),
         }
 
-        print(request)
-
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
             headers={"content-type": "application/json"},
