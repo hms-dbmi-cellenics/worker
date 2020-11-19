@@ -144,7 +144,9 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        self.correct_request["cellSet"], self.correct_request["compareWith"] = self.correct_request["compareWith"], self.correct_request["cellSet"]
+        self.correct_request["cellSet"] = "rest"
+        self.correct_request["compareWith"] = "cluster1"
+        
         DifferentialExpression(self.correct_request, self._adata)
 
 
