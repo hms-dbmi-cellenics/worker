@@ -140,6 +140,15 @@ class TestDifferentialExpression:
         DifferentialExpression(self.correct_request, self._adata)
 
     @responses.activate
+    def test_works_when_rest_is_first(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
+        self.correct_request["cellSet"], self.correct_request["compareWith"] = self.correct_request["compareWith"], self.correct_request["cellSet"]
+        DifferentialExpression(self.correct_request, self._adata)
+
+
+    @responses.activate
     def test_returns_json(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
