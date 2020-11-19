@@ -49,7 +49,7 @@ class DifferentialExpression:
         # and override the appropriate values. if between two cell sets,
         # make sure the cells not in either will be marked with `other`.
         for label, name in cell_sets.items():
-            if name == "rest" or "all" in name:
+            if name == "rest" or "all" in name.lower():
                 raw_adata.obs["condition"].fillna(value=label, inplace=True)
             else:
                 cells = find_cells_by_set_id(name, resp)
@@ -70,6 +70,8 @@ class DifferentialExpression:
                 raw_adata.obs["condition"] == "second"
             ].tolist(),
         }
+
+        print(request)
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
