@@ -1,26 +1,28 @@
-# Overview
-The purpose of the worker is to carry out data analysis tasks, for example computing an embedding. Data analysis tasks get received from a SQS queue and results will get submitted to a SNS topic the API is subscribed to.
+worker-python
+=============
 
+Overview
+--------
+The purpose of the worker is to carry out data analysis tasks. `worker-python` is the main entry point
+for data analysis tasks. Each bioinformatics task to be performed is received from an AWS SQS queue.
+Results are submitted to an SNS topic that is listened to by the `api` module.
 
-# Build and Deploy step
-The deployment step for this repository consits of deploying all resources needed for work to be carried out. Note that the deployment step in this repository does not start the work. Work gets started dynamically upon a user request by the [API](https://github.com/biomage-ltd/api).
+Running the worker
+------------------
 
-CI deployment needs four variables that need to be created on the CI/CD side:
+### Start the worker
 
-* `GITLAB_DEPLOY_USER` and `GITLAB_DEPLOY_PASSWORD`. These need to specify a valid GitLab deploy key that has read rights to the Docker registry. This secret is used by dynamically generated jobs to automatically be able to pull the worker image.
-* `K8S_SECRET_AWS_ACCESS_KEY_ID`, `K8S_SERET_AWS_SECRET_ACCESS_KEY`, `K8S_SECRET_AWS_DEFAULT_REGION`, which specify the IAM account and default region to be used with this worker.
+See the main README for instructions on how to run the workers in Docker.
 
-# Development
+### Process tasks
+Tasks are automatically processed when they are received from the SQS queue specified.
 
-## Run locally
+For **local development**, make sure you have [InfraMock](https://github.com/biomage-ltd/inframock)
+running alongside the [ui](https://github.com/biomage-ltd/ui) and [api](https://github.com/biomage-ltd/api)
+projects. Refer to their respective documentations on how to run them locally. Once all of these are running,
+tasks should automatically be submitted and processed when you perform actions on the `ui`. There is nothing else to do.
 
-### 1. Set up environment
-
-See the main README on how to run the worker containers in docker-compose.
-
-### 2. Submit a task
-* If you want to fetch and process data from a **local instance** using InfraMock, there is nothing to do. The worker is
-already configured to fetch data through it.
+### Advanced: using the worker with live AWS queues
 
 If you want to fetch and process data from **the live** `staging` or `production` clusters, you need to set
 the `CLUSTER_ENV` environment variable to be either `staging` or `production`, respectively. The name of the SQS queue used
@@ -32,20 +34,41 @@ In order to push work to the worker you can either:
 * a) Submit work via the AWS console, using the SQS interface
 * b) Submit work from the terminal using `aws-cli`
 
-a) Just go to the AWS console, select the relevant queue and submit your work following the format described further in this section.
+### Advanced: pushing custom work to the local worker
 
-b) Make sure you have `aws-cli` installed. Then, put the work in the correct format, described further in this section in 
-a file `payload.json`. Finally, use the `aws-cli` commands to send that payload to the desired SQS queue.
-Here is an example:
+You can also push work to a locally running `worker` instance without using the `ui` or the `api` projects.
+
+First, make sure you have InfraMock running. Then, you can use `aws-cli` to send a payload directly to the queue
+the worker is listening to:
 
     aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/queue/development-queue.fifo --message-body "$(< payload.json)" --message-group-id "$(date +%s)"
 
-which will push the payload in `payload.json` to a local worker. You can do something similar if you are connected to the
-live clusters by deleting the `--endpoint-url` argument and using the appropriate remote queue URL.
+This will push the payload in the file `payload.json` to the SQS queue the worker is listening to.
+
+
+Development
+-----------
+
+Open the Visual Studio Code workspace:
+
+    code python.code-workspace
+
+You should be prompted to run the code in a container. If not, hit `Cmd+Shift+P` and search for
+`Remote Containers: Reopen in Container`. Selecting this item will cause the Python worker to
+reopen in a container for development.
+
+### Tests
+While having the workspace running in a container, open a terminal in VS code. Go to `src/` and run:
+
+    gunzip -k ../../data/test/python.h5ad
+    CLUSTER_ENV="test" python -m pytest --cov=.
 
 ### Task formatting
-To see what tasks are available for submitting what what is the format of each of them, go to the [API schema](https://github.com/biomage-ltd/api/blob/master/src/specs/api.yaml) and look at
-`WorkRequest`. There, the schemas and parameters available and required are specified for all supported tasks.
+Task definitions are stored in the `api` project as an OpenAPI schema.
+You can find this [here](https://github.com/biomage-ltd/api/blob/master/src/specs/api.yaml).
+
+Download the schema and open it using Stoplight Studio. Looking into `WorkRequest` should give you
+the schemas and parameters for all supported tasks.
 
 ### Sample tasks
 Here are some examples:
@@ -95,17 +118,3 @@ Here are some examples:
         }
     }
 
-### 3. Run the code
-The worker is running locally by default when you launch the workspace inside the container as described in Step 1.
-
-To view the logs for the worker, run this under the `worker/` root folder:
-
-    docker-compose logs -f
-
-Note that the worker will automatically switch itself off if it doesn't receive any tasks for 20 minutes.
-
-## Run tests
-Go to `src/` and run:
-
-    gunzip -k ../../data/test/python.h5ad
-    CLUSTER_ENV="test" python -m pytest --cov=.
