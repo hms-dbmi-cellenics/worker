@@ -18,9 +18,9 @@ See the main README for instructions on how to run the workers in Docker.
 Tasks are automatically processed when they are received from the SQS queue specified.
 
 For **local development**, make sure you have [InfraMock](https://github.com/biomage-ltd/inframock)
-running alongside the [ui](https://github.com/biomage-ltd/ui) and [api](https://github.com/biomage-ltd/api).
-Once all of these are running as specified in their respective documentations, tasks should
-automatically be submitted and processed when you perform actions on the `ui`. There is nothing else to do.
+running alongside the [ui](https://github.com/biomage-ltd/ui) and [api](https://github.com/biomage-ltd/api)
+projects. Refer to their respective documentations on how to run them locally. Once all of these are running,
+tasks should automatically be submitted and processed when you perform actions on the `ui`. There is nothing else to do.
 
 ### Advanced: using the worker with live AWS queues
 
