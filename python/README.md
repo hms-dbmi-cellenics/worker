@@ -7,27 +7,12 @@ The purpose of the worker is to carry out data analysis tasks. `worker-python` i
 for data analysis tasks. Each bioinformatics task to be performed is received from an AWS SQS queue.
 Results are submitted to an SNS topic that is listened to by the `api` module.
 
-Development
------------
-
-Open the Visual Studio Code workspace:
-
-    code python.code-workspace
-
-You should be prompted to run the code in a container. If not, hit `Cmd+Shift+P` and search for
-`Remote Containers: Reopen in Container`. Selecting this item will cause the Python worker to
-reopen in a container for development.
-
-### Tests
-While having the workspace running in a container, open a terminal in VS code. Go to `src/` and run:
-
-    gunzip -k ../../data/test/python.h5ad
-    CLUSTER_ENV="test" python -m pytest --cov=.
-
 Running the worker
 ------------------
 
 ### Start the worker
+
+See the main README for instructions on how to run the workers in Docker.
 
 ### Process tasks
 Tasks are automatically processed when they are received from the SQS queue specified.
@@ -59,6 +44,22 @@ the worker is listening to:
 This will push the payload in the file `payload.json` to the SQS queue the worker is listening to.
 
 
+Development
+-----------
+
+Open the Visual Studio Code workspace:
+
+    code python.code-workspace
+
+You should be prompted to run the code in a container. If not, hit `Cmd+Shift+P` and search for
+`Remote Containers: Reopen in Container`. Selecting this item will cause the Python worker to
+reopen in a container for development.
+
+### Tests
+While having the workspace running in a container, open a terminal in VS code. Go to `src/` and run:
+
+    gunzip -k ../../data/test/python.h5ad
+    CLUSTER_ENV="test" python -m pytest --cov=.
 
 ### Task formatting
 Task definitions are stored in the `api` project as an OpenAPI schema.
@@ -115,17 +116,3 @@ Here are some examples:
         }
     }
 
-### 3. Run the code
-The worker is running locally by default when you launch the workspace inside the container as described in Step 1.
-
-To view the logs for the worker, run this under the `worker/` root folder:
-
-    docker-compose logs -f
-
-Note that the worker will automatically switch itself off if it doesn't receive any tasks for 20 minutes.
-
-## Run tests
-Go to `src/` and run:
-
-    gunzip -k ../../data/test/python.h5ad
-    CLUSTER_ENV="test" python -m pytest --cov=.
