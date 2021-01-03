@@ -3,9 +3,30 @@ worker
 
 The single-cell pipeline work executor.
 
-Setup
+Running locally
+-----------------------
+
+While in the `worker/` root folder on the host, you can use `docker-compose` as you would normally.
+
+For example, to run the r and python containers, you can do:
+
+    docker-compose up --build
+    
+Note that during the first time, the build can take up to 40-50 minutes to complete. 
+If you get an error, see the `Troubleshoooting` section for help.
+
+To get a development log stream of both containers running, you can use:
+
+    docker-compose logs -f
+
+To shut down the development containers, you can use:
+
+    docker-compose kill
+
+Development
 -----
 
+### Prerequisites
 Development is done inside a development container that is automatically built,
 run, and managed by Visual Studio Code. You do not need R, R Studio, or a Python
 virtual environment to be installed locally.
@@ -16,9 +37,7 @@ extension installed. Make sure you restart VS Code after installing to make sure
 loads successfully. You should see a green icon in the leftmost part of the status bar,
 which indicates that the remote container plugin has been installed.
 
-Development
------------
-
+### Setup
 To open the R workspace, you can type `code r/r.workspace` while in the terminal inside
 VS Code.
 
@@ -36,25 +55,6 @@ respectively. The terminals spawn terminals within the containers, as expected.
 These development environments should be pre-configured with the same requirements as the
 produciton instances, as well as the necessary VS Code extensions required to debug and
 lint code.
-
-Managing the containers
------------------------
-
-While in the `worker/` root folder on the host, you can use `docker-compose` as you would normally.
-
-For example, to run the r and python containers, you can do:
-
-    docker-compose up --build
-
-If you get an error, see the `Troubleshoooting` section for help.
-
-To get a development log stream of both containers running, you can use:
-
-    docker-compose logs -f
-
-To shut down the development containers, you can use:
-
-    docker-compose kill
 
 More details
 ------------
@@ -77,7 +77,5 @@ Troubleshooting
 
         1. Go to https://github.com/settings/tokens, create a new token. The token should be read only.
         2. Set `GITHUB_PAT` to equal to the value of the token in a terminal.
-
-
 
     
