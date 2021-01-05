@@ -11,3 +11,8 @@ libxml2-dev
 python3-pip
 libfontconfig1-dev
 libharfbuzz-dev
+libfribidi-dev
+libgit2-dev
+libglpk-dev
+libxt-dev
+libcairo2-dev

@@ -16,14 +16,13 @@ RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
 RUN Rscript setup/install_or_die.r devtools
-RUN Rscript setup/install_or_die.r github rexyai/RestRserve
+RUN Rscript setup/install_or_die.r RestRserve
 RUN Rscript setup/install_or_die.r languageserver
 RUN Rscript setup/install_or_die.r BiocManager
 
 RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaMethods", "org.Dr.eg.db", "org.Hs.eg.db", "org.Mm.eg.db"))'
 
-RUN apt-get update && apt-get install --yes libglpk-dev libxt-dev libcairo2-dev
-RUN R -e 'devtools::install_github("eddelbuettel/rcppspdlog")'
+RUN R -e 'install.packages("RcppSpdlog")'
 RUN R -e 'devtools::install_github("kharchenkolab/pagoda2")'
 RUN R -e 'devtools::install_github("kharchenkolab/conos@v1.3.1")'
 
