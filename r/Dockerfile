@@ -23,7 +23,7 @@ RUN Rscript setup/install_or_die.r BiocManager
 RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaMethods", "org.Dr.eg.db", "org.Hs.eg.db", "org.Mm.eg.db"))'
 
 RUN R -e 'install.packages("RcppSpdlog")'
-RUN R -e 'devtools::install_github("kharchenkolab/pagoda2")'
+RUN R -e 'devtools::install_github("kharchenkolab/pagoda2@v0.1.4")'
 RUN R -e 'devtools::install_github("kharchenkolab/conos@v1.3.1")'
 
 RUN R -e 'install.packages("gprofiler2")'

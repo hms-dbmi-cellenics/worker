@@ -81,3 +81,18 @@ For more details on the individual runners, check out the README files in their 
     This error is due to a bug in DNS resolution of Alpine-based containers running on early releases of Docker Desktop for Mac version 3.
 
     To fix this, you can download and use a previous version of Docker (e.g. 2.5.0.1) from https://docs.docker.com/docker-for-mac/release-notes/
+    
+### For linux users
+
+1. Error when attempting to start the worker saying something like:
+`botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://host.docker.internal:4566/biomage-source-development?...`
+
+Go to `docker-compose.yml`
+In the python and r entries add at the end:
+
+```
+extra_hosts:
+      - "host.docker.internal:host-gateway"
+```
+
+IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
