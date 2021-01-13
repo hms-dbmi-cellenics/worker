@@ -55,10 +55,14 @@ class GeneExpression:
             expression = view.X.flatten().tolist()
             minimum = float(np.amin(view.X))
             maximum = float(np.amax(view.X))
+            mean = float(np.mean(view.X))
+            stdev = float(np.std(view.X))
 
             result[gene] = {
                 "min": minimum,
                 "max": maximum,
+                "mean": mean,
+                "stdev": stdev,
                 "expression": expression,
             }
 
