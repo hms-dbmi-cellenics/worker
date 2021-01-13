@@ -6,9 +6,9 @@ import requests
 
 from helpers.dynamo import get_item_from_dynamo
 from helpers.find_cells_by_set_id import find_cells_by_set_id
+from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy
 
 config = get_config()
-
 
 class DifferentialExpression:
     def __init__(self, msg, adata):
@@ -24,6 +24,33 @@ class DifferentialExpression:
 
         # Return a list of formatted results.
         return [Result(result)]
+    
+    # Marks with a special string the cells that are not included in the experiment
+    def mark_cells_not_in_basis_set(self, raw_adata, resp):        
+        basis_cell_set_name = self.task_def.get("basis")
+
+        if not basis_cell_set_name or ("all" in basis_cell_set_name.lower()):
+            return set()
+
+        basis_cell_set = set(find_cells_by_set_id(basis_cell_set_name, resp))
+
+        raw_adata.obs["condition"].loc[
+            ~raw_adata.obs["cell_ids"].isin(basis_cell_set)
+        ] = "FilteredOut"
+
+        return basis_cell_set
+
+    # Fill in values appropriately.
+    def get_cells_in_set(self, label, name, resp, cell_sets_names):
+        cells = []
+
+        # If "rest", then get all cells in the same hierarchy as the first cell set that arent part of "first"
+        if "rest" in name.lower():
+            cells = find_cell_ids_in_same_hierarchy(cell_sets_names['first'], resp)
+        else:
+            cells = find_cells_by_set_id(name, resp)
+
+        return cells
 
     def compute(self):
         # the cell set to compute differential expression on
@@ -42,25 +69,33 @@ class DifferentialExpression:
         raw_adata = self.adata.raw.to_adata()
 
         # create a series to hold the conditions
-        raw_adata.obs["condition"] = None
+        raw_adata.obs["condition"] = ""
 
-        # fill in values appropriately. if `rest`, fill in all NaN
-        # values with the label, as the other one will be a cell set
-        # and override the appropriate values. if between two cell sets,
-        # make sure the cells not in either will be marked with `other`.
+        # mark all cells that aren't in the basis sample to be filtered out
+        basis_cell_set = self.mark_cells_not_in_basis_set(raw_adata, resp)
+
         for label, name in cell_sets.items():
-            if name == "rest" or "all" in name.lower():
-                raw_adata.obs["condition"].fillna(value=label, inplace=True)
+            if name == "background" or "all" in name.lower():
+                raw_adata.obs["condition"].loc[raw_adata.obs["condition"] == ""] = label
             else:
-                cells = find_cells_by_set_id(name, resp)
+                cells = self.get_cells_in_set(label, name, resp, cell_sets)
 
+                # Append the current label to the already existing one in "condition", 
+                # this way when getting the cells for one cell set
+                # we can ignore those that are intersected with the other one
+                # since these would be problematic for the factor() function in the r worker.
                 raw_adata.obs["condition"].loc[
-                    raw_adata.obs["cell_ids"].isin(cells)
-                ] = label
-        
-        raw_adata.obs["condition"].fillna(value="other", inplace=True)
+                    (raw_adata.obs["cell_ids"].isin(cells)) & (~raw_adata.obs["condition"].eq("FilteredOut"))
+                ] += label
 
-        raw_adata.obs = raw_adata.obs.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
+        # print("----------------------------raw_adata----------------------------")
+        # print("first:")
+        # print(len(raw_adata.obs.index[raw_adata.obs["condition"] == "first"]))
+        # print("second:")
+        # print(len(raw_adata.obs.index[raw_adata.obs["condition"] == "second"]))
+        # print("firstsecond:")
+        # print(len(raw_adata.obs.index[raw_adata.obs["condition"] == "firstsecond"]))
+        # print("----------------------------END-raw_adata----------------------------")
 
         request = {
             "baseCells": raw_adata.obs.index[
@@ -71,8 +106,6 @@ class DifferentialExpression:
             ].tolist(),
         }
 
-        print(request)
-
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
             headers={"content-type": "application/json"},
@@ -80,6 +113,7 @@ class DifferentialExpression:
         )
 
         result = pandas.DataFrame.from_dict(r.json())
+
         result.dropna(inplace=True)
 
         # get top x most significant results, if parameter was supplied
