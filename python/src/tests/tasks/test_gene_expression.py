@@ -1,6 +1,7 @@
 import pytest
 import anndata
 import os
+import statistics
 from tasks.gene_expression import GeneExpression
 import json
 from config import get_config
@@ -63,7 +64,7 @@ class TestGeneExpression:
         for v in res.values():
             assert len(v["expression"]) == len(self._adata.obs)
 
-    def test_min_and_max_expression_data_gets_displayed_appropriately(self):
+    def test__expression_data_gets_displayed_appropriately(self):
         res = GeneExpression(self.correct_request, self._adata).compute()
         res = res[0].result
         res = json.loads(res)
@@ -71,9 +72,13 @@ class TestGeneExpression:
         for v in res.values():
             minimum = v["min"]
             maximum = v["max"]
+            mean = v["mean"]
+            stdev = v["stdev"]
 
             assert minimum == min(v["expression"])
             assert maximum == max(v["expression"])
+            assert mean == statistics.mean(v["expression"])
+            assert stdev == statistics.stdev(v["expression"])
 
     def test_task_handles_nonexistent_genes(self):
 
