@@ -10,6 +10,7 @@ from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierar
 
 config = get_config()
 
+
 class DifferentialExpression:
     def __init__(self, msg, adata):
         self.adata = adata
@@ -24,11 +25,12 @@ class DifferentialExpression:
 
         # Return a list of formatted results.
         return [Result(result)]
-    
+
     # Marks with a special string the cells that are not included in the experiment
-    def mark_cells_not_in_basis_set(self, raw_adata, resp):        
+    def mark_cells_not_in_basis_set(self, raw_adata, resp):
         basis_cell_set_name = self.task_def.get("basis")
 
+        # Ignore basis if it is all cells in the experiment or not specified (default behaviour for previous versions)
         if not basis_cell_set_name or ("all" in basis_cell_set_name.lower()):
             return set()
 
@@ -38,15 +40,13 @@ class DifferentialExpression:
             ~raw_adata.obs["cell_ids"].isin(basis_cell_set)
         ] = "FilteredOut"
 
-        return basis_cell_set
-
-    # Fill in values appropriately.
+    # Get cells values for the cell set.
     def get_cells_in_set(self, label, name, resp, cell_sets_names):
         cells = []
 
         # If "rest", then get all cells in the same hierarchy as the first cell set that arent part of "first"
         if "rest" in name.lower():
-            cells = find_cell_ids_in_same_hierarchy(cell_sets_names['first'], resp)
+            cells = find_cell_ids_in_same_hierarchy(cell_sets_names["first"], resp)
         else:
             cells = find_cells_by_set_id(name, resp)
 
@@ -55,10 +55,10 @@ class DifferentialExpression:
     def compute(self):
         # the cell set to compute differential expression on
         cell_sets = {
-            'first': self.task_def["cellSet"],
-            'second': self.task_def["compareWith"]
+            "first": self.task_def["cellSet"],
+            "second": self.task_def["compareWith"],
         }
-        
+
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)
 
@@ -72,7 +72,7 @@ class DifferentialExpression:
         raw_adata.obs["condition"] = ""
 
         # mark all cells that aren't in the basis sample to be filtered out
-        basis_cell_set = self.mark_cells_not_in_basis_set(raw_adata, resp)
+        self.mark_cells_not_in_basis_set(raw_adata, resp)
 
         for label, name in cell_sets.items():
             if name == "background" or "all" in name.lower():
@@ -80,22 +80,14 @@ class DifferentialExpression:
             else:
                 cells = self.get_cells_in_set(label, name, resp, cell_sets)
 
-                # Append the current label to the already existing one in "condition", 
+                # Append the current label to the already existing one in "condition",
                 # this way when getting the cells for one cell set
                 # we can ignore those that are intersected with the other one
                 # since these would be problematic for the factor() function in the r worker.
                 raw_adata.obs["condition"].loc[
-                    (raw_adata.obs["cell_ids"].isin(cells)) & (~raw_adata.obs["condition"].eq("FilteredOut"))
+                    (raw_adata.obs["cell_ids"].isin(cells))
+                    & (~raw_adata.obs["condition"].eq("FilteredOut"))
                 ] += label
-
-        # print("----------------------------raw_adata----------------------------")
-        # print("first:")
-        # print(len(raw_adata.obs.index[raw_adata.obs["condition"] == "first"]))
-        # print("second:")
-        # print(len(raw_adata.obs.index[raw_adata.obs["condition"] == "second"]))
-        # print("firstsecond:")
-        # print(len(raw_adata.obs.index[raw_adata.obs["condition"] == "firstsecond"]))
-        # print("----------------------------END-raw_adata----------------------------")
 
         request = {
             "baseCells": raw_adata.obs.index[

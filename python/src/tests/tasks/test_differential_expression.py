@@ -32,21 +32,74 @@ cell_set_responses = {
     ],
     "two_sets_intersected": [
         {
-            "name": "my amazing cluster",
+            "name": "intersecting set",
             "key": "cluster1",
             "cellIds": [1, 2, 3],
         },
         {
-            "name": "my other amazing cluster",
+            "name": "other intersecting set",
             "key": "cluster2",
             "cellIds": [3, 4, 5],
+        },
+    ],
+    "three_sets": [
+        {
+            "name": "one set",
+            "key": "cluster1",
+            "cellIds": [4, 5],
+        },
+        {
+            "name": "other set",
+            "key": "cluster2",
+            "cellIds": [0, 1, 2, 3],
+        },
+        {
+            "name": "basis set",
+            "key": "basisCluster",
+            "cellIds": [0, 1, 5],
+        },
+    ],
+    "hierarchichal_sets": [
+        {
+            "name": "hierarchy 1",
+            "key": "set_hierarchy_1",
+            "cellIds": [],
+            "children": [
+                {
+                    "name": "one set",
+                    "key": "cluster1",
+                    "cellIds": [4],
+                },
+                {
+                    "name": "another set",
+                    "key": "cluster2",
+                    "cellIds": [5],
+                },
+            ],
+        },
+        {
+            "name": "hierarchy 2",
+            "key": "set_hierarchy_2",
+            "cellIds": [],
+            "children": [
+                {
+                    "name": "set",
+                    "key": "cluster3",
+                    "cellIds": [0],
+                },
+                {
+                    "name": "set1",
+                    "key": "cluster4",
+                    "cellIds": [1],
+                },
+            ],
         },
     ],
 }
 
 
 class MockDynamoClass:
-    response = []
+    response = cell_set_responses["one_set"]
 
     no_called = 0
 
@@ -54,14 +107,13 @@ class MockDynamoClass:
         MockDynamoClass.response = cell_set_responses[response_key]
 
     def Table(*args, **kwargs):
-        MockDynamoClass.setResponse("one_set")
         MockDynamoClass.no_called = 0
         return MockDynamoClass.MockTable()
 
     class MockTable:
         def get_item(*args, **kwargs):
             MockDynamoClass.no_called += 1
-
+            print("doing stuff")
             return {"Item": {"cellSets": MockDynamoClass.response}}
 
 
@@ -87,7 +139,7 @@ class TestDifferentialExpression:
         }
 
         if maxNum:
-            request["body"]["maxNum"] = 2
+            request["body"]["maxNum"] = maxNum
 
         return request
 
@@ -216,3 +268,70 @@ class TestDifferentialExpression:
         res = json.loads(res)["rows"]
 
         assert len(res) <= len(self._adata.raw.var.index)
+
+    @responses.activate
+    def test_cells_in_sets_intersection_are_filtered_out(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
+        MockDynamoClass.setResponse("two_sets_intersected")
+
+        DifferentialExpression(
+            self.get_request(cellSet="cluster1", compareWith="cluster2"), self._adata
+        ).compute()
+
+        request_to_r_worker = json.loads(responses.calls[0].request.body)
+
+        baseCells = request_to_r_worker["baseCells"]
+        backgroundCells = request_to_r_worker["backgroundCells"]
+
+        # Check 1 cell of each of the cell sets is left out
+        assert len(baseCells) == len(backgroundCells) == 2
+
+        # Check the cells that haven't been left out are
+        # those that are not in the intersection of both sets
+        assert len(set(baseCells).intersection(set(backgroundCells))) == 0
+
+    @responses.activate
+    def test_cells_not_in_basis_sample_are_filtered_out(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
+        MockDynamoClass.setResponse("three_sets")
+
+        DifferentialExpression(
+            self.get_request(
+                cellSet="cluster1", compareWith="cluster2", basis="basisCluster"
+            ),
+            self._adata,
+        ).compute()
+
+        request_to_r_worker = json.loads(responses.calls[0].request.body)
+
+        baseCells = request_to_r_worker["baseCells"]
+        backgroundCells = request_to_r_worker["backgroundCells"]
+
+        # Check cells not in basis are taken out
+        assert len(baseCells) == 1
+        assert len(backgroundCells) == 2
+
+    @responses.activate
+    def test_rest_only_adds_cells_in_the_same_hierarchy(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
+        MockDynamoClass.setResponse("hierarchichal_sets")
+
+        DifferentialExpression(
+            self.get_request(cellSet="cluster1", compareWith="rest"),
+            self._adata,
+        ).compute()
+
+        request_to_r_worker = json.loads(responses.calls[0].request.body)
+
+        baseCells = request_to_r_worker["baseCells"]
+        backgroundCells = request_to_r_worker["backgroundCells"]
+
+        # Check there is only one cell in each set
+        assert len(baseCells) == 1
+        assert len(backgroundCells) == 1
