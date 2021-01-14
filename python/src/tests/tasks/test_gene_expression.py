@@ -78,7 +78,7 @@ class TestGeneExpression:
             assert minimum == min(v["expression"])
             assert maximum == max(v["expression"])
             assert mean == statistics.mean(v["expression"])
-            assert stdev == statistics.stdev(v["expression"])
+            assert stdev == pytest.approx(statistics.stdev(v["expression"]), 0.01)
 
     def test_task_handles_nonexistent_genes(self):
 
