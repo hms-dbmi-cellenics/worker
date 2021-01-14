@@ -3,14 +3,66 @@ import anndata
 import os
 from tasks.differential_expression import DifferentialExpression
 import json
-from botocore.stub import Stubber
 import mock
-import boto3
 import responses
 from config import get_config
-from boto3.dynamodb.types import TypeSerializer
 
 config = get_config()
+
+cell_set_responses = {
+    "one_set": [
+        {"name": "my amazing cluster", "key": "cluster1", "cellIds": [4, 5]},
+        {
+            "name": "my other amazing cluster",
+            "key": "cluster2",
+            "cellIds": [0, 1, 2, 3],
+        },
+    ],
+    "two_sets": [
+        {
+            "name": "my amazing cluster",
+            "key": "cluster1",
+            "cellIds": [4, 5],
+        },
+        {
+            "name": "my other amazing cluster",
+            "key": "cluster2",
+            "cellIds": [0, 1, 2, 3],
+        },
+    ],
+    "two_sets_intersected": [
+        {
+            "name": "my amazing cluster",
+            "key": "cluster1",
+            "cellIds": [1, 2, 3],
+        },
+        {
+            "name": "my other amazing cluster",
+            "key": "cluster2",
+            "cellIds": [3, 4, 5],
+        },
+    ],
+}
+
+
+class MockDynamoClass:
+    response = []
+
+    no_called = 0
+
+    def setResponse(response_key):
+        MockDynamoClass.response = cell_set_responses[response_key]
+
+    def Table(*args, **kwargs):
+        MockDynamoClass.setResponse("one_set")
+        MockDynamoClass.no_called = 0
+        return MockDynamoClass.MockTable()
+
+    class MockTable:
+        def get_item(*args, **kwargs):
+            MockDynamoClass.no_called += 1
+
+            return {"Item": {"cellSets": MockDynamoClass.response}}
 
 
 class TestDifferentialExpression:
@@ -20,18 +72,27 @@ class TestDifferentialExpression:
             os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
         )
 
-    @pytest.fixture(autouse=True)
-    def load_correct_definition(self):
-        self.correct_request = {
+    def get_request(
+        self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
+    ):
+        request = {
             "experimentId": "5e959f9c9f4b120771249001",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "DifferentialExpression",
-                "cellSet": "cluster1",
-                "compareWith": "rest",
+                "cellSet": cellSet,
+                "compareWith": compareWith,
+                "basis": basis,
             },
         }
 
+        if maxNum:
+            request["body"]["maxNum"] = 2
+
+        return request
+
+    @pytest.fixture(autouse=True)
+    def load_correct_definition(self):
         with open(os.path.join("tests", "de_result.json")) as f:
             data = json.load(f)
             responses.add(
@@ -48,36 +109,10 @@ class TestDifferentialExpression:
 
     @pytest.fixture
     def mock_dynamo_get(self):
-        ser = TypeSerializer()
-
-        response = [
-            {"name": "my amazing cluster", "key": "cluster1", "cellIds": [4, 5]},
-            {
-                "name": "my other amazing cluster",
-                "key": "cluster2",
-                "cellIds": [0, 1, 2, 3],
-            },
-        ]
-
-        response = ser.serialize(response)
-
-        test_experiment_id = self.correct_request["experimentId"]
-
-        dynamodb = boto3.resource("dynamodb", **config.BOTO_RESOURCE_KWARGS)
-        stubber = Stubber(dynamodb.meta.client)
-        stubber.add_response(
-            "get_item",
-            {"Item": {"cellSets": response}},
-            {
-                "TableName": config.DYNAMO_TABLE,
-                "Key": {"experimentId": test_experiment_id},
-                "ProjectionExpression": "cellSets",
-            },
-        )
-        stubber.activate()
-
         with mock.patch("boto3.resource") as m:
-            yield (m, dynamodb)
+            mockDynamo = MockDynamoClass()
+            m.return_value = mockDynamo
+            yield (m, mockDynamo)
 
     @responses.activate
     def test_throws_on_missing_parameters(self):
@@ -87,84 +122,46 @@ class TestDifferentialExpression:
     @responses.activate
     def test_throws_on_missing_adata(self):
         with pytest.raises(TypeError):
-            DifferentialExpression(self.correct_request)
+            DifferentialExpression(self.get_request())
 
     @responses.activate
-    def test_dynamodb_call_is_made_once_when_vs_rest(self):
-        with mock.patch("boto3.resource") as m:
-            global no_called
-            no_called = 0
+    def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
 
-            class MockTable:
-                def get_item(*args, **kwargs):
-                    global no_called
+        MockDynamoClass.setResponse("two_sets")
 
-                    no_called += 1
+        DifferentialExpression(self.get_request(), self._adata).compute()
 
-                    response = [
-                        {
-                            "name": "my amazing cluster",
-                            "key": "cluster1",
-                            "cellIds": [4, 5],
-                        },
-                        {
-                            "name": "my other amazing cluster",
-                            "key": "cluster2",
-                            "cellIds": [0, 1, 2, 3],
-                        },
-                    ]
-
-                    # response = ser.serialize(response)
-
-                    return {"Item": {"cellSets": response}}
-
-            class MockDynamoClass:
-                def Table(*args, **kwargs):
-                    return MockTable()
-
-            m.return_value = MockDynamoClass()
-            DifferentialExpression(self.correct_request, self._adata).compute()
-
-            assert no_called == 1
+        assert dynamodb.no_called == 1
 
     @responses.activate
     def test_cell_sets_get_queried_appropriately(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
-        DifferentialExpression(self.correct_request, self._adata).compute()
+        DifferentialExpression(self.get_request(), self._adata).compute()
 
     @responses.activate
     def test_works_with_request_and_adata(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
-        DifferentialExpression(self.correct_request, self._adata)
-
-    @responses.activate
-    def test_works_when_rest_is_first(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        self.correct_request["cellSet"] = "rest"
-        self.correct_request["compareWith"] = "cluster1"
-
-        DifferentialExpression(self.correct_request, self._adata)
+        DifferentialExpression(self.get_request(), self._adata)
 
     @responses.activate
     def test_works_when_all_is_first(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        self.correct_request["cellSet"] = "all-asdasd"
-        self.correct_request["compareWith"] = "cluster1"
-        
-        DifferentialExpression(self.correct_request, self._adata)
+        request = self.get_request(cellSet="all-asdasd", compareWith="cluster1")
+
+        DifferentialExpression(request, self._adata)
 
     @responses.activate
     def test_returns_json(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.correct_request, self._adata).compute()
+        res = DifferentialExpression(self.get_request(), self._adata).compute()
         res = res[0].result
         json.loads(res)
 
@@ -173,7 +170,7 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.correct_request, self._adata).compute()
+        res = DifferentialExpression(self.get_request(), self._adata).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
@@ -183,13 +180,15 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.correct_request, self._adata).compute()
+        res = DifferentialExpression(self.get_request(), self._adata).compute()
         res = res[0].result
         res = json.loads(res)
 
         for row in res["rows"]:
             keys = sorted(row.keys())
-            expected_keys = sorted(["gene_names", "zscore", "abszscore", "qval", "log2fc", "_row"])
+            expected_keys = sorted(
+                ["gene_names", "zscore", "abszscore", "qval", "log2fc", "_row"]
+            )
             assert keys == expected_keys
 
     @responses.activate
@@ -199,8 +198,7 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        request = self.correct_request
-        request["body"]["maxNum"] = 2
+        request = self.get_request(maxNum=2)
 
         res = DifferentialExpression(request, self._adata).compute()
         res = res[0].result
@@ -213,7 +211,7 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.correct_request, self._adata).compute()
+        res = DifferentialExpression(self.get_request(), self._adata).compute()
         res = res[0].result
         res = json.loads(res)["rows"]
 
