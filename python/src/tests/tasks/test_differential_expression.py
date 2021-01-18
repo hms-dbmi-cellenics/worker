@@ -316,7 +316,7 @@ class TestDifferentialExpression:
         assert len(backgroundCells) == 2
 
     @responses.activate
-    def test_rest_only_adds_cells_in_the_same_hierarchy(self, mock_dynamo_get):
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 

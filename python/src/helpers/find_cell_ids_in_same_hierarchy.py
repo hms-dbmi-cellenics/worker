@@ -16,13 +16,12 @@ def get_all_cell_ids_on_current_level(cell_sets, ignoring_set_id=None):
         if ignoring_set_id and cell_set["key"] == ignoring_set_id:
             continue
 
-        # cell_sets_to_return.append(cell_set["key"])
         cell_sets_to_return += get_all_cell_ids_in(cell_set)
 
     return cell_sets_to_return
 
 
-# returns a list with
+# returns a list with all cell id sets that are in the same hierarchy level as key (except for key's set)
 def find_cell_ids_in_same_hierarchy(key, cell_sets):
     for cell_set in cell_sets:
         if cell_set["key"] == key:
