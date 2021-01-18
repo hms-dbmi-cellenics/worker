@@ -6,6 +6,7 @@ import requests
 
 from helpers.dynamo import get_item_from_dynamo
 from helpers.find_cells_by_set_id import find_cells_by_set_id
+from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy
 
 config = get_config()
 
@@ -25,13 +26,45 @@ class DifferentialExpression:
         # Return a list of formatted results.
         return [Result(result)]
 
+    # Marks with a special string the cells that are not included in the experiment
+    def mark_cells_not_in_basis_set(self, raw_adata, resp):
+        basis_cell_set_name = self.task_def.get("basis")
+
+        # Ignore basis if it is all cells in the experiment or not specified (default behaviour for previous versions)
+        if not basis_cell_set_name or ("all" in basis_cell_set_name.lower()):
+            return set()
+
+        basis_cell_set = set(find_cells_by_set_id(basis_cell_set_name, resp))
+
+        # Mark all cells that are not included in the sample as FilteredOut, these will be ignored in the rest of the experiment
+        raw_adata.obs["condition"].loc[
+            ~raw_adata.obs["cell_ids"].isin(basis_cell_set)
+        ] = "FilteredOut"
+
+    # Get cells values for the cell set.
+    def get_cells_in_set(self, name, resp, first_cell_set_name):
+        cells = []
+
+        # If "rest", then get all cells in the same hierarchy as the first cell set that arent part of "first"
+        if "rest" in name.lower():
+            print("found rest")
+            cells = find_cell_ids_in_same_hierarchy(first_cell_set_name, resp)
+        else:
+            cells = find_cells_by_set_id(name, resp)
+
+        return cells
+
+    def mark_cells_of_set_in_data(self, label, cells, raw_adata):
+        # Append the current label to the already existing one in "condition",
+        # this way when getting the cells for one cell set
+        # we can ignore those that are intersected with the other one
+        # since these would be problematic for the factor() function in the r worker.
+        raw_adata.obs["condition"].loc[
+            (raw_adata.obs["cell_ids"].isin(cells))
+            & (~raw_adata.obs["condition"].eq("FilteredOut"))
+        ] += label
+
     def compute(self):
-        # the cell set to compute differential expression on
-        cell_sets = {
-            'first': self.task_def["cellSet"],
-            'second': self.task_def["compareWith"]
-        }
-        
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)
 
@@ -42,26 +75,33 @@ class DifferentialExpression:
         raw_adata = self.adata.raw.to_adata()
 
         # create a series to hold the conditions
-        raw_adata.obs["condition"] = None
+        raw_adata.obs["condition"] = ""
 
-        # fill in values appropriately. if `rest`, fill in all NaN
-        # values with the label, as the other one will be a cell set
-        # and override the appropriate values. if between two cell sets,
-        # make sure the cells not in either will be marked with `other`.
-        for label, name in cell_sets.items():
-            if name == "rest" or "all" in name.lower():
-                raw_adata.obs["condition"].fillna(value=label, inplace=True)
-            else:
-                cells = find_cells_by_set_id(name, resp)
+        # mark all cells that aren't in the basis sample to be filtered out
+        self.mark_cells_not_in_basis_set(raw_adata, resp)
 
-                raw_adata.obs["condition"].loc[
-                    raw_adata.obs["cell_ids"].isin(cells)
-                ] = label
-        
-        raw_adata.obs["condition"].fillna(value="other", inplace=True)
+        first_cell_set_name = self.task_def["cellSet"]
+        second_cell_set_name = self.task_def["compareWith"]
 
-        raw_adata.obs = raw_adata.obs.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
+        # mark cells of first set
+        first_cell_set = find_cells_by_set_id(first_cell_set_name, resp)
+        self.mark_cells_of_set_in_data("first", first_cell_set, raw_adata)
 
+        # mark cells of second set
+        if (
+            second_cell_set_name == "background"
+            or "all" in second_cell_set_name.lower()
+        ):
+            raw_adata.obs["condition"].loc[raw_adata.obs["condition"] == ""] = "second"
+
+        else:
+            second_cell_set = self.get_cells_in_set(
+                second_cell_set_name, resp, first_cell_set_name
+            )
+
+            self.mark_cells_of_set_in_data("second", second_cell_set, raw_adata)
+
+        # create request from the corresponding marked cells
         request = {
             "baseCells": raw_adata.obs.index[
                 raw_adata.obs["condition"] == "first"
@@ -71,8 +111,7 @@ class DifferentialExpression:
             ].tolist(),
         }
 
-        print(request)
-
+        # send request to r worker
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
             headers={"content-type": "application/json"},
@@ -80,6 +119,7 @@ class DifferentialExpression:
         )
 
         result = pandas.DataFrame.from_dict(r.json())
+
         result.dropna(inplace=True)
 
         # get top x most significant results, if parameter was supplied
