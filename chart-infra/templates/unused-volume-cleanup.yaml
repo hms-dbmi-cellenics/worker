@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
+  annotations:
+    botkube.io/disable: true
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Replace
