@@ -10,6 +10,10 @@ For example, to run the r and python containers, you can do:
 
     docker-compose up --build
 
+On Linux, this instead needs to be:
+
+    docker-compose -f docker-compose.linux-dev.yaml up --build
+
 Note that during the first time, the build can take up to 40-50 minutes to complete.
 If you get an error, see the `Troubleshoooting` section for help.
 

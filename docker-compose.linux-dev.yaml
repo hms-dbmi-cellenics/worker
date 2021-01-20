@@ -1,0 +1,29 @@
+version: '3.2'
+services:
+  r:
+    container_name: 'biomage-worker-r'
+    build:
+      context: r/
+      target: dev
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
+        - EXPERIMENT_ID=5e959f9c9f4b120771249001
+    volumes:
+      - ./r:/r:cached
+      - ./data:/data:cached
+    expose:
+      - "4000"
+    ports:
+      - "4000:4000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  python:
+    container_name: 'biomage-worker-python'
+    build:
+      context: python/
+      target: dev
+    volumes:
+      - ./python:/python:cached
+      - ./data:/data:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
