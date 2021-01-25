@@ -24,8 +24,10 @@ RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaM
 
 RUN R -e 'install.packages("RcppSpdlog")'
 RUN R -e 'devtools::install_github("kharchenkolab/pagoda2@v0.1.4")'
-RUN R -e 'devtools::install_github("kharchenkolab/conos@v1.3.1")'
+#RUN R -e 'devtools::install_github("kharchenkolab/conos@v1.3.1")'
 
+
+RUN R -e 'install.packages("Seurat")'
 RUN R -e 'install.packages("gprofiler2")'
 RUN R -e 'install.packages("RJSONIO")'
 
