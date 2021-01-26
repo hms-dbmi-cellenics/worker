@@ -1,6 +1,4 @@
 library(RestRserve)
-library(pagoda2)
-#library(conos)
 library(Matrix)
 require(data.table)
 library(RJSONIO)
