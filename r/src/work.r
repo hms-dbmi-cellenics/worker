@@ -20,7 +20,7 @@ load_data <- function() {
             {
                 f <- readRDS(
                     paste(
-                        "/data", experiment_id, "r_seurat.rds",
+                        "/data", experiment_id, "r.rds",
                         sep = "/"
                     )
                 )
