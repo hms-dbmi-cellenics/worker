@@ -1,8 +1,11 @@
 import scanpy
 import datetime
 import json
-
+import requests
+from config import get_config
 from result import Result
+
+config = get_config()
 
 
 class ComputeEmbedding:
@@ -12,40 +15,33 @@ class ComputeEmbedding:
         self.task_def = msg["body"]
 
     def _PCA(self):
-        # Remove pre-existing embeddings
-        self.adata.obsm.pop("X_pca", None)
-        self.adata.varm.pop("PCs", None)
-        self.adata.uns.pop("pca", None)
 
-        # compute embedding
-        scanpy.tl.pca(self.adata)
-        print(datetime.datetime.utcnow(), self.adata)
-        embeddings = self.adata.obsm["X_pca"]
+        request = {}
+        r = requests.post(
+            f"{config.R_WORKER_URL}/v0/getEmbeddingPCA",
+            headers={"content-type": "application/json"},
+            data=json.dumps(request),
+        )
 
-        # Get first two PCs only.
-        raw = embeddings[:, :2]
-
-        return raw
+        result = r.json()
+        # I need to get the first two PCS of each list.
+        result = [[l[0], l[1]] for l in result]
+        return result
 
     def _UMAP(self):
-        # Remove pre-existing embeddings
-        self.adata.obsm.pop("X_umap", None)
-        self.adata.uns.pop("neighbors", None)
-        self.adata.obsp.pop("distances", None)
-        self.adata.obsp.pop("connectivities", None)
+        request = {}
+        r = requests.post(
+            f"{config.R_WORKER_URL}/v0/getEmbeddingUMAP",
+            headers={"content-type": "application/json"},
+            data=json.dumps(request),
+        )
 
-        # Compute the neighborhood graph and create UMAP
-        scanpy.pp.neighbors(self.adata, n_neighbors=10, n_pcs=40)
-        scanpy.tl.umap(self.adata)
-
-        print(datetime.datetime.utcnow(), self.adata)
-        raw = self.adata.obsm["X_umap"]
-
-        return raw
+        result = r.json()
+        return result
 
     def _format_result(self, raw):
         # JSONify result.
-        raw_result = json.dumps(raw.tolist())
+        raw_result = json.dumps(raw)
 
         # Return a list of formatted results.
         return [Result(raw_result), Result(raw_result)]
