@@ -1,9 +1,11 @@
 library(RestRserve)
-library(pagoda2)
-library(conos)
 library(Matrix)
 require(data.table)
 library(RJSONIO)
+library(Seurat)
+library(sccore)
+
+source("src/differential_expression.r")
 
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID")
@@ -23,8 +25,9 @@ load_data <- function() {
                 )
 
                 loaded <- T
-                length <- dim(f$counts)
-
+                #length <- dim(f$counts)
+                length <- dim(f)
+                
                 message(
                     paste(
                         "Data successfully loaded, dimensions",
@@ -60,58 +63,14 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/DifferentialExpression",
         FUN = function(req, res) {
-
-            # set up a factor with the appropriate cells
-            factor <- rep(
-                c("base", "background"),
-                c(
-                    length(req$body$baseCells),
-                    length(req$body$backgroundCells)
-                )
-            )
-
-            names(factor) <- c(
-                req$body$baseCells, req$body$backgroundCells
-            )
-
-            data$clusters$custom$de <- factor(factor)
-
-            # # compute differential expression
-            data$getDifferentialGenes(
-                type = "custom", verbose = T, clusterType = "de"
-            )
-
-            # # get the necessary results
-            result <- data$diffgenes$custom$de$base
-
-            # replace name with Gene names
-            result$Gene <- data$misc$gene_annotations[
-                match(result$Gene, data$misc$gene_annotations$input), "name"
-            ]
-
-            result <- result[c("Z", "M", "Gene")]
-            colnames(result) <- c("zscore", "log2fc", "gene_names")
-
-            # compute absolute Z score from Z score
-            result["abszscore"] <- abs(result["zscore"])
-
-            # compute q-value from absolute z score
-            result["qval"] <- lapply(
-                result["abszscore"], function(x) 2 * pnorm(-x)
-            )
-
-            result["qval"] <- apply(
-                result["qval"], 1, function(x) format(x, scientific = TRUE)
-            )
-
+            
+            result = runDE(req)
             res$set_body(result)
         }
     )
 
     return(app)
 }
-
-# apply(hist_data, 2, function(x) pnorm(x, mean=mean(x), sd=sd(x)))
 
 data <- load_data()
 backend <- BackendRserve$new()
