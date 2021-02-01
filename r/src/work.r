@@ -5,7 +5,7 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
-source("src/differential_expression.r")
+source("./differential_expression.r")
 
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID")
