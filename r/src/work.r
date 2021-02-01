@@ -20,10 +20,16 @@ load_data <- function() {
             {
                 f <- readRDS(
                     paste(
-                        "/data", experiment_id, "r.rds",
+                        "/data/test/Objeto","r.rds",
                         sep = "/"
                     )
                 )
+                #f <- readRDS(
+                #    paste(
+                #        "/data", experiment_id, "r.rds",
+                #        sep = "/"
+                #    )
+                #)
 
                 loaded <- T
                 #length <- dim(f$counts)
