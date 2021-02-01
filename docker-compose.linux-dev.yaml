@@ -27,3 +27,17 @@ services:
       - ./data:/data:cached
     extra_hosts:
       - "host.docker.internal:host-gateway"
+  qcserver:
+    container_name: 'biomage-worker-qserver'
+    build:
+      context: r/
+      target: qcserver-dev
+    volumes:
+      - ./r:/r:cached
+    expose:
+      - "55555"
+    ports:
+      - "55555:55555"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+

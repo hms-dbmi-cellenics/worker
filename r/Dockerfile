@@ -30,7 +30,7 @@ RUN R -e 'install.packages("gprofiler2")'
 RUN R -e 'install.packages("RJSONIO")'
 
 # ---------------------------------------------------
-# PRODUCTION BUILD
+# WORKER PRODUCTION BUILD
 # ---------------------------------------------------
 FROM builder AS prod
 
@@ -42,7 +42,7 @@ ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
 CMD ["Rscript", "work.r"]
 
 # ---------------------------------------------------
-# DEVELOPMENT BUILD
+# WORKER DEVELOPMENT BUILD
 # ---------------------------------------------------
 FROM builder AS dev
 
@@ -56,3 +56,20 @@ ENV EXPERIMENT_ID $EXPERIMENT_ID
 
 WORKDIR /r
 CMD watchmedo auto-restart --directory=./src/ --pattern=* --recursive -- Rscript src/work.r
+
+# ---------------------------------------------------
+# QCSERVER DEVELOPMENT BUILD
+# ---------------------------------------------------
+FROM builder AS qcserver-dev
+
+# install Radian for interactive R shell
+# also install watchdog to automatically restart
+# when source files change
+RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+
+WORKDIR /r
+RUN R -e 'install.packages("remoter")'
+
+CMD Rscript qcserver/main.R
+
+
