@@ -8,6 +8,7 @@ library(sccore)
 source("./differential_expression.r")
 source("./embedding.r")
 
+
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID")
     message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
@@ -28,7 +29,6 @@ load_data <- function() {
                 loaded <- T
                 # length <- dim(f$counts)
                 length <- dim(f)
-
                 message(
                     paste(
                         "Data successfully loaded, dimensions",
@@ -60,7 +60,6 @@ create_app <- function(data) {
             response$set_body("up")
         }
     )
-
     app$add_post(
         path = "/v0/DifferentialExpression",
         FUN = function(req, res) {
@@ -79,7 +78,6 @@ create_app <- function(data) {
         path = "/v0/getEmbeddingUMAP",
         FUN = function(req, res) {
             result <- runEmbedding(req, "umap")
-            res$set_body(result)
         }
     )
 
