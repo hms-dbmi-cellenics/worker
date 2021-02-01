@@ -78,6 +78,7 @@ create_app <- function(data) {
         path = "/v0/getEmbeddingUMAP",
         FUN = function(req, res) {
             result <- runEmbedding(req, "umap")
+            res$set_body(result)
         }
     )
 
