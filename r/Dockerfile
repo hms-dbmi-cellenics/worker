@@ -55,5 +55,5 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 ARG EXPERIMENT_ID
 ENV EXPERIMENT_ID $EXPERIMENT_ID
 
-WORKDIR /r
-CMD watchmedo auto-restart --directory=./src/ --pattern=* --recursive -- Rscript src/work.r
+WORKDIR /r/src
+CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript work.r
