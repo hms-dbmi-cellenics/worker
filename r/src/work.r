@@ -23,7 +23,6 @@ load_data <- function() {
                         sep = "/"
                     )
                 )
-
                 loaded <- T
                 #length <- dim(f$counts)
                 length <- dim(f)
@@ -65,6 +64,13 @@ create_app <- function(data) {
         FUN = function(req, res) {
             
             result = runDE(req)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getExpression",
+        FUN = function(req, res) {
+            result <- runGeneExpression(req)
             res$set_body(result)
         }
     )

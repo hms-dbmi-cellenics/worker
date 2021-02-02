@@ -15,6 +15,8 @@ services:
       - "4000"
     ports:
       - "4000:4000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   python:
     container_name: 'biomage-worker-python'
     build:
@@ -23,3 +25,5 @@ services:
     volumes:
       - ./python:/python:cached
       - ./data:/data:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

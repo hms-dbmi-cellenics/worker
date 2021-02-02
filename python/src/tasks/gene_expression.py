@@ -1,7 +1,10 @@
 import json
 import numpy as np
+import json
+import requests
 from config import get_config
 from result import Result
+
 
 config = get_config()
 
@@ -32,6 +35,14 @@ class GeneExpression:
             correct_adata = correct_adata.copy()
             correct_adata.X = correct_adata.X.toarray()
 
+        r = requests.post(
+            f"{config.R_WORKER_URL}/v0/getExpression",
+            headers={"content-type": "application/json"},
+            data=json.dumps({}),
+        )
+
+        result = r.json()
+        print(result)
         # create a proper ordering of cells by increasing IDs
         obs_copy = correct_adata.obs.copy()
         obs_copy.sort_values(by=["cell_ids"], inplace=True)
@@ -40,7 +51,10 @@ class GeneExpression:
 
         # try to find all genes in the list
         correct_adata.var["genes_to_compute"] = correct_adata.var.index.isin(genes)
-
+        for i in range(0, len(correct_adata.var["gene_names"])):
+            print(correct_adata.var["gene_names"][i] == result[i])
+        print(len(correct_adata.var["gene_names"]))
+        print(len(result))
         # this orders and filters the matrix correctly for both cells and genes
         correct_adata = correct_adata[
             cell_list,
