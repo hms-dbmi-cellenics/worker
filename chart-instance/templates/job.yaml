@@ -55,9 +55,9 @@ spec:
           httpGet:
             path: /health
             port: 4000
-          initialDelaySeconds: 15
-          periodSeconds: 30
-          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          failureThreshold: 6
       volumes:
       - name: 'data'
         persistentVolumeClaim:
