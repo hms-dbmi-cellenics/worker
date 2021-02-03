@@ -5,8 +5,8 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
-source("./differential_expression.r")
-source("./embedding.r")
+source("src/differential_expression.r")
+source("src/embedding.r")
 
 
 load_data <- function() {
@@ -21,7 +21,7 @@ load_data <- function() {
             {
                 f <- readRDS(
                     paste(
-                        "/data", experiment_id, "r.rds",
+                        "/data", experiment_id,"r.rds",
                         sep = "/"
                     )
                 )
@@ -68,20 +68,12 @@ create_app <- function(data) {
         }
     )
     app$add_post(
-        path = "/v0/getEmbeddingPCA",
+        path = "/v0/getEmbedding",
         FUN = function(req, res) {
-            result <- runEmbedding(req, "pca")
+            result <- runEmbedding(req)
             res$set_body(result)
         }
     )
-    app$add_post(
-        path = "/v0/getEmbeddingUMAP",
-        FUN = function(req, res) {
-            result <- runEmbedding(req, "umap")
-            res$set_body(result)
-        }
-    )
-
     return(app)
 }
 
