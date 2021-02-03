@@ -20,10 +20,7 @@ class TestEmbedding:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request_skeleton = {
-            "body": {
-                "name": "GetEmbedding",
-                "type": "pca",
-            }
+            "body": {"name": "GetEmbedding", "type": "pca", "config": ""}
         }
 
     @pytest.fixture(autouse=True)
@@ -32,7 +29,7 @@ class TestEmbedding:
             data = json.load(f)
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/getEmbeddingPCA",
+                f"{config.R_WORKER_URL}/v0/getEmbedding",
                 json=data,
                 status=200,
             )
@@ -58,14 +55,14 @@ class TestEmbedding:
         except Exception:
             old = []
 
-        res = ComputeEmbedding(self.correct_request_skeleton, self._adata)._PCA()
+        res = ComputeEmbedding(self.correct_request_skeleton, self._adata).compute()
 
         assert True
 
     @responses.activate
     def test_pca_deals_with_incomplete_previous_results(self):
         self._adata.obsm.pop("X_pca", None)
-        ComputeEmbedding(self.correct_request_skeleton, self._adata)._PCA()
+        ComputeEmbedding(self.correct_request_skeleton, self._adata).compute()
 
     def test_throws_on_invalid_embedding_type(self):
         with pytest.raises(Exception):
