@@ -5,8 +5,8 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
-source("src/differential_expression.r")
-source("src/embedding.r")
+source("./differential_expression.r")
+source("./embedding.r")
 
 
 load_data <- function() {
