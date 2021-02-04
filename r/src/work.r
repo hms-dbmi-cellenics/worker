@@ -22,7 +22,7 @@ load_data <- function() {
             {
                 f <- readRDS(
                     paste(
-                        "/data", experiment_id,"r.rds",
+                        "/data/test/Objeto","r.rds",
                         sep = "/"
                     )
                 )
@@ -52,7 +52,6 @@ load_data <- function() {
 
 create_app <- function(data) {
     app <- Application$new(content_type = "application/json")
-
     app$add_get(
         path = "/health",
         FUN = function(request, response) {
@@ -76,7 +75,8 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/getExpression",
         FUN = function(req, res) {
-            result <- runGeneExpression(req)
+            result <- runExpression(req)
+            res$set_body(result)
     	}
     )
     return(app)
