@@ -5,7 +5,10 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
-source("src/differential_expression.r")
+
+source("./differential_expression.r")
+source("./embedding.r")
+source("./expression.r")
 
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID")
@@ -19,14 +22,12 @@ load_data <- function() {
             {
                 f <- readRDS(
                     paste(
-                        "/data", experiment_id, "r.rds",
+                        "/data", experiment_id,"r.rds",
                         sep = "/"
                     )
                 )
                 loaded <- T
-                #length <- dim(f$counts)
                 length <- dim(f)
-                
                 message(
                     paste(
                         "Data successfully loaded, dimensions",
@@ -58,12 +59,17 @@ create_app <- function(data) {
             response$set_body("up")
         }
     )
-
     app$add_post(
         path = "/v0/DifferentialExpression",
         FUN = function(req, res) {
-            
-            result = runDE(req)
+            result <- runDE(req)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getEmbedding",
+        FUN = function(req, res) {
+            result <- runEmbedding(req)
             res$set_body(result)
         }
     )
@@ -71,10 +77,8 @@ create_app <- function(data) {
         path = "/v0/getExpression",
         FUN = function(req, res) {
             result <- runGeneExpression(req)
-            res$set_body(result)
-        }
+    	}
     )
-
     return(app)
 }
 

@@ -65,6 +65,7 @@ class CountMatrix:
         partsizes = [
             8388608,
             15728640,
+            16777216,
             self.megabyte_chunks(filesize, num_parts),
         ]
 

@@ -13,6 +13,9 @@ spec:
   jobTemplate:
     spec:
       template:
+        metadata:
+          annotations:
+            botkube.io/disable: "true"
         spec:
           serviceAccountName: unused-volume-cleanup
           restartPolicy: OnFailure
