@@ -20,8 +20,9 @@ load_data <- function() {
     while (!loaded) {
         data <- tryCatch(
             {
+                print("Current working directory:")
                 print(getwd())
-                print(list.files("/data",all.files=TRUE,full.names=TRUE))
+                print("Experiment folder status:")
                 print(list.files(paste("/data",experiment_id,sep = "/"),all.files=TRUE,full.names=TRUE))
                 f <- readRDS(
                     paste(
