@@ -20,6 +20,9 @@ load_data <- function() {
     while (!loaded) {
         data <- tryCatch(
             {
+                print(getwd())
+                print(list.files("/data",all.files=TRUE,full.names=TRUE))
+                print(list.files(paste("/data",experiment_id,sep = "/"),all.files=TRUE,full.names=TRUE))
                 f <- readRDS(
                     paste(
                         "/data",experiment_id,"r.rds",
