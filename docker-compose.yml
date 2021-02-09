@@ -7,7 +7,7 @@ services:
       target: dev
       args:
         - GITHUB_PAT=${GITHUB_PAT}
-        - EXPERIMENT_ID=5e959f9c9f4b120771249001
+        - EXPERIMENT_ID=5928a56c7cbff9de78974ab50765ed20
     volumes:
       - ./r:/r:cached
       - ./data:/data:cached
