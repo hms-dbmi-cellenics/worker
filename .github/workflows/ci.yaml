@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['python', 'r']
+        project: ['python', 'r', 'pipeline-server']
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
