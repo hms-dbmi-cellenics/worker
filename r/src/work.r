@@ -7,6 +7,7 @@ library(sccore)
 
 source("./differential_expression.r")
 source("./embedding.r")
+source("./get_metadata_information.r")
 
 
 load_data <- function() {
@@ -74,6 +75,22 @@ create_app <- function(data) {
             res$set_body(result)
         }
     )
+    app$add_post(
+        path = "/v0/getDoubletScore",
+        FUN = function(req, res) {
+            result <- getDoubletScore(req)
+            res$set_body(result)
+        }
+    )
+
+    app$add_post(
+        path = "/v0/getMitochondrialContent",
+        FUN = function(req, res) {
+            result <- getMitochondrialContent(req)
+            res$set_body(result)
+        }
+    )
+
     return(app)
 }
 
