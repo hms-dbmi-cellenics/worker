@@ -19,7 +19,9 @@ runExpression <- function(req) {
     if (ncol(geneExpression)==1){
         geneExpression<-t(geneExpression)
         for(gene in genesSubset$input){
-            if (gene %in% rownames(data@assays$RNA@data)){
+            #
+            #data@assays$RNA@data
+            if (gene %in% rownames(data@assays[[data@active.assay]]@data)){
                 rownames(geneExpression)<-gene  
                 break
             }    
@@ -34,11 +36,9 @@ runExpression <- function(req) {
     #merge(genesSubset,geneExpression,by.x="input",by.y=0,all.y=TRUE,all.x=FALSE)
     #I don't know which one is faster, for now I'll leave this one.
     #
-    newNames = c()
-    for (gene in rownames(geneExpression)){ 
-        newNames<-append(newNames,genesSubset[genesSubset$input == gene,]$name)
-    }
-    rownames(geneExpression) <- newNames
+    #Juanlu suggested genesSubset$name[match(rownames(geneExpression), genesSubset$input)]
+    #
+    rownames(geneExpression) <- genesSubset$name[match(rownames(geneExpression), genesSubset$input)]
     geneExpression <- as.list(as.data.frame(t(as.matrix(geneExpression))))
     return(geneExpression)
 }
