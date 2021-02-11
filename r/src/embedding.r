@@ -42,8 +42,8 @@ runEmbedding <- function(req) {
                         reduction='pca', 
                         dims = 1:10, 
                         verbose = F, 
-                        min.dist = config$minimumDistance, 
-                        metric = config$distanceMetric,
+                        min.dist = 0.3, 
+                        metric = umapMetric,
                         umap.method = "uwot-learn")                        
         return(Embeddings(data, reduction = type))        
     }

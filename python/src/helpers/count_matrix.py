@@ -24,8 +24,8 @@ class CountMatrix:
 
         if not objects:
             return {}
-        
-        objects = {o["Key"]: o["ETag"] for o in objects if o['Size'] > 0}
+
+        objects = {o["Key"]: o["ETag"] for o in objects if o["Size"] > 0}
 
         return objects
 
@@ -144,7 +144,12 @@ class CountMatrix:
         # get object in bucket and their etags
         objects = self.get_objects()
 
-        print(datetime.datetime.utcnow(), "Found", len(objects), "objects matching experiment.")
+        print(
+            datetime.datetime.utcnow(),
+            "Found",
+            len(objects),
+            "objects matching experiment.",
+        )
 
         synced = {key: self.download_object(key, etag) for key, etag in objects.items()}
 

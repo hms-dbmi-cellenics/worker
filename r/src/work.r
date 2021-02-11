@@ -5,9 +5,10 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
+
 source("./differential_expression.r")
 source("./embedding.r")
-
+source("./expression.r")
 
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "5928a56c7cbff9de78974ab50765ed20")
@@ -19,15 +20,17 @@ load_data <- function() {
     while (!loaded) {
         data <- tryCatch(
             {
+                print("Current working directory:")
+                print(getwd())
+                print("Experiment folder status:")
+                print(list.files(paste("/data",experiment_id,sep = "/"),all.files=TRUE,full.names=TRUE))
                 f <- readRDS(
                     paste(
-                        "/data", experiment_id,"r.rds",
+                        "/data",experiment_id,"r.rds",
                         sep = "/"
                     )
                 )
-
                 loaded <- T
-                # length <- dim(f$counts)
                 length <- dim(f)
                 message(
                     paste(
@@ -53,7 +56,6 @@ load_data <- function() {
 
 create_app <- function(data) {
     app <- Application$new(content_type = "application/json")
-
     app$add_get(
         path = "/health",
         FUN = function(request, response) {
@@ -73,6 +75,13 @@ create_app <- function(data) {
             result <- runEmbedding(req)
             res$set_body(result)
         }
+    )
+    app$add_post(
+        path = "/v0/getExpression",
+        FUN = function(req, res) {
+            result <- runExpression(req)
+            res$set_body(result)
+    	}
     )
     return(app)
 }
