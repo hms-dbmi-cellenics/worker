@@ -6,7 +6,7 @@ import requests
 config = get_config()
 
 
-class GetMitochondrialContent:
+class GetDoubletScore:
     def __init__(self, msg):
         self.task_def = msg["body"]
 
@@ -23,7 +23,7 @@ class GetMitochondrialContent:
 
         request = {"cells": cells}
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/getMitochondrialContent",
+            f"{config.R_WORKER_URL}/v0/getDoubletScore",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
@@ -32,10 +32,10 @@ class GetMitochondrialContent:
         result = {}
         for i in range(len(resultR['_row'])):
             cell = resultR['_row'][i]
-            doublet_scores = resultR['percent.mt'][i]
+            doublet_scores = resultR['doublet_scores'][i]
 
             result[cell] = {
-                "percent-MT": doublet_scores,
+                "doubletScore": doublet_scores,
             }
-
+        
         return self._format_result(result)
