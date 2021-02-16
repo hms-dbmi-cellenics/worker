@@ -18,7 +18,7 @@ class GetDoubletScore:
         return [Result(result)]
 
     def compute(self):
-        # the cells to get MT-content data for
+        # the cells to get doublet score data for
         cells = self.task_def["cells"]
 
         request = {"cells": cells}

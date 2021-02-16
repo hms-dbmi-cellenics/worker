@@ -63,7 +63,7 @@ check_valid_cells <- function(cells){
 
     # Check cells that are not in the experiment
     if(any(!cells%in%data$cells_id)){
-        stop("There are some requested cells that are not in the data")
+        stop("There are some requested cells that are not in the data: ", cells[!cells%in%data$cells_id])
     }
 
     return(cells)
