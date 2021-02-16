@@ -18,7 +18,7 @@ class TestGetMitochondrialContent:
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "getMitochondrialContent",
-                "cells": ["AATGGAATCTGATGGT-1", "CTGCGAGAGATTAGAC-1"],
+                "cells": ["0", "1"],
             },
         }
 

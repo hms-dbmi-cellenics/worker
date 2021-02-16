@@ -18,7 +18,7 @@ class GetMitochondrialContent:
         return [Result(result)]
 
     def compute(self):
-        # the genes to get expression data for
+        # the cells to get MT-content data for
         cells = self.task_def["cells"]
 
         request = {"cells": cells}
@@ -30,8 +30,8 @@ class GetMitochondrialContent:
         
         resultR = r.json()
         result = {}
-        for i in range(len(resultR['_row'])):
-            cell = resultR['_row'][i]
+        for i in range(len(resultR['cells_id'])):
+            cell = resultR['cells_id'][i]
             doublet_scores = resultR['percent.mt'][i]
 
             result[cell] = {

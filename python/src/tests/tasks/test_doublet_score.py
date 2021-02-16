@@ -18,7 +18,7 @@ class TestGetDoubletScore:
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "getDoubletScore",
-                "cells": ["AATGGAATCTGATGGT-1", "CTGCGAGAGATTAGAC-1"],
+                "cells": ["0", "1"],
             },
         }
 
