@@ -31,3 +31,6 @@ subjects:
 - kind: ServiceAccount
   name: deployment-runner
   namespace: {{ .Release.Namespace | replace "worker" "api" }}
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: state-machine-runner-group

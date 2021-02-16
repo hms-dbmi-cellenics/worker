@@ -7,7 +7,7 @@ services:
       target: dev
       args:
         - GITHUB_PAT=${GITHUB_PAT}
-        - EXPERIMENT_ID=5e959f9c9f4b120771249001
+        - EXPERIMENT_ID=5928a56c7cbff9de78974ab50765ed20
     volumes:
       - ./r:/r:cached
       - ./data:/data:cached
@@ -15,6 +15,17 @@ services:
       - "4000"
     ports:
       - "4000:4000"
+  pipeline-server:
+    container_name: 'biomage-pipeline-server'
+    build:
+      context: pipeline-server/
+      target: dev
+    volumes:
+      - ./pipeline-server:/pipeline-server:cached
+    expose:
+      - "6969"
+    ports:
+      - "6969:6969"
   python:
     container_name: 'biomage-worker-python'
     build:
