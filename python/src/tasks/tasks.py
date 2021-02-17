@@ -1,5 +1,7 @@
 import traceback
 import json
+from .doublet_score import GetDoubletScore
+from .mitochondrial_content import GetMitochondrialContent
 from .embedding import ComputeEmbedding
 from .list_genes import ListGenes
 from .differential_expression import DifferentialExpression
@@ -67,6 +69,12 @@ class TaskFactory:
             return my_class
         elif task_name == "ClusterCells":
             my_class = ClusterCells(msg, adata)
+            return my_class
+        elif task_name == "GetDoubletScore":
+            my_class = GetDoubletScore(msg)
+            return my_class
+        elif task_name == "GetMitochondrialContent":
+            my_class = GetMitochondrialContent(msg)
             return my_class
         else:
             raise Exception("Task class with name {} was not found".format(task_name))
