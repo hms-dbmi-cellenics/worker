@@ -13,7 +13,7 @@ runExpression <- function(req) {
     df <- data@misc$gene_annotations
     genesSubset <- subset(df,df$name %in% req$body$genes)
     #Get the expression values for those genes in the corresponding matrix.
-    geneExpression <- as.matrix(data@assays[[data@active.assay]]@data[genesSubset$input,])
+    geneExpression <- as.matrix(data@assays$RNA@data[genesSubset$input,])
     #
     #There might be a better way to do this, but when the count is 1 the previous
     #search returns a transposed matrix without the gene id corresponding to that only column
@@ -24,7 +24,7 @@ runExpression <- function(req) {
         for(gene in genesSubset$input){
             #
             #data@assays$RNA@data
-            if (gene %in% rownames(data@assays[[data@active.assay]]@data)){
+            if (gene %in% rownames(data@assays$RNA@data)){
                 rownames(geneExpression)<-gene  
                 break
             }    
