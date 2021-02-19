@@ -1,7 +1,7 @@
-version: '3.2'
+version: "3.2"
 services:
   r:
-    container_name: 'biomage-worker-r'
+    container_name: "biomage-worker-r"
     build:
       context: r/
       target: dev
@@ -15,19 +15,8 @@ services:
       - "4000"
     ports:
       - "4000:4000"
-  pipeline-server:
-    container_name: 'biomage-pipeline-server'
-    build:
-      context: pipeline-server/
-      target: dev
-    volumes:
-      - ./pipeline-server:/pipeline-server:cached
-    expose:
-      - "6969"
-    ports:
-      - "6969:6969"
   python:
-    container_name: 'biomage-worker-python'
+    container_name: "biomage-worker-python"
     build:
       context: python/
       target: dev
