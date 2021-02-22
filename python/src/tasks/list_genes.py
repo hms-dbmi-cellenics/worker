@@ -24,6 +24,19 @@ class ListGenes:
 
     def compute(self):
         request = self.task_def
+        #
+        # Remove potentialy hazardous characters from the names filter
+        # Leaving this'd leave us open to a DDOS attack in the form of a very time consuming regex.
+        # More info here: https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+        #
+        # The symbols ^ and $ can't be removed because they are the way the UI indicates the type of search the user is performing.
+        #
+        if "geneNamesFilter" in request:
+            geneFilter = request["geneNamesFilter"]
+            regexChars = "{}|()?¿*+|\/.<>"
+            for char in regexChars:
+                geneFilter = geneFilter.replace(char, "")
+            request["geneNamesFilter"] = geneFilter
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/listGenes",
             headers={"content-type": "application/json"},
