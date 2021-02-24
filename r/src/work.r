@@ -10,6 +10,7 @@ source("./differential_expression.r")
 source("./embedding.r")
 source("./get_metadata_information.r")
 source("./expression.r")
+source("./list_genes.r")
 source("./cluster.r")
 
 load_data <- function() {
@@ -100,12 +101,20 @@ create_app <- function(data) {
     	}
     )
     app$add_post(
+        path = "/v0/listGenes",
+        FUN = function(req, res) {
+            result <- getList(req)
+            res$set_body(result)
+    	}
+    )
+    app$add_post(
         path = "/v0/getClusters",
         FUN = function(req, res) {
             result <- getClusters(req)
             res$set_body(result)
     	}
     )
+
 
     return(app)
 }
