@@ -9,8 +9,7 @@ config = get_config()
 
 
 class ClusterCells:
-    def __init__(self, msg, adata):
-        self.adata = adata
+    def __init__(self, msg):
         self.task_def = msg["body"]
         self.colors = COLOR_POOL.copy()
 

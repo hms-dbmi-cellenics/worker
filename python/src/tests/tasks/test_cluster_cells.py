@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import json
 
@@ -10,11 +9,6 @@ config = get_config()
 
 
 class TestClusterCells:
-    @pytest.fixture(autouse=True)
-    def open_test_adata(self):
-        self._adata = anndata.read_h5ad(
-            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
-        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -33,10 +27,6 @@ class TestClusterCells:
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ClusterCells()
-
-    def test_throws_on_missing_adata(self):
-        with pytest.raises(TypeError):
-            ClusterCells(self.correct_request)
 
 
 """

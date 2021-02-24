@@ -153,8 +153,11 @@ runDE <- function(req){
         )
     ) 
 
+    baseCells_barcode <- rownames(data@meta.data)[match(req$body$baseCells, data@meta.data$cells_id)]
+    backgroundCells_barcode <- rownames(data@meta.data)[match(req$body$backgroundCells, data@meta.data$cells_id)]
+
     names(factor_DE) <- c( 
-        req$body$baseCells, req$body$backgroundCells
+        baseCells_barcode, backgroundCells_barcode
     )
 
     # check mapped cells

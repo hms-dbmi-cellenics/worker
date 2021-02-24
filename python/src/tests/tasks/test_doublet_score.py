@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import statistics
 from tasks.doublet_score import GetDoubletScore

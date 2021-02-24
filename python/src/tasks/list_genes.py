@@ -8,9 +8,8 @@ config = get_config()
 
 
 class ListGenes:
-    def __init__(self, msg, adata):
+    def __init__(self, msg):
         self.task_def = msg["body"]
-        self.adata = adata
 
     def _format_result(self, result, total):
         # convert result to list of row dicts
