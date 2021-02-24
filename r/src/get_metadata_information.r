@@ -9,7 +9,7 @@ getDoubletScore <- function(req) {
         stop("Doublet scores are not computed for this experiment.")
     }
 
-    # Subset the doublet_scores ordering by cells_id (DESC)
+    # Subset the doublet_scores ordering by cells_id
     result <- data@meta.data[order(data$cells_id, decreasing = F), "doublet_scores"]
 
     # Be aware of possible na values
