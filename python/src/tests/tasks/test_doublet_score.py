@@ -18,7 +18,6 @@ class TestGetDoubletScore:
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "getDoubletScore",
-                "cells": ["0", "1"],
             },
         }
 
@@ -33,29 +32,19 @@ class TestGetDoubletScore:
                 status=200,
             )
 
-    def test_throws_on_missing_parameters(self):
-        with pytest.raises(TypeError):
-            GetDoubletScore()
 
     def test_works_with_request(self):
-        GetDoubletScore(self.correct_request)
+        GetDoubletScore()
 
     @responses.activate
     def test_returns_json(self):
-        res = GetDoubletScore(self.correct_request).compute()
+        res = GetDoubletScore().compute()
         res = res[0].result
         json.loads(res)
 
     @responses.activate
     def test_returns_a_json_object(self):
-        res = GetDoubletScore(self.correct_request).compute()
+        res = GetDoubletScore().compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
-
-    @responses.activate
-    def test_object_returns_appropriate_number_of_cells(self):
-        res = GetDoubletScore(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        assert len(res) == len(self.correct_request["body"]["cells"])

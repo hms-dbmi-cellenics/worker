@@ -1,40 +1,64 @@
+
+# Function to retrieve all the doublet score for the current experiment.
+# The doublet scores were computing in the data-ingest script. To compute then, we
+# use the package Scrublet [1]
 getDoubletScore <- function(req) {
      
-    # Check cells
-    cells <- check_valid_cells(req$body$cells)
+    ## Cell order by Embedding
+    idt.cells <- c()
+    if("umap" %in% names(data@reductions)){
+        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
+    }else if("tsne" %in% names(data@reductions)){
+        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
+    }
+
+    # Check no embedding information
+    if(is.null(idt.cells))
+        stop("No embedding information in the object.")
 
     # Check if the experiment has doublet_scores stored in rds file
     if(!"doublet_scores"%in%colnames(data@meta.data)){
         stop("Doublet scores are not computed for this experiment.")
     }
 
-    # Subset the doublet_scores for the requested cells
-    result <- subset(data@meta.data, data$cells_id%in%cells, c("cells_id", "doublet_scores"))
+    # Subset the doublet_scores with cells_id
+    result <- data@meta.data[idt.cells, "doublet_scores"]
 
     # Be aware of possible na values
-    if(any(is.na(result[, "doublet_scores"])))
+    if(any(is.na(result)))
         warning("There are missing values in the doublet_scores results")
 
     return(result)
 
 }
 
-
+# Function to retrieve all the mt-content score for the current experiment.
+# The MT-content was computing in the data-ingest script. To compute then, we
+# use the function PercentageFeatureSet fom Seurat package. We have been able to identify
+# the MT-genes only in MMusculus and Homo Sapiens by grepping "MT"
 getMitochondrialContent <- function(req) {
     
-    # Check cells
-    cells <- check_valid_cells(req$body$cells)
+    ## Cell order by Embedding
+    idt.cells <- c()
+    if("umap" %in% names(data@reductions)){
+        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
+    }else if("tsne" %in% names(data@reductions)){
+        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
+    }
+
+    # Check no embedding information
+    if(is.null(idt.cells))
+        stop("No embedding information in the object.")
 
     # Check if the experiment has percent.mt stored in rds file
     if(!"percent.mt"%in%colnames(data@meta.data)){
         stop("MT content is not computed for this experiment")
     }
+    # Subset the percent.mt with cells_id
+    result <- data@meta.data[idt.cells, "percent.mt"]    
 
-    # Subset the percent.mt for the requested cells
-    result <- subset(data@meta.data, data$cells_id%in%cells, c("cells_id", "percent.mt"))
-    
     # Be aware of possible na values
-    if(any(is.na(result[, "percent.mt"])))
+    if(any(is.na(result)))
         warning("There are missing values in the doublet_scores results")
     
     return(result)
@@ -42,29 +66,7 @@ getMitochondrialContent <- function(req) {
 }
 
 
-# Internal functio to check wheter the cells belongs to the experiment and if the experiment 
-# can retrieve information from them.
-check_valid_cells <- function(cells){
-    
-    # Convert to numeric if required
-    if(!is.numeric(cells))
-        cells <- as.numeric(cells)
+# [1] Wolock SL, Lopez R, Klein AM. Scrublet: Computational Identification of Cell Doublets in Single-Cell 
+# Transcriptomic Data. Cell Syst. 2019 Apr 24;8(4):281-291.e9. doi: 10.1016/j.cels.2018.11.005. Epub 2019 Apr 3. 
+# PMID: 30954476; PMCID: PMC6625319.
 
-    # Check any possible NA value
-    if(any(is.na(cells))){
-        cells <- na.omit(cells)
-        warning("There is NA values in the request.")
-    }
-
-    # Check if the experiment has cells_id stored in rds file
-    if(!"cells_id"%in%colnames(data@meta.data)){
-        stop("Cells id are not computed for this experiment.")
-    }
-
-    # Check cells that are not in the experiment
-    if(any(!cells%in%data$cells_id)){
-        stop("There are some requested cells that are not in the data: ", cells[!cells%in%data$cells_id])
-    }
-
-    return(cells)
-}
