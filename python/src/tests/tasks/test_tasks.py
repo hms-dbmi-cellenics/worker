@@ -9,7 +9,11 @@ config = get_config()
 
 
 class TestTaskFactory:
+    @pytest.fixture(autouse=True)
+    def set_mock_task_factory(self):
+        self.task_factory = TaskFactory()
 
+        
     def test_throws_typeerror_on_empty_taskfactory_submission(self):
         with pytest.raises(TypeError):
             self.task_factory.submit()
@@ -30,7 +34,6 @@ class TestTaskFactory:
     def test_creates_class_on_existent_task(self):
         r = self.task_factory._factory({"body": {"name": "GetEmbedding"}})
         assert isinstance(r, object)
-        assert self.task_factory.count_matrix.sync.call_count == 2
 
     @pytest.mark.parametrize(
         "valid_task_name",
@@ -45,11 +48,9 @@ class TestTaskFactory:
     def test_returns_result_list_with_properly_defined_task(self, valid_task_name):
         results = self.task_factory.submit({"body": {"name": valid_task_name}})
         assert isinstance(results, list)
-        assert self.task_factory.count_matrix.sync.call_count == 2
 
     def test_each_element_in_result_list_is_a_result_object(self):
         results = self.task_factory.submit(
             {"body": {"name": "GetEmbedding", "type": "pca"}}
         )
         assert all(isinstance(result, Result) for result in results)
-        assert self.task_factory.count_matrix.sync.call_count == 2

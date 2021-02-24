@@ -10,7 +10,6 @@ from .cluster_cells import ClusterCells
 from result import Result
 
 from config import get_config
-from helpers.count_matrix import CountMatrix
 
 config = get_config()
 
