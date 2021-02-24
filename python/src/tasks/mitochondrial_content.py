@@ -9,8 +9,8 @@ config = get_config()
 
 class GetMitochondrialContent:
     def __init__(self):
-        self.task_def = "MT-content"
-
+        pass
+    
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)
@@ -38,7 +38,7 @@ class GetMitochondrialContent:
         mean = float(np.mean(values))
         stdev = float(np.std(values))
 
-        result[self.task_def] = {
+        result["MT-content"] = {
             "min": minimum,
             "max": maximum,
             "mean": mean,
