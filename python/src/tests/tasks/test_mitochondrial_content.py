@@ -18,7 +18,6 @@ class TestGetMitochondrialContent:
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "getMitochondrialContent",
-                "cells": ["0", "1"],
             },
         }
 
@@ -33,29 +32,18 @@ class TestGetMitochondrialContent:
                 status=200,
             )
 
-    def test_throws_on_missing_parameters(self):
-        with pytest.raises(TypeError):
-            GetMitochondrialContent()
-
     def test_works_with_request(self):
-        GetMitochondrialContent(self.correct_request)
+        GetMitochondrialContent()
 
     @responses.activate
     def test_returns_json(self):
-        res = GetMitochondrialContent(self.correct_request).compute()
+        res = GetMitochondrialContent().compute()
         res = res[0].result
         json.loads(res)
 
     @responses.activate
     def test_returns_a_json_object(self):
-        res = GetMitochondrialContent(self.correct_request).compute()
+        res = GetMitochondrialContent().compute()
         res = res[0].result
         res = json.loads(res)
-        assert isinstance(res, dict)
-
-    @responses.activate
-    def test_object_returns_appropriate_number_of_cells(self):
-        res = GetMitochondrialContent(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        assert len(res) == len(self.correct_request["body"]["cells"])
+        assert isinstance(res, list)
