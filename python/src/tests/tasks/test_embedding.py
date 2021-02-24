@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import numpy as np
 from tasks.embedding import ComputeEmbedding
