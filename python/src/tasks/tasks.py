@@ -71,10 +71,10 @@ class TaskFactory:
             my_class = ClusterCells(msg, adata)
             return my_class
         elif task_name == "GetDoubletScore":
-            my_class = GetDoubletScore(msg)
+            my_class = GetDoubletScore()
             return my_class
         elif task_name == "GetMitochondrialContent":
-            my_class = GetMitochondrialContent(msg)
+            my_class = GetMitochondrialContent()
             return my_class
         else:
             raise Exception("Task class with name {} was not found".format(task_name))

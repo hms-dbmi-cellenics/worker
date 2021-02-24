@@ -10,6 +10,8 @@ source("./differential_expression.r")
 source("./embedding.r")
 source("./get_metadata_information.r")
 source("./expression.r")
+source("./list_genes.r")
+source("./cluster.r")
 
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "5928a56c7cbff9de78974ab50765ed20")
@@ -98,7 +100,22 @@ create_app <- function(data) {
             res$set_body(result)
     	}
     )
-  
+    app$add_post(
+        path = "/v0/listGenes",
+        FUN = function(req, res) {
+            result <- getList(req)
+            res$set_body(result)
+    	}
+    )
+    app$add_post(
+        path = "/v0/getClusters",
+        FUN = function(req, res) {
+            result <- getClusters(req)
+            res$set_body(result)
+    	}
+    )
+
+
     return(app)
 }
 
