@@ -46,4 +46,4 @@ class TestGetMitochondrialContent:
         res = GetMitochondrialContent().compute()
         res = res[0].result
         res = json.loads(res)
-        assert isinstance(res, dict)
+        assert isinstance(res, list)

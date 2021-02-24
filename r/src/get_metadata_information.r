@@ -4,25 +4,13 @@
 # use the package Scrublet [1]
 getDoubletScore <- function(req) {
      
-    ## Cell order by Embedding
-    idt.cells <- c()
-    if("umap" %in% names(data@reductions)){
-        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
-    }else if("tsne" %in% names(data@reductions)){
-        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
-    }
-
-    # Check no embedding information
-    if(is.null(idt.cells))
-        stop("No embedding information in the object.")
-
     # Check if the experiment has doublet_scores stored in rds file
     if(!"doublet_scores"%in%colnames(data@meta.data)){
         stop("Doublet scores are not computed for this experiment.")
     }
 
-    # Subset the doublet_scores with cells_id
-    result <- data@meta.data[idt.cells, "doublet_scores"]
+    # Subset the doublet_scores ordering by cells_id (DESC)
+    result <- data@meta.data[order(data$cells_id, decreasing = F), "doublet_scores"]
 
     # Be aware of possible na values
     if(any(is.na(result)))
@@ -38,24 +26,14 @@ getDoubletScore <- function(req) {
 # the MT-genes only in MMusculus and Homo Sapiens by grepping "MT"
 getMitochondrialContent <- function(req) {
     
-    ## Cell order by Embedding
-    idt.cells <- c()
-    if("umap" %in% names(data@reductions)){
-        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
-    }else if("tsne" %in% names(data@reductions)){
-        idt.cells <- rownames(data@reductions$umap@cell.embeddings)
-    }
-
-    # Check no embedding information
-    if(is.null(idt.cells))
-        stop("No embedding information in the object.")
-
     # Check if the experiment has percent.mt stored in rds file
     if(!"percent.mt"%in%colnames(data@meta.data)){
         stop("MT content is not computed for this experiment")
     }
-    # Subset the percent.mt with cells_id
-    result <- data@meta.data[idt.cells, "percent.mt"]    
+
+    # Subset the percent.mt ordering by cells_id (DESC)
+    result <- data@meta.data[order(data$cells_id, decreasing = F), "percent.mt"]
+
 
     # Be aware of possible na values
     if(any(is.na(result)))

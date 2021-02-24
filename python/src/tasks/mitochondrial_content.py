@@ -27,24 +27,8 @@ class GetMitochondrialContent:
             data=json.dumps(request),
         )
 
-        # Format result with the same structure than Gene Expression. The values are ordered by the default order
-        # of the Embedding in the Seurat object
-        # {"MT-content": {'min': , X 'max': , X 'mean': , X 'stdev': , X 'values': [...]}
-
-        result = {}
-        values = r.json()
-        minimum = float(np.amin(values))
-        maximum = float(np.amax(values))
-        mean = float(np.mean(values))
-        stdev = float(np.std(values))
-
-        result["MT-content"] = {
-            "min": minimum,
-            "max": maximum,
-            "mean": mean,
-            "stdev": stdev,
-            "values": values,
-        }
-
+        # The values are ordered by the default order of the Embedding in the Seurat object
+        # The result contains a list with the MT-content values
+        result = r.json()
         return self._format_result(result)
 
