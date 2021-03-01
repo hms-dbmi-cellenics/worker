@@ -69,7 +69,7 @@ class Response:
                     'DataType': 'String',
                     'StringValue': 'WorkResponse'
                 }
-            }
+            },
             MessageStructure="json",
         )
 
