@@ -64,6 +64,12 @@ class Response:
                 config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
             ),
             Message=msg_to_send,
+            MessageAttributes={
+                'type': {
+                    'DataType': 'String',
+                    'StringValue': 'WorkResponse'
+                }
+            }
             MessageStructure="json",
         )
 
