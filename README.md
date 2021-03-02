@@ -29,6 +29,7 @@ To shut down the development containers, you can use:
 
 ### Prerequisites
 
+#### Remote - Containers
 Development is done inside a development container that is automatically built,
 run, and managed by Visual Studio Code. You do not need R, R Studio, or a Python
 virtual environment to be installed locally.
@@ -38,6 +39,24 @@ As such, you must have the
 extension installed. Make sure you restart VS Code after installing to make sure it
 loads successfully. You should see a green icon in the leftmost part of the status bar,
 which indicates that the remote container plugin has been installed.
+
+#### Git LFS
+File(s) under `data/test` are downloaded by [inframock](https://github.com/biomage-ltd/inframock), uploaded to mock S3 and used by the workers. As these files are over Git's file size limit  (100 MB), they are stored using [Git LFS](https://git-lfs.github.com/). Follow the installation instruction on the Git LFS website.
+
+Once you have installed Git LFS, you can open the worker root directory in a terminal and run 
+
+```
+git lfs install
+```
+
+If Git LFS is installed successfully, it should print
+
+```
+Updated git hooks.
+Git LFS initialized.
+```
+
+You can see the list of files tracked by Git LFS in `.gitattributes`.
 
 ### Setup
 
