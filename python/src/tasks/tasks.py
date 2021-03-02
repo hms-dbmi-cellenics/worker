@@ -10,13 +10,16 @@ from .cluster_cells import ClusterCells
 from result import Result
 
 from config import get_config
+from helpers.count_matrix import CountMatrix
 
 config = get_config()
 
 
 class TaskFactory:
     def __init__(self):
-        pass
+        self.count_matrix = CountMatrix()
+        self.count_matrix.sync()
+
 
     def submit(self, msg):
         my_class = self._factory(msg)
@@ -44,6 +47,7 @@ class TaskFactory:
             return result
 
     def _factory(self, msg):
+        self.count_matrix.sync()
         task_def = msg.get("body", {})
         task_name = task_def.get("name")
 

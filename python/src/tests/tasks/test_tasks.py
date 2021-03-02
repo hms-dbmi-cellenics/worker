@@ -4,6 +4,7 @@ from tasks.tasks import TaskFactory
 from result import Result
 from config import get_config
 from mock import Mock, patch
+from helpers.count_matrix import CountMatrix
 
 config = get_config()
 
@@ -11,9 +12,12 @@ config = get_config()
 class TestTaskFactory:
     @pytest.fixture(autouse=True)
     def set_mock_task_factory(self):
-        self.task_factory = TaskFactory()
+        with patch("tasks.tasks.CountMatrix") as MockCountMatrix:
+            instance = MockCountMatrix.return_value
+            instance.sync.return_value = Mock()
+            self.task_factory = TaskFactory()
+            self.task_factory.count_matrix = instance
 
-        
     def test_throws_typeerror_on_empty_taskfactory_submission(self):
         with pytest.raises(TypeError):
             self.task_factory.submit()
