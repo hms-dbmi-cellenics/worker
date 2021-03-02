@@ -128,7 +128,7 @@ class TestDifferentialExpression:
         self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
     ):
         request = {
-            "experimentId": "5928a56c7cbff9de78974ab50765ed20",
+            "experimentId": "e52b39624588791a7889e39c617f669e",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "DifferentialExpression",
@@ -257,17 +257,6 @@ class TestDifferentialExpression:
         res = json.loads(res)["rows"]
 
         assert len(res) <= request["body"]["maxNum"]
-
-    @responses.activate
-    def test_all_genes_returned_when_no_limit_is_specified(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        res = DifferentialExpression(self.get_request(), self._adata).compute()
-        res = res[0].result
-        res = json.loads(res)["rows"]
-
-        assert len(res) <= len(self._adata.raw.var.index)
 
     @responses.activate
     def test_cells_in_sets_intersection_are_filtered_out(self, mock_dynamo_get):
