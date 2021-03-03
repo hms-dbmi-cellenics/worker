@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import statistics
 from tasks.gene_expression import GeneExpression
@@ -11,11 +10,6 @@ config = get_config()
 
 
 class TestGeneExpression:
-    @pytest.fixture(autouse=True)
-    def open_test_adata(self):
-        self._adata = anndata.read_h5ad(
-            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
-        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -43,29 +37,26 @@ class TestGeneExpression:
         with pytest.raises(TypeError):
             GeneExpression()
 
-    def test_throws_on_missing_adata(self):
-        with pytest.raises(TypeError):
-            GeneExpression(self.correct_request)
 
-    def test_works_with_request_and_adata(self):
-        GeneExpression(self.correct_request, self._adata)
+    def test_works_with_request(self):
+        GeneExpression(self.correct_request)
 
     @responses.activate
     def test_returns_json(self):
-        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         json.loads(res)
 
     @responses.activate
     def test_returns_a_json_object(self):
-        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
 
     @responses.activate
     def test_object_returns_appropriate_number_of_genes(self):
-        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
 

@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import statistics
 from tasks.mitochondrial_content import GetMitochondrialContent

@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import json
 from tasks.list_genes import ListGenes
@@ -9,11 +8,6 @@ config = get_config()
 
 
 class TestListGenes:
-    @pytest.fixture(autouse=True)
-    def open_test_adata(self):
-        self._adata = anndata.read_h5ad(
-            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
-        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -32,12 +26,9 @@ class TestListGenes:
         with pytest.raises(TypeError):
             ListGenes()
 
-    def test_throws_on_missing_adata(self):
-        with pytest.raises(TypeError):
-            ListGenes(self.correct_request_skeleton)
 
-    def test_works_with_request_and_adata(self):
-        ListGenes(self.correct_request_skeleton, self._adata)
+    def test_works_with_request(self):
+        ListGenes(self.correct_request_skeleton)
 
 
 """

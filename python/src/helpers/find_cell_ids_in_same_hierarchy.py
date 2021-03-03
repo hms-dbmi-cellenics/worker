@@ -34,3 +34,15 @@ def find_cell_ids_in_same_hierarchy(key, cell_sets):
                 return result
 
     return []
+
+
+# returns a list with all cell id
+def find_all_cell_ids_in_cell_sets(cell_sets):
+    result = []
+    for cell_set in cell_sets:
+        if "children" in cell_set.keys():
+            result = result + find_all_cell_ids_in_cell_sets(cell_set["children"])
+        else:
+            result =  get_all_cell_ids_on_current_level(cell_sets)
+    return result
+

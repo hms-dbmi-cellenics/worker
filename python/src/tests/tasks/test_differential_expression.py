@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 from tasks.differential_expression import DifferentialExpression
 import json
@@ -118,11 +117,6 @@ class MockDynamoClass:
 
 
 class TestDifferentialExpression:
-    @pytest.fixture(autouse=True)
-    def open_test_adata(self):
-        self._adata = anndata.read_h5ad(
-            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
-        )
 
     def get_request(
         self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
@@ -172,18 +166,13 @@ class TestDifferentialExpression:
             DifferentialExpression()
 
     @responses.activate
-    def test_throws_on_missing_adata(self):
-        with pytest.raises(TypeError):
-            DifferentialExpression(self.get_request())
-
-    @responses.activate
     def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
         MockDynamoClass.setResponse("two_sets")
 
-        DifferentialExpression(self.get_request(), self._adata).compute()
+        DifferentialExpression(self.get_request()).compute()
 
         assert dynamodb.no_called == 1
 
@@ -191,13 +180,7 @@ class TestDifferentialExpression:
     def test_cell_sets_get_queried_appropriately(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
-        DifferentialExpression(self.get_request(), self._adata).compute()
-
-    @responses.activate
-    def test_works_with_request_and_adata(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-        DifferentialExpression(self.get_request(), self._adata)
+        DifferentialExpression(self.get_request()).compute()
 
     @responses.activate
     def test_works_when_all_is_first(self, mock_dynamo_get):
@@ -206,14 +189,14 @@ class TestDifferentialExpression:
 
         request = self.get_request(cellSet="all-asdasd", compareWith="cluster1")
 
-        DifferentialExpression(request, self._adata)
+        DifferentialExpression(request)
 
     @responses.activate
     def test_returns_json(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.get_request(), self._adata).compute()
+        res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         json.loads(res)
 
@@ -222,7 +205,7 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.get_request(), self._adata).compute()
+        res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
@@ -232,7 +215,7 @@ class TestDifferentialExpression:
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
 
-        res = DifferentialExpression(self.get_request(), self._adata).compute()
+        res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         res = json.loads(res)
 
@@ -252,7 +235,7 @@ class TestDifferentialExpression:
 
         request = self.get_request(maxNum=2)
 
-        res = DifferentialExpression(request, self._adata).compute()
+        res = DifferentialExpression(request).compute()
         res = res[0].result
         res = json.loads(res)["rows"]
 
@@ -266,7 +249,7 @@ class TestDifferentialExpression:
         MockDynamoClass.setResponse("two_sets_intersected")
 
         DifferentialExpression(
-            self.get_request(cellSet="cluster1", compareWith="cluster2"), self._adata
+            self.get_request(cellSet="cluster1", compareWith="cluster2")
         ).compute()
 
         request_to_r_worker = json.loads(responses.calls[0].request.body)
@@ -274,6 +257,10 @@ class TestDifferentialExpression:
         baseCells = request_to_r_worker["baseCells"]
         backgroundCells = request_to_r_worker["backgroundCells"]
 
+
+        print(baseCells)
+        print(backgroundCells)
+        
         # Check 1 cell of each of the cell sets is left out
         assert len(baseCells) == len(backgroundCells) == 2
 
@@ -291,8 +278,7 @@ class TestDifferentialExpression:
         DifferentialExpression(
             self.get_request(
                 cellSet="cluster1", compareWith="cluster2", basis="basisCluster"
-            ),
-            self._adata,
+            )
         ).compute()
 
         request_to_r_worker = json.loads(responses.calls[0].request.body)
@@ -312,8 +298,7 @@ class TestDifferentialExpression:
         MockDynamoClass.setResponse("hierarchichal_sets")
 
         DifferentialExpression(
-            self.get_request(cellSet="cluster1", compareWith="rest"),
-            self._adata,
+            self.get_request(cellSet="cluster1", compareWith="rest")
         ).compute()
 
         request_to_r_worker = json.loads(responses.calls[0].request.body)
