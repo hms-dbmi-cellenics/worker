@@ -10,52 +10,74 @@ config = get_config()
 
 
 class TestEmbedding:
-
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
-        self.correct_request_skeleton = {
+        self.correct_request_pca = {
             "body": {"name": "GetEmbedding", "type": "pca", "config": ""}
         }
-
-    @pytest.fixture(autouse=True)
-    def set_responses(self):
-        with open(os.path.join("tests", "emb_result.json")) as f:
-            data = json.load(f)
-            responses.add(
-                responses.POST,
-                f"{config.R_WORKER_URL}/v0/getEmbedding",
-                json=data,
-                status=200,
-            )
-
+        self.correct_request_umap = {
+            "body": {
+                "name": "GetEmbedding",
+                "type": "umap",
+                "config": {"minimumDistance": 0.5, "distanceMetric": "euclidean"},
+            }
+        }
+        self.correct_request_umap_cosine = {
+            "body": {
+                "name": "GetEmbedding",
+                "type": "umap",
+                "config": {"minimumDistance": 0.1, "distanceMetric": "cosine"},
+            }
+        }
+        self.correct_request_tsne = {
+            "body": {
+                "name": "GetEmbedding",
+                "type": "tsne",
+                "config": {"perplexity": 30, "learningRate": 200},
+            }
+        }
+        """
+        The test file has been created with the multisample dataset, expId: e52b39624588791a7889e39c617f669e
+        """
+        self.correctResponse = json.load(
+            open(os.path.join("src/tests", "emb_result.json"))
+        )
+        
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ComputeEmbedding()
 
     def test_works_with_request(self):
-        ComputeEmbedding(self.correct_request_skeleton)
+        ComputeEmbedding(self.correct_request_pca)
 
-    #
-    # These two tests are not useful in R. Will replace with additional testing when we pick the correct r testing framework.
-    #
-    """
-    @responses.activate
     def test_pca_edits_object_appropriately(self):
-        try:
-            old = np.array(self._adata.obsm["X_pca"][:, :2])
-        except Exception:
-            old = []
 
-        res = ComputeEmbedding(self.correct_request_skeleton, self._adata).compute()
+        old = str(self.correctResponse["pca"])
+        res = ComputeEmbedding(self.correct_request_pca).compute()[0].result
 
-        assert True
+        assert res == old
 
-    @responses.activate
-    def test_pca_deals_with_incomplete_previous_results(self):
-        self._adata.obsm.pop("X_pca", None)
-        ComputeEmbedding(self.correct_request_skeleton, self._adata).compute()
+    def test_umap_edits_object_appropriately(self):
+
+        old = str(self.correctResponse["umap"])
+        res = ComputeEmbedding(self.correct_request_umap).compute()[0].result
+
+        assert res == old
+
+    def test_umap_different_params(self):
+
+        old = str(self.correctResponse["umap_cosine"])
+        res = ComputeEmbedding(self.correct_request_umap_cosine).compute()[0].result
+
+        assert res == old
+
+    def test_tsne_edits_object_appropriately(self):
+
+        old = str(self.correctResponse["tsne"])
+        res = ComputeEmbedding(self.correct_request_tsne).compute()[0].result
+
+        assert res == old
 
     def test_throws_on_invalid_embedding_type(self):
         with pytest.raises(Exception):
-            ComputeEmbedding(self._adata).compute("definitelynotavalidembedding")
-"""
+            ComputeEmbedding(self).compute("definitelynotavalidembedding")

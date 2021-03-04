@@ -15,6 +15,7 @@ source("./cluster.r")
 
 load_data <- function() {
     experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "5928a56c7cbff9de78974ab50765ed20")
+    test_mode <- Sys.getenv("test", unset = FALSE)
     message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
 
     loaded <- F
@@ -27,12 +28,17 @@ load_data <- function() {
                 print(getwd())
                 print("Experiment folder status:")
                 print(list.files(paste("/data",experiment_id,sep = "/"),all.files=TRUE,full.names=TRUE))
-                f <- readRDS(
+                if (test_mode){
+                    f <- readRDS("/data/test/r.rds")  
+                }else{
+                    f <- readRDS(
                     paste(
                         "/data",experiment_id,"r.rds",
                         sep = "/"
                     )
                 )
+                }
+
                 loaded <- T
                 length <- dim(f)
                 message(
