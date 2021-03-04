@@ -36,7 +36,7 @@ class TestClusterCells:
             },
         }
         self.correctResponse = json.load(
-            open(os.path.join("src/tests", "cluster_result.json"))
+            open(os.path.join("tests", "cluster_result.json"))
         )
 
     def test_throws_on_missing_parameters(self):

@@ -39,10 +39,8 @@ class TestEmbedding:
         """
         The test file has been created with the multisample dataset, expId: e52b39624588791a7889e39c617f669e
         """
-        self.correctResponse = json.load(
-            open(os.path.join("src/tests", "emb_result.json"))
-        )
-        
+        self.correctResponse = json.load(open(os.path.join("tests", "emb_result.json")))
+
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ComputeEmbedding()
