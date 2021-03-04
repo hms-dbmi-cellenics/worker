@@ -13,7 +13,9 @@
 #
 getClusters <- function(req){
     resol <- req$body$config$resolution
-    algo <- list("louvain"=1,"leiden"=4)[[req$body$type]]
+    #algo <- list("louvain"=1,"leiden"=4)[[req$body$type]]
+    #Disabled leiden forcefully until we can find a fix for this.
+    algo <- 1
     #Leaving neighbors here in case we eventually set parameters.
     #data <- FindNeighbors(data, k.param = 20, annoy.metric = neighbors_metric, verbose=FALSE)
     data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo) 
