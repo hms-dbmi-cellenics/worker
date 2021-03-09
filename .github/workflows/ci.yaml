@@ -123,7 +123,6 @@ jobs:
     needs: build-docker
     env:
       CI: "true"
-      R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
     defaults:
       run:
         working-directory: python
@@ -132,10 +131,22 @@ jobs:
         name: Check out source code
         uses: actions/checkout@v2
 
+      - id: set-up-creds
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
       - name: Download image
         uses: ishworkh/docker-image-artifact-download@v1
         with:
-          image: env.R_IMAGE_NAME
+          image: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: setup-python
         name: Setup Python
@@ -166,6 +177,8 @@ jobs:
         run: |-
           docker run --rm --name worker-r \
             -d -p 4000:4000 $R_IMAGE_NAME
+        env:
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: test
         name: Run unit tests
