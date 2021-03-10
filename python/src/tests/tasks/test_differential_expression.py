@@ -117,7 +117,6 @@ class MockDynamoClass:
 
 
 class TestDifferentialExpression:
-
     def get_request(
         self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
     ):
@@ -222,8 +221,23 @@ class TestDifferentialExpression:
         for row in res["rows"]:
             keys = sorted(row.keys())
             expected_keys = sorted(
-                ["gene_names", "zscore", "abszscore", "qval", "log2fc", "_row"]
+                # Until the UI side is not changed we need to suppor old and new columns
+                # ["gene_names", "_row", "avg_log2FC", "p_val_adj", "pct_1", "pct_2"]
+                [
+                    "gene_names",
+                    "zscore",
+                    "abszscore",
+                    "qval",
+                    "log2fc",
+                    "_row",
+                    "avg_log2FC",
+                    "p_val_adj",
+                    "pct_1",
+                    "pct_2",
+                ]
             )
+            print(expected_keys)
+            print(keys)
             assert keys == expected_keys
 
     @responses.activate
@@ -257,10 +271,9 @@ class TestDifferentialExpression:
         baseCells = request_to_r_worker["baseCells"]
         backgroundCells = request_to_r_worker["backgroundCells"]
 
-
         print(baseCells)
         print(backgroundCells)
-        
+
         # Check 1 cell of each of the cell sets is left out
         assert len(baseCells) == len(backgroundCells) == 2
 
