@@ -7,8 +7,7 @@ config = get_config()
 
 
 class ComputeEmbedding:
-    def __init__(self, msg, adata):
-        self.adata = adata
+    def __init__(self, msg):
         self.task_def = msg["body"]
 
     def _format_result(self, raw):
@@ -27,10 +26,6 @@ class ComputeEmbedding:
             data=json.dumps(request),
         )
 
+        # The index order relies on cells_id in an ascending form. The order is made in the R part. 
         result = r.json()
-
-        # order cells by cell ids first to guarantee order
-        sorted_indices = self.adata.obs.sort_values(by=["cell_ids"]).index
-        self.adata = self.adata[sorted_indices, :]
-
         return self._format_result(result)

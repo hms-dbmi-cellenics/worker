@@ -8,13 +8,16 @@ metadata:
 rules:
 - apiGroups: ["batch"]
   resources: ["jobs"]
-  verbs: ["create", "get", "watch", "list", "update", "patch"]
+  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
   verbs: ["create", "get", "watch", "list", "update", "patch"]
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["create", "get", "watch", "list", "update", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding

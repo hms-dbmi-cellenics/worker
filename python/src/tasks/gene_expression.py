@@ -8,8 +8,7 @@ config = get_config()
 
 
 class GeneExpression:
-    def __init__(self, msg, adata):
-        self.adata = adata
+    def __init__(self, msg):
         self.task_def = msg["body"]
 
     def _format_result(self, result):

@@ -2,7 +2,6 @@ import boto3
 import datetime
 import os
 import hashlib
-import anndata
 from config import get_config
 
 config = get_config()
@@ -13,8 +12,6 @@ class CountMatrix:
         self.config = get_config()
         self.local_path = os.path.join(self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
-
-        self.adata = None
 
     def get_objects(self):
         objects = self.s3.list_objects_v2(
@@ -94,6 +91,8 @@ class CountMatrix:
     def download_object(self, key, etag):
         path = os.path.join(config.LOCAL_DIR, key)
 
+        print(key)
+
         print(f"Now checking {key} (etag: {etag}) in S3 against {path}...")
 
         if self.path_exists and self.validate_etag(path, etag):
@@ -112,21 +111,6 @@ class CountMatrix:
             f.seek(0)
 
         return True
-
-    def update_anndata(self, synced, adata_path):
-        adata_key = os.path.join(self.config.EXPERIMENT_ID, "python.h5ad")
-
-        if not self.adata:
-            print("AnnData does not exist in memory, creating it now...")
-            self.adata = anndata.read_h5ad(adata_path)
-        elif self.adata and synced[adata_key]:
-            print("AnnData has been updated, reloading...")
-            self.adata = anndata.read_h5ad(adata_path)
-
-        if "cell_ids" not in self.adata.obs:
-            raise ValueError(
-                "You must have `cell_ids` in your anndata file for integer cell IDs."
-            )
 
     def sync(self):
         # check if path existed before running this
@@ -152,6 +136,3 @@ class CountMatrix:
         )
 
         synced = {key: self.download_object(key, etag) for key, etag in objects.items()}
-
-        adata_path = os.path.join(self.local_path, "python.h5ad")
-        self.update_anndata(synced, adata_path)

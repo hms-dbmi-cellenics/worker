@@ -50,8 +50,5 @@ FROM builder AS dev
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
-ARG EXPERIMENT_ID
-ENV EXPERIMENT_ID $EXPERIMENT_ID
-
 WORKDIR /r/src
 CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript work.r

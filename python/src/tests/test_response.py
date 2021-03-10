@@ -68,6 +68,7 @@ class TestResponse:
             ),
             "Message": json.dumps({"default": json.dumps(result_object)}),
             "MessageStructure": "json",
+            "MessageAttributes": {"type": {"DataType": "String", "StringValue": "WorkResponse"}},
         }
 
         stubbed_client = botocore.session.get_session().create_client(

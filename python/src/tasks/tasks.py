@@ -20,6 +20,7 @@ class TaskFactory:
         self.count_matrix = CountMatrix()
         self.count_matrix.sync()
 
+
     def submit(self, msg):
         my_class = self._factory(msg)
 
@@ -47,34 +48,29 @@ class TaskFactory:
 
     def _factory(self, msg):
         self.count_matrix.sync()
-        adata = self.count_matrix.adata
-
-        if not adata:
-            raise Exception("Adata is missing, no tasks can be performed.")
-
         task_def = msg.get("body", {})
         task_name = task_def.get("name")
 
         if task_name == "GetEmbedding":
-            my_class = ComputeEmbedding(msg, adata)
+            my_class = ComputeEmbedding(msg)
             return my_class
         elif task_name == "ListGenes":
-            my_class = ListGenes(msg, adata)
+            my_class = ListGenes(msg)
             return my_class
         elif task_name == "DifferentialExpression":
-            my_class = DifferentialExpression(msg, adata)
+            my_class = DifferentialExpression(msg)
             return my_class
         elif task_name == "GeneExpression":
-            my_class = GeneExpression(msg, adata)
+            my_class = GeneExpression(msg)
             return my_class
         elif task_name == "ClusterCells":
-            my_class = ClusterCells(msg, adata)
+            my_class = ClusterCells(msg)
             return my_class
         elif task_name == "GetDoubletScore":
-            my_class = GetDoubletScore(msg)
+            my_class = GetDoubletScore()
             return my_class
         elif task_name == "GetMitochondrialContent":
-            my_class = GetMitochondrialContent(msg)
+            my_class = GetMitochondrialContent()
             return my_class
         else:
             raise Exception("Task class with name {} was not found".format(task_name))

@@ -1,13 +1,12 @@
-version: '3.2'
+version: "3.2"
 services:
   r:
-    container_name: 'biomage-worker-r'
+    container_name: "biomage-worker-r"
     build:
       context: r/
       target: dev
       args:
         - GITHUB_PAT=${GITHUB_PAT}
-        - EXPERIMENT_ID=5928a56c7cbff9de78974ab50765ed20
     volumes:
       - ./r:/r:cached
       - ./data:/data:cached
@@ -15,22 +14,15 @@ services:
       - "4000"
     ports:
       - "4000:4000"
-  pipeline-server:
-    container_name: 'biomage-pipeline-server'
-    build:
-      context: pipeline-server/
-      target: dev
-    volumes:
-      - ./pipeline-server:/pipeline-server:cached
-    expose:
-      - "6969"
-    ports:
-      - "6969:6969"
+    environment:
+      - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
   python:
-    container_name: 'biomage-worker-python'
+    container_name: "biomage-worker-python"
     build:
       context: python/
       target: dev
     volumes:
       - ./python:/python:cached
       - ./data:/data:cached
+    environment:
+      - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e

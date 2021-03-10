@@ -6,14 +6,13 @@ import requests
 
 from helpers.dynamo import get_item_from_dynamo
 from helpers.find_cells_by_set_id import find_cells_by_set_id
-from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy
+from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
 
 config = get_config()
 
 
 class DifferentialExpression:
-    def __init__(self, msg, adata):
-        self.adata = adata
+    def __init__(self, msg):
         self.task_def = msg["body"]
         self.experiment_id = config.EXPERIMENT_ID
 
@@ -25,21 +24,6 @@ class DifferentialExpression:
 
         # Return a list of formatted results.
         return [Result(result)]
-
-    # Marks with a special string the cells that are not included in the experiment
-    def mark_cells_not_in_basis_set(self, raw_adata, resp):
-        basis_cell_set_name = self.task_def.get("basis")
-
-        # Ignore basis if it is all cells in the experiment or not specified (default behaviour for previous versions)
-        if not basis_cell_set_name or ("all" in basis_cell_set_name.lower()):
-            return set()
-
-        basis_cell_set = set(find_cells_by_set_id(basis_cell_set_name, resp))
-
-        # Mark all cells that are not included in the sample as FilteredOut, these will be ignored in the rest of the experiment
-        raw_adata.obs["condition"].loc[
-            ~raw_adata.obs["cell_ids"].isin(basis_cell_set)
-        ] = "FilteredOut"
 
     # Get cells values for the cell set.
     def get_cells_in_set(self, name, resp, first_cell_set_name):
@@ -54,16 +38,6 @@ class DifferentialExpression:
 
         return cells
 
-    def mark_cells_of_set_in_data(self, label, cells, raw_adata):
-        # Append the current label to the already existing one in "condition",
-        # this way when getting the cells for one cell set
-        # we can ignore those that are intersected with the other one
-        # since these would be problematic for the factor() function in the r worker.
-        raw_adata.obs["condition"].loc[
-            (raw_adata.obs["cell_ids"].isin(cells))
-            & (~raw_adata.obs["condition"].eq("FilteredOut"))
-        ] += label
-
     def compute(self):
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)
@@ -71,44 +45,54 @@ class DifferentialExpression:
         # get cell sets from database
         resp = get_item_from_dynamo(self.experiment_id, "cellSets")
 
-        # use raw values for this task
-        raw_adata = self.adata.raw.to_adata()
-
-        # create a series to hold the conditions
-        raw_adata.obs["condition"] = ""
-
-        # mark all cells that aren't in the basis sample to be filtered out
-        self.mark_cells_not_in_basis_set(raw_adata, resp)
-
         first_cell_set_name = self.task_def["cellSet"]
         second_cell_set_name = self.task_def["compareWith"]
+        basis = self.task_def["basis"]
+
+        ## Check if the comparsion is between all the cells or within a cluster
+        if not basis or ("all" in basis.lower()):
+            # In case that we are not going to filter by a cluster we remain the set empty
+            filtered_set = set()
+        else:
+            # In the case that we filter by a cluster we keep the cells id in a set
+            filtered_set = set(find_cells_by_set_id(basis, resp))
 
         # mark cells of first set
         first_cell_set = find_cells_by_set_id(first_cell_set_name, resp)
-        self.mark_cells_of_set_in_data("first", first_cell_set, raw_adata)
 
         # mark cells of second set
-        if (
-            second_cell_set_name == "background"
-            or "all" in second_cell_set_name.lower()
-        ):
-            raw_adata.obs["condition"].loc[raw_adata.obs["condition"] == ""] = "second"
-
+        # check if the second set is composed by the "All other cells"
+        if (second_cell_set_name == "background" or "all" in second_cell_set_name.lower()):
+            # Retrieve all the cells (not necessary at the same hierachy level)
+            complete_cell_set = set(find_all_cell_ids_in_cell_sets(resp))
+            # Filter with those that are not in the first cell set
+            second_cell_set = [item for item in complete_cell_set if item not in first_cell_set]
         else:
-            second_cell_set = self.get_cells_in_set(
-                second_cell_set_name, resp, first_cell_set_name
-            )
+            # In the case that we compare with specific cell set, we just look for the cell directly
+            second_cell_set = self.get_cells_in_set(second_cell_set_name, resp, first_cell_set_name)
+            # Check any possible intersect cells
+            inter_cell_set = set(first_cell_set).intersection(set(second_cell_set))
+            first_cell_set = [item for item in first_cell_set if item not in inter_cell_set]
+            second_cell_set = [item for item in second_cell_set if item not in inter_cell_set]
 
-            self.mark_cells_of_set_in_data("second", second_cell_set, raw_adata)
+
+        # Keep only the cell_set that are on the specify basis (in the case that we are not in the "All" analysis)
+        if len(filtered_set)>0:
+            second_cell_set = [item for item in second_cell_set if item in filtered_set]
+            first_cell_set = [item for item in first_cell_set if item in filtered_set]
+
+        # Check if the first cell set is empty
+        if len(first_cell_set)==0:
+            raise Exception("No cells id fullfills the 1st cell set.")
+
+        # Check if the second cell set is empty
+        if len(second_cell_set)==0:
+            raise Exception("No cells id fullfills the 2nd cell set.")
 
         # create request from the corresponding marked cells
         request = {
-            "baseCells": raw_adata.obs.index[
-                raw_adata.obs["condition"] == "first"
-            ].tolist(),
-            "backgroundCells": raw_adata.obs.index[
-                raw_adata.obs["condition"] == "second"
-            ].tolist(),
+            "baseCells": [int(x) for x in first_cell_set],
+            "backgroundCells": [int(x) for x in second_cell_set],
         }
 
         # send request to r worker

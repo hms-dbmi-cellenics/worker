@@ -20,43 +20,43 @@ jobs:
       run:
         working-directory: python
     steps:
-    - id: checkout
-      name: Check out source code
-      uses: actions/checkout@v2
+      - id: checkout
+        name: Check out source code
+        uses: actions/checkout@v2
 
-    - id: setup-python
-      name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.7'
-    
-    - id: cache-seek
-      name: Check for pip cache hit
-      uses: actions/cache@v2
-      with:
-        # This path is specific to Ubuntu
-        path: ~/.cache/pip
-        # Look to see if there is a cache hit for the corresponding requirements file
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          ${{ runner.os }}-
+      - id: setup-python
+        name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
 
-    - id: install
-      name: Install dependencies
-      run: |-
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt
+      - id: cache-seek
+        name: Check for pip cache hit
+        uses: actions/cache@v2
+        with:
+          # This path is specific to Ubuntu
+          path: ~/.cache/pip
+          # Look to see if there is a cache hit for the corresponding requirements file
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
 
-    - id: test
-      name: Run unit tests
-      run: |-
-        cd src/
-        gunzip -k ../../data/test/python.h5ad.gz
-        CLUSTER_ENV="test" python -m pytest --cov=.
-      env:
-        AWS_DEFAULT_REGION: 'eu-west-1'
-        CLUSTER_ENV: 'test'
+      - id: install
+        name: Install dependencies
+        run: |-
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+
+      - id: test
+        name: Run unit tests
+        run: |-
+          cd src/
+          gunzip -k ../../data/test/python.h5ad.gz
+          CLUSTER_ENV="test" python -m pytest --cov=.
+        env:
+          AWS_DEFAULT_REGION: "eu-west-1"
+          CLUSTER_ENV: "test"
 
   build-docker:
     name: Build Docker container
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['python', 'r', 'pipeline-server']
+        project: ["python", "r"]
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       tag: ${{ steps.ref.outputs.tag }}
@@ -122,7 +122,7 @@ jobs:
       - id: login-ecr
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
-      
+
       - id: create-ecr-registry
         name: Create an ECR repository (if needed)
         # This will fail if the registry already exists, which is fine. If there is some other
@@ -138,13 +138,13 @@ jobs:
         run: |-
           echo Pulling $IMAGE_NAME from ECR.
           docker pull $IMAGE_NAME || true
-  
+
           echo Pulling $IMAGE_NAME-builder from ECR.
           docker pull $IMAGE_NAME-builder || true
 
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
-      
+
       - id: build
         name: Build Docker images
         run: |-
@@ -159,7 +159,7 @@ jobs:
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
-  
+
       - id: push
         name: Push docker images to ECR
         run: |-
@@ -178,7 +178,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        environment: ['production', 'staging']
+        environment: ["production", "staging"]
     steps:
       - id: checkout
         name: Check out source code
@@ -200,7 +200,7 @@ jobs:
         name: Install yq for modifying the deployment spec.
         run: |-
           sudo wget https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
-      
+
       - id: fill-metadata
         name: Fill out a new HelmRelease resource
         run: |-
@@ -256,39 +256,36 @@ jobs:
           retries: 8
 
       - name: Push production deployment to iac for deployment
-        if:
-          github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: '${{ steps.fill-metadata.outputs.deployment-name }}.yaml'
-          destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'releases/${{ matrix.environment }}'
-          user_email: 'ci@biomage.net'
-          user_name: 'Biomage CI/CD'
+          source_file: "${{ steps.fill-metadata.outputs.deployment-name }}.yaml"
+          destination_repo: "${{ github.repository_owner }}/iac"
+          destination_folder: "releases/${{ matrix.environment }}"
+          user_email: "ci@biomage.net"
+          user_name: "Biomage CI/CD"
 
       - name: Change name of deployment file for staging deployment
-        if:
-          matrix.environment == 'staging'
+        if: matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
           REF_DASHED: ${{ steps.fill-metadata.outputs.ref-dashed }}
         run: |-
           mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
-      
+
       - name: Push staging deployment template to iac
-        if:
-          matrix.environment == 'staging'
+        if: matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
-          destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
-          user_email: 'ci@biomage.net'
-          user_name: 'Biomage CI/CD'
+          source_file: "${{ steps.fill-metadata.outputs.ref-dashed }}.yaml"
+          destination_repo: "${{ github.repository_owner }}/iac"
+          destination_folder: "releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}"
+          user_email: "ci@biomage.net"
+          user_name: "Biomage CI/CD"
 
       - id: enable-admin-enforcement
         name: Re-enable admin enforcement

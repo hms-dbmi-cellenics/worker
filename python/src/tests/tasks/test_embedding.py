@@ -1,5 +1,4 @@
 import pytest
-import anndata
 import os
 import numpy as np
 from tasks.embedding import ComputeEmbedding
@@ -11,11 +10,6 @@ config = get_config()
 
 
 class TestEmbedding:
-    @pytest.fixture(autouse=True)
-    def open_test_adata(self):
-        self._adata = anndata.read_h5ad(
-            os.path.join(config.LOCAL_DIR, "test", "python.h5ad")
-        )
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -38,16 +32,13 @@ class TestEmbedding:
         with pytest.raises(TypeError):
             ComputeEmbedding()
 
-    def test_throws_on_missing_adata(self):
-        with pytest.raises(TypeError):
-            ComputeEmbedding(self.correct_request_skeleton)
-
-    def test_works_with_request_and_adata(self):
-        ComputeEmbedding(self.correct_request_skeleton, self._adata)
+    def test_works_with_request(self):
+        ComputeEmbedding(self.correct_request_skeleton)
 
     #
     # These two tests are not useful in R. Will replace with additional testing when we pick the correct r testing framework.
     #
+    """
     @responses.activate
     def test_pca_edits_object_appropriately(self):
         try:
@@ -67,3 +58,4 @@ class TestEmbedding:
     def test_throws_on_invalid_embedding_type(self):
         with pytest.raises(Exception):
             ComputeEmbedding(self._adata).compute("definitelynotavalidembedding")
+"""

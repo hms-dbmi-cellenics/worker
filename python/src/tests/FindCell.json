@@ -1,0 +1,56 @@
+[{ "children": [
+    {
+      "cellIds": [
+        2,
+        3,
+        26,
+        1094
+      ],
+      "color": "#fec7f8",
+      "key": "louvain-10",
+      "name": "Cluster 10"
+    },
+    {
+      "cellIds": [
+        86,
+        1105
+      ],
+      "color": "#0b7b3e",
+      "key": "louvain-11",
+      "name": "Cluster 11"
+    }
+  ],
+  "key": "louvain",
+  "name": "Louvain clusters",
+  "type": "cellSets",
+  "rootNode": true
+},
+{ "children": [
+   {
+     "cellIds": [
+       0,
+       21,
+       29,
+       31,
+       1113
+     ],
+     "color": "#e377c2",
+     "key": "condition-control",
+     "name": "Control"
+   },
+   {
+     "cellIds": [
+       4,
+       18,
+       1110
+     ],
+     "color": "#8c564b",
+     "key": "condition-treated",
+     "name": "Treated"
+   }
+ ],
+ "key": "condition",
+ "name": "Condition",
+ "type": "metadataCategorical",
+ "rootNode": true
+ }]

@@ -16,3 +16,7 @@ libgit2-dev
 libglpk-dev
 libxt-dev
 libcairo2-dev
+libfreetype6-dev
+libpng-dev
+libtiff5-dev
+libjpeg-dev
