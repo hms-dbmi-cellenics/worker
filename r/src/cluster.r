@@ -8,19 +8,58 @@
 #          resolution: integer, range: 0 - 2         
 #         }
 #
-getClusters <- function(req){
-    resol <- req$body$config$resolution
-    algo <- list("louvain"=1,"leiden"=4)[[req$body$type]]
-    #Leaving neighbors here in case we eventually set parameters.
-    #data <- FindNeighbors(data, k.param = 20, annoy.metric = neighbors_metric, verbose=FALSE)
-    data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo) 
-    #In the meta data slot the clustering is stored with the resolution used to calculate it
-    # RNA_snn_res.#resolution
-    #
 
-    str <- paste(data@active.assay,"_snn_res.",toString(resol),sep = "")
-    df <- data.frame("cluster"= data@meta.data[,str], "cell_ids"=data@meta.data$cells_id)  
-    #get the cell barcodes as rownames
-    rownames(df) <- rownames(data@meta.data)
-    return(df)
+getClusters <- function(req){
+  resol <- req$body$config$resolution
+  type <- req$body$type
+  algo <- list("louvain"=1,"leiden"=4)[[type]]
+  res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
+  
+  if (type == 'leiden') {
+    # emulate FindClusters, which overwrites seurat_clusters slot
+    # also update meta.data
+    g <- getSNNiGraph(data)
+    clusters <- igraph::cluster_leiden(g, 'modularity', resolution_parameter = resol)$membership
+    data$seurat_clusters <- data@meta.data[, res_col] <- factor(as.character(clusters-1))
+    
+  } else {
+    data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo) 
+  }
+  
+  #In the meta data slot the clustering is stored with the resolution used to calculate it
+  # RNA_snn_res.#resolution
+  df <- data.frame(cluster=data@meta.data[,res_col], cell_ids=data@meta.data$cells_id)  
+  #get the cell barcodes as rownames
+  rownames(df) <- rownames(data@meta.data)
+  return(df)
 }
+
+
+#' Get and Convert SNN Graph object into igraph object
+#' 
+#' This is used to facilitate leiden clustering.
+#'
+#' @param data \code{Seurat} object
+#'
+#' @return boolean indicating if SNN Graph object exists
+#' 
+getSNNiGraph <- function(data) {
+  
+  # check to see if we already have Seurat SNN Graph object
+  snn_name <- paste0(data@active.assay, '_snn')
+  
+  # if doesn't exist, run SNN
+  if (!snn_name %in% names(data)) data <- FindNeighbors(data)
+  
+  # convert Seurat Graph object to igraph
+  # from: https://github.com/joshpeters/westerlund/blob/46609a68855d64ed06f436a6e2628578248d3237/R/functions.R#L85
+  adj_matrix <- Matrix::Matrix(as.matrix(data@graphs[[snn_name]]), sparse = TRUE)
+  g <- igraph::graph_from_adjacency_matrix(adj_matrix, 
+                                           mode = 'undirected',
+                                           weighted = TRUE, 
+                                           add.colnames = TRUE)
+  
+  
+  return(g)
+}
+
