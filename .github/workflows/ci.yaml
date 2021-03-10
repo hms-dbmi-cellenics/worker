@@ -190,16 +190,18 @@ jobs:
           AWS_DEFAULT_REGION: "eu-west-1"
           CLUSTER_ENV: "test"
 
-      # - id: push
-      #   name: Push docker images to ECR
-      #   run: |-
-      #     echo Pushing image $IMAGE_NAME-builder to ECR.
-      #     docker push $IMAGE_NAME-builder
+      - id: push
+        name: Push docker images to ECR
+        run: |-
+          if [ "${{ github.event_name }}" = "pull_request"]; then
+            echo Pushing image $IMAGE_NAME-builder to ECR.
+            docker push $IMAGE_NAME-builder
 
-      #     echo Pushing image $IMAGE_NAME to ECR.
-      #     docker push $IMAGE_NAME
-      #   env:
-      #     IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+            echo Pushing image $IMAGE_NAME to ECR.
+            docker push $IMAGE_NAME
+          fi
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
   deploy:
     name: Deploy to Kubernetes
