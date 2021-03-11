@@ -178,8 +178,8 @@ jobs:
           pwd
           cd /home/runner/work/worker/worker/
           ls
-          docker run --rm --name worker-r \
-            --entrypoint /bin/bash -v /home/runner/work/worker/worker/data:/data -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME
+          docker run --rm  --entrypoint /bin/bash --name worker-r \
+          -v /home/runner/work/worker/worker/data:/data -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
