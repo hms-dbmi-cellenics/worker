@@ -28,7 +28,6 @@ jobs:
       - id: ref
         name: Format docker tag and repository name for current image.
         run: |-
-          pwd
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
@@ -177,7 +176,7 @@ jobs:
         name: Start R container in background
         run: |-
           docker run --rm --name worker-r \
-            -d -v ../data:/data -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME
+            -d -v /home/runner/work/worker/worker/python/data:/data -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
