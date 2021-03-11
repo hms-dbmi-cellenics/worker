@@ -175,6 +175,7 @@ jobs:
       - id: start-container
         name: Start R container in background
         run: |-
+          pwd
           docker run --rm --name worker-r \
             -d -v /home/runner/work/worker/worker/python/data:/data -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME
         env:
