@@ -21,7 +21,7 @@ getClusters <- function(req){
     clusters <- clus_res$membership
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
-    data$seurat_clusters <- data@meta.data[, res_col] <- factor(as.character(clusters-1))
+    data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters-1)
     
   } else {
     data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo) 
