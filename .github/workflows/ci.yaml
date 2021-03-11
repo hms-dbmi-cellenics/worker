@@ -177,7 +177,7 @@ jobs:
         run: |-
           pwd
           ls
-          run gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
+          gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
           docker run --rm --name worker-r -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.r
           docker ps -a
         env:
