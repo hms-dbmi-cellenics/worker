@@ -8,7 +8,6 @@
 #          resolution: integer, range: 0 - 2         
 #         }
 #
-
 getClusters <- function(req){
   resol <- req$body$config$resolution
   type <- req$body$type
@@ -16,10 +15,12 @@ getClusters <- function(req){
   res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
   
   if (type == 'leiden') {
-    # emulate FindClusters, which overwrites seurat_clusters slot
-    # also update meta.data
+    # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
     g <- getSNNiGraph(data)
-    clusters <- igraph::cluster_leiden(g, 'modularity', resolution_parameter = resol)$membership
+    clus_res <- igraph::cluster_leiden(g, 'modularity', resolution_parameter = resol)
+    clusters <- clus_res$membership
+    names(clusters) <- clus_res$names
+    clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(as.character(clusters-1))
     
   } else {
@@ -49,15 +50,14 @@ getSNNiGraph <- function(data) {
   snn_name <- paste0(data@active.assay, '_snn')
   
   # if doesn't exist, run SNN
-  if (!snn_name %in% names(data)) data <- FindNeighbors(data)
+  if (!snn_name %in% names(data)) data <- Seurat::FindNeighbors(data)
   
   # convert Seurat Graph object to igraph
-  # from: https://github.com/joshpeters/westerlund/blob/46609a68855d64ed06f436a6e2628578248d3237/R/functions.R#L85
+  # similar to https://github.com/joshpeters/westerlund/blob/46609a68855d64ed06f436a6e2628578248d3237/R/functions.R#L85
   adj_matrix <- Matrix::Matrix(as.matrix(data@graphs[[snn_name]]), sparse = TRUE)
   g <- igraph::graph_from_adjacency_matrix(adj_matrix, 
                                            mode = 'undirected',
-                                           weighted = TRUE, 
-                                           add.colnames = TRUE)
+                                           weighted = TRUE)
   
   
   return(g)
