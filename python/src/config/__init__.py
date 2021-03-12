@@ -53,7 +53,6 @@ def get_config():
         config.AWS_ACCOUNT_ID = "000000000000"
         config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
         config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
-        config.R_WORKER_URL = "http://r:4000"
 
 
     if cluster_env == "development":
