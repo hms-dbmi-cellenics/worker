@@ -14,8 +14,10 @@ def get_config():
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
-    experiment_id = os.getenv("EXPERIMENT_ID", default="e52b39624588791a7889e39c617f669e")
-    
+    experiment_id = os.getenv(
+        "EXPERIMENT_ID", default="e52b39624588791a7889e39c617f669e"
+    )
+
     # set up cluster env based on gitlab env if one was not specified
     # this is only run if `kube_env` is specified, i.e. when the system
     # is run in staging/production or in testing
@@ -53,8 +55,6 @@ def get_config():
         config.AWS_ACCOUNT_ID = "000000000000"
         config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
         config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
-        config.R_WORKER_URL = "127.0.0.1:4000"
-
 
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
