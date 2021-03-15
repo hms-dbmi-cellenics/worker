@@ -19,6 +19,7 @@ class ClusterCells:
             "key": cell_set_key,
             "name": cell_set_name,
             "rootNode": True,
+            "type": "cellSets",
             "children": [],
         }
         for cluster in raw["cluster"].cat.categories:
@@ -27,6 +28,8 @@ class ClusterCells:
                 {
                     "key": f"{cell_set_key}-{cluster}",
                     "name": f"Cluster {cluster}",
+                    "rootNode": False,
+                    "type": "cellSets",
                     "color": self.colors.pop(0),
                     "cellIds": [int(id) for id in view.tolist()],
                 }
@@ -34,15 +37,19 @@ class ClusterCells:
         return [Result(json.dumps(cell_set), cacheable=False)]
 
     def compute(self):
+        resolution = self.task_def["config"].get("resolution", 0.5)
+
         request = {
             "type": self.task_def["type"],
-            "config": self.task_def.get("config", {"resolution": 0.5}),
+            "config": self.task_def.get("config", {"resolution": resolution}),
         }
+
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/getClusters",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
+
         resR = r.json()
         #
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape expected by the UI
