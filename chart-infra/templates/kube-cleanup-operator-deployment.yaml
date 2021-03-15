@@ -33,6 +33,7 @@ spec:
         # new workers in its place
         - -keep-successful=0
         - -keep-failures=0
+        - -dry-run
 
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
