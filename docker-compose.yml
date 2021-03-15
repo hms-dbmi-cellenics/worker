@@ -16,7 +16,6 @@ services:
       - "4000:4000"
     environment:
       - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
-      - test=FALSE
   python:
     container_name: "biomage-worker-python"
     build:
