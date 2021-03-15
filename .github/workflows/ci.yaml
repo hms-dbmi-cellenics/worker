@@ -180,7 +180,7 @@ jobs:
           gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
           docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.r
           docker ps -a
-          timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/v0/health)" != "200" ]]; do sleep 5; done' || false
+          timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
       - id: test
