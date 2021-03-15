@@ -46,12 +46,12 @@ runDE <- function(req){
 
     # Compute differential expression
     result <- FindMarkers(data, group.by = "custom", ident.1 = "base", ident.2 = "background")
+
     # Replace name with Gene names
     result$gene_names <- data@misc$gene_annotations[
         match(rownames(result), data@misc$gene_annotations$input), "name"
     ]
     result$Gene <- rownames(result)
-    result$p_val <- NULL
 
     # As a first view, order by p_val_adj, to have the most significant at first.
     result <- result[order(result$p_val_adj, decreasing = F), ]
@@ -59,12 +59,16 @@ runDE <- function(req){
     # Change "." in pct.1 by _
     colnames(result) <- gsub("[.]", "_", colnames(result))
 
-    # While the UI is not changed, we will keep old columns names
-    result$zscore <- result$pct_1
-    result$pct <- result$pct_1
-    result$abszscore <- result$pct_2
-    result$log2fc <- result$avg_log2FC
-    result$qval <- result$p_val_adj
+    # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
+    result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
+
+
+    ## Old DE results from pagoda2
+    #result$zscore <- result$pct_1
+    #result$pct <- result$pct_1
+    #result$abszscore <- result$pct_2
+    #result$log2fc <- result$avg_log2FC
+    #result$qval <- result$p_val_adj
 
     return(result)
 }
