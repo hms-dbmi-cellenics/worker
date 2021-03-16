@@ -118,6 +118,14 @@ jobs:
         with:
           image: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
+      - id: push
+        name: Push builder images to ECR
+        run: |-
+          echo Pushing image $IMAGE_NAME-builder to ECR.
+          docker push $IMAGE_NAME-builder
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
   test:
     name: Run tests
     # to ensure compatibility with the sqlite found in the
@@ -206,10 +214,6 @@ jobs:
       - id: push
         name: Push docker images to ECR
         run: |-
-          echo Pushing image $IMAGE_NAME-[python/r]-builder to ECR.
-          docker push $IMAGE_NAME-python-builder
-          docker push $IMAGE_NAME-r-builder
-
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
           docker push $IMAGE_NAME-python
           docker push $IMAGE_NAME-r
