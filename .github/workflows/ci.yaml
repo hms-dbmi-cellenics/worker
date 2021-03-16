@@ -50,12 +50,16 @@ jobs:
             echo "This is a pull request, base ref and sha set to the target branch."
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
+
+            BASE_SHA="6cd261c09a8ef3be020250d5f909ba566c2287a2"
           fi
 
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
             BASE_SHA="${{ github.event.before }}"
+
+            BASE_SHA="6cd261c09a8ef3be020250d5f909ba566c2287a2"
           fi
 
           echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
