@@ -51,7 +51,7 @@ jobs:
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
 
-            BASE_SHA="6cd261c09a8ef3be020250d5f909ba566c2287a2"
+            BASE_SHA="57769278cea271fc1d97fa8480f7536af83248a3"
           fi
 
           if [ "${{ github.event_name }}" = "push" ]; then
@@ -59,7 +59,7 @@ jobs:
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
             BASE_SHA="${{ github.event.before }}"
 
-            BASE_SHA="6cd261c09a8ef3be020250d5f909ba566c2287a2"
+            BASE_SHA="57769278cea271fc1d97fa8480f7536af83248a3"
           fi
 
           echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
