@@ -21,7 +21,7 @@ class TestClusterCells:
                 "cellSetName": "Louvain clusters",
                 "type": "louvain",
                 "cellSetKey": "louvain",
-                "params": {},
+                "config": {"resolution":0.5},
             },
         }
         self.alternative_request = {
@@ -32,7 +32,7 @@ class TestClusterCells:
                 "cellSetName": "Leiden clusters",
                 "type": "leiden",
                 "cellSetKey": "leiden",
-                "params": {},
+                "params": {"resolution":0.5},
             },
         }
         self.correctResponse = json.load(
@@ -46,7 +46,6 @@ class TestClusterCells:
     def test_louvain_clustering_works(self):
         res = ClusterCells(self.correct_request).compute()
         res = res[0].result
-        print(res)
         res = json.loads(res)
         """
         I like these tests but the other one is more powerful.

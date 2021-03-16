@@ -27,9 +27,7 @@ class TestGeneExpression:
                 "genes": ["Tpt1", "Zzz3"],
             },
         }
-        self.correct_response = json.load(
-            open(os.path.join("src/tests", "GE_result.json"))
-        )
+        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
