@@ -114,6 +114,14 @@ jobs:
         with:
           image: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
+      - id: push
+        name: Push builder images to ECR
+        run: |-
+          echo Pushing image $IMAGE_NAME-builder to ECR.
+          docker push $IMAGE_NAME-builder
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
   test:
     name: Run tests
     # to ensure compatibility with the sqlite found in the
@@ -143,10 +151,15 @@ jobs:
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Download image
+      - name: Download R image
         uses: ishworkh/docker-image-artifact-download@v1
         with:
           image: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+      - name: Download Python image
+        uses: ishworkh/docker-image-artifact-download@v1
+        with:
+          image: ${{ format('{0}/{1}:{2}-python', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: setup-python
         name: Setup Python
@@ -183,6 +196,7 @@ jobs:
           timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
       - id: test
         name: Run unit tests
         run: |-
@@ -196,20 +210,16 @@ jobs:
       - id: push
         name: Push docker images to ECR
         run: |-
-          if [ "${{ github.event_name }}" = "pull_request"]; then
-            echo Pushing image $IMAGE_NAME-builder to ECR.
-            docker push $IMAGE_NAME-builder
-
-            echo Pushing image $IMAGE_NAME to ECR.
-            docker push $IMAGE_NAME
-          fi
+          echo Pushing image $IMAGE_NAME-[python/r] to ECR.
+          docker push $IMAGE_NAME-python
+          docker push $IMAGE_NAME-r
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
-    needs: test
+    needs: ["test", "build-docker"]
     strategy:
       max-parallel: 1
       matrix:
