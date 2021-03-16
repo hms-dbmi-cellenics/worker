@@ -147,10 +147,15 @@ jobs:
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Download image
+      - name: Download R image
         uses: ishworkh/docker-image-artifact-download@v1
         with:
           image: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+      - name: Download Python image
+        uses: ishworkh/docker-image-artifact-download@v1
+        with:
+          image: ${{ format('{0}/{1}:{2}-python', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: setup-python
         name: Setup Python
@@ -201,11 +206,11 @@ jobs:
       - id: push
         name: Push docker images to ECR
         run: |-
-          echo Pushing image $IMAGE_NAME-builder to ECR.
+          echo Pushing image $IMAGE_NAME-[python/r]-builder to ECR.
           docker push $IMAGE_NAME-python-builder
           docker push $IMAGE_NAME-r-builder
 
-          echo Pushing image $IMAGE_NAME to ECR.
+          echo Pushing image $IMAGE_NAME-[python/r] to ECR.
           docker push $IMAGE_NAME-python
           docker push $IMAGE_NAME-r
         env:
