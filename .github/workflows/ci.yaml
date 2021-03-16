@@ -209,7 +209,7 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
-    needs: test
+    needs: ["test", "build-docker"]
     strategy:
       max-parallel: 1
       matrix:
