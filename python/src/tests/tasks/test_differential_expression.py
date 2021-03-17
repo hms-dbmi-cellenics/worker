@@ -232,6 +232,8 @@ class TestDifferentialExpression:
                     "pct_2",
                 ]
             )
+            print(expected_keys)
+            print(keys)
             assert keys == expected_keys
 
     def test_appropriate_genes_returned_when_a_limit_is_specified(
