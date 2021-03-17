@@ -47,14 +47,13 @@ class TestClusterCells:
         res = ClusterCells(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
-        """
-        I like these tests but the other one is more powerful.
-        Clustering should be deterministic, let's see if this works fine, if not we can revert to old asserts. 
+       
+        #Leaving this tests here to recognize different fail situations
+
         assert isinstance(res, dict)
         assert res["key"] == "louvain"
         assert len(res["children"]) > 0
         assert len(res["children"][0]["cellIds"]) > 0
-        """
         assert res == self.correctResponse
 
     """

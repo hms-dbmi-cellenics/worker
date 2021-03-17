@@ -118,14 +118,14 @@ class TestListGenes:
         res = ListGenes(self.correct_filter).compute()
         res = json.loads(res[0].result)
         for row in res["rows"]:
-            assert "lin".casefold() in row["gene_names"].casefold()
+            assert "lin".lower() in row["gene_names"].lower()
 
     def test_filter_starts_with_pattern_gets_applied_to_results(self):
         res = ListGenes(self.correct_startswith).compute()
         res = json.loads(res[0].result)
 
         for row in res["rows"]:
-            assert row["gene_names"].casefold().startswith("LIN".casefold())
+            assert row["gene_names"].lower().startswith("LIN".lower())
 
     def test_empty_results(self):
         res = ListGenes(self.correct_empty).compute()
