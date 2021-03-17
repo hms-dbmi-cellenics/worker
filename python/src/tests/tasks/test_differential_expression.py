@@ -138,14 +138,12 @@ class TestDifferentialExpression:
 
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
-        with open(os.path.join("tests", "de_result.json")) as f:
-            data = json.load(f)
-            responses.add(
-                responses.POST,
-                f"{config.R_WORKER_URL}/v0/DifferentialExpression",
-                json=data,
-                status=200,
-            )
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/DifferentialExpression",
+            json={},
+            status=200,
+        )
 
     """
     Mocks the DynamoDB query for fetching cell sets. Returns an
@@ -159,12 +157,10 @@ class TestDifferentialExpression:
             m.return_value = mockDynamo
             yield (m, mockDynamo)
 
-    @responses.activate
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             DifferentialExpression()
 
-    @responses.activate
     def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
         m.return_value = dynamodb
@@ -236,11 +232,8 @@ class TestDifferentialExpression:
                     "pct_2",
                 ]
             )
-            print(expected_keys)
-            print(keys)
             assert keys == expected_keys
 
-    @responses.activate
     def test_appropriate_genes_returned_when_a_limit_is_specified(
         self, mock_dynamo_get
     ):
@@ -254,6 +247,9 @@ class TestDifferentialExpression:
         res = json.loads(res)["rows"]
 
         assert len(res) <= request["body"]["maxNum"]
+
+    # In these three tests we don't actually care about the end result of the r worker, we just need to see the request generated
+    # on the python side, so we can leave responses.activate enabled with an empty response {}.
 
     @responses.activate
     def test_cells_in_sets_intersection_are_filtered_out(self, mock_dynamo_get):
