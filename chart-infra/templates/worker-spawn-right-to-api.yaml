@@ -15,9 +15,6 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
-- apiGroups: ["helm.fluxcd.io"]
-  resources: ["helmreleases"]
-  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "list"]
@@ -34,9 +31,6 @@ roleRef:
   kind: Role
   name: can-create-jobs
 subjects:
-- kind: ServiceAccount
-  name: deployment-runner
-  namespace: {{ .Release.Namespace | replace "worker" "api" }}
 - kind: Group
   apiGroup: rbac.authorization.k8s.io
   name: state-machine-runner-group
