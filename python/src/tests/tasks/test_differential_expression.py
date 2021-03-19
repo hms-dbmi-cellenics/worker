@@ -161,18 +161,6 @@ class TestDifferentialExpression:
         with pytest.raises(TypeError):
             DifferentialExpression()
 
-
-"""
-    def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        MockDynamoClass.setResponse("two_sets")
-
-        DifferentialExpression(self.get_request()).compute()
-
-        assert dynamodb.no_called == 1
-"""
     @responses.activate
     def test_cell_sets_get_queried_appropriately(self, mock_dynamo_get):
         m, dynamodb = mock_dynamo_get
@@ -322,3 +310,16 @@ class TestDifferentialExpression:
         # Check there is only one cell in each set
         assert len(baseCells) == 1
         assert len(backgroundCells) == 1
+
+
+"""
+    def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
+        m, dynamodb = mock_dynamo_get
+        m.return_value = dynamodb
+
+        MockDynamoClass.setResponse("two_sets")
+
+        DifferentialExpression(self.get_request()).compute()
+
+        assert dynamodb.no_called == 1
+"""
