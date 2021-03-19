@@ -4,57 +4,49 @@ import statistics
 from tasks.gene_expression import GeneExpression
 import json
 from config import get_config
-import responses
 
 config = get_config()
 
 
 class TestGeneExpression:
-
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
+        self.correct_one_gene = {
+            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "timeout": "2099-12-31 00:00:00",
+            "body": {
+                "name": "GeneExpression",
+                "genes": ["Tpt1"],
+            },
+        }
         self.correct_request = {
             "experimentId": "e52b39624588791a7889e39c617f669e",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "GeneExpression",
-                "genes": ["PPBP", "PF4"],
+                "genes": ["Tpt1", "Zzz3"],
             },
         }
-
-    @pytest.fixture(autouse=True)
-    def set_responses(self):
-        with open(os.path.join("tests", "GE_result.json")) as f:
-            data = json.load(f)
-            responses.add(
-                responses.POST,
-                f"{config.R_WORKER_URL}/v0/getExpression",
-                json=data,
-                status=200,
-            )
+        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             GeneExpression()
 
-
     def test_works_with_request(self):
         GeneExpression(self.correct_request)
 
-    @responses.activate
     def test_returns_json(self):
         res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         json.loads(res)
 
-    @responses.activate
     def test_returns_a_json_object(self):
         res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
 
-    @responses.activate
     def test_object_returns_appropriate_number_of_genes(self):
         res = GeneExpression(self.correct_request).compute()
         res = res[0].result
@@ -62,22 +54,23 @@ class TestGeneExpression:
 
         assert len(res) == len(self.correct_request["body"]["genes"])
 
-    #
-    #   The following tests passed with the json object generated with the R script, but won't work with the current h5ad file.
-    #
-    """
-    @responses.activate
+    def test_object_returns_one_gene(self):
+        res = GeneExpression(self.correct_one_gene).compute()
+        res = res[0].result
+        res = json.loads(res)
+
+        assert len(res) == len(self.correct_one_gene["body"]["genes"])
+
     def test_each_expression_data_has_correct_number_of_cells(self):
-        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
 
         for v in res.values():
-            assert len(v["expression"]) == len(self._adata.obs)
+            assert len(v["expression"]) == 1500
 
-    @responses.activate
     def test__expression_data_gets_displayed_appropriately(self):
-        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
 
@@ -92,12 +85,14 @@ class TestGeneExpression:
             assert mean == pytest.approx(statistics.mean(v["expression"]), 0.01)
             assert stdev == pytest.approx(statistics.stdev(v["expression"]), 0.01)
 
-    @responses.activate
+    # This test is commented because currently the worker doesn't handle nonexistent genes
+    # A ticket has been created to fix this in expression.r
+    """
     def test_task_handles_nonexistent_genes(self):
 
         self.correct_request["body"]["genes"] = ["PPBP", "non-existent-gene"]
 
-        res = GeneExpression(self.correct_request, self._adata).compute()
+        res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
 

@@ -8,16 +8,20 @@
 #          resolution: integer, range: 0 - 2         
 #         }
 #
+#
+# We currently CANT support leiden, we need to discuss this in bioinformatics, the algorithm is not working.
+#
 getClusters <- function(req){
     resol <- req$body$config$resolution
-    algo <- list("louvain"=1,"leiden"=4)[[req$body$type]]
+    #algo <- list("louvain"=1,"leiden"=4)[[req$body$type]]
+    #Disabled leiden forcefully until we can find a fix for this.
+    algo <- 1
     #Leaving neighbors here in case we eventually set parameters.
     #data <- FindNeighbors(data, k.param = 20, annoy.metric = neighbors_metric, verbose=FALSE)
     data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo) 
     #In the meta data slot the clustering is stored with the resolution used to calculate it
     # RNA_snn_res.#resolution
     #
-
     str <- paste(data@active.assay,"_snn_res.",toString(resol),sep = "")
     df <- data.frame("cluster"= data@meta.data[,str], "cell_ids"=data@meta.data$cells_id)  
     #get the cell barcodes as rownames
