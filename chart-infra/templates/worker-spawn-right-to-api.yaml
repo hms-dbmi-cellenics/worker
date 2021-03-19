@@ -14,7 +14,7 @@ rules:
   verbs: ["create", "get", "watch", "list", "update", "patch"]
 - apiGroups: [""]
   resources: ["secrets"]
-  verbs: ["create", "get", "watch", "list", "update", "patch"]
+  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "list"]
@@ -34,6 +34,3 @@ subjects:
 - kind: ServiceAccount
   name: deployment-runner
   namespace: {{ .Release.Namespace | replace "worker" "api" }}
-- kind: Group
-  apiGroup: rbac.authorization.k8s.io
-  name: state-machine-runner-group
