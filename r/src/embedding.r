@@ -27,12 +27,14 @@ runEmbedding <- function(req) {
     } else if(type=="tsne"){
         data <- RunTSNE(data,
                         reduction = 'pca', 
+                        seed.use = 1,
                         dims = 1:pca_nPCs, 
                         perplexity = config$perplexity, 
                         learning.rate = config$learningRate)
         df_embedding <- Embeddings(data, reduction = type)
     } else if(type=="umap"){
         data <- RunUMAP(data,
+                        seed.use = 42,
                         reduction='pca', 
                         dims = 1:pca_nPCs, 
                         verbose = F, 
@@ -41,7 +43,6 @@ runEmbedding <- function(req) {
                         umap.method = "uwot-learn")                        
         df_embedding <- Embeddings(data, reduction = type)
     }
-    
     # Order embedding by cells id in ascending form
     df_embedding <- df_embedding[rownames(data@meta.data[order(data@meta.data$cells_id), ]), ]
 

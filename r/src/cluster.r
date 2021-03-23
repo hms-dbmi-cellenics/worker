@@ -8,6 +8,9 @@
 #          resolution: integer, range: 0 - 2         
 #         }
 #
+#
+# We currently CANT support leiden, we need to discuss this in bioinformatics, the algorithm is not working.
+#
 getClusters <- function(req){
   resol <- req$body$config$resolution
   type <- req$body$type

@@ -21,7 +21,6 @@ RUN Rscript setup/install_or_die.r BiocManager
 RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaMethods", "org.Dr.eg.db", "org.Hs.eg.db", "org.Mm.eg.db"))'
 
 RUN R -e 'install.packages("RcppSpdlog")'
-
 RUN R -e 'install.packages("Seurat")'
 RUN R -e 'install.packages("gprofiler2")'
 RUN R -e 'install.packages("RJSONIO")'
