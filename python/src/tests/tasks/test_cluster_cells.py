@@ -21,7 +21,7 @@ class TestClusterCells:
                 "cellSetName": "Louvain clusters",
                 "type": "louvain",
                 "cellSetKey": "louvain",
-                "config": {"resolution":0.5},
+                "config": {"resolution": 0.5},
             },
         }
         self.alternative_request = {
@@ -32,7 +32,7 @@ class TestClusterCells:
                 "cellSetName": "Leiden clusters",
                 "type": "leiden",
                 "cellSetKey": "leiden",
-                "params": {"resolution":0.5},
+                "config": {"resolution": 0.5},
             },
         }
         self.correctResponse = json.load(
@@ -47,8 +47,8 @@ class TestClusterCells:
         res = ClusterCells(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
-       
-        #Leaving this tests here to recognize different fail situations
+
+        # Leaving this tests here to recognize different fail situations
 
         assert isinstance(res, dict)
         assert res["key"] == "louvain"
@@ -56,7 +56,6 @@ class TestClusterCells:
         assert len(res["children"][0]["cellIds"]) > 0
         assert res == self.correctResponse
 
-    """
     def test_leiden_clustering_works(self):
 
         res = ClusterCells(self.alternative_request).compute()
@@ -66,4 +65,5 @@ class TestClusterCells:
         assert res["key"] == "leiden"
         assert len(res["children"]) > 0
         assert len(res["children"][0]["cellIds"]) > 0
-    """
+
+        print(res)

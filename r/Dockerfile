@@ -26,6 +26,11 @@ RUN R -e 'install.packages("gprofiler2")'
 RUN R -e 'install.packages("RJSONIO")'
 RUN R -e 'install.packages("sccore")'
 
+# install dev version of igraph for leiden clustering
+# NOTE: can remove after next igraph release
+RUN R -e 'install.packages("remotes")'
+RUN R -e 'remotes::install_github("igraph/rigraph@master", ref = "bfbf53")'
+
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
