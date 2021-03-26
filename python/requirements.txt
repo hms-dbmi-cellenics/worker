@@ -77,7 +77,7 @@ python-dateutil==2.8.1
 python-igraph==0.8.3
 python-jose==3.2.0
 pytz==2020.4
-PyYAML==5.3.1
+PyYAML==5.4
 regex==2020.10.28
 requests==2.24.0
 responses==0.12.0
