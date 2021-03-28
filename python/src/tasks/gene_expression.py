@@ -31,7 +31,13 @@ class GeneExpression:
         )
         resultR = r.json()
         result = {}
+        if not len(resultR):
+            result[genes[0]] ={
+                "message": 404,
+            }
+            return self._format_result(result)
         for gene in resultR.keys():
+
             view = resultR[gene]
             # This is not necessary and is also costly, but I leave it commented as a reminder
             # that this object has integer zeros and floating point for n!=0.
