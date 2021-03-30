@@ -33,25 +33,27 @@ class GeneExpression:
         result = {}
         if not len(resultR):
             result[genes[0]] ={
-                "message": 404,
+                "error": 404,
+                "message": "Gene {} not found!".format(genes[0]),
             }
-            return self._format_result(result)
-        for gene in resultR.keys():
+        
+        else:       
+            for gene in resultR.keys():
 
-            view = resultR[gene]
-            # This is not necessary and is also costly, but I leave it commented as a reminder
-            # that this object has integer zeros and floating point for n!=0.
-            # expression = [float(item) for item in view]
-            minimum = float(np.amin(view))
-            maximum = float(np.amax(view))
-            mean = float(np.mean(view))
-            stdev = float(np.std(view))
+                view = resultR[gene]
+                # This is not necessary and is also costly, but I leave it commented as a reminder
+                # that this object has integer zeros and floating point for n!=0.
+                # expression = [float(item) for item in view]
+                minimum = float(np.amin(view))
+                maximum = float(np.amax(view))
+                mean = float(np.mean(view))
+                stdev = float(np.std(view))
 
-            result[gene] = {
-                "min": minimum,
-                "max": maximum,
-                "mean": mean,
-                "stdev": stdev,
-                "expression": view,
-            }
+                result[gene] = {
+                    "min": minimum,
+                    "max": maximum,
+                    "mean": mean,
+                    "stdev": stdev,
+                    "expression": view,
+                }
         return self._format_result(result)
