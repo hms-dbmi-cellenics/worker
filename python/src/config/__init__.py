@@ -1,6 +1,6 @@
 import os
 import types
-from aws_xray_sdk.core import patch_all
+from aws_xray_sdk.core import xray_recorder, patch_all
 
 
 def get_config():
@@ -61,7 +61,8 @@ def get_config():
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
         config.R_WORKER_URL = "http://r:4000"
 
-    if cluster_env != "development" and cluster_env != "test":
+    if cluster_env != "test":
+        xray_recorder.configure(context_missing='LOG_ERROR')
         patch_all()
 
     return config
