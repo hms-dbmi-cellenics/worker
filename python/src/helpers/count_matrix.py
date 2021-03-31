@@ -36,13 +36,33 @@ class CountMatrix:
         path = os.path.join(config.LOCAL_DIR, key)
         print(key)
 
+        last_mod_local = None
+
+        try:
+            last_mod_local = datetime.datetime.fromtimestamp(
+                os.path.getmtime(path), tz=timezone.utc
+            )
+        except Exception as e:
+            print(e)
+            last_mod_local = None
+
         if self.last_fetch and last_modified < self.last_fetch:
             print(
                 datetime.datetime.utcnow(),
-                "Did not fetch as last modified date of",
+                "Did not fetch as last modified (remote) of",
                 last_modified,
                 "was before last fetch time of",
                 self.last_fetch,
+            )
+
+            return True
+        elif last_mod_local and last_modified < last_mod_local:
+            print(
+                datetime.datetime.utcnow(),
+                "Did not fetch as last modified (remote) of",
+                last_modified,
+                "was before last modified (local) of",
+                last_mod_local,
             )
 
             return True
