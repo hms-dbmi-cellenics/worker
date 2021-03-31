@@ -57,8 +57,6 @@ def _read_sqs_message():
                         traceid=trace_id,
                         sampling=sampled,
                         parent_id=header.parent)
-
-
     except Exception as e:
         print(datetime.datetime.utcnow(), "Exception when loading json: ", e)
         return None
