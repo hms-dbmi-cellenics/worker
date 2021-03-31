@@ -4,10 +4,11 @@ from consume_message import consume
 from response import Response
 from config import get_config
 from aws_xray_sdk.core import xray_recorder
-
+from aws_xray_sdk import global_sdk_config
 
 def main():
-    xray_recorder.begin_segment("work-task-processing")
+
+    global_sdk_config.set_sdk_enabled(False)
 
     config = get_config()
     last_activity = datetime.datetime.utcnow()
@@ -20,9 +21,13 @@ def main():
             "Worker configured to ignore timeout, will run forever...",
         )
 
+    global_sdk_config.set_sdk_enabled(True)
+
     while (
         datetime.datetime.utcnow() - last_activity
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
+        xray_recorder.begin_segment("work-task-processing")
+
         msg = consume()
         if msg:
             results = task_factory.submit(msg)
@@ -31,7 +36,7 @@ def main():
 
             last_activity = datetime.datetime.utcnow()
 
-    xray_recorder.end_segment()
+        xray_recorder.end_segment()
 
     print(datetime.datetime.utcnow(), "Timeout exceeded, shutting down...")
 
