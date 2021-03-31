@@ -62,7 +62,6 @@ def get_config():
         config.R_WORKER_URL = "http://r:4000"
 
     if cluster_env != "test":
-        xray_recorder.configure(context_missing='LOG_ERROR')
         patch_all()
 
     return config

@@ -5,6 +5,8 @@ from config import get_config
 import datetime
 import dateutil
 import pytz
+from aws_xray_sdk.core.models.trace_header import TraceHeader
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -29,7 +31,10 @@ def _read_sqs_message():
         else:
             raise e
 
-    message = queue.receive_messages(WaitTimeSeconds=20)
+    message = queue.receive_messages(
+        WaitTimeSeconds=20,
+        AttributeNames=["AWSTraceHeader"]
+    )
 
     if not message:
         return None
@@ -40,6 +45,18 @@ def _read_sqs_message():
         print(datetime.datetime.utcnow(), message.body)
         body = json.loads(message.body)
         print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
+
+        trace_header = message.attributes.get('AWSTraceHeader', None)
+
+        if trace_header:
+            header = TraceHeader.from_header_str(trace_header)
+            segment = xray_recorder.current_segment()
+
+            segment.trace_id = header.root
+            segment.parent_id = header.parent
+            segment.sampled = header.sampled
+
+
     except Exception as e:
         print(datetime.datetime.utcnow(), "Exception when loading json: ", e)
         return None

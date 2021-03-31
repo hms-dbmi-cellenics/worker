@@ -3,6 +3,7 @@ import datetime
 import os
 import hashlib
 from config import get_config
+from aws_xray_sdk import global_sdk_config
 
 config = get_config()
 
@@ -101,6 +102,8 @@ class CountMatrix:
 
         print(f"Downloading {key} (etag: {etag})...")
 
+        global_sdk_config.set_sdk_enabled(False)
+
         with open(path, "wb+") as f:
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
@@ -109,6 +112,8 @@ class CountMatrix:
             )
 
             f.seek(0)
+        
+        global_sdk_config.set_sdk_enabled(True)
 
         return True
 

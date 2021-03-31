@@ -4,6 +4,7 @@ import datetime
 from functools import reduce
 from config import get_config
 import uuid
+from aws_xray_sdk import global_sdk_config
 
 config = get_config()
 
@@ -51,7 +52,12 @@ class Response:
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
         body = result.get_result_object()["body"]
 
+        global_sdk_config.set_sdk_enabled(False)
+
         client.put_object(Key=key, Bucket=self.s3_bucket, Body=body)
+
+        global_sdk_config.set_sdk_enabled(True)
+
         return key
 
     def _send_notification(self, mssg):
