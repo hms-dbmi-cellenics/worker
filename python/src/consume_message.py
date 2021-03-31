@@ -1,3 +1,4 @@
+import traceback
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -43,10 +44,9 @@ def _read_sqs_message():
     try:
         message = message[0]
         print(datetime.datetime.utcnow(), message.body)
-        body = json.loads(message.body)
-        print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
 
-        trace_header = message.attributes.get("AWSTraceHeader", None)
+
+        trace_header = message.attributes and message.attributes.get("AWSTraceHeader", None)
 
         if trace_header:
             global_sdk_config.set_sdk_enabled(True)
@@ -61,8 +61,12 @@ def _read_sqs_message():
                 sampling=sampled,
                 parent_id=header.parent,
             )
-
+    
+        body = json.loads(message.body)
+        print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
     except Exception as e:
+        xray_recorder.current_segment().add_exception(e, traceback.format_exc())
+
         print(datetime.datetime.utcnow(), "Exception when loading json: ", e)
         return None
     finally:

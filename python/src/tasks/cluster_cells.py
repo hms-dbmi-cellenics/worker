@@ -4,6 +4,7 @@ import requests
 from result import Result
 from helpers.color_pool import COLOR_POOL
 from config import get_config
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -36,6 +37,7 @@ class ClusterCells:
             )
         return [Result(json.dumps(cell_set), cacheable=False)]
 
+    @xray_recorder.capture('ClusterCells.compute')
     def compute(self):
         resolution = self.task_def["config"].get("resolution",0.5)
 

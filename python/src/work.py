@@ -8,6 +8,8 @@ from aws_xray_sdk import global_sdk_config
 
 
 def main():
+    # Disable X-Ray for initial setup so we don't end up
+    # with segment warnings before any message is sent    
     global_sdk_config.set_sdk_enabled(False)
 
     config = get_config()
@@ -24,6 +26,8 @@ def main():
     while (
         datetime.datetime.utcnow() - last_activity
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
+
+        # Disable X-Ray before message is identified and processed
         global_sdk_config.set_sdk_enabled(False)
 
         msg = consume()

@@ -81,7 +81,7 @@ class TestConsumeMessage:
             "receive_message",
             {
                 "Messages": [
-                    {"MessageId": "asd", "ReceiptHandle": "ewrwe", "Body": '{"a": "b"}'}
+                    {"MessageId": "asd", "ReceiptHandle": "ewrwe", "Body": '{"not_json_asd: "b"}'}
                 ]
             },
             {

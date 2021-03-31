@@ -3,6 +3,7 @@ import requests
 import numpy as np
 from config import get_config
 from result import Result
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -17,6 +18,7 @@ class GeneExpression:
         # Return a list of formatted results.
         return [Result(result)]
 
+    @xray_recorder.capture('GeneExpression.compute')
     def compute(self):
         # the genes to get expression data for
         genes = self.task_def["genes"]

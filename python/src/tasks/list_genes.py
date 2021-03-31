@@ -3,6 +3,7 @@ from result import Result
 import requests
 from config import get_config
 import json
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -21,6 +22,7 @@ class ListGenes:
         # Return a list of formatted results.
         return [Result(result)]
 
+    @xray_recorder.capture('ListGenes.compute')
     def compute(self):
         request = self.task_def
         #

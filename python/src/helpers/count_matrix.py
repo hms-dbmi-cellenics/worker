@@ -4,6 +4,7 @@ import os
 import hashlib
 from config import get_config
 from aws_xray_sdk import global_sdk_config
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -89,6 +90,7 @@ class CountMatrix:
 
         return False
 
+    @xray_recorder.capture('CountMatrix.download_object')
     def download_object(self, key, etag):
         path = os.path.join(config.LOCAL_DIR, key)
 
@@ -121,6 +123,7 @@ class CountMatrix:
 
         return True
 
+    @xray_recorder.capture('CountMatrix.sync')
     def sync(self):
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)

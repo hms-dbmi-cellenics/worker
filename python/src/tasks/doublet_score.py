@@ -3,6 +3,7 @@ from config import get_config
 from result import Result
 import numpy as np
 import requests
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -18,8 +19,9 @@ class GetDoubletScore:
         # Return a list of formatted results.
         return [Result(result)]
 
+    @xray_recorder.capture('DoubletScore.compute')
     def compute(self):
-
+        
         # Retrieve the MitochondrialContent of all the cells
         request = {}
         r = requests.post(
