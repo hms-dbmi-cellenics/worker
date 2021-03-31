@@ -1,5 +1,6 @@
 import os
 import types
+from aws_xray_sdk.core import patch_all
 
 
 def get_config():
@@ -59,5 +60,8 @@ def get_config():
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
         config.R_WORKER_URL = "http://r:4000"
+
+    if cluster_env != "development" and cluster_env != "test":
+        patch_all()
 
     return config
