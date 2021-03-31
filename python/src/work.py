@@ -7,7 +7,6 @@ from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk import global_sdk_config
 
 def main():
-
     global_sdk_config.set_sdk_enabled(False)
 
     config = get_config()
@@ -22,6 +21,7 @@ def main():
         )
 
     global_sdk_config.set_sdk_enabled(True)
+
 
     while (
         datetime.datetime.utcnow() - last_activity

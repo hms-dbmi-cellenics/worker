@@ -50,11 +50,13 @@ def _read_sqs_message():
 
         if trace_header:
             header = TraceHeader.from_header_str(trace_header)
-            segment = xray_recorder.current_segment()
+            trace_id = header.root
+            sampled = header.sampled
 
-            segment.trace_id = header.root
-            segment.parent_id = header.parent
-            segment.sampled = header.sampled
+            segment = xray_recorder.begin_segment('worker processing',
+                        traceid=trace_id,
+                        sampling=sampled,
+                        parent_id=trace_header.parent)
 
 
     except Exception as e:
