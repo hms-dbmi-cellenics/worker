@@ -52,7 +52,7 @@ class Response:
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
         body = result.get_result_object()["body"]
 
-        was_enabled = global_sdk_config.is_enabled()
+        was_enabled = global_sdk_config.sdk_enabled()
 
         if was_enabled:
             global_sdk_config.set_sdk_enabled(False)

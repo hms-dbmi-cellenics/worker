@@ -102,7 +102,7 @@ class CountMatrix:
 
         print(f"Downloading {key} (etag: {etag})...")
 
-        was_enabled = global_sdk_config.is_enabled()
+        was_enabled = global_sdk_config.sdk_enabled()
 
         if was_enabled:
             global_sdk_config.set_sdk_enabled(False)
