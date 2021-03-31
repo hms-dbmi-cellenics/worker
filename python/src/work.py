@@ -6,6 +6,7 @@ from config import get_config
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk import global_sdk_config
 
+
 def main():
     global_sdk_config.set_sdk_enabled(False)
 
@@ -20,12 +21,10 @@ def main():
             "Worker configured to ignore timeout, will run forever...",
         )
 
-    global_sdk_config.set_sdk_enabled(True)
-
     while (
         datetime.datetime.utcnow() - last_activity
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
-        xray_recorder.begin_segment("work-task-processing")
+        global_sdk_config.set_sdk_enabled(False)
 
         msg = consume()
         if msg:

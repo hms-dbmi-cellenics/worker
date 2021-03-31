@@ -7,6 +7,7 @@ import dateutil
 import pytz
 from aws_xray_sdk.core.models.trace_header import TraceHeader
 from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk import global_sdk_config
 
 config = get_config()
 
@@ -32,8 +33,7 @@ def _read_sqs_message():
             raise e
 
     message = queue.receive_messages(
-        WaitTimeSeconds=20,
-        AttributeNames=["AWSTraceHeader"]
+        WaitTimeSeconds=20, AttributeNames=["AWSTraceHeader"]
     )
 
     if not message:
@@ -46,17 +46,21 @@ def _read_sqs_message():
         body = json.loads(message.body)
         print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
 
-        trace_header = message.attributes.get('AWSTraceHeader', None)
+        trace_header = message.attributes.get("AWSTraceHeader", None)
 
         if trace_header:
+            global_sdk_config.set_sdk_enabled(True)
+
             header = TraceHeader.from_header_str(trace_header)
             trace_id = header.root
             sampled = header.sampled
 
-            segment = xray_recorder.begin_segment('worker processing',
-                        traceid=trace_id,
-                        sampling=sampled,
-                        parent_id=header.parent)
+            xray_recorder.begin_segment(
+                f"worker-{config.CLUSTER_ENV}-{config.SANDBOX_ID}",
+                traceid=trace_id,
+                sampling=sampled,
+                parent_id=header.parent,
+            )
 
     except Exception as e:
         print(datetime.datetime.utcnow(), "Exception when loading json: ", e)

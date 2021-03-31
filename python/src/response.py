@@ -52,11 +52,15 @@ class Response:
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
         body = result.get_result_object()["body"]
 
-        global_sdk_config.set_sdk_enabled(False)
+        was_enabled = global_sdk_config.is_enabled()
+
+        if was_enabled:
+            global_sdk_config.set_sdk_enabled(False)
 
         client.put_object(Key=key, Bucket=self.s3_bucket, Body=body)
 
-        global_sdk_config.set_sdk_enabled(True)
+        if was_enabled:
+            global_sdk_config.set_sdk_enabled(True)
 
         return key
 
@@ -71,10 +75,7 @@ class Response:
             ),
             Message=msg_to_send,
             MessageAttributes={
-                'type': {
-                    'DataType': 'String',
-                    'StringValue': 'WorkResponse'
-                }
+                "type": {"DataType": "String", "StringValue": "WorkResponse"}
             },
             MessageStructure="json",
         )
@@ -85,9 +86,14 @@ class Response:
 
     def publish(self):
         # Get total length of all result objects:
-        message_length = reduce(
-            lambda acc, curr: acc + curr.get_result_length(), self.results, 0,
-        ) + len(json.dumps(self.request))
+        message_length = (
+            reduce(
+                lambda acc, curr: acc + curr.get_result_length(),
+                self.results,
+                0,
+            )
+            + len(json.dumps(self.request))
+        )
 
         # If we are over 80% of the limit (256 KB, 262144 bytes), upload to S3.
         # Otherwise, we can send the entire payload through the SNS topic.

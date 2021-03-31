@@ -33,6 +33,7 @@ def get_config():
 
     config = types.SimpleNamespace(
         CLUSTER_ENV=cluster_env,
+        SANDBOX_ID=sandbox_id,
         QUEUE_NAME=queue_name,
         TIMEOUT=timeout,
         IGNORE_TIMEOUT=ignore_timeout,

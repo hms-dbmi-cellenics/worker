@@ -102,7 +102,10 @@ class CountMatrix:
 
         print(f"Downloading {key} (etag: {etag})...")
 
-        global_sdk_config.set_sdk_enabled(False)
+        was_enabled = global_sdk_config.is_enabled()
+
+        if was_enabled:
+            global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
             self.s3.download_fileobj(
@@ -112,8 +115,9 @@ class CountMatrix:
             )
 
             f.seek(0)
-        
-        global_sdk_config.set_sdk_enabled(True)
+
+        if was_enabled:
+            global_sdk_config.set_sdk_enabled(False)
 
         return True
 
