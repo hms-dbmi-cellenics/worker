@@ -22,6 +22,7 @@ class TestConsumeMessage:
             {
                 "QueueUrl": "my_very_valid_and_existing_queue_url",
                 "WaitTimeSeconds": ANY,
+                "AttributeNames": ["AWSTraceHeader"],
             },
         )
 
@@ -58,6 +59,7 @@ class TestConsumeMessage:
             {
                 "QueueUrl": "my_very_valid_and_existing_queue_url",
                 "WaitTimeSeconds": ANY,
+                "AttributeNames": ["AWSTraceHeader"],
             },
         )
 
@@ -85,6 +87,7 @@ class TestConsumeMessage:
             {
                 "QueueUrl": "my_very_valid_and_existing_queue_url",
                 "WaitTimeSeconds": ANY,
+                "AttributeNames": ["AWSTraceHeader"],
             },
         )
         stubber.add_response(
@@ -100,7 +103,7 @@ class TestConsumeMessage:
             m.return_value = sqs
             r = _read_sqs_message()
 
-            assert r == {"a": "b"}
+            assert not r
 
     def test_request_with_expired_timeout_is_discarded(self):
         request = {
