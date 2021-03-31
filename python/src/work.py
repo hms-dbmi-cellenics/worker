@@ -22,7 +22,6 @@ def main():
 
     global_sdk_config.set_sdk_enabled(True)
 
-
     while (
         datetime.datetime.utcnow() - last_activity
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:

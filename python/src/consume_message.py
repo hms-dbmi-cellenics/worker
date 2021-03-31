@@ -56,7 +56,7 @@ def _read_sqs_message():
             segment = xray_recorder.begin_segment('worker processing',
                         traceid=trace_id,
                         sampling=sampled,
-                        parent_id=trace_header.parent)
+                        parent_id=header.parent)
 
 
     except Exception as e:
