@@ -93,7 +93,7 @@ class CountMatrix:
             f.seek(0)
 
         if was_enabled:
-            global_sdk_config.set_sdk_enabled(True)
+            xray.global_sdk_config.set_sdk_enabled(True)
 
         return True
 
