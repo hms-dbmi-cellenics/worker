@@ -3,6 +3,7 @@ from config import get_config
 from result import Result
 import pandas
 import requests
+import backoff
 from aws_xray_sdk.core import xray_recorder
 
 from helpers.dynamo import get_item_from_dynamo
@@ -40,6 +41,7 @@ class DifferentialExpression:
         return cells
 
     @xray_recorder.capture('DifferentialExpression.compute')
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
     def compute(self):
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)

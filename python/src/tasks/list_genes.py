@@ -1,3 +1,4 @@
+import backoff
 import pandas as pd
 from result import Result
 import requests
@@ -23,6 +24,7 @@ class ListGenes:
         return [Result(result)]
 
     @xray_recorder.capture('ListGenes.compute')
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
     def compute(self):
         request = self.task_def
         #

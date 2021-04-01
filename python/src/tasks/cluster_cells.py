@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import requests
+import backoff
 from result import Result
 from helpers.color_pool import COLOR_POOL
 from config import get_config
@@ -38,6 +39,7 @@ class ClusterCells:
         return [Result(json.dumps(cell_set), cacheable=False)]
 
     @xray_recorder.capture('ClusterCells.compute')
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
     def compute(self):
         resolution = self.task_def["config"].get("resolution",0.5)
 

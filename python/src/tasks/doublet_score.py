@@ -3,6 +3,7 @@ from config import get_config
 from result import Result
 import numpy as np
 import requests
+import backoff
 from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
@@ -20,6 +21,7 @@ class GetDoubletScore:
         return [Result(result)]
 
     @xray_recorder.capture('DoubletScore.compute')
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
     def compute(self):
         
         # Retrieve the MitochondrialContent of all the cells
