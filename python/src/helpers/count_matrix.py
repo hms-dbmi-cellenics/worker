@@ -4,6 +4,7 @@ import os
 import hashlib
 from datetime import timezone
 from config import get_config
+import aws_xray_sdk as xray
 from aws_xray_sdk import global_sdk_config
 from aws_xray_sdk.core import xray_recorder
 
@@ -78,9 +79,9 @@ class CountMatrix:
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
         # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/298
-        was_enabled = global_sdk_config.sdk_enabled()
+        was_enabled = xray.global_sdk_config.sdk_enabled()
         if was_enabled:
-            global_sdk_config.set_sdk_enabled(False)
+            xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
             self.s3.download_fileobj(

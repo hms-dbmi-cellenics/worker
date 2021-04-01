@@ -5,7 +5,7 @@ from functools import reduce
 from config import get_config
 import uuid
 from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk import global_sdk_config
+import aws_xray_sdk as xray
 
 config = get_config()
 
@@ -57,14 +57,14 @@ class Response:
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
         # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/298
-        was_enabled = global_sdk_config.sdk_enabled()
+        was_enabled = xray.global_sdk_config.sdk_enabled()
         if was_enabled:
-            global_sdk_config.set_sdk_enabled(False)
+            xray.global_sdk_config.set_sdk_enabled(False)
 
         client.put_object(Key=key, Bucket=self.s3_bucket, Body=body)
 
         if was_enabled:
-            global_sdk_config.set_sdk_enabled(True)
+            xray.global_sdk_config.set_sdk_enabled(True)
 
         return key
 

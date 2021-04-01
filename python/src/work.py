@@ -4,13 +4,13 @@ from consume_message import consume
 from response import Response
 from config import get_config
 from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk import global_sdk_config
+import aws_xray_sdk as xray
 
 
 def main():
     # Disable X-Ray for initial setup so we don't end up
     # with segment warnings before any message is sent    
-    global_sdk_config.set_sdk_enabled(False)
+    xray.global_sdk_config.set_sdk_enabled(False)
 
     config = get_config()
     last_activity = datetime.datetime.utcnow()
@@ -28,7 +28,7 @@ def main():
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
 
         # Disable X-Ray before message is identified and processed
-        global_sdk_config.set_sdk_enabled(False)
+        xray.global_sdk_config.set_sdk_enabled(False)
 
         msg = consume()
         if msg:

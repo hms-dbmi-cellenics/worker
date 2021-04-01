@@ -8,7 +8,7 @@ import dateutil
 import pytz
 from aws_xray_sdk.core.models.trace_header import TraceHeader
 from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk import global_sdk_config
+import aws_xray_sdk as xray
 
 config = get_config()
 
@@ -49,7 +49,7 @@ def _read_sqs_message():
         trace_header = message.attributes and message.attributes.get("AWSTraceHeader", None)
 
         if trace_header:
-            global_sdk_config.set_sdk_enabled(True)
+            xray.global_sdk_config.set_sdk_enabled(True)
 
             header = TraceHeader.from_header_str(trace_header)
             trace_id = header.root
