@@ -54,8 +54,10 @@ class Response:
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
         body = result.get_result_object()["body"]
 
+        # Disabled X-Ray to fix a botocore bug where the context
+        # does not propagate to S3 requests. see:
+        # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/298
         was_enabled = global_sdk_config.sdk_enabled()
-
         if was_enabled:
             global_sdk_config.set_sdk_enabled(False)
 

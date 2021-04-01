@@ -75,6 +75,9 @@ class CountMatrix:
                 self.last_fetch or "Never",
             )
 
+        # Disabled X-Ray to fix a botocore bug where the context
+        # does not propagate to S3 requests. see:
+        # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/298
         was_enabled = global_sdk_config.sdk_enabled()
         if was_enabled:
             global_sdk_config.set_sdk_enabled(False)
