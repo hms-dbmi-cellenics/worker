@@ -5,7 +5,6 @@ import hashlib
 from datetime import timezone
 from config import get_config
 import aws_xray_sdk as xray
-from aws_xray_sdk import global_sdk_config
 from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
@@ -90,7 +89,7 @@ class CountMatrix:
                 Fileobj=f,
             )
 
-            self.last_fetch = datetime.datetime.now(timezone.utc)
+            self.last_fetch = last_modified
             f.seek(0)
 
         if was_enabled:
