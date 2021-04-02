@@ -1,8 +1,10 @@
 import json
 import requests
 import numpy as np
+import backoff
 from config import get_config
 from result import Result
+from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
@@ -17,6 +19,8 @@ class GeneExpression:
         # Return a list of formatted results.
         return [Result(result)]
 
+    @xray_recorder.capture('GeneExpression.compute')
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
     def compute(self):
         # the genes to get expression data for
         genes = self.task_def["genes"]

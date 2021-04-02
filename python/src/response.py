@@ -4,6 +4,8 @@ import datetime
 from functools import reduce
 from config import get_config
 import uuid
+from aws_xray_sdk.core import xray_recorder
+import aws_xray_sdk as xray
 
 config = get_config()
 
@@ -46,12 +48,24 @@ class Response:
             "response": {"cacheable": self.cacheable, "error": self.error},
         }
 
+    @xray_recorder.capture('Response._upload')
     def _upload(self, result):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
         body = result.get_result_object()["body"]
 
+        # Disabled X-Ray to fix a botocore bug where the context
+        # does not propagate to S3 requests. see:
+        # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/298
+        was_enabled = xray.global_sdk_config.sdk_enabled()
+        if was_enabled:
+            xray.global_sdk_config.set_sdk_enabled(False)
+
         client.put_object(Key=key, Bucket=self.s3_bucket, Body=body)
+
+        if was_enabled:
+            xray.global_sdk_config.set_sdk_enabled(True)
+
         return key
 
     def _send_notification(self, mssg):
@@ -65,10 +79,7 @@ class Response:
             ),
             Message=msg_to_send,
             MessageAttributes={
-                'type': {
-                    'DataType': 'String',
-                    'StringValue': 'WorkResponse'
-                }
+                "type": {"DataType": "String", "StringValue": "WorkResponse"}
             },
             MessageStructure="json",
         )
@@ -77,11 +88,17 @@ class Response:
 
         return msg_to_send
 
+    @xray_recorder.capture('Response.publish')
     def publish(self):
         # Get total length of all result objects:
-        message_length = reduce(
-            lambda acc, curr: acc + curr.get_result_length(), self.results, 0,
-        ) + len(json.dumps(self.request))
+        message_length = (
+            reduce(
+                lambda acc, curr: acc + curr.get_result_length(),
+                self.results,
+                0,
+            )
+            + len(json.dumps(self.request))
+        )
 
         # If we are over 80% of the limit (256 KB, 262144 bytes), upload to S3.
         # Otherwise, we can send the entire payload through the SNS topic.

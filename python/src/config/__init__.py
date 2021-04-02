@@ -1,6 +1,6 @@
 import os
 import types
-
+import aws_xray_sdk as xray
 
 def get_config():
     kube_env = os.getenv("K8S_ENV")
@@ -32,6 +32,7 @@ def get_config():
 
     config = types.SimpleNamespace(
         CLUSTER_ENV=cluster_env,
+        SANDBOX_ID=sandbox_id,
         QUEUE_NAME=queue_name,
         TIMEOUT=timeout,
         IGNORE_TIMEOUT=ignore_timeout,
@@ -55,9 +56,13 @@ def get_config():
         config.AWS_ACCOUNT_ID = "000000000000"
         config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
         config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
+        xray.global_sdk_config.set_sdk_enabled(False)
 
     if cluster_env == "development":
         config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
         config.R_WORKER_URL = "http://r:4000"
+
+    if cluster_env != "test":
+        xray.core.patch_all()
 
     return config

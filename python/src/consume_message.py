@@ -1,3 +1,4 @@
+import traceback
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -5,6 +6,9 @@ from config import get_config
 import datetime
 import dateutil
 import pytz
+from aws_xray_sdk.core.models.trace_header import TraceHeader
+from aws_xray_sdk.core import xray_recorder
+import aws_xray_sdk as xray
 
 config = get_config()
 
@@ -29,7 +33,9 @@ def _read_sqs_message():
         else:
             raise e
 
-    message = queue.receive_messages(WaitTimeSeconds=20)
+    message = queue.receive_messages(
+        WaitTimeSeconds=20, AttributeNames=["AWSTraceHeader"]
+    )
 
     if not message:
         return None
@@ -38,9 +44,29 @@ def _read_sqs_message():
     try:
         message = message[0]
         print(datetime.datetime.utcnow(), message.body)
+
+
+        trace_header = message.attributes and message.attributes.get("AWSTraceHeader", None)
+
+        if trace_header:
+            xray.global_sdk_config.set_sdk_enabled(True)
+
+            header = TraceHeader.from_header_str(trace_header)
+            trace_id = header.root
+            sampled = header.sampled
+
+            xray_recorder.begin_segment(
+                f"worker-{config.CLUSTER_ENV}-{config.SANDBOX_ID}",
+                traceid=trace_id,
+                sampling=sampled,
+                parent_id=header.parent,
+            )
+    
         body = json.loads(message.body)
         print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
     except Exception as e:
+        xray_recorder.current_segment().add_exception(e, traceback.format_exc())
+
         print(datetime.datetime.utcnow(), "Exception when loading json: ", e)
         return None
     finally:
