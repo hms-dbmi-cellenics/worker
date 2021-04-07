@@ -40,7 +40,7 @@ def get_config():
         AWS_REGION=aws_region,
         BOTO_RESOURCE_KWARGS={"region_name": aws_region},
         DYNAMO_TABLE=f"experiments-{cluster_env}",
-        SOURCE_BUCKET=f"biomage-source-{cluster_env}",
+        SOURCE_BUCKET=f"processed-matrix-{cluster_env}",
         RESULTS_BUCKET=f"worker-results-{cluster_env}",
         SNS_TOPIC=f"work-results-{cluster_env}-{sandbox_id}",
         R_WORKER_URL="http://localhost:4000",
