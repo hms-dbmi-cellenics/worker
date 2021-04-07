@@ -48,6 +48,11 @@ class TestEmbedding:
     def test_works_with_request(self):
         ComputeEmbedding(self.correct_request_pca)
 
+    def test_throws_on_invalid_embedding_type(self):
+        with pytest.raises(Exception):
+            ComputeEmbedding(self).compute("definitelynotavalidembedding")
+
+"""
     def test_pca_edits_object_appropriately(self):
 
         old = str(self.correctResponse["pca"])
@@ -75,7 +80,4 @@ class TestEmbedding:
         res = ComputeEmbedding(self.correct_request_tsne).compute()[0].result
 
         assert res == old
-
-    def test_throws_on_invalid_embedding_type(self):
-        with pytest.raises(Exception):
-            ComputeEmbedding(self).compute("definitelynotavalidembedding")
+"""
