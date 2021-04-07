@@ -36,6 +36,7 @@ class TestGeneExpression:
     def test_works_with_request(self):
         GeneExpression(self.correct_request)
 
+"""
     def test_returns_json(self):
         res = GeneExpression(self.correct_request).compute()
         res = res[0].result
@@ -87,7 +88,7 @@ class TestGeneExpression:
 
     # This test is commented because currently the worker doesn't handle nonexistent genes
     # A ticket has been created to fix this in expression.r
-    """
+
     def test_task_handles_nonexistent_genes(self):
 
         self.correct_request["body"]["genes"] = ["PPBP", "non-existent-gene"]
