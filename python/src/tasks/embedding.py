@@ -32,4 +32,8 @@ class ComputeEmbedding:
 
         # The index order relies on cells_id in an ascending form. The order is made in the R part. 
         result = r.json()
+        
+        # The pair [null, null] works locally, in the case that case an error in the API, uncomment the following code
+        #result = [None if res[0]==None else res for res in result]
+
         return self._format_result(result)
