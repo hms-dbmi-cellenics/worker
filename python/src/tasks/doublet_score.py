@@ -32,6 +32,8 @@ class GetDoubletScore:
             data=json.dumps(request),
         )
 
+        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        r.raise_for_status()
         # The values are ordered by cells id
         # The result contains a list with the doublet scores values
         result = r.json()

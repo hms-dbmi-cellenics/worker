@@ -106,6 +106,8 @@ class DifferentialExpression:
             data=json.dumps(request),
         )
 
+        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        r.raise_for_status()
         result = pandas.DataFrame.from_dict(r.json())
 
         result.dropna(inplace=True)
