@@ -33,6 +33,8 @@ class GeneExpression:
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
+        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        r.raise_for_status()
         resultR = r.json()
         result = {}
         if not len(resultR):

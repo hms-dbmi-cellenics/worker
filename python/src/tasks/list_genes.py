@@ -45,7 +45,11 @@ class ListGenes:
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
+
+        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        r.raise_for_status()
         resR = r.json()
+
         # Convert to dataframe to prepare the data for the UI
         resR = pd.DataFrame(resR)
         total = 0

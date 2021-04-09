@@ -30,6 +30,8 @@ class ComputeEmbedding:
             data=json.dumps(request),
         )
 
+        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        r.raise_for_status()
         # The index order relies on cells_id in an ascending form. The order is made in the R part. 
         result = r.json()
         return self._format_result(result)

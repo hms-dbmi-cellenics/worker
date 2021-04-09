@@ -54,6 +54,8 @@ class ClusterCells:
             data=json.dumps(request),
         )
 
+        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        r.raise_for_status()
         resR = r.json()
         #
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape expected by the UI
