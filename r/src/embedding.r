@@ -44,30 +44,20 @@ runEmbedding <- function(req) {
         df_embedding <- Embeddings(data, reduction = type)
     }
     # Order embedding by cells id in ascending form
-    ids <- data@meta.data$cells_id
+
+    df_embedding <- df_embedding[rownames(data@meta.data[order(data@meta.data$cells_id), ]), ]
+    ids <- data@meta.data$cells_id+1
     idmax <- max(ids)
-    ids <- ids+1
-    tmp <- data.frame(row = 0:idmax)
-    tmp$UMAP_1 <- tmp$UMAP_2 <- NA
-    tmp[ids, ]$UMAP_1 <- df_embedding[,1]
-    tmp[ids, ]$UMAP_2 <- df_embedding[,2]
-    tmp$row <- NULL
-    row.names(tmp)[ids] <- row.names(df_embedding)
-    tmp <- lapply(row.names(tmp), function(rname) {
-        umap1 <- tmp[rname, 'UMAP_1']
-        umap2 <- tmp[rname, 'UMAP_2']
-         if(is.na(umap1)) {
-            return(NA) 
-         } else {
-            return(c(umap1, umap2))
-         }
-    })
-    return(tmp)
-
-
-    # Order embedding by cells id in ascending form
-    #df_embedding <- df_embedding[rownames(data@meta.data[order(data@meta.data$cells_id), ]), ]
-
-    #return(df_embedding)
-
+    ridx <- seq_len(idmax)
+    res <- data.frame(row = ridx, dim1 = NA, dim2 = NA)
+    res[ids, ]$dim1 <- df_embedding[,1]
+    res[ids, ]$dim2 <- df_embedding[,2]
+    res$row <- NULL
+    # convert to list of vectors
+    na.res <- is.na(res$dim1)
+    res <- data.frame(t(res))
+    res <- as.list(res)
+    res[na.res] <- NA
+    res <- unname(res)
+    return(res)
 }
