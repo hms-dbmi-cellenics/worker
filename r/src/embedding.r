@@ -44,20 +44,10 @@ runEmbedding <- function(req) {
         df_embedding <- Embeddings(data, reduction = type)
     }
     # Order embedding by cells id in ascending form
-
-    df_embedding <- df_embedding[rownames(data@meta.data[order(data@meta.data$cells_id), ]), ]
-    ids <- data@meta.data$cells_id+1
-    idmax <- max(ids)
-    ridx <- seq_len(idmax)
-    res <- data.frame(row = ridx, dim1 = NA, dim2 = NA)
-    res[ids, ]$dim1 <- df_embedding[,1]
-    res[ids, ]$dim2 <- df_embedding[,2]
-    res$row <- NULL
-    # convert to list of vectors
-    na.res <- is.na(res$dim1)
-    res <- data.frame(t(res))
-    res <- as.list(res)
-    res[na.res] <- NA
-    res <- unname(res)
+    df_embedding <- as.data.frame(df_embedding)
+    df_embedding$cells_id <- data@meta.data$cells_id
+    df_embedding < - df_embedding[ order(df_embedding$cells_id), ]
+    df_embedding <- df_embedding %>% complete(cells_id = seq(max(data@meta.data$cells_id))) %>% select(-cells_id)
+    res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], function(x, y) { if(is.na(x)) { return(NULL) } else { return(c(x, y)) } } )
     return(res)
 }
