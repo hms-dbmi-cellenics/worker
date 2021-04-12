@@ -47,13 +47,16 @@ class GeneExpression:
             for gene in resultR.keys():
 
                 view = resultR[gene]
+                # can't do summary stats on list with None's
+                # casting to np array replaces None with np.nan
+                viewnp = np.array(view, dtype=np.float)
                 # This is not necessary and is also costly, but I leave it commented as a reminder
                 # that this object has integer zeros and floating point for n!=0.
                 # expression = [float(item) for item in view]
-                minimum = float(np.amin(view))
-                maximum = float(np.amax(view))
-                mean = float(np.mean(view))
-                stdev = float(np.std(view))
+                minimum = float(np.nanmin(viewnp))
+                maximum = float(np.nanmax(viewnp))
+                mean = float(np.nanmean(viewnp))
+                stdev = float(np.nanstd(viewnp))
 
                 result[gene] = {
                     "min": minimum,
