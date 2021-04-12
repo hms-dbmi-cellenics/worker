@@ -1,3 +1,5 @@
+library(dplyr)
+library(tidyr)
 #
 #runEmbedding 
 #Returns a list of x,y coordinates for each cell.
