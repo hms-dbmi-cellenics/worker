@@ -21,17 +21,23 @@
 #'              qval            <-- Need to be returned until the UI is changed
 runDE <- function(req){
     
+
+    # Remove filtered cells
+    baseCells <- req$body$baseCells[req$body$baseCells%in%data@meta.data$cells_id]
+    backgroundCells <- req$body$backgroundCells[req$body$backgroundCells%in%data@meta.data$cells_id]
+
     # set up a factor with the appropriate cells
     factor_DE <- rep(
         c("base", "background"),
         c(
-            length(req$body$baseCells),
-            length(req$body$backgroundCells)
+            length(baseCells),
+            length(backgroundCells)
         )
     ) 
 
-    baseCells_barcode <- rownames(data@meta.data)[match(req$body$baseCells, data@meta.data$cells_id)]
-    backgroundCells_barcode <- rownames(data@meta.data)[match(req$body$backgroundCells, data@meta.data$cells_id)]
+
+    baseCells_barcode <- rownames(data@meta.data)[match(baseCells, data@meta.data$cells_id)]
+    backgroundCells_barcode <- rownames(data@meta.data)[match(backgroundCells, data@meta.data$cells_id)]
 
     names(factor_DE) <- c( 
         baseCells_barcode, backgroundCells_barcode
