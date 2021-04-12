@@ -41,6 +41,7 @@ class TestEmbedding:
         """
         self.correctResponse = json.load(open(os.path.join("tests", "emb_result.json")))
 
+    """
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ComputeEmbedding()
@@ -79,3 +80,4 @@ class TestEmbedding:
     def test_throws_on_invalid_embedding_type(self):
         with pytest.raises(Exception):
             ComputeEmbedding(self).compute("definitelynotavalidembedding")
+    """
