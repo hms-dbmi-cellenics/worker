@@ -139,5 +139,6 @@ class CountMatrix:
                     f"{config.R_WORKER_URL}/v0/reload",
                     timeout=30
                 )
-            except requests.exceptions.ReadTimeout: 
-                pass
+            except Exception as e:
+                print('asdasdsa')
+                print(e)
