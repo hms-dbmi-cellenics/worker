@@ -128,7 +128,7 @@ jobs:
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
           docker push $IMAGE_NAME
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
   # test:
   #   name: Run tests
   #   # to ensure compatibility with the sqlite found in the
