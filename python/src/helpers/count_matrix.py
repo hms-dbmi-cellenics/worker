@@ -101,7 +101,7 @@ class CountMatrix:
         return True
 
     @xray_recorder.capture("CountMatrix.sync")
-    def sync(self, initial = False):
+    def sync(self):
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
 
@@ -127,18 +127,3 @@ class CountMatrix:
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
-
-        if True in synced.values() and not initial:
-            print(
-                datetime.datetime.utcnow(),
-                f"Now telling R worker to reload files..."
-            )
-
-            try:
-                r = requests.post(
-                    f"{config.R_WORKER_URL}/v0/reload",
-                    timeout=30
-                )
-            except Exception as e:
-                print('asdasdsa')
-                print(e)

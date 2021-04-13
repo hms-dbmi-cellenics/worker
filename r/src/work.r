@@ -13,8 +13,9 @@ source("./expression.r")
 source("./list_genes.r")
 source("./cluster.r")
 
+experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
+
 load_data <- function() {
-    experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
     message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
 
     loaded <- F
@@ -125,6 +126,21 @@ create_app <- function(data) {
     return(app)
 }
 
-data <- load_data()
-backend <- BackendRserve$new()
-backend$start(create_app(data), http_port = 4000)
+repeat {
+    data <- load_data()
+    backend <- BackendRserve$new()
+    app <- backend$start(create_app(data), http_port = 4000, background = TRUE)
+
+    path <- paste(
+        "/data",experiment_id,"r.rds",
+        sep = "/"
+    )
+    
+    last <- file.info(path)$mtime
+
+    while(file.info(path)$mtime == last) {
+        Sys.sleep(1);
+    }
+
+    app$kill()
+}
