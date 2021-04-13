@@ -134,11 +134,9 @@ class CountMatrix:
                 f"Now telling R worker to reload files..."
             )
 
-            self.sync_to_r_worker()
-
             try:
                 r = requests.post(
-                    f"{config.R_WORKER_URL}/v0/loadData",
+                    f"{config.R_WORKER_URL}/v0/reload",
                     timeout=2
                 )
             except requests.exceptions.ReadTimeout: 
