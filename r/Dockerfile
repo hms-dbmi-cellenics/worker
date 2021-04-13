@@ -31,6 +31,7 @@ RUN R -e 'install.packages("sccore")'
 RUN R -e 'install.packages("remotes")'
 RUN R -e 'remotes::install_github("igraph/rigraph@master", ref = "bfbf53")'
 
+RUN apt-get update && apt-get install -y procps
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

@@ -5,7 +5,6 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
-
 source("./differential_expression.r")
 source("./embedding.r")
 source("./get_metadata_information.r")
@@ -13,8 +12,9 @@ source("./expression.r")
 source("./list_genes.r")
 source("./cluster.r")
 
+experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
+
 load_data <- function() {
-    experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
     message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
 
     loaded <- F
@@ -57,8 +57,28 @@ load_data <- function() {
     return(data)
 }
 
-create_app <- function(data) {
-    app <- Application$new(content_type = "application/json")
+create_app <- function(last_modified) {    
+    last_modified_mw <- Middleware$new(
+        process_request = function(request, response) {
+            if (!file.info(path)$mtime == last_modified) {
+                raise(
+                    HTTPError$conflict(
+                        body = toJSON(list(error = "The file is out of date and is currently being updated."))
+                    )
+                )
+            }
+
+            return(request)
+        },
+        id = "last_modified_mw"
+    )
+
+    app <- Application$new(
+        content_type = "application/json"
+    )
+
+    app$append_middleware(last_modified_mw)
+
     app$add_get(
         path = "/health",
         FUN = function(request, response) {
@@ -110,16 +130,31 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/getClusters",
         FUN = function(req, res) {
+            str(req$body)
             result <- getClusters(req)
             res$set_body(result)
     	}
     )
 
-
     return(app)
 }
 
-data <- load_data()
 backend <- BackendRserve$new()
 
-backend$start(create_app(data), http_port = 4000)
+repeat {
+    data <- load_data()
+    path <- paste(
+        "/data",experiment_id,"r.rds",
+        sep = "/"
+    )
+
+    last_modified <- file.info(path)$mtime
+    app <- create_app(last_modified)
+    proc <- backend$start(app, http_port = 4000, background = TRUE)
+
+    while(file.info(path)$mtime == last_modified) {
+        Sys.sleep(10);
+    }
+
+    proc$kill()
+}

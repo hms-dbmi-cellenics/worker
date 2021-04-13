@@ -55,7 +55,7 @@ class CountMatrix:
                 self.last_fetch,
             )
 
-            return True
+            return False
         elif last_mod_local and last_modified < last_mod_local:
             print(
                 datetime.datetime.utcnow(),
@@ -65,7 +65,7 @@ class CountMatrix:
                 last_mod_local,
             )
 
-            return True
+            return False
         else:
             print(
                 datetime.datetime.utcnow(),

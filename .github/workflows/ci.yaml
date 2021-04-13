@@ -104,21 +104,19 @@ jobs:
           docker build --target prod \
             --cache-from=$IMAGE_NAME-builder \
             --cache-from=$PREVIOUS_IMAGE_NAME \
-            --tag $IMAGE_NAME .
+            --tag $IMAGE_NAME-ci .
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
-
-      - name: Upload image
-        uses: ishworkh/docker-image-artifact-upload@v1
-        with:
-          image: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
       - id: push
         name: Push builder images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-builder to ECR.
           docker push $IMAGE_NAME-builder
+
+          echo Pushing image $IMAGE_NAME-builder-ci to ECR.
+          docker push $IMAGE_NAME-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
 
@@ -151,40 +149,13 @@ jobs:
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Download R image
-        uses: ishworkh/docker-image-artifact-download@v1
-        with:
-          image: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-
-      - name: Download Python image
-        uses: ishworkh/docker-image-artifact-download@v1
-        with:
-          image: ${{ format('{0}/{1}:{2}-python', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-
-      - id: setup-python
-        name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.7"
-
-      - id: cache-seek
-        name: Check for pip cache hit
-        uses: actions/cache@v2
-        with:
-          # This path is specific to Ubuntu
-          path: ~/.cache/pip
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-
-
-      - id: install
-        name: Install dependencies
+      - name: Download R and Python images
         run: |-
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-      
+          docker pull $IMAGE_NAME-python-ci
+          docker pull $IMAGE_NAME-r-ci
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
       - id: start-container
         name: Start R container in background
         run: |-
@@ -195,22 +166,22 @@ jobs:
           docker ps -a
           timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
         env:
-          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: test
         name: Run unit tests
         run: |-
-          cd src/
-          gunzip -k ../../data/test/python.h5ad.gz
-          CLUSTER_ENV="test" python -m pytest --cov=.
+          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
         env:
-          AWS_DEFAULT_REGION: "eu-west-1"
-          CLUSTER_ENV: "test"
+          PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: push
         name: Push docker images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
+          docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-python
+          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-r
+
           docker push $IMAGE_NAME-python
           docker push $IMAGE_NAME-r
         env:
