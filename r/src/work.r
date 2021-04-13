@@ -103,7 +103,6 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/listGenes",
         FUN = function(req, res) {
-            message(data)
             result <- getList(req)
             res$set_body(result)
     	}
@@ -120,7 +119,6 @@ create_app <- function(data) {
         FUN = function(req, res) {
             data <- load_data()
             assign("data", data, envir = .GlobalEnv)
-            message(data)
             res$set_body("ok")
     	}
     )
