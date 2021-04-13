@@ -171,7 +171,7 @@ jobs:
       - id: test
         name: Run unit tests
         run: |-
-          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test $PYTHON_IMAGE_NAME python3 -m pytest .
+          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
           cd src/
           gunzip -k ../../data/test/python.h5ad.gz
           CLUSTER_ENV="test" python -m pytest --cov=.
