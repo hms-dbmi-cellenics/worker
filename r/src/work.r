@@ -117,8 +117,8 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/reload",
         FUN = function(req, res) {
-            res$set_body("ok")
             system('/sbin/killall5')
+            res$set_body('ok')
     	}
     )
 
