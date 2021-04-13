@@ -2,13 +2,10 @@ import boto3
 import datetime
 import os
 import hashlib
-import requests
-import backoff
 from datetime import timezone
 from config import get_config
 import aws_xray_sdk as xray
 from aws_xray_sdk.core import xray_recorder
-import requests
 
 config = get_config()
 
