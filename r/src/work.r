@@ -115,11 +115,10 @@ create_app <- function(data) {
     	}
     )
     app$add_post(
-        path = "/v0/loadData",
+        path = "/v0/reload",
         FUN = function(req, res) {
-            assign("data", data, envir = .GlobalEnv)
             res$set_body("ok")
-            q(save='no', status=0)
+            system('/sbin/killall5')
     	}
     )
 

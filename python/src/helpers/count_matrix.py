@@ -100,11 +100,7 @@ class CountMatrix:
 
         return True
 
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
     def sync_to_r_worker(self):
-        r = requests.post(
-            f"{config.R_WORKER_URL}/v0/loadData",
-        )
 
 
     @xray_recorder.capture("CountMatrix.sync")
@@ -135,12 +131,18 @@ class CountMatrix:
             for key, last_modified in objects.items()
         }
 
-        if True in synced.values() or initial:
-            reason = "due to first sync in session" if initial else "because files were updated"
-
+        if True in synced.values() and not initial:
             print(
                 datetime.datetime.utcnow(),
-                f"Now telling R worker to reload files {reason}..."
+                f"Now telling R worker to reload files..."
             )
 
             self.sync_to_r_worker()
+
+            try:
+                r = requests.post(
+                    f"{config.R_WORKER_URL}/v0/loadData",
+                    timeout=2
+                )
+            except requests.exceptions.ReadTimeout: 
+                pass
