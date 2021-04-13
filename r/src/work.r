@@ -5,7 +5,6 @@ library(RJSONIO)
 library(Seurat)
 library(sccore)
 
-
 source("./differential_expression.r")
 source("./embedding.r")
 source("./get_metadata_information.r")
@@ -58,8 +57,29 @@ load_data <- function() {
     return(data)
 }
 
-create_app <- function(data) {
-    app <- Application$new(content_type = "application/json")
+create_app <- function(last_modified) {    
+    last_modified_mw <- Middleware$new(
+        process_request = function(request, response) {
+            if (!file.info(path)$mtime == last_modified) {
+                raise(
+                    HTTPError$conflict(
+                        body = list(error = "The file is out of date and is currently being updated.")
+                    )
+                )
+            }
+        },
+        process_response = function(request, response) {
+            return(TRUE)
+
+        },
+        id = "last_modified_mw"
+    )
+
+    app <- Application$new(
+        content_type = "application/json",
+        middleware=list(last_modified_mw)
+    )
+
     app$add_get(
         path = "/health",
         FUN = function(request, response) {
@@ -115,32 +135,26 @@ create_app <- function(data) {
             res$set_body(result)
     	}
     )
-    app$add_post(
-        path = "/v0/reload",
-        FUN = function(req, res) {
-            system('/sbin/killall5')
-            res$set_body('ok')
-    	}
-    )
 
     return(app)
 }
 
+backend <- BackendRserve$new()
+
 repeat {
     data <- load_data()
-    backend <- BackendRserve$new()
-    app <- backend$start(create_app(data), http_port = 4000, background = TRUE)
-
     path <- paste(
         "/data",experiment_id,"r.rds",
         sep = "/"
     )
-    
-    last <- file.info(path)$mtime
 
-    while(file.info(path)$mtime == last) {
-        Sys.sleep(1);
+    last_modified <- file.info(path)$mtime
+    app <- create_app(last_modified)
+    proc <- backend$start(app, http_port = 4000, background = TRUE)
+
+    while(file.info(path)$mtime == last_modified) {
+        Sys.sleep(10);
     }
 
-    app$kill()
+    proc$kill()
 }
