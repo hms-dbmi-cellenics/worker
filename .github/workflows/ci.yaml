@@ -172,9 +172,6 @@ jobs:
         name: Run unit tests
         run: |-
           docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
-          cd src/
-          gunzip -k ../../data/test/python.h5ad.gz
-          CLUSTER_ENV="test" python -m pytest --cov=.
         env:
           PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
