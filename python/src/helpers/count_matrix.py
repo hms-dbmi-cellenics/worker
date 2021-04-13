@@ -100,9 +100,6 @@ class CountMatrix:
 
         return True
 
-    def sync_to_r_worker(self):
-
-
     @xray_recorder.capture("CountMatrix.sync")
     def sync(self, initial = False):
         # check if path existed before running this
