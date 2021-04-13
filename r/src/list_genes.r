@@ -14,8 +14,6 @@
 # [1]Stuart, T., Butler, A., Hoffman, P., Hafemeister, C., Papalexi, E., Mauck III, W. M., ... & Satija, R. (2019). Comprehensive integration of single-cell data. Cell, 177(7), 1888-1902.
 #
 getList <- function(req){
-  data <- get("data", envir = .GlobalEnv)
-  
   selectFields <- req$body$selectFields
   orderBy <- req$body$orderBy
   orderDirection <- req$body$orderDirection == "DESC"

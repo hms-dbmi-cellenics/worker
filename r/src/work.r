@@ -57,7 +57,7 @@ load_data <- function() {
     return(data)
 }
 
-create_app <- function(data) {
+create_app <- function() {
     app <- Application$new(content_type = "application/json")
     app$add_get(
         path = "/health",
@@ -117,8 +117,7 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/loadData",
         FUN = function(req, res) {
-            data <- load_data()
-            assign("data", data, envir = .GlobalEnv)
+            data <<- load_data()
             res$set_body("ok")
     	}
     )
@@ -126,5 +125,15 @@ create_app <- function(data) {
     return(app)
 }
 
+mw = Middleware$new(
+  process_request = function(rq, rs) {
+    app_logger$info(sprintf("Incomming request (id %s): %s", rq$id, rq$path))
+  },
+  process_response = function(rq, rs) {
+    app_logger$info(sprintf("Outgoing response (id %s): %s", rq$id, rs$status))
+  },
+  id = "awesome-app-logger"
+)
+
 backend <- BackendRserve$new()
-backend$start(create_app(data), http_port = 4000)
+backend$start(create_app(), http_port = 4000)
