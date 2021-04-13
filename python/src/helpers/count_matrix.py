@@ -108,7 +108,7 @@ class CountMatrix:
 
 
     @xray_recorder.capture("CountMatrix.sync")
-    def sync(self, initial):
+    def sync(self, initial = False):
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
 
