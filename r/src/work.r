@@ -63,22 +63,21 @@ create_app <- function(last_modified) {
             if (!file.info(path)$mtime == last_modified) {
                 raise(
                     HTTPError$conflict(
-                        body = list(error = "The file is out of date and is currently being updated.")
+                        body = toJSON(list(error = "The file is out of date and is currently being updated."))
                     )
                 )
             }
-        },
-        process_response = function(request, response) {
-            return(TRUE)
 
+            return(request)
         },
         id = "last_modified_mw"
     )
 
     app <- Application$new(
-        content_type = "application/json",
-        middleware=list(last_modified_mw)
+        content_type = "application/json"
     )
+
+    app$append_middleware(last_modified_mw)
 
     app$add_get(
         path = "/health",
@@ -131,6 +130,7 @@ create_app <- function(last_modified) {
     app$add_post(
         path = "/v0/getClusters",
         FUN = function(req, res) {
+            str(req$body)
             result <- getClusters(req)
             res$set_body(result)
     	}
