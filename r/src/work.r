@@ -103,8 +103,8 @@ create_app <- function(data) {
     app$add_post(
         path = "/v0/listGenes",
         FUN = function(req, res) {
-            result <- getList(req)
             message(data)
+            result <- getList(req)
             res$set_body(result)
     	}
     )
