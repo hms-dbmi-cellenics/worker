@@ -50,10 +50,12 @@ runDE <- function(req){
     # add seurat object the new groups to compare    
     data@meta.data$custom <- NA
     data@meta.data[names(factor_DE), "custom"] <- factor_DE
+    message("checking meta.data slot ", str(data@meta.data))
 
     # Compute differential expression
     result <- FindMarkers(data, group.by = "custom", ident.1 = "base", ident.2 = "background")
 
+    message("checking FindMarkers results:  ", str(result))
     # Replace name with Gene names
     result$gene_names <- data@misc$gene_annotations[
         match(rownames(result), data@misc$gene_annotations$input), "name"
@@ -76,6 +78,7 @@ runDE <- function(req){
     #result$abszscore <- result$pct_2
     #result$log2fc <- result$avg_log2FC
     #result$qval <- result$p_val_adj
+    message("checking FindMarkers results before returning:  ", str(result))
 
     return(result)
 }
