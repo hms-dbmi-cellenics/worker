@@ -57,9 +57,7 @@ load_data <- function() {
     return(data)
 }
 
-create_app <- function() {
-    data <- NULL
-
+create_app <- function(data) {
     app <- Application$new(content_type = "application/json")
     app$add_get(
         path = "/health",
@@ -119,13 +117,15 @@ create_app <- function() {
     app$add_post(
         path = "/v0/loadData",
         FUN = function(req, res) {
-            data <<- load_data()
+            assign("data", data, envir = .GlobalEnv)
             res$set_body("ok")
+            q(save='no', status=0)
     	}
     )
 
     return(app)
 }
 
+data <- load_data()
 backend <- BackendRserve$new()
-backend$start(create_app(), http_port = 4000)
+backend$start(create_app(data), http_port = 4000)
