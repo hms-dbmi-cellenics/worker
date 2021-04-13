@@ -114,12 +114,17 @@ create_app <- function(data) {
             res$set_body(result)
     	}
     )
-
+    app$add_post(
+        path = "/v0/loadData",
+        FUN = function(req, res) {
+            data <- load_data()
+            assign("data", data, envir = .GlobalEnv)
+            res$set_body("ok")
+    	}
+    )
 
     return(app)
 }
 
-data <- load_data()
 backend <- BackendRserve$new()
-
 backend$start(create_app(data), http_port = 4000)

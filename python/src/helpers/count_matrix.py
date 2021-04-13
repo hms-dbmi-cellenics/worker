@@ -2,10 +2,13 @@ import boto3
 import datetime
 import os
 import hashlib
+import requests
+import backoff
 from datetime import timezone
 from config import get_config
 import aws_xray_sdk as xray
 from aws_xray_sdk.core import xray_recorder
+import requests
 
 config = get_config()
 
@@ -55,7 +58,7 @@ class CountMatrix:
                 self.last_fetch,
             )
 
-            return True
+            return False
         elif last_mod_local and last_modified < last_mod_local:
             print(
                 datetime.datetime.utcnow(),
@@ -65,7 +68,7 @@ class CountMatrix:
                 last_mod_local,
             )
 
-            return True
+            return False
         else:
             print(
                 datetime.datetime.utcnow(),
@@ -97,8 +100,15 @@ class CountMatrix:
 
         return True
 
+    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
+    def sync_to_r_worker(self):
+        r = requests.post(
+            f"{config.R_WORKER_URL}/v0/loadData",
+        )
+
+
     @xray_recorder.capture("CountMatrix.sync")
-    def sync(self):
+    def sync(self, initial):
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
 
@@ -124,3 +134,13 @@ class CountMatrix:
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
+
+        if True in synced.values() or initial:
+            reason = "due to first sync in session" if initial else "because files were updated"
+
+            print(
+                datetime.datetime.utcnow(),
+                f"Now telling R worker to reload files {reason}..."
+            )
+
+            self.sync_to_r_worker()

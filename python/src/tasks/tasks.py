@@ -19,7 +19,7 @@ config = get_config()
 class TaskFactory:
     def __init__(self):
         self.count_matrix = CountMatrix()
-        self.count_matrix.sync()
+        self.count_matrix.sync(initial=True)
 
 
     def submit(self, msg):
