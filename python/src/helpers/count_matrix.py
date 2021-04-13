@@ -137,7 +137,7 @@ class CountMatrix:
             try:
                 r = requests.post(
                     f"{config.R_WORKER_URL}/v0/reload",
-                    timeout=2
+                    timeout=30
                 )
             except requests.exceptions.ReadTimeout: 
                 pass
