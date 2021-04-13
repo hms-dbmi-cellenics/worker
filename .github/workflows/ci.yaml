@@ -156,30 +156,6 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
-      - id: setup-python
-        name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.7"
-
-      - id: cache-seek
-        name: Check for pip cache hit
-        uses: actions/cache@v2
-        with:
-          # This path is specific to Ubuntu
-          path: ~/.cache/pip
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-
-
-      - id: install
-        name: Install dependencies
-        run: |-
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-      
       - id: start-container
         name: Start R container in background
         run: |-
@@ -195,12 +171,10 @@ jobs:
       - id: test
         name: Run unit tests
         run: |-
+          docker run -v $(pwd):/python:rw -it --env CLUSTER_ENV=test worker_python python3 -m pytest .
           cd src/
           gunzip -k ../../data/test/python.h5ad.gz
           CLUSTER_ENV="test" python -m pytest --cov=.
-        env:
-          AWS_DEFAULT_REGION: "eu-west-1"
-          CLUSTER_ENV: "test"
 
       - id: push
         name: Push docker images to ECR
