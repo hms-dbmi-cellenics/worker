@@ -14,7 +14,7 @@ runExpression <- function(req) {
     genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
     #
     #Get the expression values for those genes in the corresponding matrix.
-    geneExpression <-data@assays$RNA@data[genesSubset$input,,drop=FALSE]
+    geneExpression <-data@assays$RNA@data[unique(genesSubset$input),,drop=FALSE]
     geneExpression <- as.data.frame(t(as.matrix(geneExpression)))
     geneExpression$cells_id <- data@meta.data$cells_id
     geneExpression <- geneExpression[ order(geneExpression$cells_id), ]
