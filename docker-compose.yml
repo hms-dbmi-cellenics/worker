@@ -15,7 +15,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
+      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
   python:
     container_name: "biomage-worker-python"
     build:
@@ -25,4 +25,4 @@ services:
       - ./python:/python:cached
       - ./data:/data:cached
     environment:
-      - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
+      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
