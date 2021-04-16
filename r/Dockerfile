@@ -30,6 +30,7 @@ RUN R -e 'install.packages("sccore")'
 # NOTE: can remove after next igraph release
 RUN R -e 'install.packages("remotes")'
 RUN R -e 'remotes::install_github("igraph/rigraph@master", ref = "bfbf53")'
+RUN R -e 'BiocManager::install(c("limma"))'
 
 RUN apt-get update && apt-get install -y procps
 
