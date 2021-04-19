@@ -124,7 +124,7 @@ IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
 
 ## Debugging locally
 
-To save the arguments (`req` and `data`) to a worker function, specify DEBUG_STEP. DEBUG_STEP corresponds to the basename of the paths in work.r and will hot-reload it changed at the top of work.r
+To save the arguments (`req` and `data`) to a worker function, specify DEBUG_STEP. DEBUG_STEP corresponds to the basename of the paths in work.r and will hot-reload if changed at the top of work.r
 
 ```bash
 # e.g. DEBUG_STEP=getClusters
