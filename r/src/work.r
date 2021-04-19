@@ -13,6 +13,11 @@ source("./list_genes.r")
 source("./cluster.r")
 
 experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
+debug_path <- Sys.getenv("DEBUG_PATH", unset = "")
+
+# over-ride manually to hot-reload
+debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
+# debug_step <- "getClusters"
 
 load_data <- function() {
     message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
@@ -57,6 +62,28 @@ load_data <- function() {
     return(data)
 }
 
+run_post <- function(req, post_fun) {
+    handle_debug(req)
+    post_fun(req)
+}
+
+handle_debug <- function(req) {
+    task_name <- basename(req$path)
+    is_debug <- debug_step == task_name
+    
+    if (is_debug) {
+        fname <- paste0(task_name, '.RData')
+        fpath_cont <- file.path('/debug', fname)
+        fpath_host <- file.path(debug_path, fname)
+        
+        message(sprintf('⚠️ DEBUG_STEP = %s. Saving `req` and `data` object.', task_name))
+        # saving data for convenience
+        # it (/data/e52../r.rds) is unchanged by worker
+        save(data, req, file = fpath_cont)
+        message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
+    }
+}
+
 create_app <- function(last_modified) {    
     last_modified_mw <- Middleware$new(
         process_request = function(request, response) {
@@ -88,42 +115,42 @@ create_app <- function(last_modified) {
     app$add_post(
         path = "/v0/DifferentialExpression",
         FUN = function(req, res) {
-            result <- runDE(req)
+            result <- run_post(req, runDE)
             res$set_body(result)
         }
     )
     app$add_post(
         path = "/v0/getEmbedding",
         FUN = function(req, res) {
-            result <- runEmbedding(req)
+            result <- run_post(req, runEmbedding)
             res$set_body(result)
         }
     )
     app$add_post(
         path = "/v0/getDoubletScore",
         FUN = function(req, res) {
-            result <- getDoubletScore(req)
+            result <- run_post(req, getDoubletScore)
             res$set_body(result)
         }
     )
     app$add_post(
         path = "/v0/getMitochondrialContent",
         FUN = function(req, res) {
-            result <- getMitochondrialContent(req)
+            result <- run_post(req, getMitochondrialContent)
             res$set_body(result)
         }
     )
     app$add_post(
         path = "/v0/getExpression",
         FUN = function(req, res) {
-            result <- runExpression(req)
+            result <- run_post(req, runExpression)
             res$set_body(result)
     	}
     )
     app$add_post(
         path = "/v0/listGenes",
         FUN = function(req, res) {
-            result <- getList(req)
+            result <- run_post(req, getList)
             res$set_body(result)
     	}
     )
@@ -131,7 +158,7 @@ create_app <- function(last_modified) {
         path = "/v0/getClusters",
         FUN = function(req, res) {
             str(req$body)
-            result <- getClusters(req)
+            result <- run_post(req, getClusters)
             res$set_body(result)
     	}
     )

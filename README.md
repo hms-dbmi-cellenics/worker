@@ -119,3 +119,23 @@ extra_hosts:
 ```
 
 IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
+
+
+
+## Debugging locally
+
+To save the arguments (`req` and `data`) to a worker function, specify DEBUG_STEP and DEBUG_PATH. DEBUG_STEP can also be hot-reloaded by changing it at the top of work.r
+
+```bash
+# e.g. DEBUG_STEP=getClusters
+# DEBUG_PATH defaults to ./data/debug
+DEBUG_STEP=task_name DEBUG_PATH=/path/to/debug/folder npm start
+```
+
+When the pipeline is run, it will save the `req` and `data` objects used by the specified `task_name` in `DEBUG_PATH`. You
+can load these into your R environment:
+
+```R
+# clicking the file in RStudio does this for you
+load('/path/to/debug/folder/{task_name}.RData')
+```

@@ -10,12 +10,15 @@ services:
     volumes:
       - ./r:/r:cached
       - ./data:/data:cached
+      - ${DEBUG_PATH-./data/debug}:/debug
     expose:
       - "4000"
     ports:
       - "4000:4000"
     environment:
       - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
+      - DEBUG_STEP=${DEBUG_STEP}
+      - DEBUG_PATH=${DEBUG_PATH}
     extra_hosts:
       - "host.docker.internal:host-gateway"
   python:
