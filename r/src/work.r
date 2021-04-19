@@ -13,10 +13,9 @@ source("./list_genes.r")
 source("./cluster.r")
 
 experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
-debug_path <- Sys.getenv("DEBUG_PATH", unset = "")
 
-# over-ride manually to hot-reload
 debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
+# over-ride manually to hot-reload
 # debug_step <- "getClusters"
 
 load_data <- function() {
@@ -74,7 +73,7 @@ handle_debug <- function(req) {
     if (is_debug) {
         fname <- paste0(task_name, '.RData')
         fpath_cont <- file.path('/debug', fname)
-        fpath_host <- file.path(debug_path, fname)
+        fpath_host <- file.path('./data/debug', fname)
         
         message(sprintf('⚠️ DEBUG_STEP = %s. Saving `req` and `data` object.', task_name))
         # saving data for convenience
