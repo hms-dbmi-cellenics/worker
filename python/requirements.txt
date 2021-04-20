@@ -63,7 +63,7 @@ pathtools==0.1.2
 patsy==0.5.1
 Pillow==8.1.1
 pluggy==0.13.1
-py==1.9.0
+py==1.10.0
 pyasn1==0.4.8
 pycodestyle==2.6.0
 pycparser==2.20
