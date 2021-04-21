@@ -6,9 +6,9 @@ The single-cell pipeline work executor.
 
 While in the `worker/` root folder on the host, you can use `make build`.
 
-For example, to run the r and python containers, you can do:
+For example to build and run the r and python containers, you can do:
 
-    make build
+    make build && make run
 
 
 Note that during the first time, the build can take up to 40-50 minutes to complete.

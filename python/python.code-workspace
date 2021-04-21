@@ -8,7 +8,10 @@
 		// Python configurations
 		"[python]": {
 			"editor.formatOnPaste": true,
-			"editor.formatOnSave": true
+			"editor.formatOnSave": true,
+            "editor.codeActionsOnSave": {
+                "source.organizeImports": true
+            }
 		},
 		"python.pythonPath": "python3",
 		"python.formatting.provider": "black",
