@@ -65,5 +65,3 @@ class TestClusterCells:
         assert res["key"] == "leiden"
         assert len(res["children"]) > 0
         assert len(res["children"][0]["cellIds"]) > 0
-
-        print(res)

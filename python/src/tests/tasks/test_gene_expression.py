@@ -3,6 +3,7 @@ import os
 import statistics
 from tasks.gene_expression import GeneExpression
 import json
+import numpy as np
 from config import get_config
 
 config = get_config()
@@ -75,15 +76,15 @@ class TestGeneExpression:
         res = json.loads(res)
 
         for v in res.values():
+            expression = np.array(v["expression"], dtype=np.float)
             minimum = v["min"]
             maximum = v["max"]
             mean = v["mean"]
             stdev = v["stdev"]
-
-            assert minimum == min(v["expression"])
-            assert maximum == max(v["expression"])
-            assert mean == pytest.approx(statistics.mean(v["expression"]), 0.01)
-            assert stdev == pytest.approx(statistics.stdev(v["expression"]), 0.01)
+            assert minimum == np.nanmin(expression)
+            assert maximum == np.nanmax(expression)
+            assert mean == pytest.approx(np.nanmean(expression), 0.01)
+            assert stdev == pytest.approx(np.nanstd(expression), 0.01)
 
     # This test is commented because currently the worker doesn't handle nonexistent genes
     # A ticket has been created to fix this in expression.r
