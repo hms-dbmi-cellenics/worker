@@ -9,14 +9,14 @@ config = get_config()
 
 
 def get_cell_sets(experiment_id):
-    path = os.path.join(config.LOCAL_DIR, f"{experiment_id}/cell_sets.json")
+    dir_path = os.path.join(config.LOCAL_DIR, f"{experiment_id}")
 
-    path_exists = os.path.exists(path)
+    path_exists = os.path.exists(dir_path)
 
     if not path_exists:
-        os.makedirs(path)
+        os.makedirs(dir_path)
 
-    with open(path, "wb+") as f:
+    with open(f"{dir_path}/cell_sets.json", "wb+") as f:
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
 
         print("downloading cellsets")
