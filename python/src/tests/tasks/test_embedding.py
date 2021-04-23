@@ -76,6 +76,6 @@ class TestEmbedding:
 
         assert res == old
 
-    def test_throws_on_invalid_embedding_type(self):
+    def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
             ComputeEmbedding(self).compute("definitelynotavalidembedding")
