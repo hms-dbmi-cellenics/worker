@@ -1,8 +1,10 @@
-import boto3
-import json
-from config import get_config
 import os
+import json
+import datetime
 from pathlib import Path
+
+import boto3
+from config import get_config
 
 import aws_xray_sdk as xray
 
@@ -17,7 +19,7 @@ def get_cell_sets(experiment_id):
     with open(f"{dir_path}/cell_sets.json", "wb+") as f:
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
 
-        print("downloading cellsets")
+        print(datetime.datetime.utcnow(), "downloading cellsets")
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
