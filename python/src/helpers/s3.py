@@ -3,7 +3,7 @@ import json
 from config import get_config
 import os
 
-from helpers.dynamo import get_item_from_dynamo
+import aws_xray_sdk as xray
 
 config = get_config()
 
@@ -21,11 +21,21 @@ def get_cell_sets(experiment_id):
 
         print("downloading cellsets")
 
+        # Disabled X-Ray to fix a botocore bug where the context
+        # does not propagate to S3 requests. see:
+        # https://github.com/open-telemetry/opentelemetry-python-contrib/issues/298
+        was_enabled = xray.global_sdk_config.sdk_enabled()
+        if was_enabled:
+            xray.global_sdk_config.set_sdk_enabled(False)
+
         s3.download_fileobj(
             Bucket=config.CELL_SETS_BUCKET,
             Key=experiment_id,
             Fileobj=f,
         )
+
+        if was_enabled:
+            xray.global_sdk_config.set_sdk_enabled(True)
 
         f.seek(0)
 
