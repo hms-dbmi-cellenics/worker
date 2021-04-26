@@ -68,10 +68,6 @@ class CountMatrix:
             )
 
             return False
-        elif last_mod_local == None:
-            print(
-                f"Downloading {key} from S3..."
-            )
         else:
             print(
                 datetime.datetime.utcnow(),
@@ -89,6 +85,9 @@ class CountMatrix:
             xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
+            print(
+                f"Downloading {key} from S3..."
+            )
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
                 Key=key,
