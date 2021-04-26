@@ -2,6 +2,7 @@ import boto3
 import json
 from config import get_config
 import os
+from pathlib import Path
 
 import aws_xray_sdk as xray
 
@@ -11,10 +12,7 @@ config = get_config()
 def get_cell_sets(experiment_id):
     dir_path = os.path.join(config.LOCAL_DIR, f"{experiment_id}")
 
-    path_exists = os.path.exists(dir_path)
-
-    if not path_exists:
-        os.makedirs(dir_path)
+    Path(dir_path).mkdir(parents=True, exist_ok=True)
 
     with open(f"{dir_path}/cell_sets.json", "wb+") as f:
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
