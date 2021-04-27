@@ -13,7 +13,8 @@ config = get_config()
 class CountMatrix:
     def __init__(self):
         self.config = get_config()
-        self.local_path = os.path.join(self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
+        self.local_path = os.path.join(
+            self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
 
         self.last_fetch = None
@@ -34,7 +35,6 @@ class CountMatrix:
     @xray_recorder.capture("CountMatrix.download_object")
     def download_object(self, key, last_modified):
         path = os.path.join(config.LOCAL_DIR, key)
-        print(key)
 
         last_mod_local = None
 
@@ -42,6 +42,8 @@ class CountMatrix:
             last_mod_local = datetime.datetime.fromtimestamp(
                 os.path.getmtime(path), tz=timezone.utc
             )
+        except FileNotFoundError:
+            last_mod_local = None
         except Exception as e:
             print(e)
             last_mod_local = None
@@ -83,6 +85,9 @@ class CountMatrix:
             xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
+            print(
+                f"Downloading {key} from S3..."
+            )
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
                 Key=key,
