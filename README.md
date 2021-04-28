@@ -128,7 +128,7 @@ To save the arguments (`req` and `data`) to a worker function, specify DEBUG_STE
 
 ```bash
 # e.g. DEBUG_STEP=getClusters
-DEBUG_STEP=task_name npm start
+DEBUG_STEP=task_name make build && make run
 ```
 
 When a worker function is run, it will save the `req` and `data` objects used by the specified `task_name` in ./data/debug. You
