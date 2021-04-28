@@ -1,0 +1,315 @@
+name: Build and deploy the worker to develop
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build-docker:
+    name: Build Docker container
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        project: ["python", "r"]
+    outputs:
+      repo-name: ${{ steps.ref.outputs.repo-name }}
+      tag: ${{ steps.ref.outputs.tag }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - id: checkout
+        name: Check out source code
+        uses: actions/checkout@v2
+
+      - id: ref
+        name: Format docker tag and repository name for current image.
+        run: |-
+          # This will take a ref like `refs/heads/master`
+          # and turn it into `refs-heads-master`
+          REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+
+          # the final tag is something like:
+          # refs-heads-master-a4f8bc313dae
+          # this is what we push to ECR
+          echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
+
+          # This will take a GitHub repo name like `biomage-ltd/iac`
+          # and turns it into `iac`. This will be the name of the
+          # ECR repository.
+          IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
+          echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
+
+      - id: ref-previous
+        name: Format docker tag and repository name for the previous pushed image.
+        run: |-
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "This is a pull request, base ref and sha set to the target branch."
+            BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "This is a push, base ref and sha set to the previous commit."
+            BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+
+      - id: set-up-creds
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - id: create-ecr-registry
+        name: Create an ECR repository (if needed)
+        # This will fail if the registry already exists, which is fine. If there is some other
+        # error, the `push` step will fail instead.
+        continue-on-error: true
+        run: |-
+          aws ecr create-repository --repository-name $REPO_NAME
+        env:
+          REPO_NAME: ${{ steps.ref.outputs.repo-name }}
+
+      - id: pull-latest-image
+        name: Pull latest Docker images from mainline
+        run: |-
+          echo Pulling $IMAGE_NAME from ECR.
+          docker pull $IMAGE_NAME || true
+
+          echo Pulling $IMAGE_NAME-builder from ECR.
+          docker pull $IMAGE_NAME-builder || true
+
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+
+      - id: build
+        name: Build Docker images
+        run: |-
+          docker build --target builder \
+            --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+            --tag $IMAGE_NAME-builder .
+
+          docker build --target prod \
+            --cache-from=$IMAGE_NAME-builder \
+            --cache-from=$PREVIOUS_IMAGE_NAME \
+            --tag $IMAGE_NAME-ci .
+        env:
+          PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
+      - id: push
+        name: Push builder images to ECR
+        run: |-
+          echo Pushing image $IMAGE_NAME-builder to ECR.
+          docker push $IMAGE_NAME-builder
+
+          echo Pushing image $IMAGE_NAME-builder-ci to ECR.
+          docker push $IMAGE_NAME-ci
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+
+  test:
+    name: Run tests
+    # to ensure compatibility with the sqlite found in the
+    # python:3.7-buster docker image, this runs on
+    # ubuntu-20.04. earlier versions of ubuntu will break the test
+    runs-on: ubuntu-20.04
+    needs: build-docker
+    env:
+      CI: "true"
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - id: checkout
+        name: Check out source code
+        uses: actions/checkout@v2
+
+      - id: set-up-creds
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Download R and Python images
+        run: |-
+          docker pull $IMAGE_NAME-python-ci
+          docker pull $IMAGE_NAME-r-ci
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+      - id: start-container
+        name: Start R container in background
+        run: |-
+          pwd
+          ls
+          gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
+          docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.r
+          docker ps -a
+          timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
+        env:
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+      - id: test
+        name: Run unit tests
+        run: |-
+          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
+        env:
+          PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+      - id: push
+        name: Push docker images to ECR
+        run: |-
+          echo Pushing image $IMAGE_NAME-[python/r] to ECR.
+          docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-python
+          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-r
+
+          docker push $IMAGE_NAME-python
+          docker push $IMAGE_NAME-r
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-20.04
+    needs: ["test", "build-docker"]
+    strategy:
+      max-parallel: 1
+      matrix:
+        environment: ["develop", "staging"]
+    steps:
+      - id: checkout
+        name: Check out source code
+        uses: actions/checkout@v2
+
+      - id: setup-aws
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - id: install-yq
+        name: Install yq for modifying the deployment spec.
+        run: |-
+          sudo wget https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
+      - id: fill-metadata
+        name: Fill out a new HelmRelease resource
+        run: |-
+          REF_DASHED=$(echo $GITHUB_REF | sed 's/\//-/g')
+          DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
+          echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
+          echo "::set-output name=ref-dashed::$REF_DASHED"
+
+          if [ "${{ matrix.environment }}" = "develop" ]; then
+            SANDBOX_ID="default"
+          fi
+
+          if [ "${{ matrix.environment }}" = "staging" ]; then
+            SANDBOX_ID="STAGING_SANDBOX_ID"
+          fi
+
+          if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+            CHART_REF="$GITHUB_SHA"
+          else
+            CHART_REF="STAGING_CHART_REF"
+          fi
+
+          echo "::set-output name=sandbox-id::$SANDBOX_ID"
+
+          yq w -d1 .flux.yaml metadata.name "$DEPLOYMENT_NAME" \
+          | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
+          | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
+          | yq w -d1 - spec.chart.ref "$CHART_REF" \
+          | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-staging" \
+          | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
+          | yq w -d1 - spec.values.python.image "$IMAGE_NAME-python" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/python]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-python" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-r" \
+          > $DEPLOYMENT_NAME.yaml
+
+          cat $DEPLOYMENT_NAME.yaml
+        env:
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          IMAGE_TAG: ${{ needs.build-docker.outputs.tag }}
+
+      - id: disable-admin-enforcement
+        name: Temporarily disable admin enforcement
+        uses: benjefferies/branch-protection-bot@master
+        with:
+          access-token: ${{ secrets.API_TOKEN_GITHUB }}
+          owner: biomage-ltd
+          repo: iac
+          enforce_admins: false
+          retries: 8
+
+      - name: Push production deployment to iac for deployment
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
+        uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source_file: "${{ steps.fill-metadata.outputs.deployment-name }}.yaml"
+          destination_repo: "${{ github.repository_owner }}/iac"
+          destination_folder: "releases/${{ matrix.environment }}"
+          user_email: "ci@biomage.net"
+          user_name: "Biomage CI/CD"
+
+      - name: Change name of deployment file for staging deployment
+        if: matrix.environment == 'staging'
+        env:
+          DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
+          REF_DASHED: ${{ steps.fill-metadata.outputs.ref-dashed }}
+        run: |-
+          mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
+
+      - name: Push staging deployment template to iac
+        if: matrix.environment == 'staging'
+        uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source_file: "${{ steps.fill-metadata.outputs.ref-dashed }}.yaml"
+          destination_repo: "${{ github.repository_owner }}/iac"
+          destination_folder: "releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}"
+          user_email: "ci@biomage.net"
+          user_name: "Biomage CI/CD"
+
+      - id: enable-admin-enforcement
+        name: Re-enable admin enforcement
+        uses: benjefferies/branch-protection-bot@master
+        if: always()
+        with:
+          access-token: ${{ secrets.API_TOKEN_GITHUB }}
+          owner: biomage-ltd
+          repo: iac
+          enforce_admins: true
+          retries: 8
