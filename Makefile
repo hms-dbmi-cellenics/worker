@@ -9,7 +9,7 @@
 PYTHON_FILES?=$$(find python -name '*.py' | grep -v venv) # do not include virtual env files
 # If unix name is Darwin, we are in MacOS => use regular docker-compose.yaml
 # Otherwise assume Linux and add docker-compose.linux-dev.yaml overrides
-ifneq ($(shell uname -s), Darwin)
+ifeq ($(shell uname -s), Darwin)
   docker_files=-f docker-compose.yaml
 else
   docker_files=-f docker-compose.yaml -f docker-compose.linux-dev.yaml
@@ -28,10 +28,12 @@ check: ## Checks code for linting/construct errors
 	flake8 $(PYTHON_FILES)
 	@echo "    [✓]\n"
 build: ## Builds the docker-compose environment
+	@read -r -p "Building the worker image takes a long time, do you want to proceed? (y/n) " CONTINUE; \
+    [ $$CONTINUE = "y" ] || [ $$CONTINUE = "Y" ] || (echo "Exiting docker image build."; exit 1;)
 	@echo "==> Building docker image..."
-	docker-compose $(docker_files) build
+	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
-run: # Runs the docker environment
+run: build # Runs the docker environment
 	@docker-compose $(docker_files) up
 logs: # Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
