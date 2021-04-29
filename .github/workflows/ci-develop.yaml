@@ -233,7 +233,7 @@ jobs:
             SANDBOX_ID="STAGING_SANDBOX_ID"
           fi
 
-          if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             CHART_REF="$GITHUB_SHA"
           else
             CHART_REF="STAGING_CHART_REF"
@@ -279,7 +279,7 @@ jobs:
         with:
           source_file: "${{ steps.fill-metadata.outputs.deployment-name }}.yaml"
           destination_repo: "${{ github.repository_owner }}/iac"
-          destination_folder: "releases/${{ matrix.environment }}"
+          destination_folder: "releases/staging"
           user_email: "ci@biomage.net"
           user_name: "Biomage CI/CD"
 
