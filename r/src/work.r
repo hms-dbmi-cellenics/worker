@@ -68,22 +68,31 @@ run_post <- function(req, post_fun) {
 
 handle_debug <- function(req) {
     task_name <- basename(req$path)
-    is_debug <- debug_step == task_name
-    
+    is_debug <- debug_step == task_name | debug_step == 'all'
+
     if (is_debug) {
-        fname <- paste0(task_name, '.RData')
-        fpath_cont <- file.path('/debug', fname)
-        fpath_host <- file.path('./data/debug', fname)
-        
-        message(sprintf('⚠️ DEBUG_STEP = %s. Saving `req` and `data` object.', task_name))
-        # saving data for convenience
-        # it (/data/e52../r.rds) is unchanged by worker
-        save(data, req, file = fpath_cont)
-        message(sprintf("⚠️ RUN load('%s') to restore environment.", fpath_host))
+        message(sprintf('⚠ DEBUG_STEP = %s. Saving `req` object.', task_name))
+        req_fname <- sprintf('%s_%s_req.rds', experiment_id, task_name)
+        saveRDS(req, file.path('/debug', req_fname))
+
+        req_host  <- file.path('./data/debug', req_fname)
+        message(sprintf("⚠ RUN req  <- readRDS('%s') to restore 'req' object.",  req_host))
+
+        # copy data to /debug if doesn't exist
+        data_fname <- sprintf('%s_data.rds', experiment_id)
+        data_cont <- file.path('/debug', data_fname)
+
+        if (!file.exists(data_cont)) {
+            data_path <- file.path('/data', experiment_id, 'r.rds')
+            file.copy(data_path, data_cont)
+        }
+
+        data_host <- file.path('./data/debug', data_fname)
+        message(sprintf("⚠ RUN data <- readRDS('%s') to restore 'data' object.", data_host))
     }
 }
 
-create_app <- function(last_modified) {    
+create_app <- function(last_modified) {
     last_modified_mw <- Middleware$new(
         process_request = function(request, response) {
             if (!file.info(path)$mtime == last_modified) {
