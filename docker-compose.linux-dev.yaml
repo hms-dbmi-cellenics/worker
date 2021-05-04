@@ -16,7 +16,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
+      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
       - DEBUG_STEP=${DEBUG_STEP}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -29,6 +29,7 @@ services:
       - ./python:/python:cached
       - ./data:/data:cached
     environment:
-      - EXPERIMENT_ID=e52b39624588791a7889e39c617f669e
+      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
+      - IGNORE_TIMEOUT=true
     extra_hosts:
       - "host.docker.internal:host-gateway"

@@ -33,4 +33,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: deployment-runner
-  namespace: {{ .Release.Namespace | replace "worker" "api" }}
+  namespace: {{ regexReplaceAll "^worker-" .Release.Namespace "api-" }}

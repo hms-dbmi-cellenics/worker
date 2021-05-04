@@ -28,3 +28,4 @@ services:
       - ./data:/data:cached
     environment:
       - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
+      - IGNORE_TIMEOUT=true

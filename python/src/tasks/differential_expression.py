@@ -6,7 +6,7 @@ import requests
 import backoff
 from aws_xray_sdk.core import xray_recorder
 
-from helpers.dynamo import get_item_from_dynamo
+from helpers.s3 import get_cell_sets
 from helpers.find_cells_by_set_id import find_cells_by_set_id
 from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
 
@@ -46,8 +46,8 @@ class DifferentialExpression:
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)
 
-        # get cell sets from database
-        resp = get_item_from_dynamo(self.experiment_id, "cellSets")
+        # get cell sets from database        
+        resp = get_cell_sets(self.experiment_id)
 
         first_cell_set_name = self.task_def["cellSet"]
         second_cell_set_name = self.task_def["compareWith"]

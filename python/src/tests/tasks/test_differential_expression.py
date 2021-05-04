@@ -5,6 +5,7 @@ import json
 import mock
 import responses
 from config import get_config
+from operator import itemgetter
 
 config = get_config()
 
@@ -97,23 +98,33 @@ cell_set_responses = {
 }
 
 
-class MockDynamoClass:
+class MockS3Class:
     response = cell_set_responses["one_set"]
 
     no_called = 0
 
     def setResponse(response_key):
-        MockDynamoClass.response = cell_set_responses[response_key]
+        MockS3Class.response = cell_set_responses[response_key]
 
-    def Table(*args, **kwargs):
-        MockDynamoClass.no_called = 0
-        return MockDynamoClass.MockTable()
+    # def Table(*args, **kwargs):
+    #     MockS3Class.no_called = 0
+    #     return MockS3Class.MockTable()
 
-    class MockTable:
-        def get_item(*args, **kwargs):
-            MockDynamoClass.no_called += 1
-            print("doing stuff")
-            return {"Item": {"cellSets": MockDynamoClass.response}}
+    # def download_fileobj(*args, **kwargs):
+    #     MockS3Class.no_called += 1
+    #     return {"Body": json.dumps({"cellSets": MockS3Class.response})}
+
+    def download_fileobj(*args, **kwargs):
+        Bucket, Key, Fileobj = itemgetter("Bucket", "Key", "Fileobj")(kwargs)
+
+        if not Bucket or not Key or not Fileobj:
+            raise Exception("Parameters not received")
+
+        Fileobj.write(str.encode(f'{{"cellSets": {json.dumps(MockS3Class.response)}}}'))
+
+        return
+        # MockS3Class.no_called += 1
+        # return {"Body": json.dumps({"cellSets": MockS3Class.response})}
 
 
 class TestDifferentialExpression:
@@ -121,7 +132,7 @@ class TestDifferentialExpression:
         self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
     ):
         request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "experimentId": "e52b39624588791a7889e39c617f669e1",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "DifferentialExpression",
@@ -146,60 +157,46 @@ class TestDifferentialExpression:
         )
 
     """
-    Mocks the DynamoDB query for fetching cell sets. Returns an
+    Mocks the S3 query for fetching cell sets. Returns an
     empty cell set and yields the patched up object.
     """
 
     @pytest.fixture
-    def mock_dynamo_get(self):
-        with mock.patch("boto3.resource") as m:
-            mockDynamo = MockDynamoClass()
-            m.return_value = mockDynamo
-            yield (m, mockDynamo)
+    def mock_S3_get(self):
+        with mock.patch("boto3.client") as m:
+            mockS3 = MockS3Class()
+            m.return_value = mockS3
+            yield (m, mockS3)
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             DifferentialExpression()
 
     @responses.activate
-    def test_cell_sets_get_queried_appropriately(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
+    def test_cell_sets_get_queried_appropriately(self, mock_S3_get):
         DifferentialExpression(self.get_request()).compute()
 
     @responses.activate
-    def test_works_when_all_is_first(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
+    def test_works_when_all_is_first(self, mock_S3_get):
         request = self.get_request(cellSet="all-asdasd", compareWith="cluster1")
 
         DifferentialExpression(request)
 
     @responses.activate
-    def test_returns_json(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
+    def test_returns_json(self, mock_S3_get):
         res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         json.loads(res)
 
     @responses.activate
-    def test_returns_a_json_object(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
+    def test_returns_a_json_object(self, mock_S3_get):
         res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
 
     @responses.activate
-    def test_object_has_all_required_columns(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
+    def test_object_has_all_required_columns(self, mock_S3_get):
         res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         res = json.loads(res)
@@ -227,11 +224,8 @@ class TestDifferentialExpression:
             assert keys == expected_keys
 
     @responses.activate
-    def test_cells_in_sets_intersection_are_filtered_out(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        MockDynamoClass.setResponse("two_sets_intersected")
+    def test_cells_in_sets_intersection_are_filtered_out(self, mock_S3_get):
+        MockS3Class.setResponse("two_sets_intersected")
 
         DifferentialExpression(
             self.get_request(cellSet="cluster1", compareWith="cluster2")
@@ -253,11 +247,8 @@ class TestDifferentialExpression:
         assert len(set(baseCells).intersection(set(backgroundCells))) == 0
 
     @responses.activate
-    def test_cells_not_in_basis_sample_are_filtered_out(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        MockDynamoClass.setResponse("three_sets")
+    def test_cells_not_in_basis_sample_are_filtered_out(self, mock_S3_get):
+        MockS3Class.setResponse("three_sets")
 
         DifferentialExpression(
             self.get_request(
@@ -275,11 +266,8 @@ class TestDifferentialExpression:
         assert len(backgroundCells) == 2
 
     @responses.activate
-    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        MockDynamoClass.setResponse("hierarchichal_sets")
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_S3_get):
+        MockS3Class.setResponse("hierarchichal_sets")
 
         DifferentialExpression(
             self.get_request(cellSet="cluster1", compareWith="rest")

@@ -27,11 +27,12 @@ spec:
       containers:
       - args:
         - --namespace={{.Release.Namespace}}
-        # delete successful and failed jobs after 30 seconds.
+        # delete successful and failed jobs after one second
         # this is so failed jobs don't prevent us from running
         # new workers in its place
-        - -delete-successful-after=0
-        - -delete-failed-after=0
+        - --legacy-mode=false
+        - --delete-successful-after=1s
+        - --delete-failed-after=1s
         image: quay.io/lwolf/kube-cleanup-operator
         imagePullPolicy: Always
         name: cleanup-operator
@@ -69,6 +70,9 @@ rules:
   resources:
   - jobs
   verbs:
+  - get
+  - list
+  - watch
   - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
