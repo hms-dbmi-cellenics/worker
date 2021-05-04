@@ -128,7 +128,7 @@ To save the `req` argument to a worker function, specify DEBUG_STEP. DEBUG_STEP 
 
 ```bash
 # e.g. DEBUG_STEP=getClusters
-DEBUG_STEP=task_name make run
+DEBUG_STEP=task_name make build && make run
 ```
 
 When a worker function is run, it will save the `req` and `data` objects used by the specified `task_name` in ./data/debug. You will see a prompt to
