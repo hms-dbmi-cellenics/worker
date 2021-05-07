@@ -3,21 +3,24 @@
 # The doublet scores were computing in the data-ingest script. To compute then, we
 # use the package Scrublet [1]
 getDoubletScore <- function(req) {
-     
-    # Check if the experiment has doublet_scores stored in rds file
-    if(!"doublet_scores"%in%colnames(data@meta.data)){
-        stop("Doublet scores are not computed for this experiment.")
-    }
-
-    # Subset the doublet_scores ordering by cells_id
-    result <- data@meta.data[order(data$cells_id, decreasing = F), "doublet_scores"]
-
-    # Be aware of possible na values
-    if(any(is.na(result)))
-        warning("There are missing values in the doublet_scores results")
-
-    return(result)
-
+  # Check if the experiment has doublet_scores stored in rds file
+  if(!"doublet_scores"%in%colnames(data@meta.data)){
+    stop("Doublet scores are not computed for this experiment.")
+  }
+  
+  # Subset the doublet_scores ordering by cells_id
+  result <- data@meta.data[order(data$cells_id, decreasing = F), "doublet_scores"]
+  result<- as.data.frame(result)
+  result$cells_id <- data@meta.data$cells_id
+  result <- result %>% complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
+  result <- t(unname(result))
+  result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
+  
+  # Be aware of possible na values
+  if(any(is.null(result)))
+    warning("There are missing values in the doublet_scores results")
+  return(result)
+  
 }
 
 # Function to retrieve all the mt-content score for the current experiment.
