@@ -36,10 +36,7 @@ getMitochondrialContent <- function(req) {
 
     # Subset the percent.mt ordering by cells_id (DESC)
     result <- data@meta.data[order(data$cells_id, decreasing = F), "percent.mt"]
-    result <- result %>% complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
-    result <- t(unname(result))
-    result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
-  
+
 
     # Be aware of possible na values
     if(any(is.na(result)))
