@@ -11,7 +11,7 @@ getDoubletScore <- function(req) {
   # Subset the doublet_scores ordering by cells_id
   result <- data@meta.data[order(data$cells_id, decreasing = F), "doublet_scores"]
   result<- as.data.frame(result)
-  result$cells_id <- data@meta.data$cells_id
+  result$cells_id <- data@meta.data$cells_id[order(data$cells_id, decreasing = F)]
   result <- result %>% complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
   result <- t(unname(result))
   result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
@@ -37,7 +37,7 @@ getMitochondrialContent <- function(req) {
     # Subset the percent.mt ordering by cells_id (DESC)
     result <- data@meta.data[order(data$cells_id, decreasing = F), "percent.mt"]
     result<- as.data.frame(result)
-    result$cells_id <- data@meta.data$cells_id
+    result$cells_id <- data@meta.data$cells_id[order(data$cells_id, decreasing = F)]
     result <- result %>% complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
     result <- t(unname(result))
     result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
