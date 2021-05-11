@@ -23,13 +23,13 @@ runEmbedding <- function(req) {
     config <- req$body$config
     pca_nPCs <- 30 
 
-    if("active.reduction" %in% names(scdata@misc))
-        active.reduction <- scdata@misc[["active.reduction"]]
+    if("active.reduction" %in% names(data@misc))
+        active.reduction <- data@misc[["active.reduction"]]
     else
         active.reduction <- "pca"
 
-    if("numPCs" %in% names(scdata@misc))
-        pca_nPCs <- scdata@misc[["numPCs"]]
+    if("numPCs" %in% names(data@misc))
+        pca_nPCs <- data@misc[["numPCs"]]
 
     if (type == "pca") {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
