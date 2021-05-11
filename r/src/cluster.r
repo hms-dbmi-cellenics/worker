@@ -16,9 +16,7 @@ getClusters <- function(req){
   type <- req$body$type
   algo <- list("louvain"=1,"leiden"=4)[[type]]
   res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
-  # HARDCODE
-  annoy.metric = "cosine"
-  
+
   if("active.reduction" %in% names(data@misc))
     active.reduction <- data@misc[["active.reduction"]]
   else
@@ -34,8 +32,6 @@ getClusters <- function(req){
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters-1)
     
   } else {
-
-    data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = annoy.metric, verbose=FALSE, reduction = active.reduction)
     data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo) 
   }
   
