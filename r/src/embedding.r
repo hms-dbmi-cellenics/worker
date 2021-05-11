@@ -22,13 +22,22 @@ runEmbedding <- function(req) {
     type <- req$body$type
     config <- req$body$config
     pca_nPCs <- 30 
+
+    if("active.reduction" %in% names(scdata@misc))
+        active.reduction <- scdata@misc[["active.reduction"]]
+    else
+        active.reduction <- "pca"
+
+    if("numPCs" %in% names(scdata@misc))
+        pca_nPCs <- scdata@misc[["numPCs"]]
+
     if (type == "pca") {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
         # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
         df_embedding <- Embeddings(data, reduction = type)[,1:2]
     } else if(type=="tsne"){
         data <- RunTSNE(data,
-                        reduction = 'pca', 
+                        reduction = active.reduction, 
                         seed.use = 1,
                         dims = 1:pca_nPCs, 
                         perplexity = config$perplexity, 
@@ -37,7 +46,7 @@ runEmbedding <- function(req) {
     } else if(type=="umap"){
         data <- RunUMAP(data,
                         seed.use = 42,
-                        reduction='pca', 
+                        reduction=active.reduction, 
                         dims = 1:pca_nPCs, 
                         verbose = F, 
                         min.dist = config$minimumDistance, 
