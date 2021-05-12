@@ -17,6 +17,7 @@ getClusters <- function(req){
   algo <- list("louvain"=1,"leiden"=4)[[type]]
   res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
 
+  # To run clustering, we need to identify the active.reduction that is used in FindNeighbors.
   if("active.reduction" %in% names(data@misc))
     active.reduction <- data@misc[["active.reduction"]]
   else

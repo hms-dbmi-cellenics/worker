@@ -23,11 +23,13 @@ runEmbedding <- function(req) {
     config <- req$body$config
     pca_nPCs <- 30 
 
+    # To run embedding, we need to set the reduction. 
     if("active.reduction" %in% names(data@misc))
         active.reduction <- data@misc[["active.reduction"]]
     else
         active.reduction <- "pca"
 
+    # The slot numPCs is set in dataIntegration with the selectd PCA by the user. 
     if("numPCs" %in% names(data@misc))
         pca_nPCs <- data@misc[["numPCs"]]
 
