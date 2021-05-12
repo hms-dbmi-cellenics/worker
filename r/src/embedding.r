@@ -33,6 +33,11 @@ runEmbedding <- function(req) {
     if("numPCs" %in% names(data@misc))
         pca_nPCs <- data@misc[["numPCs"]]
 
+    message("Active reduction --> ", active.reduction)
+    message("Active numPCs --> ", pca_nPCs)
+    message("Number of samples:")
+    message(table(data$samples))
+
     if (type == "pca") {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
         # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
