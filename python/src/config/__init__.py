@@ -1,6 +1,8 @@
 import os
 import types
+
 import aws_xray_sdk as xray
+
 
 def get_config():
     kube_env = os.getenv("K8S_ENV")
@@ -9,7 +11,7 @@ def get_config():
     sandbox_id = os.getenv("SANDBOX_ID", default="default")
 
     # timeout is in seconds, set to 1 hour
-    timeout = int(os.getenv("WORK_TIMEOUT", default="3600"))
+    timeout = int(os.getenv("WORK_TIMEOUT", default="60"))
     ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
