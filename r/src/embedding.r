@@ -22,13 +22,29 @@ runEmbedding <- function(req) {
     type <- req$body$type
     config <- req$body$config
     pca_nPCs <- 30 
+
+    # To run embedding, we need to set the reduction. 
+    if("active.reduction" %in% names(data@misc))
+        active.reduction <- data@misc[["active.reduction"]]
+    else
+        active.reduction <- "pca"
+
+    # The slot numPCs is set in dataIntegration with the selectd PCA by the user. 
+    if("numPCs" %in% names(data@misc))
+        pca_nPCs <- data@misc[["numPCs"]]
+
+    message("Active reduction --> ", active.reduction)
+    message("Active numPCs --> ", pca_nPCs)
+    message("Number of samples:")
+    message(table(data$samples))
+
     if (type == "pca") {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
         # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
         df_embedding <- Embeddings(data, reduction = type)[,1:2]
     } else if(type=="tsne"){
         data <- RunTSNE(data,
-                        reduction = 'pca', 
+                        reduction = active.reduction, 
                         seed.use = 1,
                         dims = 1:pca_nPCs, 
                         perplexity = config$perplexity, 
@@ -37,7 +53,7 @@ runEmbedding <- function(req) {
     } else if(type=="umap"){
         data <- RunUMAP(data,
                         seed.use = 42,
-                        reduction='pca', 
+                        reduction=active.reduction, 
                         dims = 1:pca_nPCs, 
                         verbose = F, 
                         min.dist = config$minimumDistance, 
