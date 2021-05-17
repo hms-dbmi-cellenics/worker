@@ -1,35 +1,8 @@
 version: "3.2"
 services:
   r:
-    container_name: "biomage-worker-r"
-    build:
-      context: r/
-      target: dev
-      args:
-        - GITHUB_PAT=${GITHUB_PAT}
-    volumes:
-      - ./r:/r:cached
-      - ./data:/data:cached
-      - ./data/debug:/debug
-    expose:
-      - "4000"
-    ports:
-      - "4000:4000"
-    environment:
-      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
-      - DEBUG_STEP=${DEBUG_STEP}
     extra_hosts:
       - "host.docker.internal:host-gateway"
   python:
-    container_name: "biomage-worker-python"
-    build:
-      context: python/
-      target: dev
-    volumes:
-      - ./python:/python:cached
-      - ./data:/data:cached
-    environment:
-      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
-      - IGNORE_TIMEOUT=true
     extra_hosts:
       - "host.docker.internal:host-gateway"
