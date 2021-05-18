@@ -118,3 +118,23 @@ extra_hosts:
 ```
 
 IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
+
+
+
+## Debugging locally
+
+To save the `req` argument to a worker function, specify DEBUG_STEP. DEBUG_STEP can be either `all` (will save `req` from any task) or the basename of a [path in work.r](r/src/work.r#L88) and will hot-reload if changed at the top of work.r. It can also be set on initial run:
+
+```bash
+# e.g. DEBUG_STEP=getClusters
+DEBUG_STEP=task_name make build && make run
+```
+
+When a worker function is run, it will save the `req` and `data` objects used by the specified `task_name` in ./data/debug. You will see a prompt to
+read these into your R environment:
+
+```R
+# clicking these files in RStudio does this for you
+req <- readRDS('./data/debug/{experiment_id}_{task_name}_req.rds')
+data <- readRDS('./data/debug/{experiment_id}_data.rds')
+```

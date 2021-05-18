@@ -10,12 +10,14 @@ services:
     volumes:
       - ./r:/r:cached
       - ./data:/data:cached
+      - ./data/debug:/debug
     expose:
       - "4000"
     ports:
       - "4000:4000"
     environment:
       - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
+      - DEBUG_STEP=${DEBUG_STEP}
   python:
     container_name: "biomage-worker-python"
     build:
