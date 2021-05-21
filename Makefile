@@ -33,7 +33,9 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
-run: build # Runs the docker environment
+run-only: # Runs the docker environment
+	@docker-compose $(docker_files) up
+run: build # Runs & builds the docker environment
 	@docker-compose $(docker_files) up
 logs: # Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
