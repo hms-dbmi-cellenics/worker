@@ -103,7 +103,7 @@ tqdm==4.51.0
 typed-ast==1.4.1
 typing-extensions==3.7.4.3
 umap-learn==0.4.6
-urllib3==1.25.11
+urllib3==1.26.5
 watchdog==0.10.3
 websocket-client==0.57.0
 Werkzeug==1.0.1
