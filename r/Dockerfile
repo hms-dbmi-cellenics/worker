@@ -8,29 +8,21 @@ COPY requirements_debian.txt .
 RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 
 # install required R packages for the worker.
-# these are sectioned as seen here so we can cache compiled code
-# NOTE: add new packages to the END of this list. this makes sure
-# previously installed packages don't get recompiled for no reason.
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
-RUN Rscript setup/install_or_die.r devtools
-RUN Rscript setup/install_or_die.r RestRserve
-RUN Rscript setup/install_or_die.r languageserver
-RUN Rscript setup/install_or_die.r BiocManager
 
-RUN R -e 'BiocManager::install(c("AnnotationDbi", "BiocGenerics", "GO.db", "pcaMethods", "org.Dr.eg.db", "org.Hs.eg.db", "org.Mm.eg.db"))'
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
+    R -e "remotes::install_github('rstudio/renv@0.13.2')"
 
-RUN R -e 'install.packages("RcppSpdlog")'
-RUN R -e 'install.packages("Seurat")'
-RUN R -e 'install.packages("gprofiler2")'
-RUN R -e 'install.packages("RJSONIO")'
-RUN R -e 'install.packages("sccore")'
+# an initial lockfile is used to avoid frequent re-installs
+# use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
+COPY ./renv.lock.init .
+RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
 
-# install dev version of igraph for leiden clustering
-# NOTE: can remove after next igraph release
-RUN R -e 'install.packages("remotes")'
-RUN R -e 'remotes::install_github("igraph/rigraph@master", ref = "bfbf53")'
-RUN R -e 'BiocManager::install(c("limma"))'
+# use renv::snapshot() while R dependency updates are quick to build
+COPY ./renv.lock .
+RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
+
 
 RUN apt-get update && apt-get install -y procps
 
