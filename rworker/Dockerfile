@@ -1,5 +1,5 @@
 # Create builder step
-FROM r-base:4.0.5 AS builder
+FROM r-base:4.1.0 AS builder
 WORKDIR /src
 
 # install required debian packages to make R packages work
@@ -27,15 +27,14 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 COPY renv.lock .
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
-# copy R source files and runner
-ADD R ./R
-COPY work.R .
-
-
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
 FROM builder AS prod
+
+# copy R source files and runner
+ADD R ./R
+COPY work.R .
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
@@ -50,5 +49,9 @@ FROM builder AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+
+# copy R source files and runner
+ADD R ./R
+COPY work.R .
 
 CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript work.R

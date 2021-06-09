@@ -58,6 +58,7 @@ runEmbedding <- function(req, data) {
                         min.dist = config$minimumDistance,
                         metric = config$distanceMetric,
                         umap.method = "uwot-learn")
+
         df_embedding <- Embeddings(data, reduction = type)
     }
     # Order embedding by cells id in ascending form

@@ -20,7 +20,7 @@ runExpression <- function(req, data) {
     geneExpression$cells_id <- data@meta.data$cells_id
     geneExpression <- geneExpression[ order(geneExpression$cells_id), ]
     geneExpression <- geneExpression %>%
-        complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>%
+        tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>%
         select(-cells_id)
     # worried about duplicate gene row.names in @data
     symbol_idx <- match(colnames(geneExpression), genesSubset$input)
