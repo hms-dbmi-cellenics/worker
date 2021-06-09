@@ -37,7 +37,6 @@ COPY work.R .
 # ---------------------------------------------------
 FROM builder AS prod
 
-
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
 CMD ["Rscript", "work.R"]
