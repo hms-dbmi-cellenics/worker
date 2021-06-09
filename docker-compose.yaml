@@ -3,12 +3,13 @@ services:
   r:
     container_name: "biomage-worker-r"
     build:
-      context: r/
+      context: rworker/
       target: dev
       args:
         - GITHUB_PAT=${GITHUB_PAT}
     volumes:
-      - ./r:/r:cached
+      - ./rworker:/rworker:cached # for watcher
+      - /rworker/renv/ # distinct renv in host/container
       - ./data:/data:cached
       - ./data/debug:/debug
     expose:

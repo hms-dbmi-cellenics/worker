@@ -1,13 +1,13 @@
 library(dplyr)
 library(tidyr)
 #
-#runEmbedding 
+#runEmbedding
 #Returns a list of x,y coordinates for each cell.
-#req is the request. 
+#req is the request.
 #
 #Req$body has:
-#type = type of embedding, supported umap, pca and tsne.  
-#config = config list. 
+#type = type of embedding, supported umap, pca and tsne.
+#config = config list.
 #
 #Config has=
 #UMAP:
@@ -18,18 +18,19 @@ library(tidyr)
 #perplexity
 #lerarningRate
 #
-runEmbedding <- function(req) {
+#' @export
+runEmbedding <- function(req, data) {
     type <- req$body$type
     config <- req$body$config
-    pca_nPCs <- 30 
+    pca_nPCs <- 30
 
-    # To run embedding, we need to set the reduction. 
+    # To run embedding, we need to set the reduction.
     if("active.reduction" %in% names(data@misc))
         active.reduction <- data@misc[["active.reduction"]]
     else
         active.reduction <- "pca"
 
-    # The slot numPCs is set in dataIntegration with the selectd PCA by the user. 
+    # The slot numPCs is set in dataIntegration with the selectd PCA by the user.
     if("numPCs" %in% names(data@misc))
         pca_nPCs <- data@misc[["numPCs"]]
 
@@ -44,21 +45,21 @@ runEmbedding <- function(req) {
         df_embedding <- Embeddings(data, reduction = type)[,1:2]
     } else if(type=="tsne"){
         data <- RunTSNE(data,
-                        reduction = active.reduction, 
+                        reduction = active.reduction,
                         seed.use = 1,
-                        dims = 1:pca_nPCs, 
-                        perplexity = config$perplexity, 
+                        dims = 1:pca_nPCs,
+                        perplexity = config$perplexity,
                         learning.rate = config$learningRate)
         df_embedding <- Embeddings(data, reduction = type)
     } else if(type=="umap"){
         data <- RunUMAP(data,
                         seed.use = 42,
-                        reduction=active.reduction, 
-                        dims = 1:pca_nPCs, 
-                        verbose = F, 
-                        min.dist = config$minimumDistance, 
+                        reduction=active.reduction,
+                        dims = 1:pca_nPCs,
+                        verbose = F,
+                        min.dist = config$minimumDistance,
                         metric = config$distanceMetric,
-                        umap.method = "uwot-learn")                        
+                        umap.method = "uwot-learn")
         df_embedding <- Embeddings(data, reduction = type)
     }
     # Order embedding by cells id in ascending form
