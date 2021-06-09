@@ -1,31 +1,7 @@
+library(Seurat)
+library(dplyr)
 
-
-
-#' @import Seurat dplyr tidyr
-#' @importFrom magrittr "%>%"
-#' @export
-work <- function() {
-    experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
-    message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
-
-    backend <- RestRserve::BackendRserve$new()
-    fpath <- file.path("/data", experiment_id, "r.rds")
-    data <- load_data(fpath)
-
-    repeat {
-
-        last_modified <- file.info(fpath)$mtime
-        app <- create_app(last_modified, data, fpath)
-        proc <- backend$start(app, http_port = 4000, background = TRUE)
-
-        while(file.info(fpath)$mtime == last_modified) {
-            Sys.sleep(10);
-        }
-
-        proc$kill()
-    }
-}
-
+for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
 load_data <- function(fpath) {
 
@@ -157,14 +133,14 @@ create_app <- function(last_modified, data, fpath) {
         FUN = function(req, res) {
             result <- run_post(req, runExpression, data)
             res$set_body(result)
-    	}
+        }
     )
     app$add_post(
         path = "/v0/listGenes",
         FUN = function(req, res) {
             result <- run_post(req, getList, data)
             res$set_body(result)
-    	}
+        }
     )
     app$add_post(
         path = "/v0/getClusters",
@@ -172,9 +148,30 @@ create_app <- function(last_modified, data, fpath) {
             str(req$body)
             result <- run_post(req, getClusters, data)
             res$set_body(result)
-    	}
+        }
     )
 
     return(app)
 }
+
+experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
+message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+
+backend <- RestRserve::BackendRserve$new()
+fpath <- file.path("/data", experiment_id, "r.rds")
+data <- load_data(fpath)
+
+repeat {
+
+    last_modified <- file.info(fpath)$mtime
+    app <- create_app(last_modified, data, fpath)
+    proc <- backend$start(app, http_port = 4000, background = TRUE)
+
+    while(file.info(fpath)$mtime == last_modified) {
+        Sys.sleep(10);
+    }
+
+    proc$kill()
+}
+
 

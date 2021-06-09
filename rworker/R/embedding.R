@@ -1,6 +1,4 @@
-library(dplyr)
-library(tidyr)
-#
+
 #runEmbedding
 #Returns a list of x,y coordinates for each cell.
 #req is the request.
@@ -66,7 +64,7 @@ runEmbedding <- function(req, data) {
     df_embedding <- as.data.frame(df_embedding)
     df_embedding$cells_id <- data@meta.data$cells_id
     df_embedding <- df_embedding[ order(df_embedding$cells_id), ]
-    df_embedding <- df_embedding %>% complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
+    df_embedding <- df_embedding %>% tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
     res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], function(x, y) { if(is.na(x)) { return(NULL) } else { return(c(x, y)) } } )
     return(res)
 }

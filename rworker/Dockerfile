@@ -15,8 +15,8 @@ ENV GITHUB_PAT $GITHUB_PAT
 RUN mkdir /rworker
 WORKDIR /rworker
 
-RUN R -e "install.packages('devtools', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "devtools::install_github('rstudio/renv@0.13.2')"
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
+    R -e "remotes::install_github('rstudio/renv@0.13.2')"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
@@ -27,15 +27,10 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 COPY renv.lock .
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
-# copy app
+# copy R source files and runner
 ADD R ./R
-ADD man ./man
-COPY NAMESPACE .
-COPY DESCRIPTION .
+COPY work.R .
 
-
-# install once
-RUN R -e "install.packages('devtools'); devtools::document(); install.packages('.')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -45,7 +40,7 @@ FROM builder AS prod
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
-CMD ["R", "-e rworker::work()"]
+CMD ["Rscript", "work.R"]
 
 # ---------------------------------------------------
 # DEVELOPMENT BUILD
@@ -57,5 +52,4 @@ FROM builder AS dev
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
-CMD ["R", "-e library(Seurat)"]
-
+CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript work.R

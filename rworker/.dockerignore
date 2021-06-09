@@ -2,4 +2,4 @@ renv/*
 tests/*
 .Rproj.user/*
 .Rhistory
-r.Rproj
+rworker.Rproj

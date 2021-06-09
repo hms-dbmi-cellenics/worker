@@ -15,7 +15,6 @@
 #
 #' @export
 getList <- function(req, data){
-  print('blah')
   selectFields <- req$body$selectFields
   orderBy <- req$body$orderBy
   orderDirection <- req$body$orderDirection == "DESC"
