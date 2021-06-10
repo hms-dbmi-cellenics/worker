@@ -14,7 +14,7 @@ WORKDIR /rworker
 # need GITHUB_PAT to authenticate github installations
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
-RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_TOKEN')"
+RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
 # install required R packages for the worker.
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
