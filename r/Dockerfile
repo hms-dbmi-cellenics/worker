@@ -1,5 +1,5 @@
 # Create builder step
-FROM r-base:4.1.0 AS builder
+FROM r-base:4.0.5 AS builder
 WORKDIR /src
 
 # install required debian packages to make R packages work
