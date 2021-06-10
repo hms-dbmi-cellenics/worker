@@ -6,7 +6,7 @@ services:
       context: r/
       target: dev
       args:
-        - GITHUB_PAT=${GITHUB_PAT}
+        - GITHUB_PAT=${GITHUB_API_TOKEN}
     volumes:
       - ./r:/src:cached # for watcher
       - /src/renv/ # distinct renv in host/container
