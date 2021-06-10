@@ -6,4 +6,4 @@ storageSize: FILLED_IN_BY_API
 namespace: FILLED_IN_BY_CI
 images:
   python: FILLED_IN_BY_CI
-  rworker: FILLED_IN_BY_CI
+  r: FILLED_IN_BY_CI

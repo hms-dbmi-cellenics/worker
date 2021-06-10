@@ -8,9 +8,6 @@ COPY requirements_debian.txt .
 RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 RUN apt-get update && apt-get install -y procps
 
-RUN mkdir /rworker
-WORKDIR /rworker
-
 # need GITHUB_PAT to authenticate github installations
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT

@@ -6,6 +6,6 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 data:
-  rworker: "{{ .Values.rworker.image }}"
+  r: "{{ .Values.r.image }}"
   python: "{{ .Values.python.image }}"
   ignoreTimeout: "{{ .Values.ignoreTimeout }}"

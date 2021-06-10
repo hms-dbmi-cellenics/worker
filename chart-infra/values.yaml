@@ -1,6 +1,6 @@
 python:
     image: FILLED_IN_BY_CI
-rworker:
+r:
     image: FILLED_IN_BY_CI
 sandboxId: FILLED_IN_BY_CI
 serviceAccount:
