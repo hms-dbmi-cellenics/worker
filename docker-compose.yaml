@@ -8,7 +8,7 @@ services:
       args:
         - GITHUB_PAT=${GITHUB_PAT}
     volumes:
-      - ./r:/rworker:cached # for watcher
+      - ./rworker:/rworker:cached # for watcher
       - /rworker/renv/ # distinct renv in host/container
       - ./data:/data:cached
       - ./data/debug:/debug
