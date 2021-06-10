@@ -3,7 +3,7 @@ services:
   r:
     container_name: "biomage-worker-r"
     build:
-      context: r/
+      context: rworker/
       target: dev
       args:
         - GITHUB_PAT=${GITHUB_PAT}
