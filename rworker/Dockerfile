@@ -8,13 +8,15 @@ COPY requirements_debian.txt .
 RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 RUN apt-get update && apt-get install -y procps
 
-# install required R packages for the worker.
-ARG GITHUB_PAT
-ENV GITHUB_PAT $GITHUB_PAT
-
 RUN mkdir /rworker
 WORKDIR /rworker
 
+# need GITHUB_PAT to authenticate github installations
+ARG GITHUB_PAT
+ENV GITHUB_PAT $GITHUB_PAT
+RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_TOKEN')"
+
+# install required R packages for the worker.
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
     R -e "remotes::install_github('rstudio/renv@0.13.2')"
 

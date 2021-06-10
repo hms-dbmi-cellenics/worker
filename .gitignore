@@ -6,4 +6,3 @@ data/**
 !data/test
 data/test/**
 !data/test/*.gz
-.Rproj.user
