@@ -149,7 +149,7 @@ jobs:
       - name: Download R and Python images
         run: |-
           docker pull $IMAGE_NAME-python-ci
-          docker pull $IMAGE_NAME-r-ci
+          docker pull $IMAGE_NAME-rworker-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
@@ -163,7 +163,7 @@ jobs:
           docker ps -a
           timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
         env:
-          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-rworker-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: test
         name: Run unit tests
@@ -177,9 +177,9 @@ jobs:
         run: |-
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
           docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-python
-          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-r
+          docker tag $IMAGE_NAME-rworker-ci $IMAGE_NAME-rworker
           docker push $IMAGE_NAME-python
-          docker push $IMAGE_NAME-r
+          docker push $IMAGE_NAME-rworker
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
@@ -242,10 +242,10 @@ jobs:
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-staging" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
+          | yq w -d1 - spec.values.r.image "$IMAGE_NAME-rworker" \
           | yq w -d1 - spec.values.python.image "$IMAGE_NAME-python" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/python]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-python" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-r" \
+          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:${IMAGE_TAG/$GITHUB_SHA/*}-rworker" \
           > $DEPLOYMENT_NAME.yaml
           cat $DEPLOYMENT_NAME.yaml
         env:
