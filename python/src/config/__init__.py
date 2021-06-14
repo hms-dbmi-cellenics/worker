@@ -14,9 +14,7 @@ def get_config():
 
     aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
     aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
-    experiment_id = os.getenv(
-        "EXPERIMENT_ID", default="e52b39624588791a7889e39c617f669e"
-    )
+    experiment_id = os.getenv("EXPERIMENT_ID")
 
     # set up cluster env based on gitlab env if one was not specified
     # this is only run if `kube_env` is specified, i.e. when the system

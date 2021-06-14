@@ -12,7 +12,7 @@ source("./expression.r")
 source("./list_genes.r")
 source("./cluster.r")
 
-experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
+experiment_id <- Sys.getenv("EXPERIMENT_ID")
 
 debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
 # over-ride manually to hot-reload
