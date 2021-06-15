@@ -159,10 +159,10 @@ message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
 
 backend <- RestRserve::BackendRserve$new()
 fpath <- file.path("/data", experiment_id, "r.rds")
-data <- load_data(fpath)
 
 repeat {
-
+    # need to load here as can change e.g. integration method
+    data <- load_data(fpath)
     last_modified <- file.info(fpath)$mtime
     app <- create_app(last_modified, data, fpath)
     proc <- backend$start(app, http_port = 4000, background = TRUE)
