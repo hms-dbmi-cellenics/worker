@@ -16,7 +16,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - EXPERIMENT_ID=${EXPERIMENT_ID}
+      - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - DEBUG_STEP=${DEBUG_STEP}
   python:
     container_name: "biomage-worker-python"
@@ -27,5 +27,5 @@ services:
       - ./python:/python:cached
       - ./data:/data:cached
     environment:
-      - EXPERIMENT_ID=${EXPERIMENT_ID}
+      - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - IGNORE_TIMEOUT=true

@@ -132,7 +132,7 @@ class TestDifferentialExpression:
         self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
     ):
         request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e1",
+            "experimentId": "test",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "DifferentialExpression",

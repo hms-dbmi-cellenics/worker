@@ -14,7 +14,7 @@ class TestClusterCells:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "experimentId": "test",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "ClusterCells",
@@ -25,7 +25,7 @@ class TestClusterCells:
             },
         }
         self.alternative_request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "experimentId": "test",
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "ClusterCells",

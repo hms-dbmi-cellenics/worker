@@ -37,7 +37,7 @@ class TestEmbedding:
             }
         }
         """
-        The test file has been created with the multisample dataset, expId: e52b39624588791a7889e39c617f669e
+        The test file has been created with the multisample dataset, expId: test
         """
         self.correctResponse = json.load(open(os.path.join("tests", "emb_result.json")))
 
