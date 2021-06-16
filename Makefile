@@ -39,7 +39,7 @@ run: build ## Runs & builds the docker environment
 	@docker-compose $(docker_files) up
 test: ## Assuming the environment is already running, executes unit tests
 	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
-	@docker exec -it biomage-worker-python bash -c 'CLUSTER_ENV="development" python -m pytest --cov=. --cov-report term-missing'
+	@docker exec -it biomage-worker-python bash -c 'CLUSTER_ENV="development" pytest --cov=. --cov-report term-missing'
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
