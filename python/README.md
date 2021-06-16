@@ -61,7 +61,7 @@ reopen in a container for development.
 While having the workspace running in a container, open a terminal in VS code. Go to `src/` and run:
 
     gunzip -k ../../data/test/python.h5ad
-    CLUSTER_ENV="test" python -m pytest --cov=.
+    CLUSTER_ENV="development" python -m pytest --cov=.
 
 ### Task formatting
 Task definitions are stored in the `api` project as an OpenAPI schema.
