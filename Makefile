@@ -33,15 +33,16 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
-run-only: # Runs the docker environment
+run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
-run: build # Runs & builds the docker environment
+run: build ## Runs & builds the docker environment
 	@docker-compose $(docker_files) up
-logs: # Shows live logs if the workers are running or logs from last running worker if they are not.
+test: ## Assuming the environment is already running, executes unit tests
+	@docker exec -it biomage-worker-python bash -c 'CLUSTER_ENV="test" python -m pytest --cov=.'
+logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
-kill: # Kills the currently running environment
+kill: ## Kills the currently running environment
 	@docker-compose $(docker_files) kill
-.PHONY: bootstrap fmt check build run clean help
 clean: ## Cleans up temporary files
 	@echo "==> Cleaning up ..."
 	@find . -name "*.pyc" -exec rm -f {} \;
@@ -49,3 +50,5 @@ clean: ## Cleans up temporary files
 	@echo ""
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: bootstrap fmt check build run-only run test logs kill clean help
