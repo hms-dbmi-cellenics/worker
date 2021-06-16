@@ -10,6 +10,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Update repos and install security updates
 apt-get update
+apt-mark hold r-base-core r-base-dev
 apt-get -y upgrade
 
 # Install required Debian packages
