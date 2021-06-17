@@ -1,6 +1,5 @@
 import pytest
 import os
-import statistics
 from tasks.doublet_score import GetDoubletScore
 import json
 from config import get_config
@@ -31,19 +30,18 @@ class TestGetDoubletScore:
                 status=200,
             )
 
-
     def test_works_with_request(self):
-        GetDoubletScore()
+        GetDoubletScore(self.correct_request)
 
     @responses.activate
     def test_returns_json(self):
-        res = GetDoubletScore().compute()
+        res = GetDoubletScore(self.correct_request).compute()
         res = res[0].result
         json.loads(res)
 
     @responses.activate
     def test_returns_a_json_object(self):
-        res = GetDoubletScore().compute()
+        res = GetDoubletScore(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, list)

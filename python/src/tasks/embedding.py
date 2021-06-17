@@ -10,9 +10,6 @@ config = get_config()
 
 
 class ComputeEmbedding(Task):
-    def __init__(self, msg):
-        self.task_def = msg["body"]
-
     def _format_result(self, raw):
         # JSONify result.
         raw_result = json.dumps(raw)

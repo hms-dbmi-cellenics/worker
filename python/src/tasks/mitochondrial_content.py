@@ -10,9 +10,6 @@ config = get_config()
 
 
 class GetMitochondrialContent(Task):
-    def __init__(self):
-        pass
-    
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)

@@ -11,9 +11,6 @@ config = get_config()
 
 
 class GeneExpression(Task):
-    def __init__(self, msg):
-        self.task_def = msg["body"]
-
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)

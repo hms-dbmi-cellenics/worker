@@ -17,7 +17,6 @@ config = get_config()
 class DifferentialExpression(Task):
     def __init__(self, msg):
         super().__init__(msg)
-        self.task_def = msg["body"]
         self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):

@@ -14,7 +14,6 @@ config = get_config()
 class ClusterCells(Task):
     def __init__(self, msg):
         super().__init__(msg)
-        self.task_def = msg["body"]
         self.colors = COLOR_POOL.copy()
 
     def _format_result(self, raw):

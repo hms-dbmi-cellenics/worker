@@ -11,9 +11,6 @@ config = get_config()
 
 
 class ListGenes(Task):
-    def __init__(self, msg):
-        self.task_def = msg["body"]
-
     def _format_result(self, result, total):
         # convert result to list of row dicts
         result = result.to_dict(orient="records")
