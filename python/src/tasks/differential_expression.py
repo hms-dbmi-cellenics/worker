@@ -9,12 +9,14 @@ from aws_xray_sdk.core import xray_recorder
 from helpers.s3 import get_cell_sets
 from helpers.find_cells_by_set_id import find_cells_by_set_id
 from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
+from tasks import Task
 
 config = get_config()
 
 
-class DifferentialExpression:
+class DifferentialExpression(Task):
     def __init__(self, msg):
+        super().__init__(msg)
         self.task_def = msg["body"]
         self.experiment_id = config.EXPERIMENT_ID
 

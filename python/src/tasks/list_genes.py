@@ -3,13 +3,14 @@ import pandas as pd
 from result import Result
 import requests
 from config import get_config
+from tasks import Task
 import json
 from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
 
-class ListGenes:
+class ListGenes(Task):
     def __init__(self, msg):
         self.task_def = msg["body"]
 

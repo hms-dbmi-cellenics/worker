@@ -5,18 +5,23 @@ import backoff
 from result import Result
 from helpers.color_pool import COLOR_POOL
 from config import get_config
+from tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
 
-class ClusterCells:
+class ClusterCells(Task):
     def __init__(self, msg):
+        super().__init__(msg)
         self.task_def = msg["body"]
         self.colors = COLOR_POOL.copy()
 
-    def _format_result(self, raw, cell_set_key, cell_set_name):
+    def _format_result(self, raw):
         # construct new cell set group
+        cell_set_key = self.task_def["cellSetKey"]
+        cell_set_name = self.task_def["cellSetName"]
+
         cell_set = {
             "key": cell_set_key,
             "name": cell_set_name,
@@ -65,6 +70,4 @@ class ClusterCells:
         resR = pd.DataFrame(resR)
         resR.set_index("_row", inplace=True)
         resR["cluster"] = pd.Categorical(resR.cluster)
-        return self._format_result(
-            resR, self.task_def["cellSetKey"], self.task_def["cellSetName"]
-        )
+        return self._format_result(resR)

@@ -4,12 +4,13 @@ import numpy as np
 import backoff
 from config import get_config
 from result import Result
+from tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
 config = get_config()
 
 
-class GeneExpression:
+class GeneExpression(Task):
     def __init__(self, msg):
         self.task_def = msg["body"]
 
