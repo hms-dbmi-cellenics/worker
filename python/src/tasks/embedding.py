@@ -9,7 +9,7 @@ from aws_xray_sdk.core import xray_recorder
 config = get_config()
 
 
-class ComputeEmbedding(Task):
+class GetEmbedding(Task):
     def _format_result(self, raw):
         # JSONify result.
         raw_result = json.dumps(raw)
