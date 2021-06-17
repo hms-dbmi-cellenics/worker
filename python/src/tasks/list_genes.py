@@ -33,11 +33,11 @@ class ListGenes(Task):
         # The symbols ^ and $ can't be removed because they are the way the UI indicates the type of search the user is performing.
         #
         if "geneNamesFilter" in request:
-            geneFilter = request["geneNamesFilter"]
-            regexChars = "{}|()?¿*+|\/.<>"
-            for char in regexChars:
-                geneFilter = geneFilter.replace(char, "")
-            request["geneNamesFilter"] = geneFilter
+            gene_filter = request["geneNamesFilter"]
+            regex_chars = "{}|()?¿*+|/.<>"
+            for char in regex_chars:
+                gene_filter = gene_filter.replace(char, "")
+            request["geneNamesFilter"] = gene_filter
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/listGenes",
             headers={"content-type": "application/json"},
