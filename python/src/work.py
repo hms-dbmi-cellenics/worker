@@ -1,5 +1,5 @@
 import datetime
-from tasks.tasks import TaskFactory
+from tasks.factory import TaskFactory
 from consume_message import consume
 from response import Response
 from config import get_config
