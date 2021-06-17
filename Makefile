@@ -25,7 +25,7 @@ fmt: ## Formats python files
 	@echo ""
 check: ## Checks code for linting/construct errors
 	@echo "==> Checking if files are well formatted..."
-	flake8 $(PYTHON_FILES)
+	@flake8 $(PYTHON_FILES)
 	@echo "    [✓]\n"
 build: ## Builds the docker-compose environment
 	@read -r -p "Building the worker image takes a long time, do you want to proceed? (y/n) " CONTINUE; \
@@ -37,9 +37,12 @@ run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
 run: build ## Runs & builds the docker environment
 	@docker-compose $(docker_files) up
-test: ## Assuming the environment is already running, executes unit tests
+test: ## Executes unit tests
 	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
-	@docker exec -it biomage-worker-python bash -c 'CLUSTER_ENV="development" pytest --cov=. --cov-report term-missing'
+	@docker top biomage-worker-python > /dev/null 2>&1 || \
+	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
+	@docker exec -it biomage-worker-python bash -c \
+	"CLUSTER_ENV='development' pytest --cov=. --cov-report term-missing"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
