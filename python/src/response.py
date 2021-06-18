@@ -1,7 +1,7 @@
 import boto3
 import json
-import datetime
 from functools import reduce
+from logging import info
 from config import get_config
 import uuid
 from aws_xray_sdk.core import xray_recorder
@@ -84,7 +84,7 @@ class Response:
             MessageStructure="json",
         )
 
-        print(datetime.datetime.utcnow(), "Message successfully sent to sns", r)
+        info(f"Message successfully sent to sns {r}")
 
         return msg_to_send
 

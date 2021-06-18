@@ -1,5 +1,6 @@
 import traceback
 import json
+from logging import error
 
 from .doublet_score import GetDoubletScore
 from .mitochondrial_content import GetMitochondrialContent
@@ -41,7 +42,7 @@ class TaskFactory:
             return result
         except Exception as e:
             trace = traceback.format_exc()
-            print(trace)
+            error(trace)
 
             xray_recorder.current_segment().add_exception(e, trace)
 
