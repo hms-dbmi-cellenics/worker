@@ -2,7 +2,7 @@ import traceback
 import boto3
 from botocore.exceptions import ClientError
 import json
-from config import get_config
+from config import config
 import datetime
 import dateutil
 from logging import info
@@ -10,8 +10,6 @@ import pytz
 from aws_xray_sdk.core.models.trace_header import TraceHeader
 from aws_xray_sdk.core import xray_recorder
 import aws_xray_sdk as xray
-
-config = get_config()
 
 
 def _read_sqs_message():

@@ -4,11 +4,11 @@ import boto3
 import botocore.session
 from botocore.stub import Stubber
 import pytest
-from config import get_config
+from config import config
 import json
 import mock
 
-config = get_config()
+
 
 
 class TestResponse:

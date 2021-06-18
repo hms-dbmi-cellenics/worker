@@ -4,11 +4,9 @@ import requests
 import backoff
 from result import Result
 from helpers.color_pool import COLOR_POOL
-from config import get_config
+from config import config
 from tasks import Task
 from aws_xray_sdk.core import xray_recorder
-
-config = get_config()
 
 
 class ClusterCells(Task):

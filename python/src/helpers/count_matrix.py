@@ -3,16 +3,14 @@ import datetime
 import os
 from datetime import timezone
 from logging import error, info
-from config import get_config
+from config import config
 import aws_xray_sdk as xray
 from aws_xray_sdk.core import xray_recorder
-
-config = get_config()
 
 
 class CountMatrix:
     def __init__(self):
-        self.config = get_config()
+        self.config = config
         self.local_path = os.path.join(
             self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
@@ -34,7 +32,7 @@ class CountMatrix:
 
     @xray_recorder.capture("CountMatrix.download_object")
     def download_object(self, key, last_modified):
-        path = os.path.join(config.LOCAL_DIR, key)
+        path = os.path.join(self.config.LOCAL_DIR, key)
 
         try:
             last_mod_local = datetime.datetime.fromtimestamp(

@@ -1,12 +1,8 @@
 import pytest
 import os
-import statistics
 from tasks.gene_expression import GeneExpression
 import json
 import numpy as np
-from config import get_config
-
-config = get_config()
 
 
 class TestGeneExpression:

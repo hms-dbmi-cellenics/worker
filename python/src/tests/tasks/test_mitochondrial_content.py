@@ -2,10 +2,8 @@ import pytest
 import os
 from tasks.mitochondrial_content import GetMitochondrialContent
 import json
-from config import get_config
+from config import config
 import responses
-
-config = get_config()
 
 
 class TestGetMitochondrialContent:

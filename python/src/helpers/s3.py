@@ -4,11 +4,11 @@ from logging import info
 from pathlib import Path
 
 import boto3
-from config import get_config
+from config import config
 
 import aws_xray_sdk as xray
 
-config = get_config()
+
 
 
 def get_cell_sets(experiment_id):

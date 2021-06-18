@@ -2,9 +2,6 @@ import pytest
 import os
 import json
 from tasks.list_genes import ListGenes
-from config import get_config
-
-config = get_config()
 
 
 class TestListGenes:

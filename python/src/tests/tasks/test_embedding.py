@@ -1,10 +1,7 @@
 import pytest
 import os
 from tasks.embedding import GetEmbedding
-from config import get_config
 import json
-
-config = get_config()
 
 
 class TestEmbedding:

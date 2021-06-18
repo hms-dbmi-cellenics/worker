@@ -1,10 +1,7 @@
 import pytest
 from tasks.factory import TaskFactory
 from result import Result
-from config import get_config
 from mock import Mock, patch
-
-config = get_config()
 
 
 class TestTaskFactory:

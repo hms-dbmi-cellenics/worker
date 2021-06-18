@@ -13,10 +13,8 @@ from result import Result
 from tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
-from config import get_config
+from config import config
 from helpers.count_matrix import CountMatrix
-
-config = get_config()
 
 
 class TaskFactory:

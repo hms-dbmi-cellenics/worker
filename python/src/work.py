@@ -3,7 +3,7 @@ from logging import basicConfig, info, INFO
 from tasks.factory import TaskFactory
 from consume_message import consume
 from response import Response
-from config import get_config
+from config import config
 from aws_xray_sdk.core import xray_recorder
 import aws_xray_sdk as xray
 
@@ -16,7 +16,6 @@ def main():
     # with segment warnings before any message is sent    
     xray.global_sdk_config.set_sdk_enabled(False)
 
-    config = get_config()
     last_activity = datetime.datetime.utcnow()
     task_factory = TaskFactory()
     info("Now listening, waiting for work to do...")

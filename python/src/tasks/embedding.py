@@ -1,12 +1,10 @@
 import json
 import requests
 import backoff
-from config import get_config
+from config import config
 from result import Result
 from tasks import Task
 from aws_xray_sdk.core import xray_recorder
-
-config = get_config()
 
 
 class GetEmbedding(Task):

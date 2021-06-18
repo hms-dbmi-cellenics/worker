@@ -1,5 +1,5 @@
 import json
-from config import get_config
+from config import config
 from result import Result
 import pandas
 import requests
@@ -10,8 +10,6 @@ from helpers.s3 import get_cell_sets
 from helpers.find_cells_by_set_id import find_cells_by_set_id
 from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
 from tasks import Task
-
-config = get_config()
 
 
 class DifferentialExpression(Task):
