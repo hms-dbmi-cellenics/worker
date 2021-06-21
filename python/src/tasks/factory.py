@@ -64,6 +64,6 @@ class TaskFactory:
         task_name = task_def.get("name")
 
         try:
-            return self.tasks[task_name]
+            return self.tasks[task_name](msg)
         except KeyError as e:
             raise ValueError(f"Task class with name {task_name} was not found") from e
