@@ -12,7 +12,13 @@
 runExpression <- function(req, data) {
     #Get the annotation matrix with the geneid to name translation, and the subset with the correct names.
     df <- data@misc$gene_annotations
-    genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
+    ignore.case <- TRUE
+    if (ignore.case){
+        genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
+    }else{
+        genesSubset <- subset(df, df$name %in% req$body$genes)
+    }
+    
     #
     #Get the expression values for those genes in the corresponding matrix.
     geneExpression <-data@assays$RNA@data[unique(genesSubset$input),,drop=FALSE]
