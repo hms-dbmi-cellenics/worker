@@ -14,6 +14,7 @@
 #' @export
 #'
 getClusters <- function(req, data){
+  print('testing cache')
   resol <- req$body$config$resolution
   type <- req$body$type
   algo <- list("louvain"=1,"leiden"=4)[[type]]
