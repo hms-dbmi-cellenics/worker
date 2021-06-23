@@ -34,7 +34,7 @@ class ClusterCells:
                     "rootNode": False,
                     "type": "cellSets",
                     "color": self.colors.pop(0),
-                    "cellIds": [int(id_) for id_ in view.tolist()],
+                    "cellIds": list(view.map(int)),
                 }
             )
         return [Result(json.dumps(cell_set), cacheable=False)]
