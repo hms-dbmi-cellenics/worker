@@ -1,13 +1,13 @@
+import json
+
+import botocore.session
+import mock
+import pytest
+from botocore.stub import Stubber
+
+from worker.config import config
 from worker.response import Response
 from worker.result import Result
-import botocore.session
-from botocore.stub import Stubber
-import pytest
-from worker.config import config
-import json
-import mock
-
-
 
 
 class TestResponse:

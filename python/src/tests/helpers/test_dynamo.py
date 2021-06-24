@@ -1,8 +1,8 @@
-from botocore.stub import Stubber, ANY
 import boto3
 import mock
-from worker.config import config
+from botocore.stub import ANY, Stubber
 
+from worker.config import config
 from worker.helpers.dynamo import get_item_from_dynamo
 
 

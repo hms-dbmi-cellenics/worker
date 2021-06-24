@@ -1,9 +1,11 @@
-import pytest
-import os
-from worker.tasks.mitochondrial_content import GetMitochondrialContent
 import json
-from config import config
+import os
+
+import pytest
 import responses
+from config import config
+
+from worker.tasks.mitochondrial_content import GetMitochondrialContent
 
 
 class TestGetMitochondrialContent:

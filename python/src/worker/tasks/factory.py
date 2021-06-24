@@ -1,20 +1,20 @@
-import traceback
 import json
+import traceback
 from logging import error
 
-from .doublet_score import GetDoubletScore
-from .mitochondrial_content import GetMitochondrialContent
-from .embedding import GetEmbedding
-from .list_genes import ListGenes
-from .differential_expression import DifferentialExpression
-from .gene_expression import GeneExpression
-from .cluster_cells import ClusterCells
-from ..result import Result
-from ..tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..helpers.count_matrix import CountMatrix
+from ..result import Result
+from ..tasks import Task
+from .cluster_cells import ClusterCells
+from .differential_expression import DifferentialExpression
+from .doublet_score import GetDoubletScore
+from .embedding import GetEmbedding
+from .gene_expression import GeneExpression
+from .list_genes import ListGenes
+from .mitochondrial_content import GetMitochondrialContent
 
 
 class TaskFactory:

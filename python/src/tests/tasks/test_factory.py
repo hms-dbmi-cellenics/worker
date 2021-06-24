@@ -1,7 +1,8 @@
 import pytest
-from worker.tasks.factory import TaskFactory
-from worker.result import Result
 from mock import Mock, patch
+
+from worker.result import Result
+from worker.tasks.factory import TaskFactory
 
 
 class TestTaskFactory:

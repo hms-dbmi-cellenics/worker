@@ -1,13 +1,15 @@
-import pandas as pd
 import json
-import requests
+
 import backoff
-from ..result import Result
-from ..helpers.color_pool import COLOR_POOL
-from ..config import config
-from ..tasks import Task
+import pandas as pd
+import requests
 from aws_xray_sdk.core import xray_recorder
 from natsort import natsorted
+
+from ..config import config
+from ..helpers.color_pool import COLOR_POOL
+from ..result import Result
+from ..tasks import Task
 
 
 class ClusterCells(Task):

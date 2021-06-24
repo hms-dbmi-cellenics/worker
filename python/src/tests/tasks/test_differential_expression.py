@@ -1,10 +1,12 @@
-import pytest
-from worker.tasks.differential_expression import DifferentialExpression
 import json
+from operator import itemgetter
+
 import mock
+import pytest
 import responses
 from config import config
-from operator import itemgetter
+
+from worker.tasks.differential_expression import DifferentialExpression
 
 cell_set_responses = {
     "one_set": [

@@ -1,7 +1,9 @@
-import pytest
-import os
-from worker.tasks.embedding import GetEmbedding
 import json
+import os
+
+import pytest
+
+from worker.tasks.embedding import GetEmbedding
 
 
 class TestEmbedding:

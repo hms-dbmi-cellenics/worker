@@ -1,8 +1,10 @@
-import pytest
-import os
-from worker.tasks.gene_expression import GeneExpression
 import json
+import os
+
 import numpy as np
+import pytest
+
+from worker.tasks.gene_expression import GeneExpression
 
 
 class TestGeneExpression:

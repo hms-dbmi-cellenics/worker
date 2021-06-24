@@ -1,11 +1,13 @@
-import boto3
 import json
+import uuid
 from functools import reduce
 from logging import info
-from .config import config
-import uuid
-from aws_xray_sdk.core import xray_recorder
+
 import aws_xray_sdk as xray
+import boto3
+from aws_xray_sdk.core import xray_recorder
+
+from .config import config
 
 
 class Response:

@@ -1,14 +1,12 @@
-import os
 import json
+import os
 from logging import info
 from pathlib import Path
 
-import boto3
-from ..config import config
-
 import aws_xray_sdk as xray
+import boto3
 
-
+from ..config import config
 
 
 def get_cell_sets(experiment_id):

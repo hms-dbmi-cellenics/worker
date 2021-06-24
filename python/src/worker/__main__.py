@@ -1,11 +1,13 @@
 import datetime
-from logging import basicConfig, info, INFO
-from .tasks.factory import TaskFactory
+from logging import INFO, basicConfig, info
+
+import aws_xray_sdk as xray
+from aws_xray_sdk.core import xray_recorder
+
+from .config import config
 from .consume_message import consume
 from .response import Response
-from .config import config
-from aws_xray_sdk.core import xray_recorder
-import aws_xray_sdk as xray
+from .tasks.factory import TaskFactory
 
 # configure logging
 basicConfig(format='%(asctime)s %(message)s', level=INFO)
@@ -43,5 +45,4 @@ def main():
     info("Timeout exceeded, shutting down...")
 
 
-if __name__ == "__main__":
-    main()
+main()

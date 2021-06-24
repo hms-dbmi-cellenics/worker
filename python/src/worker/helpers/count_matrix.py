@@ -1,11 +1,13 @@
-import boto3
 import datetime
 import os
 from datetime import timezone
 from logging import error, info
-from ..config import config
+
 import aws_xray_sdk as xray
+import boto3
 from aws_xray_sdk.core import xray_recorder
+
+from ..config import config
 
 
 class CountMatrix:

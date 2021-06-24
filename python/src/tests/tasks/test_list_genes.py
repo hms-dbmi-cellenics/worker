@@ -1,6 +1,8 @@
-import pytest
-import os
 import json
+import os
+
+import pytest
+
 from worker.tasks.list_genes import ListGenes
 
 

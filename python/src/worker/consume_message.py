@@ -1,15 +1,17 @@
-import traceback
-import boto3
-from botocore.exceptions import ClientError
-import json
-from .config import config
 import datetime
-import dateutil
+import json
+import traceback
 from logging import info
-import pytz
-from aws_xray_sdk.core.models.trace_header import TraceHeader
-from aws_xray_sdk.core import xray_recorder
+
 import aws_xray_sdk as xray
+import boto3
+import dateutil
+import pytz
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core.models.trace_header import TraceHeader
+from botocore.exceptions import ClientError
+
+from .config import config
 
 
 def _read_sqs_message():

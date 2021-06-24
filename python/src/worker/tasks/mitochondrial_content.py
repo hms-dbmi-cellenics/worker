@@ -1,10 +1,12 @@
 import json
+
 import backoff
+import requests
+from aws_xray_sdk.core import xray_recorder
+
 from ..config import config
 from ..result import Result
 from ..tasks import Task
-import requests
-from aws_xray_sdk.core import xray_recorder
 
 
 class GetMitochondrialContent(Task):

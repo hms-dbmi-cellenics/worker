@@ -1,7 +1,7 @@
 import os
 import types
-from aws_xray_sdk import core, global_sdk_config
 
+from aws_xray_sdk import core, global_sdk_config
 
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")

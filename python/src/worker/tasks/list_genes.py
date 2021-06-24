@@ -1,11 +1,13 @@
+import json
+
 import backoff
 import pandas as pd
-from ..result import Result
 import requests
-from ..config import config
-from ..tasks import Task
-import json
 from aws_xray_sdk.core import xray_recorder
+
+from ..config import config
+from ..result import Result
+from ..tasks import Task
 
 
 class ListGenes(Task):

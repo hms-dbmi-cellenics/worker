@@ -1,6 +1,8 @@
-from worker.result import Result
-import pytest
 import json
+
+import pytest
+
+from worker.result import Result
 
 
 class TestResult:

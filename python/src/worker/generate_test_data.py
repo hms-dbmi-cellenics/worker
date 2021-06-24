@@ -1,8 +1,9 @@
 # This script generates test data for working on data sets without the backend.
 
+import json
+
 import anndata
 import scanpy as sc
-import json
 
 adata = anndata.read("./basic-filtered.h5ad")
 
