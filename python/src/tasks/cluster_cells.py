@@ -6,6 +6,7 @@ from result import Result
 from helpers.color_pool import COLOR_POOL
 from config import get_config
 from aws_xray_sdk.core import xray_recorder
+from natsort import natsorted
 
 config = get_config()
 
@@ -24,7 +25,7 @@ class ClusterCells:
             "type": "cellSets",
             "children": [],
         }
-        for cluster in raw["cluster"].cat.categories:
+        for cluster in natsorted(raw["cluster"].cat.categories):
             view = raw[raw.cluster == cluster]["cell_ids"]
             cell_set["children"].append(
                 {
@@ -33,7 +34,7 @@ class ClusterCells:
                     "rootNode": False,
                     "type": "cellSets",
                     "color": self.colors.pop(0),
-                    "cellIds": [int(id) for id in view.tolist()],
+                    "cellIds": list(view.map(int)),
                 }
             )
         return [Result(json.dumps(cell_set), cacheable=False)]
@@ -57,11 +58,10 @@ class ClusterCells:
         # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
         r.raise_for_status()
         resR = r.json()
-        #
-        # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape expected by the UI
-        # Doing this allowed me to use the format function as is.
-        # It shouldn't be too taxing, at most O(n of cells), which is well within our time complexity because the taxing part will be clustering.
-        #
+
+        # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
+        # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,
+        # at most O(n of cells), which is well within our time complexity because the taxing part will be clustering.
         resR = pd.DataFrame(resR)
         resR.set_index("_row", inplace=True)
         resR["cluster"] = pd.Categorical(resR.cluster)
