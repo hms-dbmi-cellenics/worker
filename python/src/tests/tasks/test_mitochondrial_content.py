@@ -1,12 +1,9 @@
 import pytest
 import os
-import statistics
 from tasks.mitochondrial_content import GetMitochondrialContent
 import json
-from config import get_config
+from config import config
 import responses
-
-config = get_config()
 
 
 class TestGetMitochondrialContent:
@@ -32,17 +29,17 @@ class TestGetMitochondrialContent:
             )
 
     def test_works_with_request(self):
-        GetMitochondrialContent()
+        GetMitochondrialContent(self.correct_request)
 
     @responses.activate
     def test_returns_json(self):
-        res = GetMitochondrialContent().compute()
+        res = GetMitochondrialContent(self.correct_request).compute()
         res = res[0].result
         json.loads(res)
 
     @responses.activate
     def test_returns_a_json_object(self):
-        res = GetMitochondrialContent().compute()
+        res = GetMitochondrialContent(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, list)

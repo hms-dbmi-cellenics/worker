@@ -2,17 +2,13 @@ import json
 import requests
 import numpy as np
 import backoff
-from config import get_config
+from config import config
 from result import Result
+from tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
-config = get_config()
 
-
-class GeneExpression:
-    def __init__(self, msg):
-        self.task_def = msg["body"]
-
+class GeneExpression(Task):
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)

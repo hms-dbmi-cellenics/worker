@@ -2,17 +2,13 @@ import backoff
 import pandas as pd
 from result import Result
 import requests
-from config import get_config
+from config import config
+from tasks import Task
 import json
 from aws_xray_sdk.core import xray_recorder
 
-config = get_config()
 
-
-class ListGenes:
-    def __init__(self, msg):
-        self.task_def = msg["body"]
-
+class ListGenes(Task):
     def _format_result(self, result, total):
         # convert result to list of row dicts
         result = result.to_dict(orient="records")
@@ -35,11 +31,11 @@ class ListGenes:
         # The symbols ^ and $ can't be removed because they are the way the UI indicates the type of search the user is performing.
         #
         if "geneNamesFilter" in request:
-            geneFilter = request["geneNamesFilter"]
-            regexChars = "{}|()?¿*+|\/.<>"
-            for char in regexChars:
-                geneFilter = geneFilter.replace(char, "")
-            request["geneNamesFilter"] = geneFilter
+            gene_filter = request["geneNamesFilter"]
+            regex_chars = "{}|()?¿*+|/.<>"
+            for char in regex_chars:
+                gene_filter = gene_filter.replace(char, "")
+            request["geneNamesFilter"] = gene_filter
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/listGenes",
             headers={"content-type": "application/json"},

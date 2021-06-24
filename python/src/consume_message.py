@@ -2,15 +2,14 @@ import traceback
 import boto3
 from botocore.exceptions import ClientError
 import json
-from config import get_config
+from config import config
 import datetime
 import dateutil
+from logging import info
 import pytz
 from aws_xray_sdk.core.models.trace_header import TraceHeader
 from aws_xray_sdk.core import xray_recorder
 import aws_xray_sdk as xray
-
-config = get_config()
 
 
 def _read_sqs_message():
@@ -43,8 +42,7 @@ def _read_sqs_message():
     # Try to parse it as JSON
     try:
         message = message[0]
-        print(datetime.datetime.utcnow(), message.body)
-
+        info(message.body)
 
         trace_header = message.attributes and message.attributes.get("AWSTraceHeader", None)
 
@@ -63,11 +61,11 @@ def _read_sqs_message():
             )
     
         body = json.loads(message.body)
-        print(datetime.datetime.utcnow(), "Consumed a message from SQS.")
+        info("Consumed a message from SQS.")
     except Exception as e:
         xray_recorder.current_segment().add_exception(e, traceback.format_exc())
 
-        print(datetime.datetime.utcnow(), "Exception when loading json: ", e)
+        info("Exception when loading json: ", e)
         return None
     finally:
         message.delete()
@@ -85,16 +83,10 @@ def consume():
     timeout = dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
 
     if timeout <= datetime.datetime.utcnow():
-        print(
-            datetime.datetime.utcnow(),
-            "Skipping processing task with uuid",
-            mssg_body["uuid"],
-            "as its timeout of",
-            timeout,
-            "has expired...",
-        )
+        info(f"Skipping processing task with uuid {mssg_body['uuid']}"
+             f"{mssg_body['uuid']} as its timeout of {timeout} has expired...")
 
         return None
 
-    print(datetime.datetime.utcnow(), mssg_body)
+    info(mssg_body)
     return mssg_body

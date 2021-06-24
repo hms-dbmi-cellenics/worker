@@ -1,17 +1,13 @@
 import json
 import requests
 import backoff
-from config import get_config
+from config import config
 from result import Result
+from tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
-config = get_config()
 
-
-class ComputeEmbedding:
-    def __init__(self, msg):
-        self.task_def = msg["body"]
-
+class GetEmbedding(Task):
     def _format_result(self, raw):
         # JSONify result.
         raw_result = json.dumps(raw)

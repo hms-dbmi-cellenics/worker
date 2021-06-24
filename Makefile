@@ -35,8 +35,7 @@ build: ## Builds the docker-compose environment
 	@echo "    [✓]\n"
 run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
-run: build ## Runs & builds the docker environment
-	@docker-compose $(docker_files) up
+run: build run-only ## Runs & builds the docker environment
 test: ## Executes unit tests
 	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
 	@docker top biomage-worker-python > /dev/null 2>&1 || \

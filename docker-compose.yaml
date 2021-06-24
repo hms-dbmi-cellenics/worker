@@ -30,3 +30,4 @@ services:
     environment:
       - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - IGNORE_TIMEOUT=true
+      - PYTHONUNBUFFERED=1

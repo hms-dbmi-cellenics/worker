@@ -1,13 +1,10 @@
 import pytest
-import os
 from tasks.differential_expression import DifferentialExpression
 import json
 import mock
 import responses
-from config import get_config
+from config import config
 from operator import itemgetter
-
-config = get_config()
 
 cell_set_responses = {
     "one_set": [

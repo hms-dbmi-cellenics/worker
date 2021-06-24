@@ -1,18 +1,13 @@
 import json
-from config import get_config
+from config import config
+from tasks import Task
 from result import Result
-import numpy as np
 import requests
 import backoff
 from aws_xray_sdk.core import xray_recorder
 
-config = get_config()
 
-
-class GetDoubletScore:
-    def __init__(self):
-        pass
-    
+class GetDoubletScore(Task):
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)

@@ -1,8 +1,8 @@
 import boto3
 
-from config import get_config
+from config import config
 
-config = get_config()
+
 
 
 def get_item_from_dynamo(experiment_id, item_name):

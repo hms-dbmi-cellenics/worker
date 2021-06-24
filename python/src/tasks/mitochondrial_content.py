@@ -1,18 +1,13 @@
 import json
 import backoff
-from config import get_config
+from config import config
 from result import Result
-import numpy as np
+from tasks import Task
 import requests
 from aws_xray_sdk.core import xray_recorder
 
-config = get_config()
 
-
-class GetMitochondrialContent:
-    def __init__(self):
-        pass
-    
+class GetMitochondrialContent(Task):
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)
@@ -37,4 +32,3 @@ class GetMitochondrialContent:
         # The result contains a list with the MT-content values
         result = r.json()
         return self._format_result(result)
-

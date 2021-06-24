@@ -3,11 +3,6 @@ import os
 import json
 
 from tasks.cluster_cells import ClusterCells
-from config import get_config
-
-config = get_config()
-
-# CLUSTER_ENV="test" python -m pytest --cov=. src/tests/tasks/test_cluster_cells.py
 
 
 class TestClusterCells:

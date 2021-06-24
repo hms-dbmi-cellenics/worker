@@ -1,10 +1,10 @@
 import boto3
 from botocore.stub import Stubber, ANY
 import mock
-from config import get_config
+from config import config
 from consume_message import _read_sqs_message, consume
 
-config = get_config()
+
 
 
 class TestConsumeMessage:

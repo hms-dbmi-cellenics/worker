@@ -1,18 +1,16 @@
 import boto3
 import datetime
 import os
-import hashlib
 from datetime import timezone
-from config import get_config
+from logging import error, info
+from config import config
 import aws_xray_sdk as xray
 from aws_xray_sdk.core import xray_recorder
-
-config = get_config()
 
 
 class CountMatrix:
     def __init__(self):
-        self.config = get_config()
+        self.config = config
         self.local_path = os.path.join(
             self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
@@ -34,9 +32,7 @@ class CountMatrix:
 
     @xray_recorder.capture("CountMatrix.download_object")
     def download_object(self, key, last_modified):
-        path = os.path.join(config.LOCAL_DIR, key)
-
-        last_mod_local = None
+        path = os.path.join(self.config.LOCAL_DIR, key)
 
         try:
             last_mod_local = datetime.datetime.fromtimestamp(
@@ -45,37 +41,22 @@ class CountMatrix:
         except FileNotFoundError:
             last_mod_local = None
         except Exception as e:
-            print(e)
+            error(e)
             last_mod_local = None
 
         if self.last_fetch and last_modified < self.last_fetch:
-            print(
-                datetime.datetime.utcnow(),
-                "Did not fetch as last modified (remote) of",
-                last_modified,
-                "was before last fetch time of",
-                self.last_fetch,
-            )
+            info(f"Did not fetch as last modified (remote) of {last_modified}"
+                 f" was before last fetch time of {self.last_fetch}")
 
             return False
         elif last_mod_local and last_modified < last_mod_local:
-            print(
-                datetime.datetime.utcnow(),
-                "Did not fetch as last modified (remote) of",
-                last_modified,
-                "was before last modified (local) of",
-                last_mod_local,
-            )
+            info(f"Did not fetch as last modified (remote) of {last_modified}"
+                 f" was before last modified (local) of {last_mod_local}")
 
             return False
         else:
-            print(
-                datetime.datetime.utcnow(),
-                "Fetching as last modified date of",
-                last_modified,
-                "is more recent than",
-                self.last_fetch or "Never",
-            )
+            info(f"Fetching as last modified date of {last_modified}"
+                 f" is more recent than {self.last_fetch or 'Never'}")
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
@@ -108,22 +89,12 @@ class CountMatrix:
         self.path_exists = os.path.exists(self.local_path)
 
         if not self.path_exists:
-            print(
-                datetime.datetime.utcnow(),
-                "Path",
-                self.local_path,
-                "does not yet exist, creating it...",
-            )
+            info(f"Path {self.local_path} does not yet exist, creating it...")
             os.makedirs(self.local_path)
 
         objects = self.get_objects()
 
-        print(
-            datetime.datetime.utcnow(),
-            "Found",
-            len(objects),
-            "objects matching experiment.",
-        )
+        info(f"Found {len(objects)} objects matching experiment.")
 
         synced = {
             key: self.download_object(key, last_modified)
