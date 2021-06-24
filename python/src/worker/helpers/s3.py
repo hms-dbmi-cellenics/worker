@@ -4,7 +4,7 @@ from logging import info
 from pathlib import Path
 
 import boto3
-from config import config
+from ..config import config
 
 import aws_xray_sdk as xray
 

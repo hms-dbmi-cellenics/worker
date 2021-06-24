@@ -2,7 +2,7 @@ import traceback
 import boto3
 from botocore.exceptions import ClientError
 import json
-from config import config
+from .config import config
 import datetime
 import dateutil
 from logging import info

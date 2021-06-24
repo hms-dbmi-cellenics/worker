@@ -1,10 +1,8 @@
 import boto3
 from botocore.stub import Stubber, ANY
 import mock
-from config import config
-from consume_message import _read_sqs_message, consume
-
-
+from worker.config import config
+from worker.consume_message import _read_sqs_message, consume
 
 
 class TestConsumeMessage:
@@ -112,11 +110,11 @@ class TestConsumeMessage:
             "uuid": "random-uuid",
         }
 
-        with mock.patch("consume_message._read_sqs_message") as m:
+        with mock.patch("worker.consume_message._read_sqs_message") as m:
             m.return_value = request
             result = consume()
 
-            assert result == (None)
+            assert result is None
 
     def test_consume_request_with_non_expired_timeout_successfully(self):
         request = {
@@ -125,7 +123,7 @@ class TestConsumeMessage:
             "uuid": "random-uuid",
         }
 
-        with mock.patch("consume_message._read_sqs_message") as m:
+        with mock.patch("worker.consume_message._read_sqs_message") as m:
             m.return_value = request
             result = consume()
 

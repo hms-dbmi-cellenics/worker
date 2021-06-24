@@ -2,7 +2,7 @@ import pytest
 import os
 import json
 
-from tasks.cluster_cells import ClusterCells
+from worker.tasks.cluster_cells import ClusterCells
 
 
 class TestClusterCells:

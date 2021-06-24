@@ -1,7 +1,7 @@
 import json
-from config import config
-from tasks import Task
-from result import Result
+from ..config import config
+from ..tasks import Task
+from ..result import Result
 import requests
 import backoff
 from aws_xray_sdk.core import xray_recorder

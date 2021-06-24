@@ -1,10 +1,9 @@
-from response import Response
-from result import Result
-import boto3
+from worker.response import Response
+from worker.result import Result
 import botocore.session
 from botocore.stub import Stubber
 import pytest
-from config import config
+from worker.config import config
 import json
 import mock
 

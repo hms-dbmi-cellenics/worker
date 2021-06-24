@@ -1,9 +1,9 @@
 import datetime
 from logging import basicConfig, info, INFO
-from tasks.factory import TaskFactory
-from consume_message import consume
-from response import Response
-from config import config
+from .tasks.factory import TaskFactory
+from .consume_message import consume
+from .response import Response
+from .config import config
 from aws_xray_sdk.core import xray_recorder
 import aws_xray_sdk as xray
 

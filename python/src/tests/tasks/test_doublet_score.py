@@ -1,6 +1,6 @@
 import pytest
 import os
-from tasks.doublet_score import GetDoubletScore
+from worker.tasks.doublet_score import GetDoubletScore
 import json
 from config import config
 import responses

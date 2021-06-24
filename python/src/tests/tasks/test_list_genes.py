@@ -1,7 +1,7 @@
 import pytest
 import os
 import json
-from tasks.list_genes import ListGenes
+from worker.tasks.list_genes import ListGenes
 
 
 class TestListGenes:

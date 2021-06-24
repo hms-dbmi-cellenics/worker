@@ -1,4 +1,4 @@
-from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
+from worker.helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
 import json
 import os
 

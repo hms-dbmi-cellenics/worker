@@ -1,6 +1,6 @@
 import pytest
 import os
-from tasks.mitochondrial_content import GetMitochondrialContent
+from worker.tasks.mitochondrial_content import GetMitochondrialContent
 import json
 from config import config
 import responses

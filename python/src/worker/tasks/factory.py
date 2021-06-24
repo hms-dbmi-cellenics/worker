@@ -9,12 +9,12 @@ from .list_genes import ListGenes
 from .differential_expression import DifferentialExpression
 from .gene_expression import GeneExpression
 from .cluster_cells import ClusterCells
-from result import Result
-from tasks import Task
+from ..result import Result
+from ..tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
-from config import config
-from helpers.count_matrix import CountMatrix
+from ..config import config
+from ..helpers.count_matrix import CountMatrix
 
 
 class TaskFactory:

@@ -1,6 +1,6 @@
 import pytest
 import os
-from tasks.embedding import GetEmbedding
+from worker.tasks.embedding import GetEmbedding
 import json
 
 

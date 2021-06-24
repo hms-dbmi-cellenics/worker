@@ -1,13 +1,13 @@
 import pytest
-from tasks.factory import TaskFactory
-from result import Result
+from worker.tasks.factory import TaskFactory
+from worker.result import Result
 from mock import Mock, patch
 
 
 class TestTaskFactory:
     @pytest.fixture(autouse=True)
     def set_mock_task_factory(self):
-        with patch("helpers.count_matrix.CountMatrix") as MockCountMatrix:
+        with patch("worker.helpers.count_matrix.CountMatrix") as MockCountMatrix:
             instance = MockCountMatrix.return_value
             instance.sync.return_value = Mock()
             self.task_factory = TaskFactory()

@@ -1,4 +1,4 @@
-from helpers.find_cells_by_set_id import find_cells_by_set_id
+from worker.helpers.find_cells_by_set_id import find_cells_by_set_id
 
 
 class TestFindCellsBySetID:

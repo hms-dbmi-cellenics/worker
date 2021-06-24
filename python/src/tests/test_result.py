@@ -1,4 +1,4 @@
-from result import Result
+from worker.result import Result
 import pytest
 import json
 

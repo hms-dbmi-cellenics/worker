@@ -1,5 +1,5 @@
 import pytest
-from tasks.differential_expression import DifferentialExpression
+from worker.tasks.differential_expression import DifferentialExpression
 import json
 import mock
 import responses

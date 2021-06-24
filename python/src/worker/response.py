@@ -2,7 +2,7 @@ import boto3
 import json
 from functools import reduce
 from logging import info
-from config import config
+from .config import config
 import uuid
 from aws_xray_sdk.core import xray_recorder
 import aws_xray_sdk as xray

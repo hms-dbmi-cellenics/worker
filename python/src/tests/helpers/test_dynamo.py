@@ -1,9 +1,9 @@
 from botocore.stub import Stubber, ANY
 import boto3
 import mock
-from config import config
+from worker.config import config
 
-from helpers.dynamo import get_item_from_dynamo
+from worker.helpers.dynamo import get_item_from_dynamo
 
 
 class TestDynamo:

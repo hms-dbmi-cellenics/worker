@@ -1,6 +1,6 @@
 import pytest
 import os
-from tasks.gene_expression import GeneExpression
+from worker.tasks.gene_expression import GeneExpression
 import json
 import numpy as np
 

@@ -2,9 +2,9 @@ import json
 import requests
 import numpy as np
 import backoff
-from config import config
-from result import Result
-from tasks import Task
+from ..config import config
+from ..result import Result
+from ..tasks import Task
 from aws_xray_sdk.core import xray_recorder
 
 
