@@ -33,8 +33,9 @@ getClusters <- function(req, data){
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters-1)
-
   } else {
+    annoy.metric <- "cosine"
+    data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = annoy.metric, verbose = FALSE, reduction = active.reduction)
     data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo)
   }
 
