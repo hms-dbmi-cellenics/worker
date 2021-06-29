@@ -33,8 +33,11 @@ getClusters <- function(req, data){
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters-1)
-
   } else {
+    graph.name <- paste0(DefaultAssay(data),"_snn")
+    if (!graph.name %in% names(data)) {
+      data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
+    }
     data <- FindClusters(data, resolution=resol, verbose = FALSE, algorithm = algo)
   }
 
@@ -73,4 +76,3 @@ getSNNiGraph <- function(data) {
 
   return(g)
 }
-
