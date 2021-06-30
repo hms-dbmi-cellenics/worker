@@ -4,8 +4,8 @@ from operator import itemgetter
 import mock
 import pytest
 import responses
-from config import config
 
+from worker.config import config
 from worker.tasks.differential_expression import DifferentialExpression
 
 cell_set_responses = {

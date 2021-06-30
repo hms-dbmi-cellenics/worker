@@ -3,8 +3,8 @@ import os
 
 import pytest
 import responses
-from config import config
 
+from worker.config import config
 from worker.tasks.doublet_score import GetDoubletScore
 
 
