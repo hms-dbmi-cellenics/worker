@@ -21,7 +21,8 @@ bootstrap: ## Installs requirements (python linter & formatter)
 	@pip install flake8 black
 fmt: ## Formats python files
 	@echo "==> Formatting files..."
-	@black $(PYTHON_FILES)
+	@black --line-length 79 $(PYTHON_FILES)
+	@isort $(PYTHON_FILES)
 	@echo ""
 check: ## Checks code for linting/construct errors
 	@echo "==> Checking if files are well formatted..."
