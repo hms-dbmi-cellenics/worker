@@ -8,7 +8,7 @@ from worker.tasks.factory import TaskFactory
 class TestTaskFactory:
     @pytest.fixture(autouse=True)
     def set_mock_task_factory(self):
-        with patch("worker.helpers.count_matrix.CountMatrix") as MockCountMatrix:
+        with patch("worker.tasks.factory.CountMatrix") as MockCountMatrix:
             instance = MockCountMatrix.return_value
             instance.sync.return_value = Mock()
             self.task_factory = TaskFactory()
