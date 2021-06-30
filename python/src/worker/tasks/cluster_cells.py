@@ -43,10 +43,12 @@ class ClusterCells(Task):
             )
         return [Result(json.dumps(cell_set), cacheable=False)]
 
-    @xray_recorder.capture('ClusterCells.compute')
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
+    @xray_recorder.capture("ClusterCells.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
     def compute(self):
-        resolution = self.task_def["config"].get("resolution",0.5)
+        resolution = self.task_def["config"].get("resolution", 0.5)
 
         request = {
             "type": self.task_def["type"],

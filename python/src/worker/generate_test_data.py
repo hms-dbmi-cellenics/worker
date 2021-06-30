@@ -37,7 +37,11 @@ expression_level = interesting_gene.X.toarray().flatten().tolist()
 embedding_continuous = {
     "cells": cells,
     "categories": [
-        {"categoryName": "CST3", "type": "continuous", "values": expression_level}
+        {
+            "categoryName": "CST3",
+            "type": "continuous",
+            "values": expression_level,
+        }
     ],
     "embedding": embedding,
 }

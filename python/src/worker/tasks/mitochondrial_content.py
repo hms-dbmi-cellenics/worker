@@ -17,8 +17,10 @@ class GetMitochondrialContent(Task):
         # Return a list of formatted results.
         return [Result(result)]
 
-    @xray_recorder.capture('GetMitochondrialContent.compute')
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
+    @xray_recorder.capture("GetMitochondrialContent.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
     def compute(self):
         # Retrieve the MitochondrialContent of all the cells
         request = {}

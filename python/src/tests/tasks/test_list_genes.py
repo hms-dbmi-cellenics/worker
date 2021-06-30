@@ -2,7 +2,6 @@ import json
 import os
 
 import pytest
-
 from worker.tasks.list_genes import ListGenes
 
 
@@ -72,7 +71,9 @@ class TestListGenes:
                 "geneNamesFilter": "^Glefjskamsmesascc",
             }
         }
-        self.correct_response = json.load(open(os.path.join("tests", "lg_result.json")))
+        self.correct_response = json.load(
+            open(os.path.join("tests", "lg_result.json"))
+        )
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):

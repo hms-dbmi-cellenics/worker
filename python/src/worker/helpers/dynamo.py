@@ -9,7 +9,8 @@ def get_item_from_dynamo(experiment_id, item_name):
     )
 
     resp = dynamo.get_item(
-        Key={"experimentId": experiment_id}, ProjectionExpression=item_name,
+        Key={"experimentId": experiment_id},
+        ProjectionExpression=item_name,
     )
 
     if item_name in resp.get("Item", {}):

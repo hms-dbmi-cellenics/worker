@@ -2,7 +2,6 @@ import json
 import os
 
 import pytest
-
 from worker.tasks.embedding import GetEmbedding
 
 
@@ -16,7 +15,10 @@ class TestEmbedding:
             "body": {
                 "name": "GetEmbedding",
                 "type": "umap",
-                "config": {"minimumDistance": 0.5, "distanceMetric": "euclidean"},
+                "config": {
+                    "minimumDistance": 0.5,
+                    "distanceMetric": "euclidean",
+                },
             }
         }
         self.correct_request_umap_cosine = {
@@ -36,7 +38,9 @@ class TestEmbedding:
         """
         The test file has been created with the multisample dataset, expId: e52b39624588791a7889e39c617f669e
         """
-        self.correctResponse = json.load(open(os.path.join("tests", "emb_result.json")))
+        self.correctResponse = json.load(
+            open(os.path.join("tests", "emb_result.json"))
+        )
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -62,7 +66,9 @@ class TestEmbedding:
     def test_umap_different_params(self):
 
         old = str(self.correctResponse["umap_cosine"])
-        res = GetEmbedding(self.correct_request_umap_cosine).compute()[0].result
+        res = (
+            GetEmbedding(self.correct_request_umap_cosine).compute()[0].result
+        )
 
         assert res == old
 

@@ -3,7 +3,6 @@ import os
 
 import pytest
 import responses
-
 from worker.config import config
 from worker.tasks.mitochondrial_content import GetMitochondrialContent
 

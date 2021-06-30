@@ -1,6 +1,5 @@
 import pytest
 from mock import Mock, patch
-
 from worker.result import Result
 from worker.tasks.factory import TaskFactory
 
@@ -25,7 +24,9 @@ class TestTaskFactory:
 
     def test_throws_exception_on_non_existent_task(self):
         with pytest.raises(Exception) as e:
-            self.task_factory.submit({"body": {"name": "ClearlyAnInvalidTaskName"}})
+            self.task_factory.submit(
+                {"body": {"name": "ClearlyAnInvalidTaskName"}}
+            )
         assert (
             e.value.args[0]
             == "Task class with name ClearlyAnInvalidTaskName was not found"
@@ -45,7 +46,9 @@ class TestTaskFactory:
             "ClusterCells",
         ],
     )
-    def test_returns_result_list_with_properly_defined_task(self, valid_task_name):
+    def test_returns_result_list_with_properly_defined_task(
+        self, valid_task_name
+    ):
         results = self.task_factory.submit({"body": {"name": valid_task_name}})
         assert isinstance(results, list)
 

@@ -1,7 +1,6 @@
 import boto3
 import mock
 from botocore.stub import ANY, Stubber
-
 from worker.config import config
 from worker.helpers.dynamo import get_item_from_dynamo
 
@@ -24,7 +23,9 @@ class TestDynamo:
 
         with mock.patch("boto3.resource") as m:
             m.return_value = dynamodb
-            resp = get_item_from_dynamo("my-very-serious-experiment", "matrixPath")
+            resp = get_item_from_dynamo(
+                "my-very-serious-experiment", "matrixPath"
+            )
             assert resp == "very/genuine/path"
 
     def test_get_matrix_path_gets_correct_experiment_id_from_db(self):

@@ -60,7 +60,9 @@ if cluster_env == "development" or cluster_env == "test":
     global_sdk_config.set_sdk_enabled(False)
 
 if cluster_env == "development":
-    config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
+    config.BOTO_RESOURCE_KWARGS[
+        "endpoint_url"
+    ] = "http://host.docker.internal:4566"
     config.R_WORKER_URL = "http://r:4000"
 
 if cluster_env != "test":

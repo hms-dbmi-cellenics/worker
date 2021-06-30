@@ -1,7 +1,6 @@
 import boto3
 import mock
 from botocore.stub import ANY, Stubber
-
 from worker.config import config
 from worker.consume_message import _read_sqs_message, consume
 
@@ -80,7 +79,11 @@ class TestConsumeMessage:
             "receive_message",
             {
                 "Messages": [
-                    {"MessageId": "asd", "ReceiptHandle": "ewrwe", "Body": '{"not_json_asd: "b"}'}
+                    {
+                        "MessageId": "asd",
+                        "ReceiptHandle": "ewrwe",
+                        "Body": '{"not_json_asd: "b"}',
+                    }
                 ]
             },
             {

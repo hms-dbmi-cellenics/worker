@@ -48,7 +48,7 @@ class Response:
             "response": {"cacheable": self.cacheable, "error": self.error},
         }
 
-    @xray_recorder.capture('Response._upload')
+    @xray_recorder.capture("Response._upload")
     def _upload(self, result):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
@@ -88,7 +88,7 @@ class Response:
 
         return msg_to_send
 
-    @xray_recorder.capture('Response.publish')
+    @xray_recorder.capture("Response.publish")
     def publish(self):
         # Get total length of all result objects:
         message_length = (

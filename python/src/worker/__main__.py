@@ -10,12 +10,12 @@ from .response import Response
 from .tasks.factory import TaskFactory
 
 # configure logging
-basicConfig(format='%(asctime)s %(message)s', level=INFO)
+basicConfig(format="%(asctime)s %(message)s", level=INFO)
 
 
 def main():
     # Disable X-Ray for initial setup so we don't end up
-    # with segment warnings before any message is sent    
+    # with segment warnings before any message is sent
     xray.global_sdk_config.set_sdk_enabled(False)
 
     last_activity = datetime.datetime.utcnow()

@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 import pytest
-
 from worker.tasks.gene_expression import GeneExpression
 
 
@@ -26,7 +25,9 @@ class TestGeneExpression:
                 "genes": ["Tpt1", "Zzz3"],
             },
         }
-        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
+        self.correct_response = json.load(
+            open(os.path.join("tests", "GE_result.json"))
+        )
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -84,7 +85,8 @@ class TestGeneExpression:
             assert mean == pytest.approx(np.nanmean(expression), 0.01)
             assert stdev == pytest.approx(np.nanstd(expression), 0.01)
 
-    # This test is commented because currently the worker doesn't handle nonexistent genes
+    # This test is commented because currently the worker doesn't handle
+    # nonexistent genes
     # A ticket has been created to fix this in expression.r
     """
     def test_task_handles_nonexistent_genes(self):
