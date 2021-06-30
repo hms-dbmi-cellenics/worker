@@ -1,5 +1,6 @@
 import boto3
-from config import config
+
+from ..config import config
 
 
 def get_item_from_dynamo(experiment_id, item_name):
@@ -26,4 +27,3 @@ def get_item_from_dynamo(experiment_id, item_name):
         )
     )
     return {}
-
