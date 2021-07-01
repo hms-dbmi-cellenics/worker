@@ -1,15 +1,17 @@
 import json
-from config import config
-from result import Result
+
+import backoff
 import pandas
 import requests
-import backoff
 from aws_xray_sdk.core import xray_recorder
 
-from helpers.s3 import get_cell_sets
-from helpers.find_cells_by_set_id import find_cells_by_set_id
-from helpers.find_cell_ids_in_same_hierarchy import find_cell_ids_in_same_hierarchy, find_all_cell_ids_in_cell_sets
-from tasks import Task
+from ..config import config
+from ..helpers.find_cell_ids_in_same_hierarchy import (
+    find_all_cell_ids_in_cell_sets, find_cell_ids_in_same_hierarchy)
+from ..helpers.find_cells_by_set_id import find_cells_by_set_id
+from ..helpers.s3 import get_cell_sets
+from ..result import Result
+from ..tasks import Task
 
 
 class DifferentialExpression(Task):
@@ -39,13 +41,15 @@ class DifferentialExpression(Task):
 
         return cells
 
-    @xray_recorder.capture('DifferentialExpression.compute')
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
+    @xray_recorder.capture("DifferentialExpression.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
     def compute(self):
         # get the top x number of genes to load:
         n_genes = self.task_def.get("maxNum", None)
 
-        # get cell sets from database        
+        # get cell sets from database
         resp = get_cell_sets(self.experiment_id)
 
         first_cell_set_name = self.task_def["cellSet"]
@@ -65,31 +69,49 @@ class DifferentialExpression(Task):
 
         # mark cells of second set
         # check if the second set is composed by the "All other cells"
-        if (second_cell_set_name == "background" or "all" in second_cell_set_name.lower()):
+        if (
+            second_cell_set_name == "background"
+            or "all" in second_cell_set_name.lower()
+        ):
             # Retrieve all the cells (not necessary at the same hierachy level)
             complete_cell_set = set(find_all_cell_ids_in_cell_sets(resp))
             # Filter with those that are not in the first cell set
-            second_cell_set = [item for item in complete_cell_set if item not in first_cell_set]
+            second_cell_set = [
+                item
+                for item in complete_cell_set
+                if item not in first_cell_set
+            ]
         else:
             # In the case that we compare with specific cell set, we just look for the cell directly
-            second_cell_set = self.get_cells_in_set(second_cell_set_name, resp, first_cell_set_name)
+            second_cell_set = self.get_cells_in_set(
+                second_cell_set_name, resp, first_cell_set_name
+            )
             # Check any possible intersect cells
-            inter_cell_set = set(first_cell_set).intersection(set(second_cell_set))
-            first_cell_set = [item for item in first_cell_set if item not in inter_cell_set]
-            second_cell_set = [item for item in second_cell_set if item not in inter_cell_set]
-
+            inter_cell_set = set(first_cell_set).intersection(
+                set(second_cell_set)
+            )
+            first_cell_set = [
+                item for item in first_cell_set if item not in inter_cell_set
+            ]
+            second_cell_set = [
+                item for item in second_cell_set if item not in inter_cell_set
+            ]
 
         # Keep only the cell_set that are on the specify basis (in the case that we are not in the "All" analysis)
-        if len(filtered_set)>0:
-            second_cell_set = [item for item in second_cell_set if item in filtered_set]
-            first_cell_set = [item for item in first_cell_set if item in filtered_set]
+        if len(filtered_set) > 0:
+            second_cell_set = [
+                item for item in second_cell_set if item in filtered_set
+            ]
+            first_cell_set = [
+                item for item in first_cell_set if item in filtered_set
+            ]
 
         # Check if the first cell set is empty
-        if len(first_cell_set)==0:
+        if len(first_cell_set) == 0:
             raise Exception("No cells id fullfills the 1st cell set.")
 
         # Check if the second cell set is empty
-        if len(second_cell_set)==0:
+        if len(second_cell_set) == 0:
             raise Exception("No cells id fullfills the 2nd cell set.")
 
         # create request from the corresponding marked cells

@@ -1,8 +1,9 @@
 # This script generates test data for working on data sets without the backend.
 
+import json
+
 import anndata
 import scanpy as sc
-import json
 
 adata = anndata.read("./basic-filtered.h5ad")
 
@@ -36,7 +37,11 @@ expression_level = interesting_gene.X.toarray().flatten().tolist()
 embedding_continuous = {
     "cells": cells,
     "categories": [
-        {"categoryName": "CST3", "type": "continuous", "values": expression_level}
+        {
+            "categoryName": "CST3",
+            "type": "continuous",
+            "values": expression_level,
+        }
     ],
     "embedding": embedding,
 }

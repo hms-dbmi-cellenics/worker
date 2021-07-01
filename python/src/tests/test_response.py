@@ -1,14 +1,12 @@
-from response import Response
-from result import Result
-import boto3
-import botocore.session
-from botocore.stub import Stubber
-import pytest
-from config import config
 import json
+
+import botocore.session
 import mock
-
-
+import pytest
+from botocore.stub import Stubber
+from worker.config import config
+from worker.response import Response
+from worker.result import Result
 
 
 class TestResponse:
@@ -29,7 +27,9 @@ class TestResponse:
             Response({})
 
     @mock.patch("boto3.client")
-    def test_upload_returns_key_with_uuid_as_folder_when_uploading(self, mocked_client):
+    def test_upload_returns_key_with_uuid_as_folder_when_uploading(
+        self, mocked_client
+    ):
         stubbed_client = botocore.session.get_session().create_client(
             "s3", **config.BOTO_RESOURCE_KWARGS
         )
@@ -68,7 +68,9 @@ class TestResponse:
             ),
             "Message": json.dumps({"default": json.dumps(result_object)}),
             "MessageStructure": "json",
-            "MessageAttributes": {"type": {"DataType": "String", "StringValue": "WorkResponse"}},
+            "MessageAttributes": {
+                "type": {"DataType": "String", "StringValue": "WorkResponse"}
+            },
         }
 
         stubbed_client = botocore.session.get_session().create_client(
@@ -109,7 +111,9 @@ class TestResponse:
             assert msg["type"] == "inline"
 
     @mock.patch("boto3.client")
-    def test_publishing_long_responses_get_pushed_to_s3(self, mocked_client, mocker):
+    def test_publishing_long_responses_get_pushed_to_s3(
+        self, mocked_client, mocker
+    ):
         stubbed_client = botocore.session.get_session().create_client(
             "s3", **config.BOTO_RESOURCE_KWARGS
         )
@@ -152,7 +156,9 @@ class TestResponse:
                 content_type="application/octet-stream",
             ),
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
         ]
 
@@ -174,7 +180,9 @@ class TestResponse:
 
         results = [
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
         ]
 
@@ -196,10 +204,14 @@ class TestResponse:
 
         results = [
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
         ]
 
@@ -221,10 +233,14 @@ class TestResponse:
 
         results = [
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
         ]
 
@@ -271,7 +287,9 @@ class TestResponse:
 
         results = [
             Result(
-                "a", content_encoding="base64", content_type="application/octet-stream"
+                "a",
+                content_encoding="base64",
+                content_type="application/octet-stream",
             ),
         ]
 

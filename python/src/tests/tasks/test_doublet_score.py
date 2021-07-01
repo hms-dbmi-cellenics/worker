@@ -1,9 +1,10 @@
-import pytest
-import os
-from tasks.doublet_score import GetDoubletScore
 import json
-from config import config
+import os
+
+import pytest
 import responses
+from worker.config import config
+from worker.tasks.doublet_score import GetDoubletScore
 
 
 class TestGetDoubletScore:

@@ -1,8 +1,8 @@
-import pytest
-import os
 import json
+import os
 
-from tasks.cluster_cells import ClusterCells
+import pytest
+from worker.tasks.cluster_cells import ClusterCells
 
 
 class TestClusterCells:

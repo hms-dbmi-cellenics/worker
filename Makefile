@@ -21,7 +21,8 @@ bootstrap: ## Installs requirements (python linter & formatter)
 	@pip install flake8 black
 fmt: ## Formats python files
 	@echo "==> Formatting files..."
-	@black $(PYTHON_FILES)
+	@black --line-length 79 $(PYTHON_FILES)
+	@isort $(PYTHON_FILES)
 	@echo ""
 check: ## Checks code for linting/construct errors
 	@echo "==> Checking if files are well formatted..."
@@ -41,7 +42,7 @@ test: ## Executes unit tests
 	@docker top biomage-worker-python > /dev/null 2>&1 || \
 	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
 	@docker exec -it biomage-worker-python bash -c \
-	"CLUSTER_ENV='development' pytest --cov=. --cov-report term-missing"
+	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment

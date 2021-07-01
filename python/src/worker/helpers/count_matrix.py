@@ -1,18 +1,21 @@
-import boto3
 import datetime
 import os
 from datetime import timezone
 from logging import error, info
-from config import config
+
 import aws_xray_sdk as xray
+import boto3
 from aws_xray_sdk.core import xray_recorder
+
+from ..config import config
 
 
 class CountMatrix:
     def __init__(self):
         self.config = config
         self.local_path = os.path.join(
-            self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
+            self.config.LOCAL_DIR, self.config.EXPERIMENT_ID
+        )
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
 
         self.last_fetch = None
@@ -26,7 +29,9 @@ class CountMatrix:
         if not objects:
             return {}
 
-        objects = {o["Key"]: o["LastModified"] for o in objects if o["Size"] > 0}
+        objects = {
+            o["Key"]: o["LastModified"] for o in objects if o["Size"] > 0
+        }
 
         return objects
 
@@ -45,18 +50,24 @@ class CountMatrix:
             last_mod_local = None
 
         if self.last_fetch and last_modified < self.last_fetch:
-            info(f"Did not fetch as last modified (remote) of {last_modified}"
-                 f" was before last fetch time of {self.last_fetch}")
+            info(
+                f"Did not fetch as last modified (remote) of {last_modified}"
+                f" was before last fetch time of {self.last_fetch}"
+            )
 
             return False
         elif last_mod_local and last_modified < last_mod_local:
-            info(f"Did not fetch as last modified (remote) of {last_modified}"
-                 f" was before last modified (local) of {last_mod_local}")
+            info(
+                f"Did not fetch as last modified (remote) of {last_modified}"
+                f" was before last modified (local) of {last_mod_local}"
+            )
 
             return False
         else:
-            info(f"Fetching as last modified date of {last_modified}"
-                 f" is more recent than {self.last_fetch or 'Never'}")
+            info(
+                f"Fetching as last modified date of {last_modified}"
+                f" is more recent than {self.last_fetch or 'Never'}"
+            )
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
@@ -66,9 +77,7 @@ class CountMatrix:
             xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
-            print(
-                f"Downloading {key} from S3..."
-            )
+            print(f"Downloading {key} from S3...")
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
                 Key=key,

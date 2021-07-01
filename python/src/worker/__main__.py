@@ -1,19 +1,21 @@
 import datetime
-from logging import basicConfig, info, INFO
-from tasks.factory import TaskFactory
-from consume_message import consume
-from response import Response
-from config import config
-from aws_xray_sdk.core import xray_recorder
+from logging import INFO, basicConfig, info
+
 import aws_xray_sdk as xray
+from aws_xray_sdk.core import xray_recorder
+
+from .config import config
+from .consume_message import consume
+from .response import Response
+from .tasks.factory import TaskFactory
 
 # configure logging
-basicConfig(format='%(asctime)s %(message)s', level=INFO)
+basicConfig(format="%(asctime)s %(message)s", level=INFO)
 
 
 def main():
     # Disable X-Ray for initial setup so we don't end up
-    # with segment warnings before any message is sent    
+    # with segment warnings before any message is sent
     xray.global_sdk_config.set_sdk_enabled(False)
 
     last_activity = datetime.datetime.utcnow()
@@ -43,5 +45,4 @@ def main():
     info("Timeout exceeded, shutting down...")
 
 
-if __name__ == "__main__":
-    main()
+main()

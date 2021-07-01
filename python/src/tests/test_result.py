@@ -1,6 +1,7 @@
-from result import Result
-import pytest
 import json
+
+import pytest
+from worker.result import Result
 
 
 class TestResult:
@@ -18,7 +19,9 @@ class TestResult:
         assert result.content_type == "application/json"
 
     def test_result_works_with_custom_type_and_encoding(self):
-        result = Result("", content_type="image/svg+xml", content_encoding="base64")
+        result = Result(
+            "", content_type="image/svg+xml", content_encoding="base64"
+        )
 
         assert result.content_encoding == "base64"
         assert result.content_type == "image/svg+xml"
@@ -30,20 +33,26 @@ class TestResult:
         assert type(o) == dict
 
     def test_get_result_object_returns_custom_type_and_encoding(self):
-        result = Result("", content_type="image/svg+xml", content_encoding="base64")
+        result = Result(
+            "", content_type="image/svg+xml", content_encoding="base64"
+        )
 
         o = result.get_result_object()
 
         assert o["content-type"] == "image/svg+xml"
         assert o["content-encoding"] == "base64"
 
-    def test_get_result_object_returns_type_when_resp_format_is_requested(self):
+    def test_get_result_object_returns_type_when_resp_format_is_requested(
+        self,
+    ):
         result = Result("")
         o = result.get_result_object(resp_format=True)
 
         assert o["type"]
 
-    def test_get_result_object_returns_appropriate_path_when_s3_path_is_patched(self):
+    def test_get_result_object_returns_appropriate_path_when_s3_path_is_patched(
+        self,
+    ):
         result = Result("")
         o = result.get_result_object(resp_format=True, s3_path="my/s3/path")
 

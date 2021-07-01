@@ -1,11 +1,13 @@
 import json
-import requests
-import numpy as np
+
 import backoff
-from config import config
-from result import Result
-from tasks import Task
+import numpy as np
+import requests
 from aws_xray_sdk.core import xray_recorder
+
+from ..config import config
+from ..result import Result
+from ..tasks import Task
 
 
 class GeneExpression(Task):
@@ -15,8 +17,10 @@ class GeneExpression(Task):
         # Return a list of formatted results.
         return [Result(result)]
 
-    @xray_recorder.capture('GeneExpression.compute')
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
+    @xray_recorder.capture("GeneExpression.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
     def compute(self):
         # the genes to get expression data for
         genes = self.task_def["genes"]
@@ -34,12 +38,12 @@ class GeneExpression(Task):
         resultR = r.json()
         result = {}
         if not len(resultR):
-            result[genes[0]] ={
+            result[genes[0]] = {
                 "error": 404,
                 "message": "Gene {} not found!".format(genes[0]),
             }
-        
-        else:       
+
+        else:
             for gene in resultR.keys():
 
                 view = resultR[gene]

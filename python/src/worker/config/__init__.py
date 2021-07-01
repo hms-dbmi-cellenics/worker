@@ -1,7 +1,7 @@
 import os
 import types
-from aws_xray_sdk import core, global_sdk_config
 
+from aws_xray_sdk import core, global_sdk_config
 
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")
@@ -60,7 +60,9 @@ if cluster_env == "development" or cluster_env == "test":
     global_sdk_config.set_sdk_enabled(False)
 
 if cluster_env == "development":
-    config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
+    config.BOTO_RESOURCE_KWARGS[
+        "endpoint_url"
+    ] = "http://host.docker.internal:4566"
     config.R_WORKER_URL = "http://r:4000"
 
 if cluster_env != "test":

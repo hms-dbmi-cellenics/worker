@@ -1,11 +1,13 @@
+import json
+
 import backoff
 import pandas as pd
-from result import Result
 import requests
-from config import config
-from tasks import Task
-import json
 from aws_xray_sdk.core import xray_recorder
+
+from ..config import config
+from ..result import Result
+from ..tasks import Task
 
 
 class ListGenes(Task):
@@ -19,8 +21,10 @@ class ListGenes(Task):
         # Return a list of formatted results.
         return [Result(result)]
 
-    @xray_recorder.capture('ListGenes.compute')
-    @backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
+    @xray_recorder.capture("ListGenes.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
     def compute(self):
         request = self.task_def
         #

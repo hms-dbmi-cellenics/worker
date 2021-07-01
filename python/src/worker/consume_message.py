@@ -1,15 +1,17 @@
-import traceback
-import boto3
-from botocore.exceptions import ClientError
-import json
-from config import config
 import datetime
-import dateutil
+import json
+import traceback
 from logging import info
-import pytz
-from aws_xray_sdk.core.models.trace_header import TraceHeader
-from aws_xray_sdk.core import xray_recorder
+
 import aws_xray_sdk as xray
+import boto3
+import dateutil
+import pytz
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core.models.trace_header import TraceHeader
+from botocore.exceptions import ClientError
+
+from .config import config
 
 
 def _read_sqs_message():
@@ -27,7 +29,10 @@ def _read_sqs_message():
     try:
         queue = sqs.get_queue_by_name(QueueName=config.QUEUE_NAME)
     except ClientError as e:
-        if e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue":
+        if (
+            e.response["Error"]["Code"]
+            == "AWS.SimpleQueueService.NonExistentQueue"
+        ):
             return None
         else:
             raise e
@@ -44,7 +49,9 @@ def _read_sqs_message():
         message = message[0]
         info(message.body)
 
-        trace_header = message.attributes and message.attributes.get("AWSTraceHeader", None)
+        trace_header = message.attributes and message.attributes.get(
+            "AWSTraceHeader", None
+        )
 
         if trace_header:
             xray.global_sdk_config.set_sdk_enabled(True)
@@ -59,11 +66,13 @@ def _read_sqs_message():
                 sampling=sampled,
                 parent_id=header.parent,
             )
-    
+
         body = json.loads(message.body)
         info("Consumed a message from SQS.")
     except Exception as e:
-        xray_recorder.current_segment().add_exception(e, traceback.format_exc())
+        xray_recorder.current_segment().add_exception(
+            e, traceback.format_exc()
+        )
 
         info("Exception when loading json: ", e)
         return None
@@ -80,11 +89,17 @@ def consume():
         return None
 
     timeout = mssg_body["timeout"]
-    timeout = dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
+    timeout = (
+        dateutil.parser.parse(timeout)
+        .astimezone(pytz.utc)
+        .replace(tzinfo=None)
+    )
 
     if timeout <= datetime.datetime.utcnow():
-        info(f"Skipping processing task with uuid {mssg_body['uuid']}"
-             f"{mssg_body['uuid']} as its timeout of {timeout} has expired...")
+        info(
+            f"Skipping processing task with uuid {mssg_body['uuid']}"
+            f"{mssg_body['uuid']} as its timeout of {timeout} has expired..."
+        )
 
         return None
 
