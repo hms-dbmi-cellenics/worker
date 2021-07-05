@@ -25,9 +25,7 @@ class TestGeneExpression:
                 "genes": ["Tpt1", "Zzz3"],
             },
         }
-        self.correct_response = json.load(
-            open(os.path.join("tests", "GE_result.json"))
-        )
+        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -38,32 +36,32 @@ class TestGeneExpression:
 
     def test_returns_json(self):
         res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
+        res = res[0].result["rawExpression"]
         json.loads(res)
 
     def test_returns_a_json_object(self):
         res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
+        res = res[0].result["rawExpression"]
         res = json.loads(res)
         assert isinstance(res, dict)
 
     def test_object_returns_appropriate_number_of_genes(self):
         res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
+        res = res[0].result["rawExpression"]
         res = json.loads(res)
 
         assert len(res) == len(self.correct_request["body"]["genes"])
 
     def test_object_returns_one_gene(self):
         res = GeneExpression(self.correct_one_gene).compute()
-        res = res[0].result
+        res = res[0].result["rawExpresion"]
         res = json.loads(res)
 
-        assert len(res) == len(self.correct_one_gene["body"]["genes"])
+        assert len(res["expresion"]) == len(self.correct_one_gene["body"]["genes"])
 
     def test_each_expression_data_has_correct_number_of_cells(self):
         res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
+        res = res[0].result["rawExpression"]
         res = json.loads(res)
 
         for v in res.values():
@@ -71,7 +69,7 @@ class TestGeneExpression:
 
     def test__expression_data_gets_displayed_appropriately(self):
         res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
+        res = res[0].result["rawExpression"]
         res = json.loads(res)
 
         for v in res.values():

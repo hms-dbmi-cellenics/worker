@@ -36,5 +36,5 @@ runExpression <- function(req, data) {
         print(i)
         return(pmin(x,lim))
     }))
-    return(list(expression = geneExpression,truncatedExpression = adjGeneExpression))
+    return(list(rawExpression = geneExpression,truncatedExpression = adjGeneExpression))
 }

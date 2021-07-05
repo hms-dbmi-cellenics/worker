@@ -36,9 +36,9 @@ class GeneExpression(Task):
         # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
         r.raise_for_status()
         resultR = r.json()
-        truncatedR = resultR["truncatedExpression"]        
+        truncatedR = resultR["truncatedExpression"]
         resultR = resultR["expression"]
-        result = {"truncatedExpression":{},"expression":{}}
+        result = {"truncatedExpression": {}, "rawExpression": {}}
         if not len(resultR):
             result[genes[0]] = {
                 "error": 404,
@@ -60,7 +60,7 @@ class GeneExpression(Task):
                 mean = float(np.nanmean(viewnp))
                 stdev = float(np.nanstd(viewnp))
 
-                result["expression"][gene] = {
+                result["rawExpression"][gene] = {
                     "min": minimum,
                     "max": maximum,
                     "mean": mean,
@@ -84,6 +84,6 @@ class GeneExpression(Task):
                     "mean": mean,
                     "stdev": stdev,
                     "expression": view,
-                }  
-            print(result)              
+                }
+            print(result)
         return self._format_result(result)
