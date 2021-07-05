@@ -69,7 +69,7 @@ Then run these commands:
 
     gunzip -k ../../data/test/r.rds.gz  # unzip the test object (you only need to do this once)
     export CLUSTER_ENV="development"
-    pytest --cov=.
+    python -m pytest --cov=.
 
 You can append specific test files (e.g. `tests/tasks/test_cluster_cells.py`) to the pytest command to only
 run those tests.

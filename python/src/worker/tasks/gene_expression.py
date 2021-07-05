@@ -37,7 +37,7 @@ class GeneExpression(Task):
         r.raise_for_status()
         resultR = r.json()
         truncatedR = resultR["truncatedExpression"]
-        resultR = resultR["expression"]
+        resultR = resultR["rawExpression"]
         result = {"truncatedExpression": {}, "rawExpression": {}}
         if not len(resultR):
             result[genes[0]] = {
@@ -85,5 +85,4 @@ class GeneExpression(Task):
                     "stdev": stdev,
                     "expression": view,
                 }
-            print(result)
         return self._format_result(result)
