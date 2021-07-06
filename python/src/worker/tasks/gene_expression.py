@@ -38,7 +38,7 @@ class GeneExpression(Task):
         resultR = r.json()
         truncatedR = resultR["truncatedExpression"]
         resultR = resultR["rawExpression"]
-        result = {"truncatedExpression": {}, "rawExpression": {}}
+        result = {}
         if not len(resultR):
             result[genes[0]] = {
                 "error": 404,
@@ -55,34 +55,22 @@ class GeneExpression(Task):
                 # This is not necessary and is also costly, but I leave it commented as a reminder
                 # that this object has integer zeros and floating point for n!=0.
                 # expression = [float(item) for item in view]
-                minimum = float(np.nanmin(viewnp))
-                maximum = float(np.nanmax(viewnp))
                 mean = float(np.nanmean(viewnp))
                 stdev = float(np.nanstd(viewnp))
-
-                result["rawExpression"][gene] = {
-                    "min": minimum,
-                    "max": maximum,
+                result[gene] = {"truncatedExpression": {}, "rawExpression": {}}
+                result[gene]["rawExpression"] = {
                     "mean": mean,
                     "stdev": stdev,
                     "expression": view,
                 }
-            for gene in truncatedR.keys():
-                view = truncatedR[gene]
-                viewnp = np.array(view, dtype=np.float)
-                # This is not necessary and is also costly, but I leave it commented as a reminder
-                # that this object has integer zeros and floating point for n!=0.
-                # expression = [float(item) for item in view]
-                minimum = float(np.nanmin(viewnp))
-                maximum = float(np.nanmax(viewnp))
-                mean = float(np.nanmean(viewnp))
-                stdev = float(np.nanstd(viewnp))
 
-                result["truncatedExpression"][gene] = {
-                    "min": minimum,
-                    "max": maximum,
-                    "mean": mean,
-                    "stdev": stdev,
-                    "expression": view,
-                }
+                viewTr = truncatedR[gene]
+                viewnpTr = np.array(viewTr, dtype=np.float)
+                minimum = float(np.nanmin(viewnpTr))
+                maximum = float(np.nanmax(viewnpTr))
+                result[gene]["truncatedExpression"] = {
+                                    "min": minimum,
+                                    "max": maximum,
+                                    "expression": viewTr,
+                                }              
         return self._format_result(result)
