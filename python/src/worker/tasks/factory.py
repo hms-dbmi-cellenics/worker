@@ -43,9 +43,10 @@ class TaskFactory:
             result = task.compute()
             return result
         except Exception as e:
-            trace = traceback.format_exc()
-            error(trace)
+            trace = f"Exception for task {task.__class__.__name__}:\n" \
+                    f"{traceback.format_exc()}"
 
+            error(trace)
             xray_recorder.current_segment().add_exception(e, trace)
 
             # Only send real traces in development.
