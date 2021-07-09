@@ -10,6 +10,7 @@
 #
 #' @export
 runExpression <- function(req, data) {
+    quantile_threshold <- 0.95
     #Get the annotation matrix with the geneid to name translation, and the subset with the correct names.
     df <- data@misc$gene_annotations
     genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
@@ -25,6 +26,15 @@ runExpression <- function(req, data) {
     # worried about duplicate gene row.names in @data
     symbol_idx <- match(colnames(geneExpression), genesSubset$input)
     colnames(geneExpression) <- genesSubset$name[symbol_idx]
-    #geneExpression <- as.list(as.data.frame(t(as.matrix(geneExpression))))
-    return(geneExpression)
+    adjGeneExpression <- as.data.frame(apply(geneExpression,2,FUN=function(x){
+        lim <- as.numeric(quantile(x,quantile_threshold,na.rm=TRUE))
+        i <- 0.01
+        while (lim==0 & i+quantile_threshold<=1) {
+            lim <- as.numeric(quantile(x,quantile_threshold + i,na.rm=TRUE))
+            i<-i+0.01
+        }
+        print(i)
+        return(pmin(x,lim))
+    }))
+    return(list(rawExpression = geneExpression,truncatedExpression = adjGeneExpression))
 }

@@ -25,9 +25,7 @@ class TestGeneExpression:
                 "genes": ["Tpt1", "Zzz3"],
             },
         }
-        self.correct_response = json.load(
-            open(os.path.join("tests", "GE_result.json"))
-        )
+        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -65,9 +63,8 @@ class TestGeneExpression:
         res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
-
-        for v in res.values():
-            assert len(v["expression"]) == 1500
+        res = res["Zzz3"]["rawExpression"]
+        assert len(res["expression"]) == 1500
 
     def test__expression_data_gets_displayed_appropriately(self):
         res = GeneExpression(self.correct_request).compute()
@@ -75,13 +72,9 @@ class TestGeneExpression:
         res = json.loads(res)
 
         for v in res.values():
-            expression = np.array(v["expression"], dtype=np.float)
-            minimum = v["min"]
-            maximum = v["max"]
-            mean = v["mean"]
-            stdev = v["stdev"]
-            assert minimum == np.nanmin(expression)
-            assert maximum == np.nanmax(expression)
+            expression = np.array(v["rawExpression"]["expression"], dtype=np.float)
+            mean = v["rawExpression"]["mean"]
+            stdev = v["rawExpression"]["stdev"]
             assert mean == pytest.approx(np.nanmean(expression), 0.01)
             assert stdev == pytest.approx(np.nanstd(expression), 0.01)
 
