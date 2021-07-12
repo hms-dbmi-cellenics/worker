@@ -56,7 +56,7 @@ class ClusterCells(Task):
         }
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/getClusters",
+            f"{config.R_WORKER_URL}/v0/runClusters",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
