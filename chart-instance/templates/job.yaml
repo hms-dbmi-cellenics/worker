@@ -36,9 +36,10 @@ spec:
           readOnly: true
         - name: shutdown-file
           mountPath: /var/lib/shutdown-file
-        requests:
-          memory: "2Gi"
-          cpu: "0.5"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "0.5"
       - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.images.r }}"
         env:
@@ -56,9 +57,10 @@ spec:
           mountPath: /var/lib/shutdown-file
         ports:
         - containerPort: 4000
-        requests:
-          memory: "10Gi"
-          cpu: "2"
+        resources:
+          requests:
+            memory: "10Gi"
+            cpu: "2"
         livenessProbe:
           httpGet:
             path: /health
