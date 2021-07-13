@@ -129,7 +129,7 @@ create_app <- function(last_modified, data, fpath) {
         }
     )
     app$add_post(
-        path = "/v0/getExpression",
+        path = "/v0/runExpression",
         FUN = function(req, res) {
             result <- run_post(req, runExpression, data)
             res$set_body(result)
