@@ -145,7 +145,7 @@ create_app <- function(last_modified, data, fpath) {
     app$add_post(
         path = "/v0/getClusters",
         FUN = function(req, res) {
-            result <- run_post(req, getClusters, data)
+            result <- run_post(req, runClusters, data)
             res$set_body(result)
         }
     )
