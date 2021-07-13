@@ -29,7 +29,7 @@ class GeneExpression(Task):
         # scale = self.task_def.get("scale", True)
         request = {"genes": genes}
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/getExpression",
+            f"{config.R_WORKER_URL}/v0/runExpression",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )

@@ -31,7 +31,8 @@ runMarkerHeatmap <- function(req,data) {
 
   all_markers <- all_markers[markerIndex, ]
 
-  genesSubset <- subset(data@misc$gene_annotations, toupper(df$input) %in% toupper(all_markers$gene))
+  df <- data@misc$gene_annotations
+  genesSubset <- subset(df, toupper(df$input) %in% toupper(all_markers$gene))
   all_markers$name <- genesSubset[match(all_markers$gene,genesSubset$input),"name"]
   all_markers <- all_markers[,c("gene","name")]
   rownames(all_markers)<-c()
