@@ -28,7 +28,6 @@ getExpressionValues <- function(genes,data){
             lim <- as.numeric(quantile(x,quantile_threshold + i,na.rm=TRUE))
             i<-i+0.01
         }
-        print(i)
         return(pmin(x,lim))
     }))
     return(list(rawExpression = geneExpression,truncatedExpression = adjGeneExpression))
