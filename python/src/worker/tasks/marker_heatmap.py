@@ -34,15 +34,15 @@ class MarkerHeatmap(Task):
         truncatedR = resultR["truncatedExpression"]
         resultR = resultR["rawExpression"]
         result = {}
+        data = {}
+        order = []
         if not len(resultR):
             result[genes[0]] = {
                 "error": 404,
                 "message": "Gene {} not found!".format(genes[0]),
             }
-
         else:
             for gene in resultR.keys():
-
                 view = resultR[gene]
                 # can't do summary stats on list with None's
                 # casting to np array replaces None with np.nan
@@ -52,8 +52,8 @@ class MarkerHeatmap(Task):
                 # expression = [float(item) for item in view]
                 mean = float(np.nanmean(viewnp))
                 stdev = float(np.nanstd(viewnp))
-                result[gene] = {"truncatedExpression": {}, "rawExpression": {}}
-                result[gene]["rawExpression"] = {
+                data[gene] = {"truncatedExpression": {}, "rawExpression": {}}
+                data[gene]["rawExpression"] = {
                     "mean": mean,
                     "stdev": stdev,
                     "expression": view,
@@ -63,9 +63,12 @@ class MarkerHeatmap(Task):
                 viewnpTr = np.array(viewTr, dtype=np.float)
                 minimum = float(np.nanmin(viewnpTr))
                 maximum = float(np.nanmax(viewnpTr))
-                result[gene]["truncatedExpression"] = {
+                data[gene]["truncatedExpression"] = {
                                     "min": minimum,
                                     "max": maximum,
                                     "expression": viewTr,
-                                }              
+                                }    
+                order.append(gene)  
+        result["data"] = data
+        result["order"] = order        
         return self._format_result(result)
