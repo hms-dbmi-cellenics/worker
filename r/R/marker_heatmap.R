@@ -8,7 +8,7 @@
 #'
 #' @examples
 runMarkerHeatmap <- function(req,data) {
-  nFeatures <- req$body$nGene
+  nFeatures <- req$body$nGenes
   data <- getClusters(req$body$type,req$body$config$resolution,data)
   all_markers<-presto::wilcoxauc(data,assay = "data", seurat_assay = "RNA")
 
