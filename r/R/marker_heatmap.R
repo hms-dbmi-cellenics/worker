@@ -20,7 +20,7 @@ runMarkerHeatmap <- function(req,data) {
   all_markers<-subset(all_markers,all_markers$padj<=all_markers$minp)
   all_markers <- all_markers[!duplicated(all_markers$feature), ]
 
-  all_markers <- all_markers %>% group_by(group) %>% arrange(padj) %>% dplyr::filter(row_number() %in% c(1:nFeatures))
+  all_markers <- all_markers %>%  group_by(group) %>% arrange(padj) %>% arrange(group) %>% dplyr::filter(row_number() %in% c(1:nFeatures))
 
   df <- data@misc$gene_annotations
   genesSubset <- subset(df, toupper(df$input) %in% toupper(all_markers$feature))
@@ -30,3 +30,6 @@ runMarkerHeatmap <- function(req,data) {
   colnames(all_markers)<-c("input","name")
   return(getExpressionValues(all_markers,data))
 }
+
+
+
