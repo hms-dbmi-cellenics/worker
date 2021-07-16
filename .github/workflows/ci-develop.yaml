@@ -184,6 +184,16 @@ jobs:
         env:
           PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
+      - id: generate-coverage-report
+        name: Generate Code Coverage Report
+        run: |
+          pip install coverage
+          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME coverage run -m pytest .
+
+      - id: upload-coverage
+        name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v1
+
       - id: push
         name: Push docker images to ECR
         run: |-
