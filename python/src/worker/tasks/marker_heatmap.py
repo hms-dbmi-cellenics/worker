@@ -70,5 +70,5 @@ class MarkerHeatmap(Task):
                                 }    
                 order.append(gene)  
         result["data"] = data
-        result["order"] = order        
+        result["order"] = order   
         return self._format_result(result)

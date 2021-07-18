@@ -3,111 +3,95 @@ import os
 
 import numpy as np
 import pytest
-from worker.tasks.gene_expression import GeneExpression
+from worker.tasks.marker_heatmap import MarkerHeatmap
 
 
-class TestGeneExpression:
+class TestMarkerHeatmap:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
-        self.correct_one_gene = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
-            "timeout": "2099-12-31 00:00:00",
-            "body": {
-                "name": "GeneExpression",
-                "genes": ["Tpt1"],
-            },
-        }
         self.correct_request = {
             "experimentId": "e52b39624588791a7889e39c617f669e",
             "timeout": "2099-12-31 00:00:00",
             "body": {
-                "name": "GeneExpression",
-                "genes": ["Tpt1", "Zzz3"],
+                "name": "MarkerHeatmap",
+                "nGenes":5,
+                "type":"louvain",
+                "config":{"resolution":0.5}
             },
         }
-        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
-
+        #Correct response with flexible ngenes
+        self.correct_response_genes = ['Il7r', 'S100a10', 'Crip1', 'Cd163l1', 'Trdv4', 'Tmem176b', 'Ccr7', 'Slamf6', 'Smc4', 'Ccl5', 'Xcl1', 'Ly6c2', 'Gzma', 'Ncr1', 'Klra9', 'Cd300c2', 'Spi1', 'Alox5ap', 'Cd79a', 'Iglc2', 'Ebf1', 'Emp2', 'Tspan7', 'Tmem100']
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
-            GeneExpression()
+            MarkerHeatmap()
 
     def test_works_with_request(self):
-        GeneExpression(self.correct_request)
+        MarkerHeatmap(self.correct_request)
 
     def test_returns_json(self):
-        res = GeneExpression(self.correct_request).compute()
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         json.loads(res)
 
     def test_returns_a_json_object(self):
-        res = GeneExpression(self.correct_request).compute()
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
         assert isinstance(res, dict)
 
+    """
+    #Useless until we use ngenes
     def test_object_returns_appropriate_number_of_genes(self):
-        res = GeneExpression(self.correct_request).compute()
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
-
-        assert len(res) == len(self.correct_request["body"]["genes"])
-
-    def test_object_returns_one_gene(self):
-        res = GeneExpression(self.correct_one_gene).compute()
+        assert len(res) % self.correct_request["body"]["nGenes"] == 0 
+    """
+    def test_object_returns_proper_genes(self):
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
+        assert len(res["data"]) == len(self.correct_response_genes)
 
-        assert len(res) == len(self.correct_one_gene["body"]["genes"])
+    def test_object_returns_proper_order(self):
+        res = MarkerHeatmap(self.correct_request).compute()
+        res = res[0].result
+        res = json.loads(res)
+        res = res["order"]
+        assert res == self.correct_response_genes       
 
     def test_each_expression_data_has_correct_number_of_cells(self):
-        res = GeneExpression(self.correct_request).compute()
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
-        res = res["Zzz3"]["rawExpression"]
+        res = res["data"][self.correct_response_genes[0]]["rawExpression"]
         assert len(res["expression"]) == 1500
 
     def test_expression_was_properly_truncated(self):
-        res = GeneExpression(self.correct_request).compute()
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
 
-        for v in res.values():
+        for v in res["data"].values():
             truncatedExpression = np.array(v["truncatedExpression"]["expression"], dtype=np.float)
             expression = np.array(v["rawExpression"]["expression"], dtype=np.float)
             max_truncated = np.nanmax(truncatedExpression)
-
-            #Because it's dynamic, we don't know what the actual max will be unless we calculate it manually in python.
             lim = np.nanquantile(expression,0.95)
             i = 0.01
             while(lim==0 and i+0.95<=1):
                 lim = np.nanquantile(expression,0.95+i)
                 i = i+0.01
 
-            assert max_truncated == pytest.approx(lim, 0.01) 
+            assert max_truncated == pytest.approx(lim, 0.01)      
 
     def test__expression_data_gets_displayed_appropriately(self):
-        res = GeneExpression(self.correct_request).compute()
+        res = MarkerHeatmap(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
 
-        for v in res.values():
+        for v in res["data"].values():
             expression = np.array(v["rawExpression"]["expression"], dtype=np.float)
             mean = v["rawExpression"]["mean"]
             stdev = v["rawExpression"]["stdev"]
             assert mean == pytest.approx(np.nanmean(expression), 0.01)
             assert stdev == pytest.approx(np.nanstd(expression), 0.01)
-
-    # This test is commented because currently the worker doesn't handle
-    # nonexistent genes
-    # A ticket has been created to fix this in expression.r
-    """
-    def test_task_handles_nonexistent_genes(self):
-
-        self.correct_request["body"]["genes"] = ["PPBP", "non-existent-gene"]
-
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-
-        assert len(res) == 1
-    """
