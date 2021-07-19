@@ -21,11 +21,12 @@ bootstrap: ## Installs requirements (python linter & formatter)
 	@pip install flake8 black
 fmt: ## Formats python files
 	@echo "==> Formatting files..."
-	@black $(PYTHON_FILES)
+	@black --line-length 79 $(PYTHON_FILES)
+	@isort $(PYTHON_FILES)
 	@echo ""
 check: ## Checks code for linting/construct errors
 	@echo "==> Checking if files are well formatted..."
-	flake8 $(PYTHON_FILES)
+	@flake8 $(PYTHON_FILES)
 	@echo "    [✓]\n"
 build: ## Builds the docker-compose environment
 	@read -r -p "Building the worker image takes a long time, do you want to proceed? (y/n) " CONTINUE; \
@@ -33,15 +34,19 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
-run-only: # Runs the docker environment
+run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
-run: build # Runs & builds the docker environment
-	@docker-compose $(docker_files) up
-logs: # Shows live logs if the workers are running or logs from last running worker if they are not.
+run: build run-only ## Runs & builds the docker environment
+test: ## Executes unit tests
+	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
+	@docker top biomage-worker-python > /dev/null 2>&1 || \
+	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
+	@docker exec -it biomage-worker-python bash -c \
+	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing"
+logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
-kill: # Kills the currently running environment
+kill: ## Kills the currently running environment
 	@docker-compose $(docker_files) kill
-.PHONY: bootstrap fmt check build run clean help
 clean: ## Cleans up temporary files
 	@echo "==> Cleaning up ..."
 	@find . -name "*.pyc" -exec rm -f {} \;
@@ -49,3 +54,5 @@ clean: ## Cleans up temporary files
 	@echo ""
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: bootstrap fmt check build run-only run test logs kill clean help

@@ -1,12 +1,9 @@
-import pytest
-import os
-import statistics
-from tasks.gene_expression import GeneExpression
 import json
-import numpy as np
-from config import get_config
+import os
 
-config = get_config()
+import numpy as np
+import pytest
+from worker.tasks.gene_expression import GeneExpression
 
 
 class TestGeneExpression:
@@ -66,9 +63,8 @@ class TestGeneExpression:
         res = GeneExpression(self.correct_request).compute()
         res = res[0].result
         res = json.loads(res)
-
-        for v in res.values():
-            assert len(v["expression"]) == 1500
+        res = res["Zzz3"]["rawExpression"]
+        assert len(res["expression"]) == 1500
 
     def test__expression_data_gets_displayed_appropriately(self):
         res = GeneExpression(self.correct_request).compute()
@@ -76,17 +72,14 @@ class TestGeneExpression:
         res = json.loads(res)
 
         for v in res.values():
-            expression = np.array(v["expression"], dtype=np.float)
-            minimum = v["min"]
-            maximum = v["max"]
-            mean = v["mean"]
-            stdev = v["stdev"]
-            assert minimum == np.nanmin(expression)
-            assert maximum == np.nanmax(expression)
+            expression = np.array(v["rawExpression"]["expression"], dtype=np.float)
+            mean = v["rawExpression"]["mean"]
+            stdev = v["rawExpression"]["stdev"]
             assert mean == pytest.approx(np.nanmean(expression), 0.01)
             assert stdev == pytest.approx(np.nanstd(expression), 0.01)
 
-    # This test is commented because currently the worker doesn't handle nonexistent genes
+    # This test is commented because currently the worker doesn't handle
+    # nonexistent genes
     # A ticket has been created to fix this in expression.r
     """
     def test_task_handles_nonexistent_genes(self):

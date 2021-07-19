@@ -1,13 +1,11 @@
-import pytest
-import os
-from tasks.differential_expression import DifferentialExpression
 import json
-import mock
-import responses
-from config import get_config
 from operator import itemgetter
 
-config = get_config()
+import mock
+import pytest
+import responses
+from worker.config import config
+from worker.tasks.differential_expression import DifferentialExpression
 
 cell_set_responses = {
     "one_set": [
@@ -120,7 +118,9 @@ class MockS3Class:
         if not Bucket or not Key or not Fileobj:
             raise Exception("Parameters not received")
 
-        Fileobj.write(str.encode(f'{{"cellSets": {json.dumps(MockS3Class.response)}}}'))
+        Fileobj.write(
+            str.encode(f'{{"cellSets": {json.dumps(MockS3Class.response)}}}')
+        )
 
         return
         # MockS3Class.no_called += 1
@@ -178,7 +178,9 @@ class TestDifferentialExpression:
 
     @responses.activate
     def test_works_when_all_is_first(self, mock_S3_get):
-        request = self.get_request(cellSet="all-asdasd", compareWith="cluster1")
+        request = self.get_request(
+            cellSet="all-asdasd", compareWith="cluster1"
+        )
 
         DifferentialExpression(request)
 
@@ -204,8 +206,10 @@ class TestDifferentialExpression:
         for row in res["rows"]:
             keys = sorted(row.keys())
             expected_keys = sorted(
-                # Until the UI side is not changed we need to suppor old and new columns
-                # ["gene_names", "_row", "avg_log2FC", "p_val_adj", "pct_1", "pct_2"]
+                # Until the UI side is not changed we need to support old and
+                # new columns
+                # ["gene_names", "_row", "avg_log2FC", "p_val_adj", "pct_1",
+                # "pct_2"]
                 [
                     "gene_names",
                     "zscore",
@@ -252,7 +256,9 @@ class TestDifferentialExpression:
 
         DifferentialExpression(
             self.get_request(
-                cellSet="cluster1", compareWith="cluster2", basis="basisCluster"
+                cellSet="cluster1",
+                compareWith="cluster2",
+                basis="basisCluster",
             )
         ).compute()
 
@@ -266,7 +272,9 @@ class TestDifferentialExpression:
         assert len(backgroundCells) == 2
 
     @responses.activate
-    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_S3_get):
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(
+        self, mock_S3_get
+    ):
         MockS3Class.setResponse("hierarchichal_sets")
 
         DifferentialExpression(

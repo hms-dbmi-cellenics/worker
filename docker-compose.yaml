@@ -6,9 +6,10 @@ services:
       context: r/
       target: dev
       args:
-        - GITHUB_PAT=${GITHUB_PAT}
+        - GITHUB_PAT=${GITHUB_API_TOKEN}
     volumes:
-      - ./r:/r:cached
+      - ./r:/src:cached # for watcher
+      - /src/renv/ # distinct renv in host/container
       - ./data:/data:cached
       - ./data/debug:/debug
     expose:
@@ -16,7 +17,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
+      - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - DEBUG_STEP=${DEBUG_STEP}
   python:
     container_name: "biomage-worker-python"
@@ -27,5 +28,6 @@ services:
       - ./python:/python:cached
       - ./data:/data:cached
     environment:
-      - EXPERIMENT_ID=${EXPERIMENT_ID-e52b39624588791a7889e39c617f669e}
+      - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - IGNORE_TIMEOUT=true
+      - PYTHONUNBUFFERED=1

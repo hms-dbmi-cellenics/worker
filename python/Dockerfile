@@ -20,7 +20,7 @@ COPY src ./
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
-CMD ["python3", "-u", "work.py"]
+CMD ["python", "-m", "worker"]
 
 # ---------------------------------------------------
 # DEVELOPMENT BUILD
@@ -30,4 +30,4 @@ FROM builder AS dev
 RUN pip3 install -U watchdog[watchmedo]
 
 WORKDIR /python/src
-CMD watchmedo auto-restart --directory=. --pattern=*.py --recursive -- python3 -u work.py
+CMD watchmedo auto-restart --directory=. --pattern=*.py --recursive -- python -m worker

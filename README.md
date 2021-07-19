@@ -10,13 +10,18 @@ For example to build and run the r and python containers, you can do:
 
     make build && make run
 
-
 Note that during the first time, the build can take up to 40-50 minutes to complete.
 If you get an error, see the `Troubleshoooting` section for help.
 
 To get a development log stream of both containers running, you can use:
 
     make logs
+
+Assuming the containers are running, you can execute the (pytest) unit tests using:
+
+    make test
+
+See [here](python/README.md#tests) for more information about the tests.
 
 To shut down the development containers, you can use:
 
@@ -42,16 +47,13 @@ File(s) under `data/test` are downloaded by [inframock](https://github.com/bioma
 
 Once you have installed Git LFS, you can open the worker root directory in a terminal and run 
 
-```
-git lfs install
-```
+    git lfs install
+
 
 If Git LFS is installed successfully, it should print
 
-```
-Updated git hooks.
-Git LFS initialized.
-```
+    Updated git hooks.
+    Git LFS initialized.
 
 You can see the list of files tracked by Git LFS in `.gitattributes`.
 
@@ -102,15 +104,18 @@ For more details on the individual runners, check out the README files in their 
 
     To fix this, you can download and use a previous version of Docker (e.g. 2.5.0.1) from https://docs.docker.com/docker-for-mac/release-notes/
     
-### For linux users
-
-1. Error when attempting to start the worker saying something like:
+4.  Error when attempting to start the worker saying something like:
 `botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://host.docker.internal:4566/biomage-source-development?...`
+   
+First, check inframock is running. If it isn't, start it and try again. Otherwise, see below.
 
-**Note** this error should already been handled by the Makefilebuilds . If you encounter it while using `make build` report in on slack channel #engineering.
+##### For Linux users
+
+**Note** this error should already been handled by the Makefile builds. If you encounter it while
+using `make run`, report it in the Slack channel #engineering.
 
 Go to `docker-compose.yaml`
-In the python and r entries add at the end:
+In the `python` and `r` entries add at the end:
 
 ```
 extra_hosts:
@@ -119,11 +124,12 @@ extra_hosts:
 
 IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
 
-
-
 ## Debugging locally
 
-To save the `req` argument to a worker function, specify DEBUG_STEP. DEBUG_STEP can be either `all` (will save `req` from any task) or the basename of a [path in work.r](r/src/work.r#L88) and will hot-reload if changed at the top of work.r. It can also be set on initial run:
+**TLDR:** Save anything in /debug in the container and it will be available at `$(pwd)/data/debug`.
+
+To save the `req` argument to a worker function, specify DEBUG_STEP. DEBUG_STEP can be either `all` (will save `req` from any task) or the basename of a [path in work.R](r/work.R#L42) and will hot-reload if changed in work.R. It can also be set on initial run:
+
 
 ```bash
 # e.g. DEBUG_STEP=getClusters

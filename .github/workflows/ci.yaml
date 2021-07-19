@@ -8,6 +8,7 @@ jobs:
   build-docker:
     name: Build Docker container
     runs-on: ubuntu-20.04
+    if: startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/') # allow PRs to master for releases & hotfixes
     strategy:
       matrix:
         project: ["python", "r"]
@@ -96,16 +97,18 @@ jobs:
         run: |-
           docker build --target builder \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
           docker build --target prod \
             --cache-from=$IMAGE_NAME-builder \
             --cache-from=$PREVIOUS_IMAGE_NAME \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-ci .
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
-
+          GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
       - id: push
         name: Push builder images to ECR
         run: |-
@@ -159,7 +162,7 @@ jobs:
           pwd
           ls
           gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
-          docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.r
+          docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.R
           docker ps -a
           timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
         env:

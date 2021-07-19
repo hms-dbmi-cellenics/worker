@@ -1,13 +1,8 @@
-import pytest
-import os
 import json
+import os
 
-from tasks.cluster_cells import ClusterCells
-from config import get_config
-
-config = get_config()
-
-# CLUSTER_ENV="test" python -m pytest --cov=. src/tests/tasks/test_cluster_cells.py
+import pytest
+from worker.tasks.cluster_cells import ClusterCells
 
 
 class TestClusterCells:
