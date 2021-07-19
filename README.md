@@ -124,7 +124,6 @@ extra_hosts:
 
 IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
 
-
 ## Debugging locally
 
 **TLDR:** Save anything in /debug in the container and it will be available at `$(pwd)/data/debug`.
