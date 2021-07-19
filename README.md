@@ -124,12 +124,12 @@ extra_hosts:
 
 IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
 
-
 ## Debugging locally
 
 **TLDR:** Save anything in /debug in the container and it will be available at `$(pwd)/data/debug`.
 
 To save the `req` argument to a worker function, specify DEBUG_STEP. DEBUG_STEP can be either `all` (will save `req` from any task) or the basename of a [path in work.R](r/work.R#L42) and will hot-reload if changed in work.R. It can also be set on initial run:
+
 
 ```bash
 # e.g. DEBUG_STEP=getClusters
