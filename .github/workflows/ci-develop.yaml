@@ -193,11 +193,8 @@ jobs:
           PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: upload-coverage
-        name: Upload Coverage to Codecov
-        run: |- 
-          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME bash <(curl -s https://codecov.io/bash)
-        env:
-          PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+        name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
 
       - id: push
         name: Push docker images to ECR
