@@ -21,7 +21,7 @@ runMarkerHeatmap <- function(req, data) {
   nFeatures <- as.integer(30 / (as.integer(max(all_markers$group)) + 1))
   all_markers <- all_markers %>%
    group_by(group) %>%
-    arrange(padj) %>%
+    arrange(pval) %>%
     slice_head(n=5)
 
   df <- data@misc$gene_annotations
