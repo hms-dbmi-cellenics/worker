@@ -14,11 +14,9 @@ runMarkerHeatmap <- function(req, data) {
   all_markers <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA")
   # Filtering out repeated genes to improve visualization, based on lowest p-value.
   # We could also use fold change.
-  pvalueAggregate <- aggregate(all_markers$padj, by = list(all_markers$feature), FUN = min)
-  minp <- pvalueAggregate$x[match(all_markers$feature, pvalueAggregate$Group.1)]
-  all_markers$minp <- minp
-  all_markers <- subset(all_markers, all_markers$padj <= all_markers$minp)
-  all_markers <- all_markers[!duplicated(all_markers$feature), ]
+ all_markers <- all_markers %>%  
+ group_by(feature) %>% 
+ slice(which.min(pval))
 
   nFeatures <- as.integer(30 / (as.integer(max(all_markers$group)) + 1))
   all_markers <- all_markers %>%
