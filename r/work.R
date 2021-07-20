@@ -2,6 +2,9 @@ library(Seurat)
 library(dplyr)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
+# restore bugs out in dockerfile for some reason
+renv::consent(TRUE)
+renv::restore(prompt=FALSE)
 
 load_data <- function(fpath) {
 
