@@ -1,4 +1,3 @@
-
 #runEmbedding
 #Returns a list of x,y coordinates for each cell.
 #req is the request.

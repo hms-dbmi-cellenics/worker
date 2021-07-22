@@ -36,6 +36,10 @@ spec:
           readOnly: true
         - name: shutdown-file
           mountPath: /var/lib/shutdown-file
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "0.5"
       - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.images.r }}"
         env:
@@ -53,6 +57,10 @@ spec:
           mountPath: /var/lib/shutdown-file
         ports:
         - containerPort: 4000
+        resources:
+          requests:
+            memory: "10Gi"
+            cpu: "2"
         livenessProbe:
           httpGet:
             path: /health
@@ -62,8 +70,6 @@ spec:
           failureThreshold: 6
       volumes:
       - name: 'data'
-        persistentVolumeClaim:
-          claimName: "{{ .Release.Name }}-pvc"
       - name: watch-script
         configMap:
           name: "watch-script"

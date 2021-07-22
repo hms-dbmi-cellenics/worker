@@ -9,7 +9,7 @@ queue_name = os.getenv("WORK_QUEUE")
 sandbox_id = os.getenv("SANDBOX_ID", default="default")
 
 # timeout is in seconds, set to 1 hour
-timeout = int(os.getenv("WORK_TIMEOUT", default="3600"))
+timeout = int(os.getenv("WORK_TIMEOUT", default=str(60 * 60 * 9)))
 ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 
 aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
