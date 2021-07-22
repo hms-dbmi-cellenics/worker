@@ -1,14 +1,18 @@
-name: CI
+name: Build and Deploy the worker
 on:
   push:
     branches:
       - master
-
+  release:
+    types:
+      - released
+  pull_request:
+    branches:
+      - master
 jobs:
   build-docker:
     name: Build Docker container
     runs-on: ubuntu-20.04
-    # if: startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/') # allow PRs to master for releases & hotfixes
     strategy:
       matrix:
         project: ["python", "r"]
@@ -24,7 +28,7 @@ jobs:
         uses: actions/checkout@v2
 
       - id: ref
-        name: Format docker tag and repository name for current image.
+        name: Format docker tag and repository name.
         run: |-
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
@@ -33,7 +37,13 @@ jobs:
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
-          echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
+          # we will also take semver'd tags like `1.0.0` and use them for releases
+
+          if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
+            echo "::set-output name=tag::$REF_ID"
+          else
+            echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
+          fi
 
           # This will take a GitHub repo name like `biomage-ltd/iac`
           # and turns it into `iac`. This will be the name of the
@@ -48,15 +58,22 @@ jobs:
             echo "This is a pull request, base ref and sha set to the target branch."
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
-          fi
+            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+          else
 
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
             BASE_SHA="${{ github.event.before }}"
+            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
           fi
 
-          echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "This is a release, base ref and sha set to the current commit."
+            BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
+            BASE_SHA="$GITHUB_SHA"
+            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+          fi
 
       - id: set-up-creds
         name: Configure AWS credentials
@@ -109,6 +126,7 @@ jobs:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
+
       - id: push
         name: Push builder images to ECR
         run: |-
@@ -194,7 +212,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        environment: ["production", "staging"]
+        environment: ["production", "staging", "develop"]
     steps:
       - id: checkout
         name: Check out source code
@@ -227,15 +245,16 @@ jobs:
 
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
+            CHART_REF="$GITHUB_SHA"
+          fi
+
+          if [ "${{ matrix.environment }}" = "develop" ]; then
+            SANDBOX_ID="default"
+            CHART_REF="$GITHUB_SHA"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
-          fi
-
-          if [ "${{ github.ref }}" = "refs/heads/master" ]; then
-            CHART_REF="$GITHUB_SHA"
-          else
             CHART_REF="STAGING_CHART_REF"
           fi
 
@@ -271,20 +290,22 @@ jobs:
           enforce_admins: false
           retries: 8
 
-      - name: Push production deployment to iac for deployment
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.environment == 'production'
+      - name: Push production/develop release to iac for deployment
+        if:
+          (matrix.environment == 'production' && github.event_name == 'release' && github.event.action == 'released') || (matrix.environment == 'develop' && github.event_name == 'push')
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: "${{ steps.fill-metadata.outputs.deployment-name }}.yaml"
-          destination_repo: "${{ github.repository_owner }}/iac"
-          destination_folder: "releases/${{ matrix.environment }}"
-          user_email: "ci@biomage.net"
-          user_name: "Biomage CI/CD"
+          source_file: '${{ steps.fill-metadata.outputs.deployment-name }}.yaml'
+          destination_repo: '${{ github.repository_owner }}/iac'
+          destination_folder: 'releases/${{ steps.fill-metadata.outputs.kubernetes-env }}'
+          user_email: 'ci@biomage.net'
+          user_name: 'Biomage CI/CD'
 
       - name: Change name of deployment file for staging deployment
-        if: matrix.environment == 'staging'
+        if:
+          github.event_name == 'push' && matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
           REF_DASHED: ${{ steps.fill-metadata.outputs.ref-dashed }}
@@ -292,16 +313,17 @@ jobs:
           mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
 
       - name: Push staging deployment template to iac
-        if: matrix.environment == 'staging'
+        if:
+          github.event_name == 'push' && matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: "${{ steps.fill-metadata.outputs.ref-dashed }}.yaml"
-          destination_repo: "${{ github.repository_owner }}/iac"
-          destination_folder: "releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}"
-          user_email: "ci@biomage.net"
-          user_name: "Biomage CI/CD"
+          source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
+          destination_repo: '${{ github.repository_owner }}/iac'
+          destination_folder: 'releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
+          user_email: 'ci@biomage.net'
+          user_name: 'Biomage CI/CD'
 
       - id: enable-admin-enforcement
         name: Re-enable admin enforcement
@@ -313,3 +335,24 @@ jobs:
           repo: iac
           enforce_admins: true
           retries: 8
+
+      - id: send-to-slack
+        name: Send failure notification to Slack
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.BUILD_STATUS_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1
+        with:
+          channel: pipelines
+          status: FAILED
+          color: danger
+
+  ready-to-merge:
+    name: Ready for merging
+    runs-on: ubuntu-20.04
+    needs: deploy
+    steps:
+      - id: ready-to-merge
+        name: Signal readiness to merge
+        run: |-
+          exit 0
