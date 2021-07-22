@@ -71,9 +71,8 @@ jobs:
 
           if [ "${{ github.event_name }}" = "release" ]; then
             echo "This is a release, base ref and sha set to the current commit."
-            BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
             BASE_SHA="$GITHUB_SHA"
-            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+            echo "::set-output name=tag::refs-heads-master-$BASE_SHA"
           fi
 
       - id: set-up-creds
@@ -247,19 +246,23 @@ jobs:
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
+            KUBERNETES_ENV="production"
           fi
 
           if [ "${{ matrix.environment }}" = "develop" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
+            KUBERNETES_ENV="staging"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
             SANDBOX_ID="STAGING_SANDBOX_ID"
             CHART_REF="STAGING_CHART_REF"
+            KUBERNETES_ENV="staging"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
+          echo "::set-output name=kubernetes-env::$KUBERNETES_ENV"
 
           yq w -d1 .flux.yaml metadata.name "$DEPLOYMENT_NAME" \
           | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
