@@ -64,7 +64,8 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
-            BASE_SHA="${{ github.event.before }}"
+            # BASE_SHA="${{ github.event.before }}"
+            BASE_SHA="df8c14244376abc60edabcf353e7904cb751f015"
             echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
           fi
 
