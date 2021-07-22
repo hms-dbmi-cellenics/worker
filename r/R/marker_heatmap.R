@@ -18,9 +18,6 @@ runMarkerHeatmap <- function(req, data) {
     group_by(feature) %>%
     slice(which.min(pval))
 
-
-  # nFeatures <- as.integer(30 / (as.integer(max(all_markers$group)) + 1))
-  nFeatures <- 5
   all_markers <- all_markers %>%
     group_by(group) %>%
     arrange(pval) %>%
