@@ -29,8 +29,6 @@ check: ## Checks code for linting/construct errors
 	@flake8 $(PYTHON_FILES)
 	@echo "    [✓]\n"
 build: ## Builds the docker-compose environment
-	@read -r -p "Building the worker image takes a long time, do you want to proceed? (y/n) " CONTINUE; \
-    [ $$CONTINUE = "y" ] || [ $$CONTINUE = "Y" ] || (echo "Exiting docker image build."; exit 1;)
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"

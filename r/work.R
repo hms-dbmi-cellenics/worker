@@ -129,7 +129,7 @@ create_app <- function(last_modified, data, fpath) {
         }
     )
     app$add_post(
-        path = "/v0/getExpression",
+        path = "/v0/runExpression",
         FUN = function(req, res) {
             result <- run_post(req, runExpression, data)
             res$set_body(result)
@@ -145,12 +145,17 @@ create_app <- function(last_modified, data, fpath) {
     app$add_post(
         path = "/v0/getClusters",
         FUN = function(req, res) {
-            str(req$body)
-            result <- run_post(req, getClusters, data)
+            result <- run_post(req, runClusters, data)
             res$set_body(result)
         }
     )
-
+    app$add_post(
+        path = "/v0/runMarkerHeatmap",
+        FUN = function(req, res) {
+            result <- run_post(req, runMarkerHeatmap, data)
+            res$set_body(result)
+        }
+    )
     return(app)
 }
 
