@@ -186,9 +186,15 @@ jobs:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       - id: test
-        name: Run unit tests
+        name: Test, generate code coverage report and upload it
         run: |-
-          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
+          pip install pytest-cov
+          ci_env=`bash <(curl -s https://codecov.io/env)`
+
+          docker run -v /home/runner/work/worker/worker/data:/data $ci_env -e CI=true --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME /bin/bash -c "
+            python3 -m pytest --cov=. --cov-report=xml
+            bash <(curl -s https://codecov.io/bash)
+            "
         env:
           PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
