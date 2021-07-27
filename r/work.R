@@ -3,7 +3,7 @@ library(dplyr)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
-load_data <- function(fpath) {
+load_data <- function(expid_path) {
 
     loaded <- FALSE
     data <- NULL
@@ -11,22 +11,25 @@ load_data <- function(fpath) {
     while (!loaded) {
         data <- tryCatch(
             {
+                experiment_id <- readRDS(expid_path)
+                scdata_path <- file.path("/data", experiment_id, "r.rds")
                 print("Current working directory:")
                 print(getwd())
                 print("Experiment folder status:")
-                print(list.files(dirname(fpath), all.files=TRUE, full.names=TRUE))
-                f <- readRDS(fpath)
+                print(list.files(dirname(scdata_path), all.files=TRUE, full.names=TRUE))
+                scdata <- readRDS(scdata_path)
                 loaded <- TRUE
-                length <- dim(f)
+                length <- dim(scdata)
                 message("Data successfully loaded, dimensions",
                         length[1], "x", length[2])
 
-                return(f)
+                return(scdata)
             },
             warning = function(w) {
                 message("file could not be loaded: ", w)
             },
             error = function(e) {
+
                 message("file could not be loaded: ", e)
             }
         )
@@ -155,19 +158,28 @@ create_app <- function(last_modified, data, fpath) {
 }
 
 experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
-message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+expid_path <- '/data/current_expid.rds'
+if (!file.exists(expid_path)) saveRDS(experiment_id, expid_path)
 
+message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
 backend <- RestRserve::BackendRserve$new()
-fpath <- file.path("/data", experiment_id, "r.rds")
+
 
 repeat {
     # need to load here as can change e.g. integration method
-    data <- load_data(fpath)
-    last_modified <- file.info(fpath)$mtime
-    app <- create_app(last_modified, data, fpath)
+    data <- load_data(expid_path)
+
+    experiment_id <- readRDS(expid_path)
+    scdata_path <- file.path("/data", experiment_id, "r.rds")
+
+    last_mod_scdata <- file.info(scdata_path)$mtime
+    last_mod_expid <- file.info(expid_path)$mtime
+
+    app <- create_app(last_mod_scdata, data, scdata_path)
     proc <- backend$start(app, http_port = 4000, background = TRUE)
 
-    while(file.info(fpath)$mtime == last_modified) {
+    while(file.info(scdata_path)$mtime == last_mod_scdata &
+          file.info(expid_path)$mtime == last_mod_expid) {
         Sys.sleep(10);
     }
 
