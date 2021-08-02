@@ -39,7 +39,6 @@ spec:
         resources:
           requests:
             memory: "2Gi"
-            cpu: "0.5"
       - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.images.r }}"
         env:
@@ -59,8 +58,7 @@ spec:
         - containerPort: 4000
         resources:
           requests:
-            memory: "28Gi"
-            cpu: "4"
+            memory: "27Gi"
         livenessProbe:
           httpGet:
             path: /health
