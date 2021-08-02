@@ -59,7 +59,7 @@ spec:
         - containerPort: 4000
         resources:
           requests:
-            memory: "29Gi"
+            memory: "28Gi"
             cpu: "4"
         livenessProbe:
           httpGet:
