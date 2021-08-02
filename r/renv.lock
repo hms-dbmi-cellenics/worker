@@ -5,6 +5,10 @@
       {
         "Name": "CRAN",
         "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "RFORGE",
+        "URL": "http://rforge.net"
       }
     ]
   },
@@ -235,7 +239,7 @@
       "Package": "Rserve",
       "Version": "1.8-8",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "RFORGE",
       "Hash": "acedcbb21ca6f9bdbfc99d8a0d75f111"
     },
     "Rtsne": {
