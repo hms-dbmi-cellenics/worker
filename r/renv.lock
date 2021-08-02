@@ -227,10 +227,10 @@
     },
     "Rserve": {
       "Package": "Rserve",
-      "Version": "1.7-3.1",
+      "Version": "1.8-8",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "d70a8c2c56f502a187fe1641b9b1f29b"
+      "Hash": "acedcbb21ca6f9bdbfc99d8a0d75f111"
     },
     "Rtsne": {
       "Package": "Rtsne",
