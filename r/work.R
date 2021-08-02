@@ -110,8 +110,11 @@ create_app <- function(last_modified, data, fpath) {
     app$add_post(
         path = "/v0/getEmbedding",
         FUN = function(req, res) {
+            print(packageVersion("Rserve"))
             result <- run_post(req, runEmbedding, data)
+            print("6")
             res$set_body(result)
+            print("7")
         }
     )
     app$add_post(
