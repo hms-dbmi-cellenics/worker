@@ -5,6 +5,10 @@
       {
         "Name": "CRAN",
         "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "RFORGE",
+        "URL": "http://rforge.net"
       }
     ]
   },
