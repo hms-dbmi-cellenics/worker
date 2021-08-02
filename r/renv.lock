@@ -195,10 +195,10 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.7",
+      "Version": "1.0.6",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "dab19adae4440ae55aa8a9d238b246bb"
+      "Hash": "dbb5e436998a7eba5a9d682060533338"
     },
     "RcppAnnoy": {
       "Package": "RcppAnnoy",
