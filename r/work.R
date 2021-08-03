@@ -1,3 +1,4 @@
+renv::restore(lockfile = 'renv.lock')
 library(Seurat)
 library(dplyr)
 

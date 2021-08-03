@@ -15,16 +15,16 @@ RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
 # install required R packages for the worker.
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "remotes::install_github('rstudio/renv@0.13.2')"
+    R -e "remotes::install_github('rstudio/renv@0.14.0')"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
 COPY renv.lock.init .
-RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
+RUN R -e "renv::activate(); renv::restore(lockfile='renv.lock.init')"
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY renv.lock .
-RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
+RUN R -e "renv::restore(lockfile='renv.lock')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -53,4 +53,4 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 ADD R ./R
 COPY work.R .
 
-CMD watchmedo auto-restart --directory=. --pattern=* --recursive -- Rscript work.R
+CMD watchmedo auto-restart --directory=./R --pattern=* --recursive -- Rscript work.R

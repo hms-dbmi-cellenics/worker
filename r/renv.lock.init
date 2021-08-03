@@ -5,6 +5,10 @@
       {
         "Name": "CRAN",
         "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "RFORGE",
+        "URL": "http://rforge.net"
       }
     ]
   },
@@ -185,10 +189,10 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.6",
+      "Version": "1.0.7",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "dbb5e436998a7eba5a9d682060533338"
+      "Hash": "dab19adae4440ae55aa8a9d238b246bb"
     },
     "RcppAnnoy": {
       "Package": "RcppAnnoy",
@@ -227,10 +231,10 @@
     },
     "Rserve": {
       "Package": "Rserve",
-      "Version": "1.7-3.1",
+      "Version": "1.8-8",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "d70a8c2c56f502a187fe1641b9b1f29b"
+      "Repository": "RFORGE",
+      "Hash": "acedcbb21ca6f9bdbfc99d8a0d75f111"
     },
     "Rtsne": {
       "Package": "Rtsne",
@@ -714,11 +718,11 @@
       "Version": "1.2.6.9118",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "rigraph",
       "RemoteUsername": "igraph",
+      "RemoteRepo": "rigraph",
       "RemoteRef": "master",
       "RemoteSha": "46bfafd9623b4c9d6cbad9b6768ba3fb297fc06b",
+      "RemoteHost": "api.github.com",
       "Hash": "d0bc05b3feb0bb04b8f6aae3d4d14271"
     },
     "irlba": {
@@ -980,9 +984,9 @@
       "RemoteHost": "api.github.com",
       "RemoteUsername": "immunogenomics",
       "RemoteRepo": "presto",
-      "RemoteRef": "master",
+      "RemoteRef": "052085db9c88aa70a28d11cc58ebc807999bf0ad",
       "RemoteSha": "052085db9c88aa70a28d11cc58ebc807999bf0ad",
-      "Hash": "bf01a4a8947398ef32d019e8d8282222"
+      "Hash": "df524f54500f7c34e3088849154e3585"
     },
     "processx": {
       "Package": "processx",
@@ -1028,10 +1032,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "0.13.2",
+      "Version": "0.14.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "079cb1f03ff972b30401ed05623cbe92"
+      "Hash": "30e5eba91b67f7f4d75d31de14bbfbdc"
     },
     "reshape2": {
       "Package": "reshape2",
