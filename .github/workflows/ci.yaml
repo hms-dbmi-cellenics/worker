@@ -62,6 +62,8 @@ jobs:
             echo "::set-output name=tag::refs-pull-162-merge-af9bba63d812a01a099cf02b1ba244f77932d0b2"
           fi
 
+          
+
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
