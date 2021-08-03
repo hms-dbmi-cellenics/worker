@@ -97,6 +97,8 @@ create_app <- function(last_modified, data, fpath) {
             )
             msg = to_json(msg)
             cat(msg, sep = '\n')
+
+            return(.res)
         },
 
         id = "last_modified_mw"
