@@ -41,15 +41,15 @@ runEmbedding <- function(req, data) {
         # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
         df_embedding <- Embeddings(data, reduction = type)[,1:2]
     } else if(type=="tsne"){
-        data <- RunTSNE(data,
+        data_embedding <- RunTSNE(data,
                         reduction = active.reduction,
                         seed.use = 1,
                         dims = 1:pca_nPCs,
                         perplexity = config$perplexity,
                         learning.rate = config$learningRate)
-        df_embedding <- Embeddings(data, reduction = type)
+        df_embedding <- Embeddings(data_embedding, reduction = type)
     } else if(type=="umap"){
-        data <- RunUMAP(data,
+        data_embedding <- RunUMAP(data,
                         seed.use = 42,
                         reduction=active.reduction,
                         dims = 1:pca_nPCs,
@@ -58,7 +58,7 @@ runEmbedding <- function(req, data) {
                         metric = config$distanceMetric,
                         umap.method = "uwot-learn")
 
-        df_embedding <- Embeddings(data, reduction = type)
+        df_embedding <- Embeddings(data_embedding, reduction = type)
     }
     # Order embedding by cells id in ascending form
     print("1")
