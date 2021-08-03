@@ -85,6 +85,20 @@ create_app <- function(last_modified, data, fpath) {
 
             return(request)
         },
+
+        process_response = function(.req, .res) {
+            msg = list(
+                middleware = "last_modified_mw",
+                # we would like to have a request_id for each response in order to correlate
+                # request and response
+                request_id = .req$id,
+                response = list(headers = .res$headers, status_code = .res$status_code, body = .res$body),
+                timestamp = Sys.time()
+            )
+            msg = to_json(msg)
+            cat(msg, sep = '\n')
+        },
+
         id = "last_modified_mw"
     )
 
