@@ -56,9 +56,10 @@ jobs:
         run: |-
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "This is a pull request, base ref and sha set to the target branch."
-            BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
-            BASE_SHA=${{ github.event.pull_request.base.sha }}
-            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+            #BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
+            #BASE_SHA=${{ github.event.pull_request.base.sha }}
+            #echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+            echo "::set-output name=tag::refs-pull-162-merge-af9bba63d812a01a099cf02b1ba244f77932d0b2"
           fi
 
           if [ "${{ github.event_name }}" = "push" ]; then
