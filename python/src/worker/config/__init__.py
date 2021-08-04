@@ -32,7 +32,7 @@ class Config(types.SimpleNamespace):
         labels = {}
 
         try:
-            with open("labels") as f:
+            with open("/etc/podinfo/labels") as f:
                 for line in f.readlines():
                     key, value = line.rstrip("\n").replace('"', "").split("=")
                     labels[key] = value
