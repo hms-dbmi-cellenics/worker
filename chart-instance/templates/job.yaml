@@ -8,6 +8,9 @@ metadata:
     sandboxId: "{{ .Values.sandboxId }}"
 spec:
   template:
+    labels:
+      experimentId: "{{ .Values.experimentId }}"
+      sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
       - name: "{{ .Release.Name }}"
