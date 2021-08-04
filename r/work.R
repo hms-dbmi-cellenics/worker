@@ -3,7 +3,7 @@ library(dplyr)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
-load_data <- function(expid_path) {
+load_data <- function(scdata_path, is.dev) {
 
     loaded <- FALSE
     data <- NULL
@@ -11,8 +11,11 @@ load_data <- function(expid_path) {
     while (!loaded) {
         data <- tryCatch(
             {
-                experiment_id <- readRDS(expid_path)
-                scdata_path <- file.path("/data", experiment_id, "r.rds")
+                if (is.dev) {
+                    experiment_id <- readRDS('/data/current_expid.rds')
+                    scdata_path <- file.path("/data", experiment_id, "r.rds")
+                } 
+
                 print("Current working directory:")
                 print(getwd())
                 print("Experiment folder status:")
@@ -158,8 +161,10 @@ create_app <- function(last_modified, data, fpath) {
 }
 
 experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
-expid_path <- '/data/current_expid.rds'
-if (!file.exists(expid_path)) saveRDS(experiment_id, expid_path)
+is.dev <- Sys.getenv('CLUSTER_ENV', unset = "development") == 'development'
+message('is.dev: ', is.dev)
+
+if (is.dev) saveRDS(experiment_id, '/data/current_expid.rds')
 
 message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
 backend <- RestRserve::BackendRserve$new()
@@ -167,10 +172,10 @@ backend <- RestRserve::BackendRserve$new()
 
 repeat {
     # need to load here as can change e.g. integration method
-    data <- load_data(expid_path)
-
-    experiment_id <- readRDS(expid_path)
     scdata_path <- file.path("/data", experiment_id, "r.rds")
+    data <- load_data(scdata_path, is.dev)
+
+    if (is.dev) experiment_id <- readRDS('/data/current_expid.rds')
 
     last_mod_scdata <- file.info(scdata_path)$mtime
     last_mod_expid <- file.info(expid_path)$mtime
@@ -178,8 +183,7 @@ repeat {
     app <- create_app(last_mod_scdata, data, scdata_path)
     proc <- backend$start(app, http_port = 4000, background = TRUE)
 
-    while(file.info(scdata_path)$mtime == last_mod_scdata &
-          file.info(expid_path)$mtime == last_mod_expid) {
+    while(file.info(scdata_path)$mtime == last_mod_scdata) {
         Sys.sleep(10);
     }
 
