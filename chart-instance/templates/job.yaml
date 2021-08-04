@@ -8,16 +8,19 @@ metadata:
     sandboxId: "{{ .Values.sandboxId }}"
 spec:
   template:
-    labels:
-      experimentId: "{{ .Values.experimentId }}"
-      sandboxId: "{{ .Values.sandboxId }}"
+    metadata:
+      labels:
+        experimentId: "{{ .Values.experimentId }}"
+        sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.images.python }}"
         env:
         - name: 'EXPERIMENT_ID'
-          value: "{{ .Values.experimentId }}"
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels.experimentId
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
         - name: 'WORK_QUEUE'
@@ -25,8 +28,9 @@ spec:
         - name: 'K8S_ENV'
           value: "{{ .Values.clusterEnv }}"
         - name: 'SANDBOX_ID'
-          value: "{{ .Values.sandboxId }}"
-        - name: 'IGNORE_TIMEOUT'
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels.sandboxId
           valueFrom:
             configMapKeyRef:
               name: instance-config
@@ -46,9 +50,13 @@ spec:
         image: "{{ .Values.images.r }}"
         env:
         - name: 'EXPERIMENT_ID'
-          value: "{{ .Values.experimentId }}"
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels.experimentId
         - name: 'SANDBOX_ID'
-          value: "{{ .Values.sandboxId }}"
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels.sandboxId
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
