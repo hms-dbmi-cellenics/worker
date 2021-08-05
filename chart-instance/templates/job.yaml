@@ -17,16 +17,12 @@ spec:
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.images.python }}"
         env:
-        - name: 'EXPERIMENT_ID'
-          value: "{{ .Values.experimentId }}"
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
         - name: 'WORK_QUEUE'
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
           value: "{{ .Values.clusterEnv }}"
-        - name: 'SANDBOX_ID'
-          value: "{{ .Values.sandboxId }}"
         - name: 'IGNORE_TIMEOUT'
           valueFrom:
             configMapKeyRef:
@@ -47,11 +43,6 @@ spec:
             memory: "2Gi"
       - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.images.r }}"
-        env:
-        - name: 'EXPERIMENT_ID'
-          value: "{{ .Values.experimentId }}"
-        - name: 'SANDBOX_ID'
-          value: "{{ .Values.sandboxId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
