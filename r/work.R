@@ -164,7 +164,7 @@ repeat {
 
     if(file.exists(label_path)) {
         labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
-        experiment_id <- checkini["experimentId", ]
+        experiment_id <- labels["experimentId", ]
     }
 
     if(is.na(experiment_id)) {

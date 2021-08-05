@@ -32,29 +32,14 @@ class Config(types.SimpleNamespace):
     def get_label(self, label_key):
         labels = {}
 
-        print('labels before', labels)
-
         try:
             with open("/etc/podinfo/labels") as f:
                 for line in f.readlines():
                     key, value = line.rstrip("\n").replace('"', "").split("=")
                     labels[key] = value
         except FileNotFoundError:
-            print('file not found')
             pass
         
-        print('labels after', labels)
-        print('label key', label_key)
-        print('label requested', labels.get(label_key))
-
-        print('returned', labels.get(
-            label_key,
-            os.getenv(
-                re.sub(r'(?<!^)(?=[A-Z])', '_', label_key).upper(),
-                None
-            )
-        ))
-
         # Attempt to get the data directly from the label. If the label
         # does not exist (because e.g. it is in development or because
         # the worker is unassigned to an experiment) we try to get the
@@ -70,7 +55,6 @@ class Config(types.SimpleNamespace):
         
     @property
     def EXPERIMENT_ID(self):
-        print('trying to get experimentId from config')
         return self.get_label('experimentId')
     
     @property

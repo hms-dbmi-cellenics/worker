@@ -22,14 +22,14 @@ def main():
     while not config.EXPERIMENT_ID:
         info("Experiment not yet assigned, waiting...")
         time.sleep(5)
-
+    
     # Disable X-Ray for initial setup so we don't end up
     # with segment warnings before any message is sent
     xray.global_sdk_config.set_sdk_enabled(False)
 
     last_activity = datetime.datetime.utcnow()
     task_factory = TaskFactory()
-    info("Now listening, waiting for work to do...")
+    info(f"Now listening for experiment {config.EXPERIMENT_ID}, waiting for work to do...")
 
     while (
         datetime.datetime.utcnow() - last_activity
