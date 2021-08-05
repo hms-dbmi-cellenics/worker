@@ -1,6 +1,7 @@
 import os
 import types
 import re
+from logging import info
 
 from aws_xray_sdk import core, global_sdk_config
 
@@ -31,14 +32,21 @@ class Config(types.SimpleNamespace):
     def get_label(self, label_key):
         labels = {}
 
+        info('labels before', labels)
+
         try:
             with open("/etc/podinfo/labels") as f:
                 for line in f.readlines():
                     key, value = line.rstrip("\n").replace('"', "").split("=")
                     labels[key] = value
         except FileNotFoundError:
+            info('file not found')
             pass
         
+        info('labels after', labels)
+        info('label key', label_key)
+        info('label requested', labels.get(label_key))
+
         # Attempt to get the data directly from the label. If the label
         # does not exist (because e.g. it is in development or because
         # the worker is unassigned to an experiment) we try to get the
@@ -54,6 +62,7 @@ class Config(types.SimpleNamespace):
         
     @property
     def EXPERIMENT_ID(self):
+        info('trying to get experimentId from config')
         return self.get_label('experimentId')
     
     @property
