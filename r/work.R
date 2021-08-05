@@ -167,9 +167,9 @@ repeat {
         experiment_id <- checkini["experimentId", ]
     }
 
-    # if(is.na(experiment_id)) {
-    #     experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = NA)
-    # }
+    if(is.na(experiment_id)) {
+        experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = NA)
+    }
     
     if(is.na(experiment_id)) {
         message("No experiment ID label set yet, waiting...")
