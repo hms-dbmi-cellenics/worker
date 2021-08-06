@@ -1,4 +1,6 @@
 import datetime
+import time
+
 from logging import INFO, basicConfig, info
 
 import aws_xray_sdk as xray
@@ -14,16 +16,20 @@ basicConfig(format="%(asctime)s %(message)s", level=INFO)
 
 
 def main():
+    if config.IGNORE_TIMEOUT:
+        info("Worker configured to ignore timeout, will run forever...")
+
+    while not config.EXPERIMENT_ID:
+        info("Experiment not yet assigned, waiting...")
+        time.sleep(5)
+    
     # Disable X-Ray for initial setup so we don't end up
     # with segment warnings before any message is sent
     xray.global_sdk_config.set_sdk_enabled(False)
 
     last_activity = datetime.datetime.utcnow()
     task_factory = TaskFactory()
-    info("Now listening, waiting for work to do...")
-
-    if config.IGNORE_TIMEOUT:
-        info("Worker configured to ignore timeout, will run forever...")
+    info(f"Now listening for experiment {config.EXPERIMENT_ID}, waiting for work to do...")
 
     while (
         datetime.datetime.utcnow() - last_activity

@@ -72,7 +72,6 @@ handle_debug <- function(req, debug_step) {
 }
 
 create_app <- function(last_modified, data, fpath) {
-
     last_modified_mw <- RestRserve::Middleware$new(
         process_request = function(request, response) {
             if (!file.info(fpath)$mtime == last_modified) {
@@ -159,8 +158,27 @@ create_app <- function(last_modified, data, fpath) {
     return(app)
 }
 
-experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
-message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+repeat {
+    label_path <- "/etc/podinfo/labels"
+    experiment_id <- NA
+
+    if(file.exists(label_path)) {
+        labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
+        experiment_id <- labels["experimentId", ]
+    }
+
+    if(is.na(experiment_id)) {
+        experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = NA)
+    }
+    
+    if(is.na(experiment_id)) {
+        message("No experiment ID label set yet, waiting...")
+        Sys.sleep(5)
+    } else {
+        message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+        break
+    }
+}
 
 backend <- RestRserve::BackendRserve$new()
 fpath <- file.path("/data", experiment_id, "r.rds")

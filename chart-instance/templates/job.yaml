@@ -8,21 +8,21 @@ metadata:
     sandboxId: "{{ .Values.sandboxId }}"
 spec:
   template:
+    metadata:
+      labels:
+        experimentId: "{{ .Values.experimentId }}"
+        sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.images.python }}"
         env:
-        - name: 'EXPERIMENT_ID'
-          value: "{{ .Values.experimentId }}"
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
         - name: 'WORK_QUEUE'
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
           value: "{{ .Values.clusterEnv }}"
-        - name: 'SANDBOX_ID'
-          value: "{{ .Values.sandboxId }}"
         - name: 'IGNORE_TIMEOUT'
           valueFrom:
             configMapKeyRef:
@@ -36,16 +36,13 @@ spec:
           readOnly: true
         - name: shutdown-file
           mountPath: /var/lib/shutdown-file
+        - name: podinfo
+          mountPath: /etc/podinfo
         resources:
           requests:
             memory: "2Gi"
       - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.images.r }}"
-        env:
-        - name: 'EXPERIMENT_ID'
-          value: "{{ .Values.experimentId }}"
-        - name: 'SANDBOX_ID'
-          value: "{{ .Values.sandboxId }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -54,6 +51,8 @@ spec:
           readOnly: true
         - name: shutdown-file
           mountPath: /var/lib/shutdown-file
+        - name: podinfo
+          mountPath: /etc/podinfo
         ports:
         - containerPort: 4000
         resources:
@@ -77,5 +76,11 @@ spec:
             - key: entrypoint.sh
               path: entrypoint.sh
       - name: shutdown-file
+      - name: podinfo
+        downwardAPI:
+          items:
+            - path: "labels"
+              fieldRef:
+                fieldPath: metadata.labels
       restartPolicy: OnFailure
       serviceAccountName: 'deployment-runner'
