@@ -15,6 +15,10 @@ from ..tasks import Task
 
 
 class DifferentialExpression(Task):
+    def __init__(self, msg):
+        super().__init__(msg)
+        self.experiment_id = config.EXPERIMENT_ID
+
     def _format_result(self, result):
         result = result.to_dict(orient="records")
 
@@ -46,7 +50,7 @@ class DifferentialExpression(Task):
         n_genes = self.task_def.get("maxNum", None)
 
         # get cell sets from database
-        resp = get_cell_sets(config.EXPERIMENT_ID)
+        resp = get_cell_sets(self.experiment_id)
 
         first_cell_set_name = self.task_def["cellSet"]
         second_cell_set_name = self.task_def["compareWith"]
