@@ -22,7 +22,7 @@
 #' @export
 #'
 runDE <- function(req, data){
-
+    method = "Seurat"
     cells_id <- data@meta.data$cells_id
 
     # Remove filtered cells
@@ -55,13 +55,19 @@ runDE <- function(req, data){
     message("checking meta.data slot ", str(data@meta.data))
 
     # Compute differential expression
-    result <- FindMarkers(data, group.by = "custom", ident.1 = "base", ident.2 = "background")
+    result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA",group_by="custom")
+    result <- result[result$group=="base",]
+    rownames(result) <- result$feature
+    result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
+    colnames(result)<-list("p_val","avg_log2FC","pct_1","pct_2","p_val_adj","auc")
+
 
     message("checking FindMarkers results:  ", str(result))
     # Replace name with Gene names
     result$gene_names <- data@misc$gene_annotations[
         match(rownames(result), data@misc$gene_annotations$input), "name"
     ]
+
     result$Gene <- rownames(result)
 
     # As a first view, order by p_val_adj, to have the most significant at first.
@@ -73,13 +79,6 @@ runDE <- function(req, data){
     # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
     result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
 
-
-    ## Old DE results from pagoda2
-    #result$zscore <- result$pct_1
-    #result$pct <- result$pct_1
-    #result$abszscore <- result$pct_2
-    #result$log2fc <- result$avg_log2FC
-    #result$qval <- result$p_val_adj
     message("checking FindMarkers results before returning:  ", str(result))
 
     return(result)
