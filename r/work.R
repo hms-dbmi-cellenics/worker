@@ -1,5 +1,5 @@
-# library(Seurat)
-# library(dplyr)
+library(Seurat)
+library(dplyr)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 

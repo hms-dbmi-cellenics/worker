@@ -1,7 +1,5 @@
 import os
 import types
-import re
-from logging import info
 
 from aws_xray_sdk import core, global_sdk_config
 
