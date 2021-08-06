@@ -1,4 +1,5 @@
 import os
+import re
 import types
 
 from aws_xray_sdk import core, global_sdk_config
