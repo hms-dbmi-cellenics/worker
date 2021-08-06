@@ -19,4 +19,4 @@ coverage:
         enabled: no
 
 fixes:
-  - "worker/::worker/python/src/"
+  - "::python/src/"
