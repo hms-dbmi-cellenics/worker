@@ -13,4 +13,4 @@ spec:
     matchExpressions:
       - {key: experimentId, operator: DoesNotExist}
   template:
-    {{- template "worker.pod-template" }}
+    {{ template "worker.pod-template" . }}

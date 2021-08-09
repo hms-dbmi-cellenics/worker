@@ -1,12 +1,12 @@
 {{/* Generate a template that can be used for both assigned and unassigned xperiments */}}
-{{- define "worker.pod-template" }}
+{{- define "worker.pod-template" -}}
     metadata:
       labels:
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
       - name: "{{ .Release.Name }}"
-        image: "{{ .Values.images.python }}"
+        image: "{{ .Values.python.image }}"
         env:
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
@@ -33,7 +33,7 @@
           requests:
             memory: "2Gi"
       - name: "{{ .Release.Name }}-r"
-        image: "{{ .Values.images.r }}"
+        image: "{{ .Values.r.image }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -73,6 +73,6 @@
             - path: "labels"
               fieldRef:
                 fieldPath: metadata.labels
-      restartPolicy: OnFailure
+      restartPolicy: Always
       serviceAccountName: 'deployment-runner'
-{{- end }}
+{{- end -}}
