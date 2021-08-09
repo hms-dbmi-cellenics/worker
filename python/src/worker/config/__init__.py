@@ -38,7 +38,7 @@ class Config(types.SimpleNamespace):
                     labels[key] = value
         except FileNotFoundError:
             pass
-        
+
         # Attempt to get the data directly from the label. If the label
         # does not exist (because e.g. it is in development or because
         # the worker is unassigned to an experiment) we try to get the
@@ -51,15 +51,15 @@ class Config(types.SimpleNamespace):
                 None
             )
         )
-        
+
     @property
     def EXPERIMENT_ID(self):
         return self.get_label('experimentId')
-    
+
     @property
     def SNS_TOPIC(self):
-        return f"work-results-{cluster_env}-{self.get_label('experimentId')}"
-    
+        return f"work-results-{cluster_env}-{self.get_label('sandboxId')}"
+
     @property
     def SANDBOX_ID(self):
         return self.get_label('sandboxId')
