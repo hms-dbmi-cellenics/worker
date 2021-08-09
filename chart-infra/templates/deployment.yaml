@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+apiVersion:  {{ default "apps/v1" .Values.deploymentApiVersion }}
 kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-unassigned"
