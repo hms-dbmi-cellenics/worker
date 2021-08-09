@@ -23,36 +23,8 @@
 #'
 runDE <- function(req, data){
 
-    cells_id <- data@meta.data$cells_id
-
-    # Remove filtered cells
-    baseCells <- req$body$baseCells[req$body$baseCells %in% cells_id]
-    backgroundCells <- req$body$backgroundCells[req$body$backgroundCells %in% cells_id]
-
-    # set up a factor with the appropriate cells
-    factor_DE <- rep(
-        c("base", "background"),
-        c(
-            length(baseCells),
-            length(backgroundCells)
-        )
-    )
-
-
-    baseCells_barcode <- rownames(data@meta.data)[match(baseCells, cells_id)]
-    backgroundCells_barcode <- rownames(data@meta.data)[match(backgroundCells, cells_id)]
-
-    names(factor_DE) <- c(
-        baseCells_barcode, backgroundCells_barcode
-    )
-
-    # check mapped cells
-    message("Mapped cells ", round(sum(names(factor_DE)%in%colnames(data))/ncol(data)*100, 4), " %.")
-
-    # add seurat object the new groups to compare
-    data@meta.data$custom <- NA
-    data@meta.data[names(factor_DE), "custom"] <- factor_DE
-    message("checking meta.data slot ", str(data@meta.data))
+    # add comparison group to 'custom' slot
+    data <- add_comparison_group(req, data)
 
     # Compute differential expression
     result <- FindMarkers(data, group.by = "custom", ident.1 = "base", ident.2 = "background")
