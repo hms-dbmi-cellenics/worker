@@ -17,6 +17,7 @@
 #
 #' @export
 runEmbedding <- function(req, data) {
+
     type <- req$body$type
     config <- req$body$config
     pca_nPCs <- 30
@@ -55,8 +56,7 @@ runEmbedding <- function(req, data) {
                         dims = 1:pca_nPCs,
                         verbose = F,
                         min.dist = config$minimumDistance,
-                        metric = config$distanceMetric,
-                        umap.method = "umap-learn")
+                        metric = config$distanceMetric)
 
         df_embedding <- Embeddings(data, reduction = type)
     }
