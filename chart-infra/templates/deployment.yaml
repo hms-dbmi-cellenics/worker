@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-unassigned"
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      sandboxId: "{{ .Values.sandboxId }}"
+    matchExpressions:
+      - {key: experimentId, operator: DoesNotExist}
+  template:
+    {{- template "worker.pod-template" }}
