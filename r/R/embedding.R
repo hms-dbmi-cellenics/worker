@@ -33,8 +33,8 @@ runEmbedding <- function(req, data) {
 
     message("Active reduction --> ", active.reduction)
     message("Active numPCs --> ", pca_nPCs)
-    message("Number of samples:")
-    message(table(data$samples))
+    message("Number of cells/sample:")
+    table(data$samples)
 
     if (type == "pca") {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
