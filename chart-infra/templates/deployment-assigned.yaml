@@ -1,0 +1,15 @@
+apiVersion:  {{ default "apps/v1" .Values.deploymentApiVersion }}
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-assigned"
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    sandboxId: "{{ .Values.sandboxId }}"
+spec:
+  selector:
+    matchLabels:
+      sandboxId: "{{ .Values.sandboxId }}"
+    matchExpressions:
+      - {key: experimentId, operator: Exists}
+  template:
+    {{ template "worker.pod-template" . }}
