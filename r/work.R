@@ -3,7 +3,7 @@ library(dplyr)
 
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
-load_data <- function(scdata_path, is.dev) {
+load_data <- function(expid_path) {
 
     loaded <- FALSE
     data <- NULL
@@ -11,10 +11,8 @@ load_data <- function(scdata_path, is.dev) {
     while (!loaded) {
         data <- tryCatch(
             {
-                if (is.dev) {
-                    experiment_id <- readRDS('/data/current_expid.rds')
-                    scdata_path <- file.path("/data", experiment_id, "r.rds")
-                } 
+                experiment_id <- readRDS(expid_path)
+                scdata_path <- file.path("/data", experiment_id, "r.rds")
 
                 print("Current working directory:")
                 print(getwd())
@@ -78,7 +76,6 @@ handle_debug <- function(req, debug_step) {
 }
 
 create_app <- function(last_modified, data, fpath) {
-
     last_modified_mw <- RestRserve::Middleware$new(
         process_request = function(request, response) {
             if (!file.info(fpath)$mtime == last_modified) {
@@ -135,7 +132,7 @@ create_app <- function(last_modified, data, fpath) {
         }
     )
     app$add_post(
-        path = "/v0/getExpression",
+        path = "/v0/runExpression",
         FUN = function(req, res) {
             result <- run_post(req, runExpression, data)
             res$set_body(result)
@@ -151,31 +148,52 @@ create_app <- function(last_modified, data, fpath) {
     app$add_post(
         path = "/v0/getClusters",
         FUN = function(req, res) {
-            str(req$body)
-            result <- run_post(req, getClusters, data)
+            result <- run_post(req, runClusters, data)
             res$set_body(result)
         }
     )
-
+    app$add_post(
+        path = "/v0/runMarkerHeatmap",
+        FUN = function(req, res) {
+            result <- run_post(req, runMarkerHeatmap, data)
+            res$set_body(result)
+        }
+    )
     return(app)
 }
 
-experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = "e52b39624588791a7889e39c617f669e")
-is.dev <- Sys.getenv('CLUSTER_ENV', unset = "development") == 'development'
-message('is.dev: ', is.dev)
+repeat {
+    label_path <- "/etc/podinfo/labels"
+    experiment_id <- NA
 
-if (is.dev) saveRDS(experiment_id, '/data/current_expid.rds')
+    if(file.exists(label_path)) {
+        labels <- read.csv(label_path, sep="=", row.names=1, header=FALSE)
+        experiment_id <- labels["experimentId", ]
+    }
 
-message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+    if(is.na(experiment_id)) {
+        experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = NA)
+    }
+
+    if(is.na(experiment_id)) {
+        message("No experiment ID label set yet, waiting...")
+        Sys.sleep(5)
+    } else {
+        message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+        break
+    }
+}
+
+expid_path <- '/data/current_expid.rds'
+saveRDS(experiment_id, expid_path)
+
 backend <- RestRserve::BackendRserve$new()
-
-
 repeat {
     # need to load here as can change e.g. integration method
     scdata_path <- file.path("/data", experiment_id, "r.rds")
-    data <- load_data(scdata_path, is.dev)
+    data <- load_data(expid_path)
 
-    if (is.dev) experiment_id <- readRDS('/data/current_expid.rds')
+    experiment_id <- readRDS(expid_path)
 
     last_mod_scdata <- file.info(scdata_path)$mtime
     last_mod_expid <- file.info(expid_path)$mtime
@@ -183,7 +201,8 @@ repeat {
     app <- create_app(last_mod_scdata, data, scdata_path)
     proc <- backend$start(app, http_port = 4000, background = TRUE)
 
-    while(file.info(scdata_path)$mtime == last_mod_scdata) {
+    while(file.info(scdata_path)$mtime == last_mod_scdata &
+          file.info(expid_path)$mtime == last_mod_expid) {
         Sys.sleep(10);
     }
 

@@ -1,4 +1,6 @@
-# worker
+[![codecov](https://codecov.io/gh/biomage-ltd/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/biomage-ltd/worker)
+worker
+======
 
 The single-cell pipeline work executor.
 

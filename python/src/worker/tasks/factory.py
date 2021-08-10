@@ -3,6 +3,7 @@ import traceback
 from logging import error
 
 from aws_xray_sdk.core import xray_recorder
+from worker.tasks.marker_heatmap import MarkerHeatmap
 
 from ..config import config
 from ..helpers.count_matrix import CountMatrix
@@ -14,6 +15,7 @@ from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
 from .gene_expression import GeneExpression
 from .list_genes import ListGenes
+from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
 
 
@@ -28,6 +30,7 @@ class TaskFactory:
             ClusterCells,
             GetDoubletScore,
             GetMitochondrialContent,
+            MarkerHeatmap
         )
     }
 

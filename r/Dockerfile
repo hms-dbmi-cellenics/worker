@@ -26,6 +26,11 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 COPY renv.lock .
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
+# install miniconda and python umap-learn for RunUMAP
+ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
+RUN R -e "reticulate::install_miniconda()"
+RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
+
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
