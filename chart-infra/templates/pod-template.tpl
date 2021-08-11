@@ -49,13 +49,6 @@
         resources:
           requests:
             memory: "27Gi"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
-          initialDelaySeconds: 30
-          periodSeconds: 15
-          failureThreshold: 6
       volumes:
       - name: 'data'
       - name: watch-script
