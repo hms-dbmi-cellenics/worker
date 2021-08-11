@@ -303,6 +303,7 @@ jobs:
           | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
+          | yq w -d1 - spec.values.kubernetes.env "$KUBERNETES_ENV" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-$KUBERNETES_ENV" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \

@@ -13,7 +13,7 @@
         - name: 'WORK_QUEUE'
           value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
-          value: "{{ .Values.clusterEnv }}"
+          value: {{ .Values.kubernetes.env | quote }}
         - name: 'IGNORE_TIMEOUT'
           valueFrom:
             configMapKeyRef:
