@@ -10,8 +10,6 @@
         env:
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
-        - name: 'WORK_QUEUE'
-          value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
           value: {{ .Values.kubernetes.env | quote }}
         - name: 'IGNORE_TIMEOUT'

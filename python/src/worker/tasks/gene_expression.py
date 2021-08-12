@@ -19,7 +19,7 @@ class GeneExpression(Task):
 
     @xray_recorder.capture("GeneExpression.compute")
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
+        backoff.expo, requests.exceptions.RequestException, max_time=120
     )
     def compute(self):
         # the genes to get expression data for

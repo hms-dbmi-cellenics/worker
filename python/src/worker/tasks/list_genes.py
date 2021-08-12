@@ -23,7 +23,7 @@ class ListGenes(Task):
 
     @xray_recorder.capture("ListGenes.compute")
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
+        backoff.expo, requests.exceptions.RequestException, max_time=120
     )
     def compute(self):
         request = self.task_def

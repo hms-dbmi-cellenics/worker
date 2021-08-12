@@ -6,6 +6,5 @@ sandboxId: FILLED_IN_BY_CI
 serviceAccount:
     iamRole: FILLED_IN_BY_CI
 ignoreTimeout: false
-workQueueName: queue-job-094ef5e8cc562452ab3901b6fcae04a6dc2c1581-production.fifo
 kubernetes:
     env: production

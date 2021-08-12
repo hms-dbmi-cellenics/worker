@@ -19,7 +19,7 @@ class GetEmbedding(Task):
 
     @xray_recorder.capture("ComputeEmbedding.compute")
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
+        backoff.expo, requests.exceptions.RequestException, max_time=120
     )
     def compute(self):
         request = {
