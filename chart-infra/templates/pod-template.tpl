@@ -5,6 +5,23 @@
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
+      - name: "{{ .Release.Name }}-r"
+        image: "{{ .Values.r.image }}"
+        volumeMounts:
+        - name: 'data'
+          mountPath: '/data'
+        - name: watch-script
+          mountPath: /var/lib/watchfile
+          readOnly: true
+        - name: shutdown-file
+          mountPath: /var/lib/shutdown-file
+        - name: podinfo
+          mountPath: /etc/podinfo
+        ports:
+        - containerPort: 4000
+        resources:
+          requests:
+            memory: "27Gi"
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.python.image }}"
         env:
@@ -30,23 +47,6 @@
         resources:
           requests:
             memory: "2Gi"
-      - name: "{{ .Release.Name }}-r"
-        image: "{{ .Values.r.image }}"
-        volumeMounts:
-        - name: 'data'
-          mountPath: '/data'
-        - name: watch-script
-          mountPath: /var/lib/watchfile
-          readOnly: true
-        - name: shutdown-file
-          mountPath: /var/lib/shutdown-file
-        - name: podinfo
-          mountPath: /etc/podinfo
-        ports:
-        - containerPort: 4000
-        resources:
-          requests:
-            memory: "27Gi"
       volumes:
       - name: 'data'
       - name: watch-script

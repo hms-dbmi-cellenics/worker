@@ -27,29 +27,29 @@ if not cluster_env:
     cluster_env = "development"
 
 class Config(types.SimpleNamespace):
-    def get_label(self, label_key):
-        labels = {}
+def get_label(self, label_key):
+    labels = {}
 
-        try:
-            with open("/etc/podinfo/labels") as f:
-                for line in f.readlines():
-                    key, value = line.rstrip("\n").replace('"', "").split("=")
-                    labels[key] = value
-        except FileNotFoundError:
-            pass
+    try:
+        with open("/etc/podinfo/labels") as f:
+            for line in f.readlines():
+                key, value = line.rstrip("\n").replace('"', "").split("=")
+                labels[key] = value
+    except FileNotFoundError:
+        pass
 
-        # Attempt to get the data directly from the label. If the label
-        # does not exist (because e.g. it is in development or because
-        # the worker is unassigned to an experiment) we try to get the
-        # info from an env variable (experimentId -> EXPERIMENT_ID).
-        # If unsuccessful, we return None.
-        return labels.get(
-            label_key,
-            os.getenv(
-                re.sub(r'(?<!^)(?=[A-Z])', '_', label_key).upper(),
-                None
-            )
+    # Attempt to get the data directly from the label. If the label
+    # does not exist (because e.g. it is in development or because
+    # the worker is unassigned to an experiment) we try to get the
+    # info from an env variable (experimentId -> EXPERIMENT_ID).
+    # If unsuccessful, we return None.
+    return labels.get(
+        label_key,
+        os.getenv(
+            re.sub(r'(?<!^)(?=[A-Z])', '_', label_key).upper(),
+            None
         )
+    )
 
     @property
     def EXPERIMENT_ID(self):
@@ -65,7 +65,7 @@ class Config(types.SimpleNamespace):
 
     @property
     def QUEUE_NAME(self):
-        return self.get_label('workQueueName')
+        return self.get_label('workQueueName') or ""
 
 config = Config(
     CLUSTER_ENV=cluster_env,
