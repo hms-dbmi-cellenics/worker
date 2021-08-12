@@ -1,6 +1,6 @@
 import json
 import pandas
-import requests
+import backoff
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config

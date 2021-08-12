@@ -1,6 +1,5 @@
 import datetime
 import time
-
 from logging import INFO, basicConfig, info
 
 import aws_xray_sdk as xray
