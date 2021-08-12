@@ -6,3 +6,5 @@ sandboxId: FILLED_IN_BY_CI
 serviceAccount:
     iamRole: FILLED_IN_BY_CI
 ignoreTimeout: false
+kubernetes:
+    env: production

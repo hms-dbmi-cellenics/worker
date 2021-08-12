@@ -6,7 +6,6 @@ from aws_xray_sdk import core, global_sdk_config
 
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")
-queue_name = os.getenv("WORK_QUEUE")
 
 # timeout is in seconds, set to 1 hour
 timeout = int(os.getenv("WORK_TIMEOUT", default=str(60 * 60 * 9)))
@@ -64,9 +63,15 @@ class Config(types.SimpleNamespace):
     def SANDBOX_ID(self):
         return self.get_label('sandboxId')
 
+    @property
+    def QUEUE_NAME(self):
+        if cluster_env == "development" or cluster_env == "test":
+            return "development-queue.fifo"
+         
+        return self.get_label('workQueueName') or ""
+
 config = Config(
     CLUSTER_ENV=cluster_env,
-    QUEUE_NAME=queue_name,
     TIMEOUT=timeout,
     IGNORE_TIMEOUT=ignore_timeout,
     AWS_ACCOUNT_ID=aws_account_id,
@@ -85,7 +90,6 @@ config = Config(
 
 
 if cluster_env == "development" or cluster_env == "test":
-    config.QUEUE_NAME = "development-queue.fifo"
     config.AWS_ACCOUNT_ID = "000000000000"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"

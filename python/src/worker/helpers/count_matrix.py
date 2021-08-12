@@ -1,4 +1,6 @@
 import datetime
+import backoff
+import requests
 import os
 from datetime import timezone
 from logging import error, info
@@ -92,6 +94,15 @@ class CountMatrix:
 
         return True
 
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException
+    )
+    def check_if_received(self):
+        print('Count matrices updated, checking if R worker is alive...')
+        r = requests.get(
+            f"{config.R_WORKER_URL}/health",
+        )
+
     @xray_recorder.capture("CountMatrix.sync")
     def sync(self):
         # check if path existed before running this
@@ -109,3 +120,6 @@ class CountMatrix:
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
+
+        if True in synced.values():
+            self.check_if_received()

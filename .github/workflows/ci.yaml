@@ -274,7 +274,7 @@ jobs:
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="production"
-
+            REPLICA_COUNT="4"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
             IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
           fi
@@ -283,6 +283,7 @@ jobs:
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
+            REPLICA_COUNT="4"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
@@ -290,6 +291,7 @@ jobs:
             SANDBOX_ID="STAGING_SANDBOX_ID"
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
+            REPLICA_COUNT="2"
             IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
@@ -303,8 +305,10 @@ jobs:
           | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
+          | yq w -d1 - spec.values.kubernetes.env "$KUBERNETES_ENV" \
           | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-$KUBERNETES_ENV" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
+          | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
           | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
           | yq w -d1 - spec.values.python.image "$IMAGE_NAME-python" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:$IMAGE_GLOB-r" \

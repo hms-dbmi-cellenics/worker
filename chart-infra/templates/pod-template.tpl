@@ -1,28 +1,34 @@
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "{{ .Release.Name }}-job"
-  namespace: "{{ .Values.namespace }}"
-  labels:
-    experimentId: "{{ .Values.experimentId }}"
-    sandboxId: "{{ .Values.sandboxId }}"
-spec:
-  template:
+{{/* Generate a template that can be used for both assigned and unassigned xperiments */}}
+{{- define "worker.pod-template" -}}
     metadata:
       labels:
-        experimentId: "{{ .Values.experimentId }}"
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
+      - name: "{{ .Release.Name }}-r"
+        image: "{{ .Values.r.image }}"
+        volumeMounts:
+        - name: 'data'
+          mountPath: '/data'
+        - name: watch-script
+          mountPath: /var/lib/watchfile
+          readOnly: true
+        - name: shutdown-file
+          mountPath: /var/lib/shutdown-file
+        - name: podinfo
+          mountPath: /etc/podinfo
+        ports:
+        - containerPort: 4000
+        resources:
+          requests:
+            memory: "27Gi"
       - name: "{{ .Release.Name }}"
-        image: "{{ .Values.images.python }}"
+        image: "{{ .Values.python.image }}"
         env:
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
-        - name: 'WORK_QUEUE'
-          value: "{{ .Values.workQueueName }}"
         - name: 'K8S_ENV'
-          value: "{{ .Values.clusterEnv }}"
+          value: {{ .Values.kubernetes.env | quote }}
         - name: 'IGNORE_TIMEOUT'
           valueFrom:
             configMapKeyRef:
@@ -41,30 +47,6 @@ spec:
         resources:
           requests:
             memory: "2Gi"
-      - name: "{{ .Release.Name }}-r"
-        image: "{{ .Values.images.r }}"
-        volumeMounts:
-        - name: 'data'
-          mountPath: '/data'
-        - name: watch-script
-          mountPath: /var/lib/watchfile
-          readOnly: true
-        - name: shutdown-file
-          mountPath: /var/lib/shutdown-file
-        - name: podinfo
-          mountPath: /etc/podinfo
-        ports:
-        - containerPort: 4000
-        resources:
-          requests:
-            memory: "27Gi"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
-          initialDelaySeconds: 30
-          periodSeconds: 15
-          failureThreshold: 6
       volumes:
       - name: 'data'
       - name: watch-script
@@ -82,5 +64,6 @@ spec:
             - path: "labels"
               fieldRef:
                 fieldPath: metadata.labels
-      restartPolicy: OnFailure
+      restartPolicy: Always
       serviceAccountName: 'deployment-runner'
+{{- end -}}
