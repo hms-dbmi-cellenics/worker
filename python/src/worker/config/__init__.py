@@ -65,6 +65,9 @@ class Config(types.SimpleNamespace):
 
     @property
     def QUEUE_NAME(self):
+        if cluster_env == "development" or cluster_env == "test":
+            return "development-queue.fifo"
+         
         return self.get_label('workQueueName') or ""
 
 config = Config(
@@ -87,7 +90,6 @@ config = Config(
 
 
 if cluster_env == "development" or cluster_env == "test":
-    config.QUEUE_NAME = "development-queue.fifo"
     config.AWS_ACCOUNT_ID = "000000000000"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
