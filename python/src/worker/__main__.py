@@ -14,7 +14,6 @@ from .tasks.factory import TaskFactory
 # configure logging
 basicConfig(format="%(asctime)s %(message)s", level=INFO)
 
-
 def main():
     if config.IGNORE_TIMEOUT:
         info("Worker configured to ignore timeout, will run forever...")

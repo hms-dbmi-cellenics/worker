@@ -1,6 +1,4 @@
 import json
-
-import backoff
 import pandas
 import requests
 from aws_xray_sdk.core import xray_recorder
@@ -43,7 +41,7 @@ class DifferentialExpression(Task):
 
     @xray_recorder.capture("DifferentialExpression.compute")
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=120
+        backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
         # get the top x number of genes to load:

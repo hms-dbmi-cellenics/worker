@@ -19,7 +19,7 @@ class GetDoubletScore(Task):
 
     @xray_recorder.capture("DoubletScore.compute")
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=120
+        backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
 

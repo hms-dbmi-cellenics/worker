@@ -4,7 +4,6 @@ library(dplyr)
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
 load_data <- function(fpath) {
-
     loaded <- FALSE
     data <- NULL
 

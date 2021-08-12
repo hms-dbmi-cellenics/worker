@@ -37,6 +37,7 @@ class TaskFactory:
     def __init__(self):
         self.count_matrix = CountMatrix()
         self.count_matrix.sync()
+        self.count_matrix.check_if_received()
 
     def submit(self, msg):
         task = self._factory(msg)
