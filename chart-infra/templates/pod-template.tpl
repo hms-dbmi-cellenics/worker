@@ -64,6 +64,6 @@
             - path: "labels"
               fieldRef:
                 fieldPath: metadata.labels
-      restartPolicy: Always
+      restartPolicy: Never
       serviceAccountName: 'deployment-runner'
 {{- end -}}
