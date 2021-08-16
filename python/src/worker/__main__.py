@@ -1,6 +1,5 @@
 import datetime
 import time
-
 from logging import INFO, basicConfig, info
 
 import aws_xray_sdk as xray
@@ -13,7 +12,6 @@ from .tasks.factory import TaskFactory
 
 # configure logging
 basicConfig(format="%(asctime)s %(message)s", level=INFO)
-
 
 def main():
     if config.IGNORE_TIMEOUT:

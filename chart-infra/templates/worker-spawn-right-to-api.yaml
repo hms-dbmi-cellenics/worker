@@ -6,18 +6,9 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 rules:
-- apiGroups: ["batch"]
-  resources: ["jobs"]
-  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
-- apiGroups: [""]
-  resources: ["persistentvolumeclaims"]
-  verbs: ["create", "get", "watch", "list", "update", "patch"]
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding

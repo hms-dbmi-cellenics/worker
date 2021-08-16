@@ -4,7 +4,6 @@ library(dplyr)
 for (f in list.files('R', '.R$', full.names = TRUE)) source(f)
 
 load_data <- function(fpath) {
-
     loaded <- FALSE
     data <- NULL
 
@@ -155,6 +154,13 @@ create_app <- function(last_modified, data, fpath) {
             res$set_body(result)
         }
     )
+    app$add_post(
+        path = "/v0/getBackgroundExpressedGenes",
+        FUN = function(req, res) {
+            result <- run_post(req, getBackgroundExpressedGenes, data)
+            res$set_body(result)
+        }
+    )
     return(app)
 }
 
@@ -170,7 +176,7 @@ repeat {
     if(is.na(experiment_id)) {
         experiment_id <- Sys.getenv("EXPERIMENT_ID", unset = NA)
     }
-    
+
     if(is.na(experiment_id)) {
         message("No experiment ID label set yet, waiting...")
         Sys.sleep(5)
