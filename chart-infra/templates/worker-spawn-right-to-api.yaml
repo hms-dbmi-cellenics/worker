@@ -6,6 +6,9 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["create", "get", "watch", "list", "update", "patch", "delete", "deletecollection"]
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
   verbs: ["create", "get", "watch", "list", "update", "patch"]
