@@ -58,8 +58,7 @@ runDE <- function(req, data){
     result <- result[result$group=="base",]
     rownames(result) <- result$feature
     result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
-    result$logFC <- log2(10^result$logFC)
-    colnames(result)<-list("p_val","avg_log2FC","pct_1","pct_2","p_val_adj","auc")
+    colnames(result)<-list("p_val","logFC","pct_1","pct_2","p_val_adj","auc")
 
     message("checking FindMarkers results:  ", str(result))
     # Replace name with Gene names
