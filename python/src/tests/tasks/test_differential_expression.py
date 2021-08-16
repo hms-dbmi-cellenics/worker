@@ -290,6 +290,10 @@ class TestDifferentialExpression:
         assert len(baseCells) == 1
         assert len(backgroundCells) == 1
 
+    def experiment_id_fetched_correctly(self, mock_dynamo_get):
+        de = DifferentialExpression(self.get_request())
+
+        assert de.experiment_id == config.EXPERIMENT_ID
 
 """
     def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
