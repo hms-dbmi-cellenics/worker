@@ -24,7 +24,7 @@
 runDE <- function(req, data){
 
     # add comparison group to 'custom' slot
-    data <- add_comparison_group(req, data)
+    data <- addComparisonGroup(req, data)
 
     # Compute differential expression
     result <- FindMarkers(data, group.by = "custom", ident.1 = "base", ident.2 = "background")

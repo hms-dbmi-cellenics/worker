@@ -13,7 +13,7 @@ getBackgroundExpressedGenes <- function(req, data) {
     min.total.count = 15
 
     # add comparison group to 'custom' slot
-    data <- add_comparison_group(req, data)
+    data <- addComparisonGroup(req, data)
 
     # subset to compared cells
     data <- data[, !is.na(data$custom)]
@@ -28,7 +28,7 @@ getBackgroundExpressedGenes <- function(req, data) {
 }
 
 # adds 'custom' slot to identitify background and base cells
-add_comparison_group <- function(req, data) {
+addComparisonGroup <- function(req, data) {
     cells_id <- data$cells_id
 
     # Remove filtered cells
