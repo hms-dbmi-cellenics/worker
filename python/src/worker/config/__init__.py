@@ -27,7 +27,7 @@ if not cluster_env:
     cluster_env = "development"
 
 class Config(types.SimpleNamespace):
-    def get_label(self, label_key):
+    def get_label(self, label_key, default=None):
         labels = {}
 
         try:
@@ -47,7 +47,7 @@ class Config(types.SimpleNamespace):
             label_key,
             os.getenv(
                 re.sub(r'(?<!^)(?=[A-Z])', '_', label_key).upper(),
-                None
+                default
             )
         )
 
@@ -57,7 +57,7 @@ class Config(types.SimpleNamespace):
 
     @property
     def SNS_TOPIC(self):
-        return f"work-results-{cluster_env}-{self.get_label('sandboxId')}"
+        return f"work-results-{cluster_env}-{self.get_label('sandboxId', 'default')}"
 
     @property
     def SANDBOX_ID(self):
