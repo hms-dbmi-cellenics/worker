@@ -16,6 +16,11 @@
 #lerarningRate
 #
 #' @export
+
+library(reticulate)
+use_virtualenv('r-reticulate')
+import('umap-learn')
+
 runEmbedding <- function(req, data) {
     type <- req$body$type
     config <- req$body$config
