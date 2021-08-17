@@ -6,7 +6,6 @@ from aws_xray_sdk import core, global_sdk_config
 
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")
-sandbox_id = os.getenv("SANDBOX_ID", default="default")
 
 # timeout is in seconds, set to 1 hour
 timeout = int(os.getenv("WORK_TIMEOUT", default=str(60 * 60 * 9)))
@@ -28,7 +27,7 @@ if not cluster_env:
     cluster_env = "development"
 
 class Config(types.SimpleNamespace):
-    def get_label(self, label_key):
+    def get_label(self, label_key, default=None):
         labels = {}
 
         try:
@@ -48,7 +47,7 @@ class Config(types.SimpleNamespace):
             label_key,
             os.getenv(
                 re.sub(r'(?<!^)(?=[A-Z])', '_', label_key).upper(),
-                None
+                default
             )
         )
 
@@ -58,7 +57,11 @@ class Config(types.SimpleNamespace):
 
     @property
     def SNS_TOPIC(self):
-        return f"work-results-{cluster_env}-{sandbox_id}"
+        return f"work-results-{cluster_env}-{self.get_label('sandboxId', 'default')}"
+
+    @property
+    def SANDBOX_ID(self):
+        return self.get_label('sandboxId')
 
     @property
     def QUEUE_NAME(self):
@@ -70,7 +73,6 @@ class Config(types.SimpleNamespace):
 config = Config(
     CLUSTER_ENV=cluster_env,
     TIMEOUT=timeout,
-    SANDBOX_ID=sandbox_id,
     IGNORE_TIMEOUT=ignore_timeout,
     AWS_ACCOUNT_ID=aws_account_id,
     AWS_REGION=aws_region,
