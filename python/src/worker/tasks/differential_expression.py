@@ -33,7 +33,6 @@ class DifferentialExpression(Task):
 
         # If "rest", then get all cells in the same hierarchy as the first cell set that arent part of "first"
         if "rest" in name.lower():
-            print("found rest")
             cells = find_cell_ids_in_same_hierarchy(first_cell_set_name, resp)
         else:
             cells = find_cells_by_set_id(name, resp)
