@@ -84,7 +84,7 @@ class Response:
             MessageStructure="json",
         )
 
-        info(f"Request with UUID {self.request['uuid']} successfully sent to SNS, message ID: {r.MessageId}.")
+        info(f"Request with UUID {self.request['uuid']} successfully sent to SNS, message ID: {r['MessageId']}.")
 
         return msg_to_send
 
