@@ -47,7 +47,6 @@ def _read_sqs_message():
     # Try to parse it as JSON
     try:
         message = message[0]
-        info(message.body)
 
         trace_header = message.attributes and message.attributes.get(
             "AWSTraceHeader", None
@@ -74,7 +73,8 @@ def _read_sqs_message():
             e, traceback.format_exc()
         )
 
-        info("Exception when loading json: ", e)
+        info("Exception when loading message", message.body)
+        info("Exception:", e)
         return None
     finally:
         message.delete()
@@ -103,5 +103,5 @@ def consume():
 
         return None
 
-    info(mssg_body)
+    info(json.dumps(mssg_body, indent=2, sort_keys=True))
     return mssg_body

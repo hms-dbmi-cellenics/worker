@@ -1,5 +1,6 @@
 import boto3
 
+from logging import error, info
 from ..config import config
 
 
@@ -15,14 +16,14 @@ def get_item_from_dynamo(experiment_id, item_name):
 
     if item_name in resp.get("Item", {}):
         returned_items = resp["Item"][item_name]
-        print(
+        info(
             "Successfully got {} from database for experiment id {}.".format(
                 item_name, experiment_id
             )
         )
         return returned_items
 
-    print(
+    info(
         "Could not find item {} in the database for experiment id {}.".format(
             item_name, experiment_id
         )
