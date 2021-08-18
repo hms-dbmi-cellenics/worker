@@ -112,7 +112,7 @@ class Response:
             response_msg = self._get_response_msg()
 
 
-        info("Request ", self.request["uuid"], "processed, response message:")
+        info(f"Request {self.request['uuid']} processed, response:")
         info(json.dumps(response_msg, indent=2, sort_keys=True))
 
         return self._send_notification(response_msg)
