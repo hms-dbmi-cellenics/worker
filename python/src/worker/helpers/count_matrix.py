@@ -95,7 +95,7 @@ class CountMatrix:
         return True
 
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException
+        backoff.constant, requests.exceptions.RequestException, interval=5
     )
     def check_if_received(self):
         print('Count matrices updated, checking if R worker is alive...')
