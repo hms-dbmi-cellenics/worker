@@ -9,7 +9,8 @@
 generate_request <- function(task) {
     res = switch(task,
            "expression" = list(body=list(genes=list("gzma"))),
-           "markerHeatmap" = list(body=list(nGenes=5,type="louvain",config=list(resolution=0.5)))
+           "markerHeatmap" = list(body=list(nGenes=5,type="louvain",config=list(resolution=0.5))),
+           "DE" = list(body=list(baseCells=0:500,backgroundCells=501:1499))
            )
 }
 
