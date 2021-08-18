@@ -48,13 +48,7 @@ runEmbedding <- function(req, data) {
                         perplexity = config$perplexity,
                         learning.rate = config$learningRate)
         df_embedding <- Embeddings(data, reduction = type)
-
-    } else if (type=="umap") {
-        # until we figure out why umap-learn and uwot break locally
-        env <- Sys.getenv('CLUSTER_ENV', 'development')
-        umap.method <- ifelse(env == 'development', 'uwot-learn', 'umap-learn')
-        message(sprintf('CLUSTER_ENV: %s --> UMAP method is: %s', env, umap.method))
-
+    } else if(type=="umap"){
         data <- RunUMAP(data,
                         seed.use = 42,
                         reduction=active.reduction,
@@ -62,7 +56,7 @@ runEmbedding <- function(req, data) {
                         verbose = F,
                         min.dist = config$minimumDistance,
                         metric = config$distanceMetric,
-                        umap.method = umap.method)
+                        umap.method = "umap-learn")
 
         df_embedding <- Embeddings(data, reduction = type)
     }
