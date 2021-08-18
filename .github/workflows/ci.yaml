@@ -284,7 +284,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="4"
-            IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
           if [ "${{ matrix.environment }}" = "staging" ]; then
@@ -292,7 +292,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="2"
-            IMAGE_GLOB="glob:${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
