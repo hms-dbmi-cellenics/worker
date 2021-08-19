@@ -64,8 +64,8 @@ run_post <- function(req, post_fun, data) {
             return(res)
         },
         error = function(e) {
-            flog.error("🚩 --------- 🚩")
-            message("Error at worker task: ", e)
+            message("🚩 --------- 🚩")
+            message("Error at worker task: ", e$message)
         }
     )  
 }
