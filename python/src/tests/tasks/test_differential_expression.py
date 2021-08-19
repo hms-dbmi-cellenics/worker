@@ -118,9 +118,7 @@ class MockS3Class:
         if not Bucket or not Key or not Fileobj:
             raise Exception("Parameters not received")
 
-        Fileobj.write(
-            str.encode(f'{{"cellSets": {json.dumps(MockS3Class.response)}}}')
-        )
+        Fileobj.write(str.encode(f'{{"cellSets": {json.dumps(MockS3Class.response)}}}'))
 
         return
         # MockS3Class.no_called += 1
@@ -178,9 +176,7 @@ class TestDifferentialExpression:
 
     @responses.activate
     def test_works_when_all_is_first(self, mock_S3_get):
-        request = self.get_request(
-            cellSet="all-asdasd", compareWith="cluster1"
-        )
+        request = self.get_request(cellSet="all-asdasd", compareWith="cluster1")
 
         DifferentialExpression(request)
 
@@ -202,22 +198,21 @@ class TestDifferentialExpression:
         res = DifferentialExpression(self.get_request()).compute()
         res = res[0].result
         res = json.loads(res)
-
+        print(res)
         for row in res["rows"]:
             keys = sorted(row.keys())
             expected_keys = sorted(
                 # Until the UI side is not changed we need to support old and
                 # new columns
                 # ["gene_names", "_row", "avg_log2FC", "p_val_adj", "pct_1",
+                # p_val avg_log2FC       pct_1     pct_2     p_val_adj       auc    gene_names
                 # "pct_2"]
                 [
                     "gene_names",
+                    "Gene",
                     "zscore",
-                    "abszscore",
-                    "qval",
-                    "log2fc",
-                    "_row",
-                    "avg_log2FC",
+                    "auc",
+                    "logFC",
                     "p_val_adj",
                     "pct_1",
                     "pct_2",
@@ -225,6 +220,7 @@ class TestDifferentialExpression:
             )
             print(expected_keys)
             print(keys)
+            print("HOLA")
             assert keys == expected_keys
 
     @responses.activate
@@ -272,9 +268,7 @@ class TestDifferentialExpression:
         assert len(backgroundCells) == 2
 
     @responses.activate
-    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(
-        self, mock_S3_get
-    ):
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_S3_get):
         MockS3Class.setResponse("hierarchichal_sets")
 
         DifferentialExpression(
@@ -294,6 +288,7 @@ class TestDifferentialExpression:
         de = DifferentialExpression(self.get_request())
 
         assert de.experiment_id == config.EXPERIMENT_ID
+
 
 """
     def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):

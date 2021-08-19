@@ -36,12 +36,26 @@ load_data <- function(fpath) {
 }
 
 run_post <- function(req, post_fun, data) {
-    # over-ride manually to hot-reload
-    # debug_step <- "getClusters"
     debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
 
     handle_debug(req, debug_step)
-    post_fun(req, data)
+
+    message(rep("✧",100))
+    message("➥ Starting ",req$name)
+    message("Input:")
+    message(str(req$body))
+
+    tryCatch({
+            res <- post_fun(req, data)
+            message("✅ Finished ", req$body$name)
+            message(rep("✧",100))
+            return(res)
+        },
+        error = function(e) {
+            flog.error("🚩 --------- 🚩")
+            message("Error at worker task: ", e)
+        }
+    )    
 }
 
 handle_debug <- function(req, debug_step) {
@@ -199,7 +213,7 @@ repeat {
     while(file.info(fpath)$mtime == last_modified) {
         Sys.sleep(10);
     }
-
+    message("Detected a change in the rds object, reloading...")
     proc$kill()
 }
 
