@@ -98,8 +98,3 @@ getClusters <- function(type, resolution, data) {
   return(data)
 }
 
-logWorkerStartFunction <- function(task){
-  message("Starting ",task)
-  message("Input:")
-  message(req)
-}

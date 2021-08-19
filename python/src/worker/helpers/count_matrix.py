@@ -79,7 +79,7 @@ class CountMatrix:
             xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
-            print(f"Downloading {key} from S3...")
+            info(f"Downloading {key} from S3...")
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
                 Key=key,
@@ -95,10 +95,10 @@ class CountMatrix:
         return True
 
     @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException
+        backoff.constant, requests.exceptions.RequestException, interval=5
     )
     def check_if_received(self):
-        print('Count matrices updated, checking if R worker is alive...')
+        info('Count matrices updated, checking if R worker is alive...')
         r = requests.get(
             f"{config.R_WORKER_URL}/health",
         )

@@ -27,7 +27,11 @@ runDE <- function(req, data){
     data <- addComparisonGroup(req, data)
 
     # Compute differential expression
-    result <- FindMarkers(data, group.by = "custom", ident.1 = "base", ident.2 = "background")
+    result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA",group_by="custom")
+    result <- result[result$group=="base",]
+    rownames(result) <- result$feature
+    result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
+    colnames(result)<-list("p_val","logFC","pct_1","pct_2","p_val_adj","auc")
 
     message("checking FindMarkers results:  ", str(result))
     # Replace name with Gene names
