@@ -41,12 +41,22 @@ run_post <- function(req, post_fun, data) {
     handle_debug(req, debug_step)
 
     message(rep("✧",100))
-    message("➥ Starting ",req$name)
+    message("➥ Starting ",sub("run","",basename(req$path)))
     message("Input:")
     message(str(req$body))
 
     tryCatch({
+            message("\nSeurat logs:")
+            message("➡️ \n")
+            tstart <- Sys.time()
             res <- post_fun(req, data)
+            message("\n⬅️")
+
+            message("\nResult head: ")
+            message(str(head(res,10)))
+
+            ttask <- format(Sys.time()-tstart, digits = 2)
+            message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
             message("✅ Finished ", req$body$name)
             message(rep("✧",100))
             return(res)

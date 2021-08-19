@@ -33,7 +33,6 @@ runDE <- function(req, data){
     result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
     colnames(result)<-list("p_val","logFC","pct_1","pct_2","p_val_adj","auc")
 
-    message("checking FindMarkers results:  ", str(result))
     # Replace name with Gene names
     result$gene_names <- data@misc$gene_annotations[
         match(rownames(result), data@misc$gene_annotations$input), "name"
@@ -49,14 +48,11 @@ runDE <- function(req, data){
     # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
     result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
 
-
     ## Old DE results from pagoda2
     #result$zscore <- result$pct_1
     #result$pct <- result$pct_1
     #result$abszscore <- result$pct_2
     #result$log2fc <- result$avg_log2FC
     #result$qval <- result$p_val_adj
-    message("checking FindMarkers results before returning:  ", str(result))
-
     return(result)
 }
