@@ -54,6 +54,7 @@ run_post <- function(req, post_fun, data) {
             res <- post_fun(req, data)
             message("\n⬅️")
 
+            message("\nResult length: ",length(res))
             message("\nResult head: ")
             message(str(head(res,10)))
 
