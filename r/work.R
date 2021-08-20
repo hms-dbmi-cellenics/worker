@@ -41,7 +41,34 @@ run_post <- function(req, post_fun, data) {
     debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
 
     handle_debug(req, debug_step)
-    post_fun(req, data)
+
+    message(rep("✧",100))
+    message("➥ Starting ",sub("run","",basename(req$path)))
+    message("Input:")
+    message(str(req$body))
+
+    tryCatch({
+            message("\nSeurat logs:")
+            message("➡️ \n")
+            tstart <- Sys.time()
+            res <- post_fun(req, data)
+            message("\n⬅️")
+
+            message("\nResult length: ",length(res))
+            message("\nResult head: ")
+            message(str(head(res,10)))
+
+            ttask <- format(Sys.time()-tstart, digits = 2)
+            message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
+            message("✅ Finished ", req$body$name)
+            message(rep("✧",100))
+            return(res)
+        },
+        error = function(e) {
+            message("🚩 --------- 🚩")
+            message("Error at worker task: ", e$message)
+        }
+    )  
 }
 
 handle_debug <- function(req, debug_step) {
@@ -199,7 +226,7 @@ repeat {
     while(file.info(fpath)$mtime == last_modified) {
         Sys.sleep(10);
     }
-
+    message("Detected a change in the rds object, reloading...")
     proc$kill()
 }
 
