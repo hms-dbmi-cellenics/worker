@@ -9,15 +9,23 @@
 #' @examples
 runMarkerHeatmap <- function(req, data) {
   nFeatures <- req$body$nGenes
-  data <- getClusters(req$body$type, req$body$config$resolution, data)
+  cellSets <- req$body$cellSets$children
+  saveRDS(req$body$cellSets,"scratchpad.rds")
+  data$custom <- NA
 
-  all_markers <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA")
+  object_ids <- data$cells_id
+  for(set in cellSets){
+    filtered_cells <- intersect(set$cellIds,object_ids)
+    data$custom[object_ids %in% filtered_cells] <- match(set$key,lapply(cellSets,function(x){x$key}))
+  }
+
+  all_markers <- presto::wilcoxauc(data, group_by="custom",assay = "data", seurat_assay = "RNA")
   all_markers$group <- as.numeric(all_markers$group)
   # Filtering out repeated genes to improve visualization, based on lowest p-value.
   # We could also use fold change.
   all_markers <- all_markers %>%
     group_by(feature) %>%
-    slice(which.min(pval))
+    slice(which.max(logFC))
 
   all_markers <- all_markers %>%
     group_by(group) %>%
