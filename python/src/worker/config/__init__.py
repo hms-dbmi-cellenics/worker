@@ -68,7 +68,7 @@ class Config(types.SimpleNamespace):
         if cluster_env == "development" or cluster_env == "test":
             return "development-queue.fifo"
          
-        return self.get_label('workQueueName') or ""
+        return f"queue-job-{self.get_label('workQueueHash')}-{cluster_env}.fifo"  or ""
 
 config = Config(
     CLUSTER_ENV=cluster_env,
