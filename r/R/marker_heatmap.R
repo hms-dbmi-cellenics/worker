@@ -10,7 +10,6 @@
 runMarkerHeatmap <- function(req, data) {
   nFeatures <- req$body$nGenes
   cellSets <- req$body$cellSets$children
-  saveRDS(req$body$cellSets,"scratchpad.rds")
   data$custom <- NA
 
   object_ids <- data$cells_id
