@@ -15,7 +15,7 @@ runMarkerHeatmap <- function(req, data) {
   object_ids <- data$cells_id
   for (i in 1:length(cellSets)){
     set <- cellSets[[i]]
-    filtered_cells <- intersect(set$cellIds,object_ids)
+    filtered_cells <- intersect(set$cellIds, object_ids)
     data$custom[object_ids %in% filtered_cells] <- i
   }
 
