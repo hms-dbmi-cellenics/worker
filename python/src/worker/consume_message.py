@@ -81,6 +81,18 @@ def _read_sqs_message():
 
     return body
 
+@xray_recorder.capture("consume_message._response_exists")
+def _response_exists(mssg_body):
+    client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
+    ETag = mssg_body["ETag"]
+
+    response = client.list_objects_v2(
+        Bucket=config.RESULTS_BUCKET,
+        Prefix=ETag,
+    )
+    for obj in response.get('Contents', []):
+        if obj['Key'] == ETag:
+            return obj['Size']
 
 def consume():
     mssg_body = _read_sqs_message()
@@ -97,11 +109,20 @@ def consume():
 
     if timeout <= datetime.datetime.utcnow():
         info(
-            f"Skipping processing task with uuid {mssg_body['uuid']}"
-            f"{mssg_body['uuid']} as its timeout of {timeout} has expired..."
+            f"Skipping processing task with ETag {mssg_body['ETag']} "
+            f"as its timeout of {timeout} has expired..."
         )
 
         return None
+    
+    if _response_exists(mssg_body):
+        info(
+            f"Skipping processing task with ETag {mssg_body['ETag']} "
+            f"as a response with this hash is already in S3."
+        )
+
+        return None
+    
 
     info(json.dumps(mssg_body, indent=2, sort_keys=True))
     return mssg_body

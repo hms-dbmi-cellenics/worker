@@ -16,18 +16,14 @@ class Result:
         self.error = error
         self.cacheable = cacheable
 
-    def get_result_object(self, resp_format=False, s3_path=None):
+    def get_result_object(self, resp_format=False):
         obj = {
             "content-type": self.content_type,
             "content-encoding": self.content_encoding,
             "body": self.result,
         }
 
-        if resp_format and s3_path:
-            obj["type"] = "s3-path"
-            obj["body"] = s3_path
-
-        if resp_format and not s3_path:
+        if resp_format:
             obj["type"] = "inline"
 
         return obj

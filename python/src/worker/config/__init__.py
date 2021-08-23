@@ -56,10 +56,6 @@ class Config(types.SimpleNamespace):
         return self.get_label('experimentId')
 
     @property
-    def SNS_TOPIC(self):
-        return f"work-results-{cluster_env}-{self.get_label('sandboxId', 'default')}"
-
-    @property
     def SANDBOX_ID(self):
         return self.get_label('sandboxId')
 
@@ -88,12 +84,16 @@ config = Config(
     LOCAL_DIR=os.path.join(os.pardir, os.pardir, "data"),
 )
 
+config.API_URL=f"http://api.api-{config.SANDBOX_ID}.svc.cluster.local",
 
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
+    config.API_URL="http://host.docker.internal:3000"
+    
     global_sdk_config.set_sdk_enabled(False)
+    
 
 if cluster_env == "development":
     config.BOTO_RESOURCE_KWARGS[
