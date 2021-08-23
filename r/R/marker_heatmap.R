@@ -19,7 +19,7 @@ runMarkerHeatmap <- function(req, data) {
     data$custom[object_ids %in% filtered_cells] <- i
   }
 
-  all_markers <- presto::wilcoxauc(data, group_by="custom",assay = "data", seurat_assay = "RNA")
+  all_markers <- presto::wilcoxauc(data, group_by="custom", assay = "data", seurat_assay = "RNA")
   all_markers$group <- as.numeric(all_markers$group)
   # Filtering out repeated genes to avoid displaying the same genes for two groups, based on lowest p-value
   all_markers <- all_markers %>%
