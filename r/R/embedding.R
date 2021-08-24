@@ -22,14 +22,16 @@ runEmbedding <- function(req, data) {
     pca_nPCs <- 30
 
     # To run embedding, we need to set the reduction.
-    if("active.reduction" %in% names(data@misc))
+    if ("active.reduction" %in% names(data@misc)) {
         active.reduction <- data@misc[["active.reduction"]]
-    else
+    } else {
         active.reduction <- "pca"
+    }
 
     # The slot numPCs is set in dataIntegration with the selectd PCA by the user.
-    if("numPCs" %in% names(data@misc))
+    if("numPCs" %in% names(data@misc)) {
         pca_nPCs <- data@misc[["numPCs"]]
+    }
 
     message("Active reduction --> ", active.reduction)
     message("Active numPCs --> ", pca_nPCs)
@@ -40,7 +42,8 @@ runEmbedding <- function(req, data) {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
         # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
         df_embedding <- Embeddings(data, reduction = type)[,1:2]
-    } else if(type=="tsne"){
+
+    } else if (type == "tsne") {
         data <- RunTSNE(data,
                         reduction = active.reduction,
                         seed.use = 1,
@@ -48,23 +51,29 @@ runEmbedding <- function(req, data) {
                         perplexity = config$perplexity,
                         learning.rate = config$learningRate)
         df_embedding <- Embeddings(data, reduction = type)
-    } else if(type=="umap"){
+
+    } else if (type == "umap") {
+        # faster to run uwot-learn for smaller datasets
+        umap.method <- ifelse(ncol(data) < 35000, 'uwot-learn', 'umap-learn')
+
         data <- RunUMAP(data,
                         seed.use = 42,
                         reduction=active.reduction,
                         dims = 1:pca_nPCs,
-                        verbose = F,
+                        verbose = FALSE,
                         min.dist = config$minimumDistance,
                         metric = config$distanceMetric,
-                        umap.method = "umap-learn")
+                        umap.method = umap.method)
 
         df_embedding <- Embeddings(data, reduction = type)
     }
+
     # Order embedding by cells id in ascending form
     df_embedding <- as.data.frame(df_embedding)
     df_embedding$cells_id <- data@meta.data$cells_id
     df_embedding <- df_embedding[ order(df_embedding$cells_id), ]
     df_embedding <- df_embedding %>% tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
+
     res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], function(x, y) { if(is.na(x)) { return(NULL) } else { return(c(x, y)) } } )
     return(res)
 }
