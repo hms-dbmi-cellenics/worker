@@ -76,7 +76,7 @@ runEmbedding <- function(req, data) {
         tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>%
         select(-cells_id)
 
-    map2_fun <- function(x, y) {if(is.na(x)) return(NULL) else return(c(x, y))}
+    map2_fun <- function(x, y) {if (is.na(x)) return(NULL) else return(c(x, y))}
     res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], map2_fun)
     return(res)
 }
