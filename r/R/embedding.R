@@ -39,7 +39,7 @@ runEmbedding <- function(req, data) {
     table(data$samples)
 
     if (type == "pca") {
-        # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA>
+        # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA
         # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
         df_embedding <- Embeddings(data, reduction = type)[,1:2]
 
@@ -72,8 +72,11 @@ runEmbedding <- function(req, data) {
     df_embedding <- as.data.frame(df_embedding)
     df_embedding$cells_id <- data@meta.data$cells_id
     df_embedding <- df_embedding[ order(df_embedding$cells_id), ]
-    df_embedding <- df_embedding %>% tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
+    df_embedding <- df_embedding %>%
+        tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>%
+        select(-cells_id)
 
-    res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], function(x, y) { if(is.na(x)) { return(NULL) } else { return(c(x, y)) } } )
+    map2_fun <- function(x, y) {if(is.na(x)) return(NULL) else return(c(x, y))}
+    res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], map2_fun)
     return(res)
 }
