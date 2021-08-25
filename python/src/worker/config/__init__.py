@@ -2,6 +2,7 @@ import os
 import re
 import types
 
+import redis
 from aws_xray_sdk import core, global_sdk_config
 
 kube_env = os.getenv("K8S_ENV")
@@ -60,16 +61,20 @@ class Config(types.SimpleNamespace):
         return self.get_label('sandboxId')
 
     @property
-    def REDIS_CONNECTION_KWARGS(self):
-        if cluster_env == "development" or cluster_env == "test":
-            return {"host": "host.docker.internal", "port": 6379}
+    def REDIS_CLIENT(self):
+        if self.redis:
+            return self.redis
+        elif cluster_env == "development" or cluster_env == "test":
+            self.redis = redis.Redis({"host": "host.docker.internal", "port": 6379})
         else:
-            return {
+            self.redis = redis.Redis({
                 "host": "master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
                 "port": 6379,
                 "ssl": True,
                 "ssl_cert_reqs": None
-            }
+            })
+
+        return self.redis
 
     @property
     def QUEUE_NAME(self):

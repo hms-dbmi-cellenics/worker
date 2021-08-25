@@ -89,8 +89,8 @@ class Response:
 
         return ETag
 
-    def _send_notification(self, response_msg):
-        io = Emitter(config.REDIS_CONNECTION_KWARGS)
+    def _send_notification(self):
+        io = Emitter(config.REDIS_CLIENT)
 
         if self.request["socketId"] == "broadcast":
             print(f'{self.request["experimentId"]}-{self.request["body"]["name"]}');
@@ -119,4 +119,4 @@ class Response:
             self._upload(response_msg)
 
         info("Sending socket.io message to clients subscribed to work response")
-        return self._send_notification(response_msg)
+        return self._send_notification()
