@@ -1,3 +1,7 @@
+# see what scaled heatmap should look like
+# scale.data: output of getHeatmapExpression
+# clusters: data$seurat_clusters
+#
 plotScaledHeatmap <- function(scale.data, clusters) {
     cell.order <- unique(names(sort(clusters)))
     gene.order <- rev(row.names(scale.data))
