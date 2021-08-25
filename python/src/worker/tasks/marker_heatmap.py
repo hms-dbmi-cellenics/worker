@@ -6,11 +6,16 @@ import requests
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
+from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
 
 
 class MarkerHeatmap(Task):
+    def __init__(self, msg):
+        super().__init__(msg)
+        self.experiment_id = config.EXPERIMENT_ID
+
     def _format_result(self, result):
         # JSONify result.
         result = json.dumps(result)
@@ -23,6 +28,18 @@ class MarkerHeatmap(Task):
     )
     def compute(self):
         request = {"nGenes": self.task_def["nGenes"], "type":self.task_def["type"], "config":self.task_def["config"]}
+        
+        typeOfSets = self.task_def["typeOfSets"]
+
+        cellSets = get_cell_sets(self.experiment_id)
+
+        for set in cellSets:
+            if(set["key"]==typeOfSets):
+                cellSets = set
+                break
+        
+        request["cellSets"] = cellSets
+
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runMarkerHeatmap",
             headers={"content-type": "application/json"},
