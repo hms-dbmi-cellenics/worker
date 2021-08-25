@@ -70,7 +70,14 @@ class Response:
                     {
                         'Key': 'requestType',
                         'Value': self.request['body']['name']
-                    }
+                    },
+
+                    # TODO: this needs to be removed and a proper
+                    # ACL system implemented before merging.
+                    {
+                        'Key': 'public',
+                        'Value': 'true',
+                    },
                 ]
             }
         )
