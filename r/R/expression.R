@@ -10,9 +10,26 @@
 #
 #' @export
 runExpression <- function(req, data) {
-    #Get the annotation matrix with the geneid to name translation, and the subset with the correct names.
     df <- data@misc$gene_annotations
-    genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
-    genesSubset <- genesSubset[,c("input","name")]
-    return(getExpressionValues(genesSubset,data))
+    row.names(df) <- df$original_name
+
+    genes <- req$body$genes
+    enids <- df[genes, 'input']
+
+    expr <- data[['RNA']]@data[enids,, drop = FALSE] %>% as.matrix()
+
+    raw_expr <- expr %>%
+        completeCellIds(data$cells_id) %>%
+        `colnames<-`(genes)
+
+    trunc_expr <- expr %>%
+        truncateExpression() %>%
+        completeCellIds(data$cells_id) %>%
+        `colnames<-`(genes)
+
+    res <- list(
+        rawExpression = raw_expr,
+        truncatedExpression = trunc_expr
+    )
+    return(res)
 }
