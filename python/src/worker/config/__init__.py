@@ -60,11 +60,16 @@ class Config(types.SimpleNamespace):
         return self.get_label('sandboxId')
 
     @property
-    def REDIS_HOST(self):
+    def REDIS_CONNECTION_KWARGS(self):
         if cluster_env == "development" or cluster_env == "test":
-            return "host.docker.internal"
+            return {"host": "host.docker.internal", "port": 6379}
         else:
-            return "master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com"
+            return {
+                "host": "master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
+                "port": 6379,
+                "ssl": True,
+                "ssl_cert_reqs": None
+            }
 
     @property
     def QUEUE_NAME(self):
