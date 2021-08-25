@@ -1,4 +1,5 @@
 # see what scaled heatmap should look like
+#
 # scale.data: output of getHeatmapExpression
 # clusters: data$seurat_clusters
 #
@@ -27,5 +28,5 @@ plotScaledHeatmap <- function(scale.data, clusters) {
                              na.value = "white") +
         labs(x = NULL, y = NULL, fill = "expression") +
         Seurat::WhiteBackground() +
-        Seurat::NoAxes(keep.text = TRUE)
+        Seurat::NoAxes(keep.text = FALSE)
 }
