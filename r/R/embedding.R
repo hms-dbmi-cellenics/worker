@@ -53,9 +53,6 @@ runEmbedding <- function(req, data) {
         df_embedding <- Embeddings(data, reduction = type)
 
     } else if (type == "umap") {
-        # faster to run uwot-learn for smaller datasets
-        umap.method <- ifelse(ncol(data) < 35000, 'uwot-learn', 'umap-learn')
-
         data <- RunUMAP(data,
                         seed.use = 42,
                         reduction=active.reduction,
@@ -63,7 +60,7 @@ runEmbedding <- function(req, data) {
                         verbose = FALSE,
                         min.dist = config$minimumDistance,
                         metric = config$distanceMetric,
-                        umap.method = umap.method)
+                        umap.method = "umap-learn")
 
         df_embedding <- Embeddings(data, reduction = type)
     }
