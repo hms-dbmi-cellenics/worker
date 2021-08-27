@@ -66,14 +66,14 @@ class Config(types.SimpleNamespace):
             return self.redis
         except AttributeError:
             if cluster_env == "development" or cluster_env == "test":
-                self.redis = redis.Redis({"host": "host.docker.internal", "port": 6379})
+                self.redis = redis.Redis(host="host.docker.internal", port=6379)
             else:
-                self.redis = redis.Redis({
-                    "host": "master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
-                    "port": 6379,
-                    "ssl": True,
-                    "ssl_cert_reqs": None
-                })
+                self.redis = redis.Redis(
+                    host="master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
+                    port=6379,
+                    ssl=True,
+                    ssl_cert_reqs=None
+                )
 
             return self.redis
 
