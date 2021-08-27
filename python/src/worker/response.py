@@ -90,7 +90,7 @@ class Response:
         return ETag
 
     def _send_notification(self):
-        io = Emitter(config.REDIS_CLIENT)
+        io = Emitter({"client": config.REDIS_CLIENT})
 
         if self.request["socketId"] == "broadcast":
             print(f'{self.request["experimentId"]}-{self.request["body"]["name"]}');
