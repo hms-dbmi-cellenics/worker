@@ -62,19 +62,20 @@ class Config(types.SimpleNamespace):
 
     @property
     def REDIS_CLIENT(self):
-        if self.redis:
+        try:
             return self.redis
-        elif cluster_env == "development" or cluster_env == "test":
-            self.redis = redis.Redis({"host": "host.docker.internal", "port": 6379})
-        else:
-            self.redis = redis.Redis({
-                "host": "master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
-                "port": 6379,
-                "ssl": True,
-                "ssl_cert_reqs": None
-            })
+        except AttributeError:
+            if cluster_env == "development" or cluster_env == "test":
+                self.redis = redis.Redis({"host": "host.docker.internal", "port": 6379})
+            else:
+                self.redis = redis.Redis({
+                    "host": "master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
+                    "port": 6379,
+                    "ssl": True,
+                    "ssl_cert_reqs": None
+                })
 
-        return self.redis
+            return self.redis
 
     @property
     def QUEUE_NAME(self):
