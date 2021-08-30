@@ -11,7 +11,7 @@
 #' @export
 runExpression <- function(req, data) {
     df <- data@misc$gene_annotations
-    row.names(df) <- df$original_name
+    row.names(df) <- df$name
 
     genes <- req$body$genes
     enids <- df[genes, 'input']
