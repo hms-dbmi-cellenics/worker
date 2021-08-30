@@ -102,7 +102,7 @@ config = Config(
     LOCAL_DIR=os.path.join(os.pardir, os.pardir, "data"),
 )
 
-config.API_URL=f"http://api.api-{config.SANDBOX_ID}.svc.cluster.local"
+config.API_URL=f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
 
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
