@@ -29,6 +29,7 @@ runDE <- function(req, data){
     # Compute differential expression
     result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA",group_by="custom")
     result <- result[result$group=="base",]
+
     rownames(result) <- result$feature
     result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
     colnames(result)<-list("p_val","logFC","pct_1","pct_2","p_val_adj","auc")
@@ -41,14 +42,13 @@ runDE <- function(req, data){
     result$Gene <- rownames(result)
 
     # As a first view, order by p_val_adj, to have the most significant at first.
-    result <- result[order(result$p_val_adj, decreasing = F), ]
+    result <- result[order(result$p_val_adj, decreasing = FALSE), ]
 
     # Change "." in pct.1 by _
     colnames(result) <- gsub("[.]", "_", colnames(result))
 
     # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
     result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
-
 
     ## Old DE results from pagoda2
     #result$zscore <- result$pct_1
@@ -57,6 +57,11 @@ runDE <- function(req, data){
     #result$log2fc <- result$avg_log2FC
     #result$qval <- result$p_val_adj
     message("checking FindMarkers results before returning:  ", str(result))
+
+    # subset for pagination as in list_genes
+    offset <- req$body$offset + 1
+    limit <- req$body$limit - 1
+    result <- na.omit(result[offset:(offset+limit), ])
 
     return(result)
 }
