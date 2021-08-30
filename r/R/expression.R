@@ -33,3 +33,12 @@ runExpression <- function(req, data) {
     )
     return(res)
 }
+
+runHeatmapExpression <- function(req, data) {
+    df <- data@misc$gene_annotations
+    row.names(df) <- df$name
+
+    enids <- df[req$body$genes, 'input']
+
+    getHeatmapExpression(data, enids)
+}
