@@ -17,6 +17,7 @@ class ClusterCells(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.colors = COLOR_POOL.copy()
+        self.request = msg
 
     def _convert_to_cell_set_object(self, raw):
         # construct new cell set group
