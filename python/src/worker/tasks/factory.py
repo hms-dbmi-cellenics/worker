@@ -11,6 +11,7 @@ from ..result import Result
 from ..tasks import Task
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
+from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
 from .gene_expression import GeneExpression
@@ -28,6 +29,7 @@ class TaskFactory:
             DifferentialExpression,
             GeneExpression,
             ClusterCells,
+            DotPlot,
             GetDoubletScore,
             GetMitochondrialContent,
             MarkerHeatmap
