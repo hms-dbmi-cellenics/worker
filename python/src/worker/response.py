@@ -73,7 +73,7 @@ class Response:
                     },
 
                     # TODO: this needs to be removed and a proper
-                    # ACL system implemented before merging.
+                    # ACL system implemented at some point.
                     {
                         'Key': 'public',
                         'Value': 'true',

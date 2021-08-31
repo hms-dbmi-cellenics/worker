@@ -69,7 +69,7 @@ class ClusterCells(Task):
         info(r.status_code)
     
     def _format_result(self, cell_set_object):
-        return [Result(json.dumps(cell_set_object))]
+        return [Result(json.dumps(cell_set_object), cacheable=False)]
 
     @xray_recorder.capture("ClusterCells.compute")
     @backoff.on_exception(
