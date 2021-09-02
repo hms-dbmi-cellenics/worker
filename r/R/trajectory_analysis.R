@@ -3,7 +3,7 @@ runTrajectoryAnalysis <- function(req,data){
     cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
     cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
 
-    cells_start <- req$body$cells_id
+    cells_start <- req$body$cell_ids
     cell_bcds <- rownames(data@meta.data)[match(cells_start,data@meta.data$cells_id)]
 
     cell_data <- monocle3::order_cells(cell_data,root_cells=cell_bcds)
