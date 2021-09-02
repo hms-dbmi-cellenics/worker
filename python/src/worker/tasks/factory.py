@@ -17,6 +17,7 @@ from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
+from .trajectory_analysis import TrajectoryAnalysis
 
 
 class TaskFactory:
@@ -30,7 +31,8 @@ class TaskFactory:
             ClusterCells,
             GetDoubletScore,
             GetMitochondrialContent,
-            MarkerHeatmap
+            MarkerHeatmap,
+            TrajectoryAnalysis
         )
     }
 

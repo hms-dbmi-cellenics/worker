@@ -26,6 +26,12 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 COPY renv.lock .
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
+RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor','Matrix.utils'))"
+
+RUN R -e "install.packages('devtools')"
+RUN R -e "devtools::install_github('cole-trapnell-lab/leidenbase')"
+RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
+
 # install miniconda and python umap-learn for RunUMAP
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
