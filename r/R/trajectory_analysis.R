@@ -14,6 +14,7 @@ runTrajectoryAnalysis <- function(req,data){
     pseudotime <- pseudotime %>%
         tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
         select(-cells_id)
+    print(pseudotime)
     return(unname(pseudotime))
 }
 

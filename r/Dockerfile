@@ -37,6 +37,16 @@ ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
 
+RUN apt-get install -y gdal-bin
+RUN apt-get install -y libudunits2-dev
+RUN apt-get install -y libgdal-dev
+
+RUN R -e "install.packages('sf')"
+RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')""
+RUN R -e "install.packages('R.utils')"
+RUN R -e "remotes::install_github('satijalab/seurat-wrappers')"
+
+
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
@@ -64,4 +74,6 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 ADD R ./R
 COPY work.R .
 
-CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
+CMD Rscript work.R
+
+#CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
