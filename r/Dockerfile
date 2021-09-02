@@ -42,7 +42,7 @@ RUN apt-get install -y libudunits2-dev
 RUN apt-get install -y libgdal-dev
 
 RUN R -e "install.packages('sf')"
-RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')""
+RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
 RUN R -e "install.packages('R.utils')"
 RUN R -e "remotes::install_github('satijalab/seurat-wrappers')"
 
