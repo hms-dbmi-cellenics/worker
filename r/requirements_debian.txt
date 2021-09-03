@@ -13,3 +13,5 @@ libfreetype6-dev
 libpng-dev
 libtiff5-dev
 libjpeg-dev
+libgdal-dev
+libudunits2-dev
