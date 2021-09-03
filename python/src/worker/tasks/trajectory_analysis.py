@@ -24,6 +24,7 @@ class TrajectoryAnalysis(Task):
     def compute(self):
         request = {
             "cell_ids": self.task_def["cellIds"],
+            "method": self.task_def["method"],
         }
 
         r = requests.post(

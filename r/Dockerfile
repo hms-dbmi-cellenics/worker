@@ -37,7 +37,6 @@ ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
 
-RUN apt-get install -y gdal-bin
 RUN apt-get install -y libudunits2-dev
 RUN apt-get install -y libgdal-dev
 
