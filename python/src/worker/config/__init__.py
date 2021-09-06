@@ -7,8 +7,7 @@ from aws_xray_sdk import core, global_sdk_config
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")
 
-# timeout is in seconds, set to 1 hour
-timeout = int(os.getenv("WORK_TIMEOUT", default=str(60 * 60 * 9)))
+timeout = int(os.getenv("WORK_TIMEOUT", default=str(60 * 60 * 6) if kube_env == "production" else str(60 * 60)))
 ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 
 aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
