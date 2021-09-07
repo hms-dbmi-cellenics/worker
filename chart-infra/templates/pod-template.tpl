@@ -21,7 +21,7 @@
         - containerPort: 4000
         resources:
           requests:
-            memory: "27Gi"
+            memory: "{{ .Values.r.memoryRequest }}"
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.python.image }}"
         env:
@@ -46,7 +46,7 @@
           mountPath: /etc/podinfo
         resources:
           requests:
-            memory: "2Gi"
+            memory: "1Gi"
       volumes:
       - name: 'data'
       - name: watch-script
