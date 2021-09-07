@@ -2,6 +2,7 @@ import os
 import re
 import types
 
+import redis
 from aws_xray_sdk import core, global_sdk_config
 
 kube_env = os.getenv("K8S_ENV")
@@ -61,12 +62,25 @@ class Config(types.SimpleNamespace):
         return self.get_label('experimentId')
 
     @property
-    def SNS_TOPIC(self):
-        return f"work-results-{cluster_env}-{self.get_label('sandboxId', 'default')}"
-
-    @property
     def SANDBOX_ID(self):
         return self.get_label('sandboxId')
+
+    @property
+    def REDIS_CLIENT(self):
+        try:
+            return self.redis
+        except AttributeError:
+            if cluster_env == "development" or cluster_env == "test":
+                self.redis = redis.Redis(host="host.docker.internal", port=6379)
+            else:
+                self.redis = redis.Redis(
+                    host="master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
+                    port=6379,
+                    ssl=True,
+                    ssl_cert_reqs=None
+                )
+
+            return self.redis
 
     @property
     def QUEUE_NAME(self):
@@ -93,12 +107,16 @@ config = Config(
     LOCAL_DIR=os.path.join(os.pardir, os.pardir, "data"),
 )
 
+config.API_URL=f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
 
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
+    config.API_URL="http://host.docker.internal:3000"
+    
     global_sdk_config.set_sdk_enabled(False)
+    
 
 if cluster_env == "development":
     config.BOTO_RESOURCE_KWARGS[
