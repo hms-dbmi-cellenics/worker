@@ -1,5 +1,5 @@
 # pull official base image
-FROM python:3.7-buster AS builder
+FROM python:3.8-buster AS builder
 
 # set working directory
 WORKDIR /src

@@ -1,7 +1,9 @@
 import os
 import re
 import types
+from functools import cached_property
 
+import boto3
 import redis
 from aws_xray_sdk import core, global_sdk_config
 
@@ -32,8 +34,10 @@ if kube_env and not cluster_env:
 if not cluster_env:
     cluster_env = "development"
 
+
 class Config(types.SimpleNamespace):
-    def get_label(self, label_key, default=None):
+    @staticmethod
+    def get_label(label_key, default=None):
         labels = {}
 
         try:
@@ -65,29 +69,40 @@ class Config(types.SimpleNamespace):
     def SANDBOX_ID(self):
         return self.get_label('sandboxId')
 
-    @property
-    def REDIS_CLIENT(self):
-        try:
-            return self.redis
-        except AttributeError:
-            if cluster_env == "development" or cluster_env == "test":
-                self.redis = redis.Redis(host="host.docker.internal", port=6379)
-            else:
-                self.redis = redis.Redis(
-                    host="master.biomage-redis-staging.aykd0e.euw1.cache.amazonaws.com",
-                    port=6379,
-                    ssl=True,
-                    ssl_cert_reqs=None
-                )
+    @cached_property
+    def REDIS_ENDPOINT(self):
+        client = boto3.client("elasticache", **self.BOTO_RESOURCE_KWARGS)
+        response = client.describe_replication_groups(
+            ReplicationGroupId=f"biomage-redis-{cluster_env}"
+        )
 
-            return self.redis
+        # only one group matches the ID
+        replication_group = response["ReplicationGroups"][0]
+
+        # only one node group for redis
+        node_group = replication_group["NodeGroups"][0]
+
+        return node_group["PrimaryEndpoint"]
+
+    @cached_property
+    def REDIS_CLIENT(self):
+        if cluster_env == "development" or cluster_env == "test":
+            return redis.Redis(host="host.docker.internal", port=6379)
+
+        return redis.Redis(
+            host=self.REDIS_ENDPOINT["Address"],
+            port=self.REDIS_ENDPOINT["Port"],
+            ssl=True,
+            ssl_cert_reqs=None
+        )
 
     @property
     def QUEUE_NAME(self):
         if cluster_env == "development" or cluster_env == "test":
             return "development-queue.fifo"
-         
-        return f"queue-job-{self.get_label('workQueueHash')}-{cluster_env}.fifo"  or ""
+
+        return f"queue-job-{self.get_label('workQueueHash')}-{cluster_env}.fifo"
+
 
 config = Config(
     CLUSTER_ENV=cluster_env,
@@ -107,16 +122,15 @@ config = Config(
     LOCAL_DIR=os.path.join(os.pardir, os.pardir, "data"),
 )
 
-config.API_URL=f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
+config.API_URL = f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
 
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
-    config.API_URL="http://host.docker.internal:3000"
-    
+    config.API_URL = "http://host.docker.internal:3000"
+
     global_sdk_config.set_sdk_enabled(False)
-    
 
 if cluster_env == "development":
     config.BOTO_RESOURCE_KWARGS[
