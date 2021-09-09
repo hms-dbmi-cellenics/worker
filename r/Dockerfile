@@ -30,6 +30,7 @@ RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixS
 
 RUN R -e "install.packages('devtools')"
 RUN R -e "devtools::install_github('cole-trapnell-lab/leidenbase')"
+RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
 
 # install miniconda and python umap-learn for RunUMAP
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
