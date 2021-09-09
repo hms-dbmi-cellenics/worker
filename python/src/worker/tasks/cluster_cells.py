@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 from aws_xray_sdk.core import xray_recorder
 from natsort import natsorted
+from logging import info
 
 from ..config import config
 from ..helpers.color_pool import COLOR_POOL
@@ -16,8 +17,9 @@ class ClusterCells(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.colors = COLOR_POOL.copy()
+        self.request = msg
 
-    def _format_result(self, raw):
+    def _convert_to_cell_set_object(self, raw):
         # construct new cell set group
         cell_set_key = self.task_def["cellSetKey"]
         cell_set_name = self.task_def["cellSetName"]
@@ -29,6 +31,7 @@ class ClusterCells(Task):
             "type": "cellSets",
             "children": [],
         }
+
         for cluster in natsorted(raw["cluster"].cat.categories):
             view = raw[raw.cluster == cluster]["cell_ids"]
             cell_set["children"].append(
@@ -41,7 +44,33 @@ class ClusterCells(Task):
                     "cellIds": list(view.map(int)),
                 }
             )
-        return [Result(json.dumps(cell_set), cacheable=False)]
+        
+        return cell_set
+    
+    def _update_through_api(self, cell_set_object):
+        r = requests.patch(
+            f"{config.API_URL}/v1/experiments/{self.request['experimentId']}/cellSets",
+            headers={
+                "content-type": "application/boschni-json-merger+json",
+                "Authorization": self.request["Authorization"],
+            },
+            json=[
+                {
+                    "$match": {
+                        "query": f'$[?(@.key == "{self.task_def["cellSetKey"]}")]',
+                        "$remove": True,
+                    },
+                },
+                {
+                    "$prepend": cell_set_object,
+                }
+            ],
+        )
+
+        info(r.status_code)
+    
+    def _format_result(self, cell_set_object):
+        return [Result(json.dumps(cell_set_object), cacheable=False)]
 
     @xray_recorder.capture("ClusterCells.compute")
     @backoff.on_exception(
@@ -71,4 +100,9 @@ class ClusterCells(Task):
         resR = pd.DataFrame(resR)
         resR.set_index("_row", inplace=True)
         resR["cluster"] = pd.Categorical(resR.cluster)
-        return self._format_result(resR)
+
+        # Convert it into a JSON format and patch the API directly
+        cell_set_object = self._convert_to_cell_set_object(resR)
+        self._update_through_api(cell_set_object)
+
+        return self._format_result(cell_set_object)
