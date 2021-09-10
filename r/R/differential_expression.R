@@ -22,7 +22,7 @@
 #' @export
 #'
 runDE <- function(req, data){
-
+    pagination <- req$body$pagination
     # add comparison group to 'custom' slot
     data <- addComparisonGroup(req, data)
 
@@ -50,18 +50,19 @@ runDE <- function(req, data){
     # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
     result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
 
-    ## Old DE results from pagoda2
-    #result$zscore <- result$pct_1
-    #result$pct <- result$pct_1
-    #result$abszscore <- result$pct_2
-    #result$log2fc <- result$avg_log2FC
-    #result$qval <- result$p_val_adj
-    message("checking FindMarkers results before returning:  ", str(result))
+    message("Paginating results:  ", str(result))
 
-    # subset for pagination as in list_genes
-    offset <- req$body$offset + 1
-    limit <- req$body$limit - 1
-    result <- na.omit(result[offset:(offset+limit), ])
+    order_by <- pagination$orderBy
+    order_decreasing <- pagination$orderDirection == "DESC"
+    offset <- pagination$offset
+    limit <- pagination$limit
 
+    filter <- NULL
+    if("filters" %in% names(pagination)){
+        filter <- pagination$filters$expression
+    }
+
+    result <- handle_pagination(result,offset,limit,order_by,order_decreasing,filter)
+    print(result)
     return(result)
 }

@@ -97,3 +97,21 @@ getClusters <- function(type, resolution, data) {
   }
   return(data)
 }
+
+handle_pagination <- function(gene_results,offset,limit,order_by,order_decreasing,filter=NULL){
+  gene_results$full_count <- nrow(gene_results)
+
+  if(!is.null(filter)){
+    gene_results <- gene_results[grepl(filter, gene_results$gene_name,ignore.case = TRUE),]
+    if (nrow(gene_results)>0){
+      gene_results$full_count = nrow(gene_results)
+    }
+  }
+  if(order_by %in% names(gene_results)){
+    gene_results <- gene_results[order(gene_results[,order_by], decreasing = order_decreasing),]
+  }
+  offset <- offset + 1
+  limit <- limit - 1
+  gene_results <- na.omit(gene_results[(offset):(offset+limit),])
+  return(gene_results)
+}

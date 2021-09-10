@@ -15,47 +15,24 @@
 #
 #' @export
 getList <- function(req, data){
-  selectFields <- req$body$selectFields
-  orderBy <- req$body$orderBy
-  orderDirection <- req$body$orderDirection == "DESC"
+  select_fields <- req$body$selectFields
+  order_by <- req$body$orderBy
+  order_decreasing <- req$body$orderDirection == "DESC"
+  offset <- req$body$offset
+  limit <- req$body$limit
+
   #Gene dispersion slot generated in data ingest script with the same info as the meta.features slot but with the annotated genes
-  df <- data@misc$gene_dispersion
-  #Saving the full count in case there's no filter set.
-  df$full_count = nrow(df)
+  gene_results <- data@misc$gene_dispersion
+
+  colnames(gene_results)[colnames(gene_results)=="SYMBOL"] = "gene_names"
+  colnames(gene_results)[colnames(gene_results)=="variance.standardized"] = "dispersions"
+
+  filter <- NULL
   if ("geneNamesFilter" %in% names(req$body)){
-    #create logical vector with grepl. The placeholders for searching are set on the UI side.
-    df <- df[grepl(req$body$geneNamesFilter, df$SYMBOL,ignore.case = TRUE),]
-    #Update the number of rows for the UI to know how many pages to create.
-    if (nrow(df)>0){
-      df$full_count = nrow(df)
-    }
+    filter <- req$body$geneNamesFilter
   }
-  #Sorting the dataset
-  if (orderBy == "dispersions"){
-    df <- df[order(df$variance.standardized, decreasing = orderDirection),]
-  }else if (orderBy == "gene_names"){
-    df <- df[order(df$SYMBOL, decreasing = orderDirection),]
-  }
-  #
-  #  Offset 0 ->  offset + 1 = 1 ( r arrays start from 1)
-  #  Limit 4 -> limit + offset -1 = 4
-  #
-  #  [ 0 ! 1 ! 2 ! 3 ! 4 ! 5 ! 6 ! 7 ! 8 ! 9 ]
-  #    !           !
-  #    O           L
-  #
-  #  Offset 4 ->  offset + 1 = 5
-  #  Limit 4 -> limit + offset - 1 = 8
-  #
-  #  [ 0 ! 1 ! 2 ! 3 ! 4 ! 5 ! 6 ! 7 ! 8 ! 9 ]
-  #                    !           !
-  #                    O           L
-  #
-  offset <- req$body$offset + 1
-  limit <- req$body$limit - 1
-  #Remove NA's and offset the df
-  df <- na.omit(df[(offset):(offset+limit),])
-  #clean out unwanted columns
-  res <- data.frame(gene_names = df$SYMBOL, dispersions = df$variance.standardized, full_count = df$full_count)
-  return(res)
+
+  gene_results <- handle_pagination(gene_results,offset,limit,order_by,order_decreasing,filter)
+  gene_results <- gene_results[,c("gene_names","dispersions","full_count")]
+  return(gene_results)
 }

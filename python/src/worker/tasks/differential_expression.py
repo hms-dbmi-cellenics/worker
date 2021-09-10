@@ -1,6 +1,7 @@
 import json
-import pandas
+
 import backoff
+import pandas
 import requests
 from aws_xray_sdk.core import xray_recorder
 
@@ -17,12 +18,13 @@ class DifferentialExpression(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.experiment_id = config.EXPERIMENT_ID
+        self.pagination = msg["pagination"]
 
-    def _format_result(self, result):
+    def _format_result(self, result,total):
         result = result.to_dict(orient="records")
 
         # JSONify result.
-        result = json.dumps({"rows": result})
+        result = json.dumps({"total":total,"rows": result})
 
         # Return a list of formatted results.
         return [Result(result)]
@@ -116,6 +118,7 @@ class DifferentialExpression(Task):
         request = {
             "baseCells": [int(x) for x in first_cell_set],
             "backgroundCells": [int(x) for x in second_cell_set],
+            "pagination": self.pagination,
         }
 
         # send request to r worker
@@ -130,9 +133,12 @@ class DifferentialExpression(Task):
         result = pandas.DataFrame.from_dict(r.json())
 
         result.dropna(inplace=True)
-
+        total = 0
+        if len(result) > 0:
+            total = int(result["full_count"][0])
+        result = result.drop("full_count", axis=1)
         # get top x most significant results, if parameter was supplied
         if n_genes:
             result = result.nsmallest(n_genes, ["abszscore"])
 
-        return self._format_result(result)
+        return self._format_result(result,total)
