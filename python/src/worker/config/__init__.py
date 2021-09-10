@@ -69,6 +69,17 @@ class Config(types.SimpleNamespace):
     def SANDBOX_ID(self):
         return self.get_label('sandboxId')
 
+    @property
+    def WORK_QUEUE_HASH(self):
+        return self.get_label('workQueueHash')
+
+    @property
+    def QUEUE_NAME(self):
+        if cluster_env == "development" or cluster_env == "test":
+            return "development-queue.fifo"
+
+        return f"queue-job-{self.WORK_QUEUE_HASH}-{cluster_env}.fifo"
+
     @cached_property
     def REDIS_ENDPOINT(self):
         client = boto3.client("elasticache", **self.BOTO_RESOURCE_KWARGS)
@@ -95,13 +106,6 @@ class Config(types.SimpleNamespace):
             ssl=True,
             ssl_cert_reqs=None
         )
-
-    @property
-    def QUEUE_NAME(self):
-        if cluster_env == "development" or cluster_env == "test":
-            return "development-queue.fifo"
-
-        return f"queue-job-{self.get_label('workQueueHash')}-{cluster_env}.fifo"
 
 
 config = Config(
