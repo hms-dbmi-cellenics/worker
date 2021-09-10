@@ -14,25 +14,28 @@
 # [1]Stuart, T., Butler, A., Hoffman, P., Hafemeister, C., Papalexi, E., Mauck III, W. M., ... & Satija, R. (2019). Comprehensive integration of single-cell data. Cell, 177(7), 1888-1902.
 #
 #' @export
-getList <- function(req, data){
+getList <- function(req, data) {
   select_fields <- req$body$selectFields
   order_by <- req$body$orderBy
   order_decreasing <- req$body$orderDirection == "DESC"
   offset <- req$body$offset
   limit <- req$body$limit
 
-  #Gene dispersion slot generated in data ingest script with the same info as the meta.features slot but with the annotated genes
+  # Gene dispersion slot generated in data ingest script with the same info as the meta.features slot but with the annotated genes
   gene_results <- data@misc$gene_dispersion
 
-  colnames(gene_results)[colnames(gene_results)=="SYMBOL"] = "gene_names"
-  colnames(gene_results)[colnames(gene_results)=="variance.standardized"] = "dispersions"
+  colnames(gene_results)[colnames(gene_results) == "SYMBOL"] <- "gene_names"
+  colnames(gene_results)[colnames(gene_results) == "variance.standardized"] <- "dispersions"
 
   filter <- NULL
-  if ("geneNamesFilter" %in% names(req$body)){
+  if ("geneNamesFilter" %in% names(req$body)) {
     filter <- req$body$geneNamesFilter
   }
 
-  gene_results <- handle_pagination(gene_results,offset,limit,order_by,order_decreasing,filter)
-  gene_results <- gene_results[,c("gene_names","dispersions","full_count")]
+  gene_results <- handle_pagination(gene_results, offset, limit, order_by, order_decreasing, filter)
+
+  columns <- c("gene_names", "dispersions","full_count")
+
+  gene_results <- gene_results[, columns]
   return(gene_results)
 }

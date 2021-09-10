@@ -25,7 +25,6 @@ class DifferentialExpression(Task):
 
         # JSONify result.
         result = json.dumps({"total":total,"rows": result})
-
         # Return a list of formatted results.
         return [Result(result)]
 
@@ -114,12 +113,18 @@ class DifferentialExpression(Task):
         if len(second_cell_set) == 0:
             raise Exception("No cells id fullfills the 2nd cell set.")
 
-        # create request from the corresponding marked cells
         request = {
             "baseCells": [int(x) for x in first_cell_set],
             "backgroundCells": [int(x) for x in second_cell_set],
             "pagination": self.pagination,
         }
+
+        if "filters" in self.pagination:
+            gene_filter = self.pagination["filters"][0]["expression"]
+            regex_chars = "{}|()?¿*+|/.<>"
+            for char in regex_chars:
+                gene_filter = gene_filter.replace(char, "")
+            request["geneNamesFilter"] = gene_filter
 
         # send request to r worker
         r = requests.post(
