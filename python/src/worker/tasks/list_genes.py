@@ -30,10 +30,13 @@ class ListGenes(Task):
         request = self.task_def
         #
         # Remove potentialy hazardous characters from the names filter
-        # Leaving this'd leave us open to a DDOS attack in the form of a very time consuming regex.
-        # More info here: https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+        # Leaving this'd leave us open to a DDOS attack in the form of a very time
+        #  consuming regex.
+        # More info here:
+        # https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
         #
-        # The symbols ^ and $ can't be removed because they are the way the UI indicates the type of search the user is performing.
+        # The symbols ^ and $ can't be removed because they are the way the UI
+        # indicates the type of search the user is performing.
         #
         if "geneNamesFilter" in request:
             gene_filter = request["geneNamesFilter"]
@@ -45,7 +48,8 @@ class ListGenes(Task):
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        # raise an exception if an HTTPError if one occurred because otherwise
+        #  r.json() will fail
         r.raise_for_status()
         r = r.json()
         total = r["full_count"]

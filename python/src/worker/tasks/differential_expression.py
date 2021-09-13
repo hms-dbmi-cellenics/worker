@@ -7,7 +7,9 @@ from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..helpers.find_cell_ids_in_same_hierarchy import (
-    find_all_cell_ids_in_cell_sets, find_cell_ids_in_same_hierarchy)
+    find_all_cell_ids_in_cell_sets,
+    find_cell_ids_in_same_hierarchy,
+)
 from ..helpers.find_cells_by_set_id import find_cells_by_set_id
 from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
@@ -21,11 +23,11 @@ class DifferentialExpression(Task):
         self.experiment_id = config.EXPERIMENT_ID
         self.pagination = msg["pagination"]
 
-    def _format_result(self, result,total):
+    def _format_result(self, result, total):
         result = result.to_dict(orient="records")
 
         # JSONify result.
-        result = json.dumps({"total":total,"rows": result})
+        result = json.dumps({"total": total, "rows": result})
         # Return a list of formatted results.
         return [Result(result)]
 
@@ -33,7 +35,8 @@ class DifferentialExpression(Task):
     def get_cells_in_set(self, name, resp, first_cell_set_name):
         cells = []
 
-        # If "rest", then get all cells in the same hierarchy as the first cell set that arent part of "first"
+        # If "rest", then get all cells in the same hierarchy as the first cell set
+        #  that arent part of "first"
         if "rest" in name.lower():
             cells = find_cell_ids_in_same_hierarchy(first_cell_set_name, resp)
         else:
@@ -46,9 +49,6 @@ class DifferentialExpression(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        # get the top x number of genes to load:
-        n_genes = self.task_def.get("maxNum", None)
-
         # get cell sets from database
         resp = get_cell_sets(self.experiment_id)
 
@@ -56,9 +56,10 @@ class DifferentialExpression(Task):
         second_cell_set_name = self.task_def["compareWith"]
         basis = self.task_def["basis"]
 
-        ## Check if the comparsion is between all the cells or within a cluster
+        # Check if the comparsion is between all the cells or within a cluster
         if not basis or ("all" in basis.lower()):
-            # In case that we are not going to filter by a cluster we remain the set empty
+            # In case that we are not going to filter by a cluster we remain the set
+            #  empty
             filtered_set = set()
         else:
             # In the case that we filter by a cluster we keep the cells id in a set
@@ -77,19 +78,16 @@ class DifferentialExpression(Task):
             complete_cell_set = set(find_all_cell_ids_in_cell_sets(resp))
             # Filter with those that are not in the first cell set
             second_cell_set = [
-                item
-                for item in complete_cell_set
-                if item not in first_cell_set
+                item for item in complete_cell_set if item not in first_cell_set
             ]
         else:
-            # In the case that we compare with specific cell set, we just look for the cell directly
+            # In the case that we compare with specific cell set, we just look for
+            #  the cell directly
             second_cell_set = self.get_cells_in_set(
                 second_cell_set_name, resp, first_cell_set_name
             )
             # Check any possible intersect cells
-            inter_cell_set = set(first_cell_set).intersection(
-                set(second_cell_set)
-            )
+            inter_cell_set = set(first_cell_set).intersection(set(second_cell_set))
             first_cell_set = [
                 item for item in first_cell_set if item not in inter_cell_set
             ]
@@ -97,14 +95,11 @@ class DifferentialExpression(Task):
                 item for item in second_cell_set if item not in inter_cell_set
             ]
 
-        # Keep only the cell_set that are on the specify basis (in the case that we are not in the "All" analysis)
+        # Keep only the cell_set that are on the specify basis (in the case that we
+        # are not in the "All" analysis)
         if len(filtered_set) > 0:
-            second_cell_set = [
-                item for item in second_cell_set if item in filtered_set
-            ]
-            first_cell_set = [
-                item for item in first_cell_set if item in filtered_set
-            ]
+            second_cell_set = [it for it in second_cell_set if it in filtered_set]
+            first_cell_set = [it for it in first_cell_set if it in filtered_set]
 
         # Check if the first cell set is empty
         if len(first_cell_set) == 0:
@@ -131,11 +126,12 @@ class DifferentialExpression(Task):
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
+        # raise an exception if an HTTPError if one occurred because otherwise r.json()
+        #  will fail
         r.raise_for_status()
         r = r.json()
         total = r["full_count"]
         result = pandas.DataFrame.from_dict(r["gene_results"])
         result.dropna(inplace=True)
 
-        return self._format_result(result,total)
+        return self._format_result(result, total)
