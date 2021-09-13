@@ -18,7 +18,7 @@ endif
 # Targets
 #--------------------------------------------------
 bootstrap: ## Installs requirements (python linter & formatter)
-	@pip install flake8 black
+	@pip install flake8 black isort
 fmt: ## Formats python files
 	@echo "==> Formatting files..."
 	@black --line-length 79 $(PYTHON_FILES)
