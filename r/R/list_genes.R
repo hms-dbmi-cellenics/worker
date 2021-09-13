@@ -32,10 +32,12 @@ getList <- function(req, data) {
     filter <- req$body$geneNamesFilter
   }
 
-  gene_results <- handle_pagination(gene_results, offset, limit, order_by, order_decreasing, filter)
+  paginated_results <- handle_pagination(gene_results, offset, limit, order_by, order_decreasing, filter)
+  gene_results <- paginated_results$gene_results
 
-  columns <- c("gene_names", "dispersions","full_count")
+  columns <- c("gene_names", "dispersions")
 
-  gene_results <- gene_results[, columns]
-  return(gene_results)
+  gene_results <- gene_results[,columns]
+
+  return(list(gene_results=gene_results,full_count=paginated_results$full_count))
 }

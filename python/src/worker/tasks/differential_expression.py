@@ -9,6 +9,7 @@ from ..config import config
 from ..helpers.find_cell_ids_in_same_hierarchy import (
     find_all_cell_ids_in_cell_sets, find_cell_ids_in_same_hierarchy)
 from ..helpers.find_cells_by_set_id import find_cells_by_set_id
+from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
@@ -121,10 +122,7 @@ class DifferentialExpression(Task):
 
         if "filters" in self.pagination:
             gene_filter = self.pagination["filters"][0]["expression"]
-            regex_chars = "{}|()?¿*+|/.<>"
-            for char in regex_chars:
-                gene_filter = gene_filter.replace(char, "")
-            request["geneNamesFilter"] = gene_filter
+            request["geneNamesFilter"] = remove_regex(gene_filter)
 
         # send request to r worker
         r = requests.post(
@@ -135,15 +133,9 @@ class DifferentialExpression(Task):
 
         # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
         r.raise_for_status()
-        result = pandas.DataFrame.from_dict(r.json())
-
+        r = r.json()
+        total = r["full_count"]
+        result = pandas.DataFrame.from_dict(r["gene_results"])
         result.dropna(inplace=True)
-        total = 0
-        if len(result) > 0:
-            total = int(result["full_count"][0])
-        result = result.drop("full_count", axis=1)
-        # get top x most significant results, if parameter was supplied
-        if n_genes:
-            result = result.nsmallest(n_genes, ["abszscore"])
 
         return self._format_result(result,total)
