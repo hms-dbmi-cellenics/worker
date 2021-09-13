@@ -21,42 +21,46 @@
 #'              qval            <-- Need to be returned until the UI is changed
 #' @export
 #'
-runDE <- function(req, data){
+runDE <- function(req, data) {
+  pagination <- req$body$pagination
+  # add comparison group to 'custom' slot
+  data <- addComparisonGroup(req, data)
 
-    # add comparison group to 'custom' slot
-    data <- addComparisonGroup(req, data)
+  # Compute differential expression
+  result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA", group_by = "custom")
+  result <- result[result$group == "base", ]
 
-    # Compute differential expression
-    result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA",group_by="custom")
-    result <- result[result$group=="base",]
-    rownames(result) <- result$feature
-    result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
-    colnames(result)<-list("p_val","logFC","pct_1","pct_2","p_val_adj","auc")
+  rownames(result) <- result$feature
+  result <- result[, c("pval", "logFC", "pct_in", "pct_out", "padj", "auc")]
+  colnames(result) <- list("p_val", "logFC", "pct_1", "pct_2", "p_val_adj", "auc")
 
-    message("checking FindMarkers results:  ", str(result))
-    # Replace name with Gene names
-    result$gene_names <- data@misc$gene_annotations[
-        match(rownames(result), data@misc$gene_annotations$input), "name"
-    ]
-    result$Gene <- rownames(result)
+  message("checking FindMarkers results:  ", str(result))
+  # Replace name with Gene names
+  result$gene_names <- data@misc$gene_annotations[
+    match(rownames(result), data@misc$gene_annotations$input), "name"
+  ]
+  result$Gene <- rownames(result)
 
-    # As a first view, order by p_val_adj, to have the most significant at first.
-    result <- result[order(result$p_val_adj, decreasing = F), ]
+  # As a first view, order by p_val_adj, to have the most significant at first.
+  result <- result[order(result$p_val_adj, decreasing = FALSE), ]
 
-    # Change "." in pct.1 by _
-    colnames(result) <- gsub("[.]", "_", colnames(result))
+  # Change "." in pct.1 by _
+  colnames(result) <- gsub("[.]", "_", colnames(result))
 
-    # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
-    result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
+  # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
+  result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
 
+  message("Paginating results:  ", str(result))
+  order_by <- pagination$orderBy
+  order_decreasing <- pagination$orderDirection == "DESC"
+  offset <- pagination$offset
+  limit <- pagination$limit
 
-    ## Old DE results from pagoda2
-    #result$zscore <- result$pct_1
-    #result$pct <- result$pct_1
-    #result$abszscore <- result$pct_2
-    #result$log2fc <- result$avg_log2FC
-    #result$qval <- result$p_val_adj
-    message("checking FindMarkers results before returning:  ", str(result))
+  filter <- NULL
+  if ("geneNamesFilter" %in% names(req$body)) {
+    filter <- req$body$geneNamesFilter
+  }
 
-    return(result)
+  result <- handle_pagination(result, offset, limit, order_by, order_decreasing, filter)
+  return(result)
 }
