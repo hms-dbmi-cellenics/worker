@@ -276,7 +276,7 @@ jobs:
             KUBERNETES_ENV="production"
             REPLICA_COUNT="2"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
-            IMAGE_GLOB="glob:${IMAGE_TAG/$SHORT_TAG_REF/*}"
+            IMAGE_GLOB="${IMAGE_TAG/$SHORT_TAG_REF/*}"
             MEMORY_REQUEST="28Gi"
           fi
 
