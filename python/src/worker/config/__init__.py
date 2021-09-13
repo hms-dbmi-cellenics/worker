@@ -11,7 +11,7 @@ cluster_env = os.getenv("CLUSTER_ENV")
 timeout = int(
     os.getenv(
         "WORK_TIMEOUT",
-        default=str(60 * 60 * 6) if kube_env == "production" else str(60 * 60)
+        default=str(60 * 60 * 3) if kube_env == "production" else str(60 * 10)
     )
 )
 
