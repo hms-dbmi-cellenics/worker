@@ -119,7 +119,7 @@ class DifferentialExpression(Task):
             if "filters" in self.pagination:
                 gene_filter = self.pagination["filters"][0]["expression"]
                 request["geneNamesFilter"] = remove_regex(gene_filter)
-            request["pagination"] = self.pagination,
+            request["pagination"] = self.pagination
 
         # send request to r worker
         r = requests.post(
