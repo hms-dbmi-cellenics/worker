@@ -22,7 +22,6 @@
 #' @export
 #'
 runDE <- function(req, data) {
-  pagination <- req$body$pagination
   # add comparison group to 'custom' slot
   data <- addComparisonGroup(req, data)
 
@@ -50,7 +49,15 @@ runDE <- function(req, data) {
   # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
   result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
 
+
+  if (!("pagination" %in% names(req$body))) {
+    result <- list(gene_results = result,full_count=nrow(result))
+    message("Pagination not enabled, returning results: ", str(result))
+    return(result)
+  }
+
   message("Paginating results:  ", str(result))
+  pagination <- req$body$pagination
   order_by <- pagination$orderBy
   order_decreasing <- pagination$orderDirection == "DESC"
   offset <- pagination$offset
@@ -62,5 +69,6 @@ runDE <- function(req, data) {
   }
 
   result <- handle_pagination(result, offset, limit, order_by, order_decreasing, filter)
+
   return(result)
 }
