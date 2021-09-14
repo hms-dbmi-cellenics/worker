@@ -7,9 +7,7 @@ from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..helpers.find_cell_ids_in_same_hierarchy import (
-    find_all_cell_ids_in_cell_sets,
-    find_cell_ids_in_same_hierarchy,
-)
+    find_all_cell_ids_in_cell_sets, find_cell_ids_in_same_hierarchy)
 from ..helpers.find_cells_by_set_id import find_cells_by_set_id
 from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
@@ -21,7 +19,10 @@ class DifferentialExpression(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.experiment_id = config.EXPERIMENT_ID
-        self.pagination = msg["pagination"]
+        if "pagination" in msg:
+            self.pagination = msg["pagination"]
+        else:
+            self.pagination = {}
 
     def _format_result(self, result, total):
         result = result.to_dict(orient="records")
@@ -112,12 +113,13 @@ class DifferentialExpression(Task):
         request = {
             "baseCells": [int(x) for x in first_cell_set],
             "backgroundCells": [int(x) for x in second_cell_set],
-            "pagination": self.pagination,
         }
 
-        if "filters" in self.pagination:
-            gene_filter = self.pagination["filters"][0]["expression"]
-            request["geneNamesFilter"] = remove_regex(gene_filter)
+        if self.pagination:
+            if "filters" in self.pagination:
+                gene_filter = self.pagination["filters"][0]["expression"]
+                request["geneNamesFilter"] = remove_regex(gene_filter)
+            request["pagination"] = self.pagination,
 
         # send request to r worker
         r = requests.post(
