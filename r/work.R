@@ -68,7 +68,7 @@ run_post <- function(req, post_fun, data) {
             message("🚩 --------- 🚩")
             message("Error at worker task: ", e$message)
         }
-    )  
+    )
 }
 
 handle_debug <- function(req, debug_step) {
@@ -185,6 +185,13 @@ create_app <- function(last_modified, data, fpath) {
         path = "/v0/getBackgroundExpressedGenes",
         FUN = function(req, res) {
             result <- run_post(req, getBackgroundExpressedGenes, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/runDotPlot",
+        FUN = function(req, res) {
+            result <- run_post(req, runDotPlot, data)
             res$set_body(result)
         }
     )
