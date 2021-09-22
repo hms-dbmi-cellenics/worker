@@ -38,8 +38,8 @@ class DotPlot(Task):
 
         cellSets = get_cell_sets(self.experiment_id)
 
-setNames = [set["key"] for set in cellSets]
-request["cellSets"] = cellSets[setNames.index(typeOfSets)]
+        setNames = [set["key"] for set in cellSets]
+        request["cellSets"] = cellSets[setNames.index(typeOfSets)]
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",

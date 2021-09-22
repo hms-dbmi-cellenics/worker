@@ -1,5 +1,6 @@
 runDotPlot <- function(req, data) {
   type <- req$body$type
+  req_genes <- req$body$genes
 
   # construct clusters from cell sets
   data$custom <- NA
@@ -12,20 +13,22 @@ runDotPlot <- function(req, data) {
     data$custom[cells_id %in% filtered_cells] <- i
   }
 
-  if(type=="custom"){
-    df <- data@misc$gene_annotations
-    genes_subset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
-    genes_subset <- genes_subset[, c("input", "name")]
-  }else{
-    #type == marker
-    #Need the marker features
+  if (type == "custom") {
+    annot <- data@misc$gene_annotations
+    annot_subset <- subset(annot, toupper(name) %in% toupper(req_genes))
+    annot_subset <- annot_subset[, c("input", "name")]
+    rownames(annot_subset) <- annot_subset$input
+  } else {
+    # type == marker
+    # Need the marker features
   }
-  dotplot_data <- Seurat::DotPlot(data, features = genes_subset$input, group.by = "custom")$data
 
-  dotplot_data$name <- genes_subset[match(dotplot_data$features.plot, genes_subset$input), "name"]
+  dotplot_data <- Seurat::DotPlot(data, features = annot_subset$input, group.by = "custom")$data
 
-  dotplot_data <- dotplot_data[, c('avg.exp', 'pct.exp', 'name', 'id')]
-  colnames(dotplot_data) <- c('avgExpression', 'cellsPercentage', 'geneName', 'cellSet')
+  dotplot_data$name <- annot_subset[dotplot_data$features.plot, "name"]
+
+  dotplot_data <- dotplot_data[, c("avg.exp", "pct.exp", "name", "id")]
+  colnames(dotplot_data) <- c("avgExpression", "cellsPercentage", "geneName", "cellSet")
 
   res <- purrr::transpose(dotplot_data)
 
