@@ -27,14 +27,14 @@ class MarkerHeatmap(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = {"nGenes": self.task_def["nGenes"], "type":self.task_def["type"], "config":self.task_def["config"]}
+        request = {"nGenes": self.task_def["nGenes"]}
         
-        typeOfSets = self.task_def["typeOfSets"]
+        cellSetKey = self.task_def["cellSetKey"]
 
         cellSets = get_cell_sets(self.experiment_id)
 
         for set in cellSets:
-            if(set["key"]==typeOfSets):
+            if(set["key"]==cellSetKey):
                 cellSets = set
                 break
         
