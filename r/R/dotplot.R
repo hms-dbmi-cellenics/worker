@@ -17,7 +17,6 @@ runDotPlot <- function(req, data) {
     annot <- data@misc$gene_annotations
     annot_subset <- subset(annot, toupper(name) %in% toupper(req_genes))
     annot_subset <- annot_subset[, c("input", "name")]
-    rownames(annot_subset) <- annot_subset$input
   } else {
     # type == marker
     # Need the marker features
