@@ -24,7 +24,7 @@ runDotPlot <- function(req, data) {
   }
 
   dotplot_data <- Seurat::DotPlot(data, features = annot_subset$input, group.by = "custom")$data
-
+  #features.plot has the ensemble ids
   dotplot_data$name <- annot_subset[dotplot_data$features.plot, "name"]
 
   dotplot_data <- dotplot_data[, c("avg.exp", "pct.exp", "name", "id")]
