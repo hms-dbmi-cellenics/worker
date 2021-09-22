@@ -29,7 +29,7 @@ class DotPlot(Task):
     def compute(self):
         request = {"nGenes": self.task_def["nGenes"], "type":self.task_def["type"], "config":self.task_def["config"]}
         
-        if(self.task_def["type"]=="custom"):
+        if self.task_def["type"] is "custom":
             request["genes"] = self.task_def["genes"]
         else:
             request["nGenes"] = self.task_def["nGenes"]
