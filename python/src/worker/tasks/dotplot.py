@@ -39,7 +39,7 @@ class DotPlot(Task):
         cellSets = get_cell_sets(self.experiment_id)
 
         for set in cellSets:
-            if(set["key"]==typeOfSets):
+            if set["key"] is typeOfSets:
                 cellSets = set
                 break
         
