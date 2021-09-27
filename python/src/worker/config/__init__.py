@@ -128,10 +128,6 @@ config = Config(
 
 config.API_URL = f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
 
-# temporary fix, in the future it would be good to unify the api app names for production / staging
-if cluster_env == "production":
-    config.API_URL = f"http://api.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
-
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
