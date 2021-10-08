@@ -15,7 +15,7 @@ the id of the processed experiment that you want to use the worker with.
 ### 1. Building the worker
 While in the `worker/` root folder on the host, you can use `make build`.
 
-To build and run the r and python containers, you can do:
+To build and run the R and python containers, you can do:
 
     make build
 
