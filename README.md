@@ -45,7 +45,7 @@ You can obtain this folder structure if you do either of the following:
 
 OR
 
-- Download the r.rds object and the cell_sets.json file for already processed experiment from S3 and manually add then in `worker/data` under a new folder with name equal to the experiment id.
+- Download the r.rds object and the cell_sets.json file for an already processed experiment from S3 and then manually add them in `worker/data` under a new folder named with the experiment id.
 
 You can have one or more experiments under `worker/data`.
 
