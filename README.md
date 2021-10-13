@@ -2,15 +2,22 @@
 worker
 ======
 
-The single-cell pipeline work executor.
+The single-cell pipeline work executor. It consists of two containers: a Python container and an R container. 
+
+The Python part of the worker is a wrapper around the R part: it receives tasks from the API, parses them, sends them to the R part for computation, then formats the results, uploads them to S3 and sends a notification to the API that they are ready.
+
+The R part of the worker computes single cell analysis tasks on a pre-processed Seurat rds object. It can communicate only with the Python part of the worker.
 
 ## Running locally
+To run the worker locally, you will need to build it and then run it, passing
+the id of the processed experiment that you want to use the worker with.
 
+### 1. Building the worker
 While in the `worker/` root folder on the host, you can use `make build`.
 
-For example to build and run the r and python containers, you can do:
+To build and run the R and python containers, you can do:
 
-    make build && make run
+    make build
 
 Note that during the first time, the build can take up to 40-50 minutes to complete.
 If you get an error, see the `Troubleshoooting` section for help.
@@ -19,6 +26,37 @@ To get a development log stream of both containers running, you can use:
 
     make logs
 
+### 2. Running the worker
+Before running the worker, you need to have a folder named with the experiment id that you want to load. The folder should be saved under `worker/data` and it has to contain:
+ - Processed rds object file, called `r.rds`
+ - A json file of the cell_sets for that experiment, called `cell_sets.json`
+
+Here is an example folder structure for experiment id `1234`:
+
+```bash
+data
+├── 1234
+│   ├── cell_sets.json
+│   └── r.rds
+```
+
+You can obtain this folder structure if you do either of the following:
+- Start the rest of the Cellscope platform components locally, then upload samples from Data Management and launch analysis.
+
+OR
+
+- Download the r.rds object and the cell_sets.json file for an already processed experiment from S3 and then manually add them in `worker/data` under a new folder named with the experiment id.
+
+You can have one or more experiments under `worker/data`.
+
+To run the worker with the experiment id of your choice, do the following:
+In a terminal, while in the `worker/` root folder, type the following:
+
+    EXPERIMENT_ID=1234 make run
+    
+where `1234` is the experiment id of your choice.
+
+### Running tests
 Assuming the containers are running, you can execute the (pytest) unit tests using:
 
     make test
