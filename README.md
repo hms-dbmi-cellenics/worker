@@ -27,7 +27,7 @@ To get a development log stream of both containers running, you can use:
     make logs
 
 ### 2. Running the worker
-Before running the worker, you need to have a folder with named with the experiment id that you want to load. The folder should be saved under `worker/data` and it has to contain:
+Before running the worker, you need to have a folder named with the experiment id that you want to load. The folder should be saved under `worker/data` and it has to contain:
  - Processed rds object file, called `r.rds`
  - A json file of the cell_sets for that experiment, called `cell_sets.json`
 
