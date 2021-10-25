@@ -47,7 +47,7 @@ class Response:
     def _upload(self, response_msg):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
-        body = json.dumps(response_msg)
+        body = json.dumps(response_msg["results"][0]["body"])
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
