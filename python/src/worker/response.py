@@ -1,4 +1,5 @@
 import json
+import gzip
 import uuid
 from functools import reduce
 from logging import info
@@ -49,7 +50,9 @@ class Response:
         ETag = self.request["ETag"]
 
         updatedResponseMsg = {"cacheable": response_msg["response"]["cacheable"], "data": json.loads(response_msg["results"][0]["body"])}
-        body = json.dumps(updatedResponseMsg)
+        json_body = json.dumps(updatedResponseMsg)
+
+        gzipped_body = gzip.compress(json_body.encode('utf-8'))
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
@@ -58,7 +61,7 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.put_object(Key=ETag, Bucket=self.s3_bucket, Body=body)
+        client.put_object(Key=ETag, Bucket=self.s3_bucket, Body=gzipped_body)
 
         client.put_object_tagging(
             Key=ETag,
