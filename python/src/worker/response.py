@@ -52,7 +52,11 @@ class Response:
         updatedResponseMsg = {"cacheable": response_msg["response"]["cacheable"], "data": json.loads(response_msg["results"][0]["body"])}
         json_body = json.dumps(updatedResponseMsg)
 
+        print("Starting compression before upload to s3")
+
         gzipped_body = gzip.compress(json_body.encode('utf-8'))
+
+        print("Compression finished")
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
