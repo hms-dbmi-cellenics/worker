@@ -27,20 +27,38 @@ class DotPlot(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = {"nGenes": self.task_def["nGenes"], "type":self.task_def["type"], "config":self.task_def["config"]}
+        request = {"nGenes": self.task_def["nGenes"], "markerGenes":self.task_def["markerGenes"], "config":self.task_def["config"]}
         
         if self.task_def["type"] is "custom":
             request["genes"] = self.task_def["genes"]
         else:
             request["nGenes"] = self.task_def["nGenes"]
 
-        typeOfSets = self.task_def["typeOfSets"]
+        #getting cell ids for the groups we want to show. 
+        typeOfSets = subset["cellClassKey"]
 
         cellSets = get_cell_sets(self.experiment_id)
 
         setNames = [set["key"] for set in cellSets]
         request["cellSets"] = cellSets[setNames.index(typeOfSets)]
 
+        # Getting the cell ids for subsetting the seurat object with a group of cells. 
+        subset = self.task_def["subset"]
+        subsetCellSetsKey = subset["cellSetKey"]
+        if(subsetCellSetsKey.lower() == "all"):
+            request["subsetCellSets"] = request["cellSets"]
+        else:    
+            subsetCellSetsKey = subsetCellSetsKey.split("/")
+            subsetCellSetsClass = subsetCellSetsKey[0]
+            subsetCellSet = subsetCellSetsKey[1]
+            subset = cellSets[setNames.index(subsetCellSetsClass)]
+            if(subsetCellSet.lower() == "all"):
+                request["subsetCellSets"] = subset
+            else:
+                setNames = [set["key"] for set in subset]
+                subset = subset[setNames.index(subsetCellSet)] 
+                request["subsetCellSets"] = subset  
+    
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
             headers={"content-type": "application/json"},
