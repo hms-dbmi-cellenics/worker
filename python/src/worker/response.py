@@ -49,7 +49,7 @@ class Response:
         ETag = self.request["ETag"]
 
         updatedResponseMsg = response_msg["results"][0]["body"]
-        body = json.dumps(updatedResponseMsg)
+        body = updatedResponseMsg
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
