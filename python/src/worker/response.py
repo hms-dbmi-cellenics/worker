@@ -48,7 +48,7 @@ class Response:
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
 
-        updatedResponseMsg = {"cacheable": response_msg["response"]["cacheable"], "data": json.loads(response_msg["results"][0]["body"])}
+        updatedResponseMsg = response_msg["results"][0]["body"]
         body = json.dumps(updatedResponseMsg)
 
         # Disabled X-Ray to fix a botocore bug where the context
