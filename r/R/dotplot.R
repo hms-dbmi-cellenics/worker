@@ -17,7 +17,7 @@ runDotPlot <- function(req, data) {
   }
 
   if(length(subsetIds)>0){
-    meta_data_subset <- data@meta.data[match(subsetIds, scdata@meta.data$cells_id), ]
+    meta_data_subset <- data@meta.data[match(subsetIds, data@meta.data$cells_id), ]
     current_cells <- rownames(meta_data_subset)
     data <- subset(data, cells = current_cells)
   }else{

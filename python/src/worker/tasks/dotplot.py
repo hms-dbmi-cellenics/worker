@@ -27,12 +27,16 @@ class DotPlot(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = {"nGenes": self.task_def["nGenes"], "markerGenes":self.task_def["markerGenes"], "config":self.task_def["config"]}
+
+        input = self.task_def['input']
+        subset = self.task_def["subset"]
+
+        request = {"markerGenes":self.task_def["markerGenes"]}
         
-        if self.task_def["type"] is "custom":
-            request["genes"] = self.task_def["genes"]
+        if self.task_def["markerGenes"]:
+            request["nGenes"] = input["nGenes"]
         else:
-            request["nGenes"] = self.task_def["nGenes"]
+            request["genes"] = input["genes"]
 
         #getting cell ids for the groups we want to show. 
         typeOfSets = subset["cellClassKey"]
@@ -43,7 +47,6 @@ class DotPlot(Task):
         request["cellSets"] = cellSets[setNames.index(typeOfSets)]
 
         # Getting the cell ids for subsetting the seurat object with a group of cells. 
-        subset = self.task_def["subset"]
         subsetCellSetsKey = subset["cellSetKey"]
         if(subsetCellSetsKey.lower() == "all"):
             request["subsetCellSets"] = request["cellSets"]
