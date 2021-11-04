@@ -22,29 +22,29 @@ class Response:
 
         self.s3_bucket = config.RESULTS_BUCKET
 
-    def _construct_response_msg(self, brief=False):
-        message = {
-            "request": self.request,
-            "response": {"cacheable": self.cacheable, "error": self.error},
-        }
-
-        if not brief:
-            message["result"] = self.result
-        
-        return message
-
-    @xray_recorder.capture("Response._upload")
-    def _upload(self, response_msg):
-        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
-        ETag = self.request["ETag"]
-
-        json_body = json.dumps(response_msg["result"].result)
+    def _construct_data_for_upload(self):
+        json_body = json.dumps(self.result.result)
 
         print("Starting compression before upload to s3")
 
         gzipped_body = gzip.compress(json_body.encode('utf-8'))
 
         print("Compression finished")
+
+        return gzipped_body
+
+    def _construct_response_msg(self):
+        message = {
+            "request": self.request,
+            "response": {"cacheable": self.cacheable, "error": self.error},
+        }
+        
+        return message
+
+    @xray_recorder.capture("Response._upload")
+    def _upload(self, response_data):
+        client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
+        ETag = self.request["ETag"]
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
@@ -53,7 +53,7 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.put_object(Key=ETag, Bucket=self.s3_bucket, Body=gzipped_body)
+        client.put_object(Key=ETag, Bucket=self.s3_bucket, Body=response_data)
 
         client.put_object_tagging(
             Key=ETag,
@@ -94,12 +94,12 @@ class Response:
 
             io.Emit(
                 f'{self.request["experimentId"]}-{self.request["body"]["name"]}',
-                self._construct_response_msg(brief=True)
+                self._construct_response_msg()
             )
         else:
             io.Emit(
                 f'WorkResponse-{self.request["ETag"]}',
-                self._construct_response_msg(brief=True)
+                self._construct_response_msg()
             )
 
     
@@ -107,13 +107,14 @@ class Response:
 
     @xray_recorder.capture("Response.publish")
     def publish(self):
-        response_msg = self._construct_response_msg()
-
         info(f"Request {self.request['ETag']} processed, response:")
 
         if not self.error and self.cacheable:
+            
+            response_data = self._construct_data_for_upload()
+
             info("Uploading response to S3")
-            self._upload(response_msg)
+            self._upload(response_data)
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()
