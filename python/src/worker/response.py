@@ -23,14 +23,16 @@ class Response:
         self.s3_bucket = config.RESULTS_BUCKET
 
     def _construct_data_for_upload(self):
-        json_body = json.dumps(self.result.result)
+        info("Dumping json data into a string")
 
-        print("Starting compression before upload to s3")
+        json_body = json.dumps(self.result.data)
+
+        info("Starting compression before upload to s3")
 
         gzipped_body = gzip.compress(json_body.encode('utf-8'))
 
-        print("Compression finished")
-
+        info("Compression finished")
+        
         return gzipped_body
 
     def _construct_response_msg(self):
