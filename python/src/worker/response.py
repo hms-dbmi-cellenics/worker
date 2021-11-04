@@ -109,7 +109,6 @@ class Response:
         info(f"Request {self.request['ETag']} processed, response:")
 
         if not self.error and self.cacheable:
-            
             response_data = self._construct_data_for_upload()
 
             info("Uploading response to S3")
