@@ -13,20 +13,12 @@ from .config import config
 
 
 class Response:
-    def __init__(self, request, results):
+    def __init__(self, request, result):
         self.request = request
-        self.results = results
+        self.result = result
 
-        self.error = False
-        for result in self.results:
-            self.error = self.error or result.error
-
-        if self.error:
-            self.cacheable = False
-        else:
-            self.cacheable = True
-            for result in self.results:
-                self.cacheable = self.cacheable and result.cacheable
+        self.error = result.error
+        self.cacheable = (not result.error) and result.cacheable
 
         self.s3_bucket = config.RESULTS_BUCKET
 
@@ -37,10 +29,7 @@ class Response:
         }
 
         if not brief:
-            result_objs = [
-                res.get_result_object(resp_format=True) for res in self.results
-            ]
-            message["results"] = list(result_objs)
+            message["result"] = self.result
         
         return message
 
@@ -49,8 +38,7 @@ class Response:
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
 
-        updatedResponseMsg = {"cacheable": response_msg["response"]["cacheable"], "data": json.loads(response_msg["results"][0]["body"])}
-        json_body = json.dumps(updatedResponseMsg)
+        json_body = json.dumps(response_msg)
 
         print("Starting compression before upload to s3")
 

@@ -56,13 +56,11 @@ class TaskFactory:
 
             # Only send real traces in development.
             if config.CLUSTER_ENV == "development":
-                result = [Result(json.dumps(trace), error=True)]
+                result = Result(trace, error=True)
             else:
                 result = [
                     Result(
-                        json.dumps(
-                            "An unexpected error occurred while performing the work."
-                        ),
+                        "An unexpected error occurred while performing the work.",
                         error=True,
                     )
                 ]

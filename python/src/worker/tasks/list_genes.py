@@ -16,11 +16,8 @@ class ListGenes(Task):
         # convert result to list of row dicts
         result = result.to_dict(orient="records")
 
-        # JSONify result.
-        result = json.dumps({"total": total, "rows": result})
-
         # Return a list of formatted results.
-        return [Result(result)]
+        return Result({"total": total, "rows": result})
 
     @xray_recorder.capture("ListGenes.compute")
     @backoff.on_exception(

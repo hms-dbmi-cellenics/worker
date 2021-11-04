@@ -28,10 +28,8 @@ class DifferentialExpression(Task):
     def _format_result(self, result, total):
         result = result.to_dict(orient="records")
 
-        # JSONify result.
-        result = json.dumps({"total": total, "rows": result})
         # Return a list of formatted results.
-        return [Result(result)]
+        return Result({"total": total, "rows": result})
 
     # Get cells values for the cell set.
     def get_cells_in_set(self, name, resp, first_cell_set_name):
