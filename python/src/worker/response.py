@@ -111,7 +111,7 @@ class Response:
 
         info(f"Request {self.request['ETag']} processed, response:")
 
-        if not response_msg["response"]["error"] and response_msg["response"]["cacheable"]:
+        if not self.error and self.cacheable:
             info("Uploading response to S3")
             self._upload(response_msg)
 
