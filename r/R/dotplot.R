@@ -5,16 +5,7 @@ runDotPlot <- function(req, data) {
   cell_sets <- req$body$cellSets$children
   subsetCellSets <- req$body$subsetCellSets
 
-  # subsetCellSets might be one cellSet or the scratchpad, with many cellSets inside.
-  if ("cellIds" %in% names(subsetCellSets)) {
-    subsetIds <- subsetCellSets$cellIds
-  } else {
-    subsetIds <- list()
-    for (i in seq_along(subsetCellSets$children)) {
-      set <- cell_sets[[i]]
-      subsetIds <- append(subsetIds, set$cellIds)
-    }
-  }
+  subsetIds <- subsetCellSets$cellIds
 
   if (length(subsetIds) > 0) {
     meta_data_subset <- data@meta.data[match(subsetIds, data@meta.data$cells_id), ]
@@ -24,15 +15,25 @@ runDotPlot <- function(req, data) {
   } else {
     return(list())
   }
-
-  if(length(cell_sets) < 1){
+  if (length(cell_sets) < 1) {
     return(list())
   }
 
   for (i in seq_along(cell_sets)) {
     set <- cell_sets[[i]]
     filtered_cells <- intersect(set$cellIds, cells_id)
-    data$custom[cells_id %in% filtered_cells] <- set$name
+    if (set$name %in% data$custom) {
+      data$custom[cells_id %in% filtered_cells] <- paste0(set$name, i)
+    } else {
+      data$custom[cells_id %in% filtered_cells] <- set$name
+    }
+  }
+  data <- subset(data, subset = custom != "NA")
+
+  if (length(current_cells) > 0) {
+    data <- subset(data, cells = current_cells)
+  } else {
+    return(list())
   }
 
   if (markerGenes) {
@@ -46,11 +47,10 @@ runDotPlot <- function(req, data) {
     annot_subset <- subset(annot, toupper(name) %in% toupper(req_genes))
     features <- annot_subset[, c("input", "name")]
   }
-
   dotplot_data <- Seurat::DotPlot(data, features = features$input, group.by = "custom")$data
   # features.plot has the ensemble ids
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
-  dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id,numeric=TRUE),]
+  dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
   dotplot_data <- dotplot_data %>% transmute(cellSets = as.character(id), geneName = as.character(name), avgExpression = avg.exp, cellsPercentage = pct.exp)
 
   res <- purrr::transpose(dotplot_data)
