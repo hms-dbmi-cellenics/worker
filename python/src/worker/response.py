@@ -38,7 +38,7 @@ class Response:
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
 
-        json_body = json.dumps(response_msg)
+        json_body = json.dumps(response_msg["result"].result)
 
         print("Starting compression before upload to s3")
 
