@@ -1,3 +1,37 @@
+getTopMarkerGenes <- function(nFeatures, data, cellSets) {
+  data$custom <- NA
+
+  object_ids <- data$cells_id
+  for (i in seq_along(cellSets)) {
+    set <- cellSets[[i]]
+    filtered_cells <- intersect(set$cellIds, object_ids)
+    data$custom[object_ids %in% filtered_cells] <- i
+  }
+
+  all_markers <- presto::wilcoxauc(data, group_by = "custom", assay = "data", seurat_assay = "RNA")
+  all_markers$group <- as.numeric(all_markers$group)
+  # Filtering out repeated genes to avoid displaying the same genes for two groups, based on lowest p-value
+  all_markers <- all_markers %>%
+    dplyr::filter(logFC > 0) %>%
+    group_by(feature) %>%
+    slice(which.min(pval))
+
+  top_markers <- all_markers %>%
+    group_by(group) %>%
+    arrange(desc(logFC)) %>%
+    dplyr::slice_head(n = nFeatures) %>%
+    arrange(group)
+
+  return(top_markers)
+}
+
+getMarkerNames <- function(data, all_markers) {
+  all_markers$name <- data@misc$gene_annotations[all_markers$feature, "name"]
+  all_markers <- all_markers %>% transmute(input = feature, name = name)
+  rownames(all_markers) <- c()
+  return(all_markers)
+}
+
 #' Returns expression values for selected genes
 #'
 #' @param genes - Must have names and input(ensmbl ids)
@@ -109,10 +143,10 @@ handle_pagination <- function(gene_results, offset, limit, order_by, order_decre
     gene_results <- gene_results[order(gene_results[, order_by], decreasing = order_decreasing), ]
   }
 
-  #Offset starts at 0, limit is number of results per page
+  # Offset starts at 0, limit is number of results per page
   offset <- offset + 1
   limit <- limit - 1
 
   gene_results <- na.omit(gene_results[(offset):(offset + limit), ])
-  return(list(gene_results = gene_results,full_count=full_count))
+  return(list(gene_results = gene_results, full_count = full_count))
 }

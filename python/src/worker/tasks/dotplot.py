@@ -55,9 +55,11 @@ class DotPlot(Task):
             subsetCellSetsClass = subsetCellSetsKey[0]
             subsetCellSet = subsetCellSetsKey[1]
             subset = cellSets[setNames.index(subsetCellSetsClass)]
+
             if(subsetCellSet.lower() == "all"):
                 request["subsetCellSets"] = subset
             else:
+                subset = subset["children"]
                 setNames = [set["key"] for set in subset]
                 subset = subset[setNames.index(subsetCellSet)] 
                 request["subsetCellSets"] = subset  
