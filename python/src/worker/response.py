@@ -29,8 +29,10 @@ class Response:
         with gzip.open(gzipped_body, 'wt', encoding="utf-8") as zipfile:
             json.dump(self.result.data, zipfile)
 
+        gzipped_body.seek(0)
+        
         info("Compression finished")
-        return gzipped_body.getvalue()
+        return gzipped_body
 
     def _construct_response_msg(self):
         message = {
@@ -52,7 +54,7 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.put_object(Key=ETag, Bucket=self.s3_bucket, Body=response_data)
+        client.upload_fileobj(response_data, self.s3_bucket, ETag)
 
         client.put_object_tagging(
             Key=ETag,
