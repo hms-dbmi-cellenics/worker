@@ -1,7 +1,6 @@
 import json
 
 import backoff
-import numpy as np
 import requests
 from aws_xray_sdk.core import xray_recorder
 
@@ -28,17 +27,17 @@ class DotPlot(Task):
     )
     def compute(self):
 
-        input = self.task_def['input']
+        input = self.task_def["input"]
         subset = self.task_def["subset"]
 
-        request = {"markerGenes":self.task_def["markerGenes"]}
-        
+        request = {"markerGenes": self.task_def["markerGenes"]}
+
         if self.task_def["markerGenes"]:
             request["nGenes"] = input["nGenes"]
         else:
             request["genes"] = input["genes"]
 
-        #getting cell ids for the groups we want to show. 
+        # getting cell ids for the groups we want to show.
         typeOfSets = subset["cellClassKey"]
 
         cellSets = get_cell_sets(self.experiment_id)
@@ -46,23 +45,21 @@ class DotPlot(Task):
         setNames = [set["key"] for set in cellSets]
         request["cellSets"] = cellSets[setNames.index(typeOfSets)]
 
-        # Getting the cell ids for subsetting the seurat object with a group of cells. 
+        # Getting the cell ids for subsetting the seurat object with a group of cells.
         subsetCellSetsKey = subset["cellSetKey"]
         request["allCellSets"] = subsetCellSetsKey.lower() == "all"
-        if(subsetCellSetsKey.lower() == "all"):
+        if subsetCellSetsKey.lower() == "all":
             request["subsetCellSets"] = request["cellSets"]
-        else:    
+        else:
             subsetCellSetsKey = subsetCellSetsKey.split("/")
             subsetCellSetsClass = subsetCellSetsKey[0]
             subsetCellSet = subsetCellSetsKey[1]
             subset = cellSets[setNames.index(subsetCellSetsClass)]
             subset = subset["children"]
             setNames = [set["key"] for set in subset]
-            subset = subset[setNames.index(subsetCellSet)] 
-            request["subsetCellSets"] = subset  
-        
-        
-    
+            subset = subset[setNames.index(subsetCellSet)]
+            request["subsetCellSets"] = subset
+
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
             headers={"content-type": "application/json"},
