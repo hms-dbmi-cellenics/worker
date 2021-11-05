@@ -4,8 +4,22 @@ runDotPlot <- function(req, data) {
   data$custom <- NA
   cell_sets <- req$body$cellSets$children
   subsetCellSets <- req$body$subsetCellSets
+  all_cell_sets <- req$body$allCellSets
 
-  subsetIds <- subsetCellSets$cellIds
+  if (length(cell_sets) < 1) {
+    message("The requested Cell Sets are empty. Returning empty results.")
+    return(list())
+  }
+
+  if (!all_cell_sets) {
+    subsetIds <- subsetCellSets$cellIds
+  } else {
+    subsetIds <- list()
+    for (i in seq_along(subsetCellSets$children)) {
+      set <- cell_sets[[i]]
+      subsetIds <- append(subsetIds, set$cellIds)
+    }
+  }
 
   if (length(subsetIds) > 0) {
     meta_data_subset <- data@meta.data[match(subsetIds, data@meta.data$cells_id), ]
@@ -13,9 +27,7 @@ runDotPlot <- function(req, data) {
     data <- subset(data, cells = current_cells)
     cells_id <- data$cells_id
   } else {
-    return(list())
-  }
-  if (length(cell_sets) < 1) {
+    message("The ids to subset the object are empty. Returning empty results.")
     return(list())
   }
 
@@ -28,13 +40,8 @@ runDotPlot <- function(req, data) {
       data$custom[cells_id %in% filtered_cells] <- set$name
     }
   }
+  #If NA values are left in the group, dotplot function will fail.
   data <- subset(data, subset = custom != "NA")
-
-  if (length(current_cells) > 0) {
-    data <- subset(data, cells = current_cells)
-  } else {
-    return(list())
-  }
 
   if (markerGenes) {
     nFeatures <- req$body$nGenes

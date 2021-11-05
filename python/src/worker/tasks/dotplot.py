@@ -48,6 +48,7 @@ class DotPlot(Task):
 
         # Getting the cell ids for subsetting the seurat object with a group of cells. 
         subsetCellSetsKey = subset["cellSetKey"]
+        request["allCellSets"] = subsetCellSetsKey.lower() == "all"
         if(subsetCellSetsKey.lower() == "all"):
             request["subsetCellSets"] = request["cellSets"]
         else:    
@@ -55,14 +56,12 @@ class DotPlot(Task):
             subsetCellSetsClass = subsetCellSetsKey[0]
             subsetCellSet = subsetCellSetsKey[1]
             subset = cellSets[setNames.index(subsetCellSetsClass)]
-
-            if(subsetCellSet.lower() == "all"):
-                request["subsetCellSets"] = subset
-            else:
-                subset = subset["children"]
-                setNames = [set["key"] for set in subset]
-                subset = subset[setNames.index(subsetCellSet)] 
-                request["subsetCellSets"] = subset  
+            subset = subset["children"]
+            setNames = [set["key"] for set in subset]
+            subset = subset[setNames.index(subsetCellSet)] 
+            request["subsetCellSets"] = subset  
+        
+        
     
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
