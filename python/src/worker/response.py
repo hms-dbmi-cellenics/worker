@@ -1,3 +1,4 @@
+import io
 import json
 import gzip
 import uuid
@@ -23,14 +24,13 @@ class Response:
         self.s3_bucket = config.RESULTS_BUCKET
 
     def _construct_data_for_upload(self):
-        info("Dumping json data into a string")
-        json_body = json.dumps(self.result.data)
-
         info("Starting compression before upload to s3")
-        gzipped_body = gzip.compress(json_body.encode('utf-8'))
+        gzipped_body = io.BytesIO()
+        with gzip.open(gzipped_body, 'wt', encoding="utf-8") as zipfile:
+            json.dump(self.result.data, zipfile)
 
         info("Compression finished")
-        return gzipped_body
+        return gzipped_body.getvalue()
 
     def _construct_response_msg(self):
         message = {
