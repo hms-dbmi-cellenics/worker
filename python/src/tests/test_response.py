@@ -87,23 +87,15 @@ class TestResponse:
         stubber.assert_no_pending_responses()
 
     def test_get_response_msg_returns_original_request_object(self):
-        results = [
-            Result({"result1key": "result1val"}),
-            Result({"result2key": "result2val"}),
-        ]
-        resp = Response(self.request, results)
+        resp = Response(self.request, Result({"result1key": "result1val"}))
 
         print(resp._get_response_msg())
 
         assert resp._get_response_msg()["request"] == self.request
 
     def test_get_response_msg_returns_result_object_definitions(self):
-        results = [
-            Result({"result1key": "result1val"}, content_encoding="base64"),
-            Result({"result2key": "result2val"}, content_encoding="base64"),
-        ]
+        resp = Response(self.request, Result({"result1key": "result1val"}, content_encoding="base64"))
 
-        resp = Response(self.request, results)
         results_msg = resp._get_response_msg()["results"]
 
         for msg in results_msg:
@@ -120,20 +112,13 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        results = [
-            Result(
+        result = Result(
                 "a" * 512 * 1024,
                 content_encoding="base64",
                 content_type="application/octet-stream",
             ),
-            Result(
-                "a" * 512 * 1024,
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            ),
-        ]
 
-        resp = Response(self.request, results)
+        resp = Response(self.request, result)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -149,20 +134,13 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        results = [
-            Result(
+        result = Result(
                 "a" * 512 * 1024,
                 content_encoding="base64",
                 content_type="application/octet-stream",
-            ),
-            Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            ),
-        ]
+            )
 
-        resp = Response(self.request, results)
+        resp = Response(self.request, result)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -178,13 +156,11 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        results = [
-            Result(
+        results = Result(
                 "a",
                 content_encoding="base64",
                 content_type="application/octet-stream",
             ),
-        ]
 
         resp = Response(self.request, results)
         spy = mocker.spy(resp, "_upload")
@@ -202,20 +178,13 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        results = [
-            Result(
+        result = Result(
                 "a",
                 content_encoding="base64",
                 content_type="application/octet-stream",
-            ),
-            Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            ),
-        ]
+            )
 
-        resp = Response(self.request, results)
+        resp = Response(self.request, result)
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
@@ -231,20 +200,13 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        results = [
-            Result(
+        result = Result(
                 "a",
                 content_encoding="base64",
                 content_type="application/octet-stream",
             ),
-            Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            ),
-        ]
 
-        resp = Response(self.request, results)
+        resp = Response(self.request, result)
         result = resp.publish()
 
         assert "inline" in result
@@ -260,15 +222,13 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        results = [
-            Result(
+        result = Result(
                 "a" * 512 * 1024,
                 content_encoding="base64",
                 content_type="application/octet-stream",
-            ),
-        ]
+            )
 
-        resp = Response(self.request, results)
+        resp = Response(self.request, result)
         result = resp.publish()
 
         assert "inline" not in result
@@ -285,15 +245,13 @@ class TestResponse:
         request = self.request
         request["timeout"] = "2000-01-01 00:00:00"
 
-        results = [
-            Result(
+        result = Result(
                 "a",
                 content_encoding="base64",
                 content_type="application/octet-stream",
-            ),
-        ]
+            )
 
-        resp = Response(self.request, results)
+        resp = Response(self.request, result)
         result = resp.publish()
 
         assert result
