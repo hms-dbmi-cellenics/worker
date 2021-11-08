@@ -274,7 +274,7 @@ jobs:
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="production"
-            REPLICA_COUNT="2"
+            REPLICA_COUNT="1"
             SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
             IMAGE_GLOB="${IMAGE_TAG/$SHORT_TAG_REF/*}"
             MEMORY_REQUEST="28Gi"
