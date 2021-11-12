@@ -14,11 +14,11 @@
 #'
 #' @examples
 runDotPlot <- function(req, data) {
-  markerGenes <- req$body$markerGenes
+  useMarkerGenes <- req$body$useMarkerGenes
   data$custom <- NA
   cell_sets <- req$body$cellSets$children
-  subsetCellSets <- req$body$subsetCellSets
-  cell_sets_is_all <- req$body$cellSetsIsAll
+  filter_by <- req$body$filterBy
+  filter_by_all <- req$body$filterByAll
 
   if (length(cell_sets) < 1) {
     message("The requested Cell Sets are empty. Returning empty results.")
@@ -26,11 +26,11 @@ runDotPlot <- function(req, data) {
   }
 
   #Construct ids to subset object
-  if (!cell_sets_is_all) {
-    subsetIds <- subsetCellSets$cellIds
+  if (!filter_by_all) {
+    subsetIds <- filter_by$cellIds
   } else {
     subsetIds <- list()
-    for (i in seq_along(subsetCellSets$children)) {
+    for (i in seq_along(filter_by$children)) {
       set <- cell_sets[[i]]
       subsetIds <- append(subsetIds, set$cellIds)
     }
@@ -61,13 +61,13 @@ runDotPlot <- function(req, data) {
   data <- subset(data, subset = custom != "NA")
 
   #Get marker genes or requested gene names.
-  if (markerGenes) {
-    nFeatures <- req$body$nGenes
+  if (useMarkerGenes) {
+    nFeatures <- req$body$numberOfMarkers
     all_markers <- getTopMarkerGenes(nFeatures, data, cell_sets)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
   } else {
-    req_genes <- req$body$genes
+    req_genes <- req$body$customGenesList
     annot <- data@misc$gene_annotations
     annot_subset <- subset(annot, toupper(name) %in% toupper(req_genes))
     features <- annot_subset[, c("input", "name")]
