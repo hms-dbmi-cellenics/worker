@@ -27,33 +27,29 @@ class DotPlot(Task):
     )
     def compute(self):
 
-        input = self.task_def["input"]
-        subset = self.task_def["subset"]
+        request = {"markerGenes": self.task_def["useMarkerGenes"]}
 
-        request = {"markerGenes": self.task_def["markerGenes"]}
-
-        if self.task_def["markerGenes"]:
-            request["nGenes"] = input["nGenes"]
+        if self.task_def["useMarkerGenes"]:
+            request["nGenes"] = self.task_def["numberOfMarkers"]
         else:
-            request["genes"] = input["genes"]
+            request["genes"] = self.task_def["customGenesList"]
 
         # getting cell ids for the groups we want to display.
         cellSets = get_cell_sets(self.experiment_id)
         setNames = [set["key"] for set in cellSets]
-        request["cellSets"] = cellSets[setNames.index(subset["cellClassKey"])]
+        request["cellSets"] = cellSets[setNames.index(self.task_def["groupBy"])]
 
         # Getting the cell ids for subsetting the seurat object with a group of cells.
-        subsetString = subset["cellSetKey"]
+        filterBy = self.task_def["filterBy"]
+        subsetString = filterBy['group']
+
         request["cellSetsIsAll"] = subsetString.lower() == "all"
         if subsetString.lower() == "all":
             request["subsetCellSets"] = request["cellSets"]
         else:
-            subsetString = subsetString.split("/")
-            subsetClass = subsetString[0]
-            subsetCellSet = subsetString[1]
-            subset = cellSets[setNames.index(subsetClass)]["children"]
+            subset = cellSets[setNames.index(filterBy['group'])]["children"]
             setNames = [set["key"] for set in subset]
-            subset = subset[setNames.index(subsetCellSet)]
+            subset = subset[setNames.index(filterBy['key'])]
             request["subsetCellSets"] = subset
 
         r = requests.post(
