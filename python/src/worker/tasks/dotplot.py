@@ -8,8 +8,6 @@ from ..config import config
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
-
-
 class DotPlot(Task):
     def __init__(self, msg):
         super().__init__(msg)
@@ -26,30 +24,28 @@ class DotPlot(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-
         # getting cell ids for the groups we want to display.
         cellSets = get_cell_sets(self.experiment_id)
-        setNames = [set["key"] for set in cellSets]
-    
-        # Getting the cell ids for subsetting the seurat object with a group of cells.
-        cellSets = cellSets[setNames.index(self.task_def["groupBy"])]
-        filterBy = self.task_def["filterBy"]
-        filterByAll = filterBy['group'].lower() == "all"
 
-        if filterByAll:
-            filterBy = cellSets
-        else:
-            children = cellSets[setNames.index(filterBy['group'])]["children"]
-            childrenNames = [set["key"] for set in children]
-            filterBy = childrenNames[childrenNames.index(filterBy['key'])]
+        # Getting the cell ids for subsetting the seurat object with a group of cells.
+        groupByCellSet = [cellSet for cellSet in cellSets if cellSet['key'] == self.task_def["groupBy"]][0]
+        otherCellSets = [cellSet for cellSet in cellSets if cellSet['key'] != self.task_def["groupBy"]]
+
+        filterByDefinition = self.task_def["filterBy"]
+        isFilterByAll = filterByDefinition['group'].lower() == "all"
+        filterByCellSet = otherCellSets
+
+        if not isFilterByAll:
+            children = [cellSet for cellSet in cellSets if cellSet["key"] == filterByDefinition['group']][0]["children"]
+            filterByCellSet = [child for child in children if child["key"] == filterByDefinition['key']][0]
 
         request = {
             "useMarkerGenes": self.task_def["useMarkerGenes"],
             "numberOfMarkers": self.task_def["numberOfMarkers"],
             "customGenesList": self.task_def["customGenesList"],
-            "cellSets": cellSets,
-            "filterBy": filterBy,
-            "filterByAll": filterByAll,
+            "groupBy": groupByCellSet,
+            "filterBy": filterByCellSet,
+            "isFilterByAll": isFilterByAll,
         }
 
         r = requests.post(

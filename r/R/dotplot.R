@@ -1,11 +1,13 @@
 #' Title
 #'
 #' @param req {body: {
-#'               markerGenes: True/False determines whether to use marker genes or predefined genes
-#'               cellSets: Cellsets to show in the plot. Determines whether to show Louvain/Samples/Custom
-#'               subsetCellSets: Cellsets to subset the experiment with.
-#'               cellSetsIsAll: Bool value. If true, the experiment will be subsetted to all the cellSets ids.
-#'            }
+#'               useMarkerGenes: True/False determines whether to use marker genes or predefined genes
+#'               numberOfMarkers: Int. Number of marker genes to use
+#'               customGenesList: List of Strings. List of marker genes to use
+#'               groupBy: Cellsets to show in the plot. Determines whether to show Louvain/Samples/Custom
+#'               filterBy: Cellsets to subset the experiment with.
+#'               isFilterByAll: Bool value. If true, the experiment will be subsetted to all the cellSets ids.
+#'              }
 #'            }
 #' @param data
 #'
@@ -16,27 +18,29 @@
 runDotPlot <- function(req, data) {
   useMarkerGenes <- req$body$useMarkerGenes
   data$custom <- NA
-  cell_sets <- req$body$cellSets$children
+  group_by_cell_sets <- req$body$groupBy$children
   filter_by <- req$body$filterBy
-  filter_by_all <- req$body$filterByAll
+  is_filtered_by_all <- req$body$isFilterByAll
 
-  if (length(cell_sets) < 1) {
+  if (length(group_by_cell_sets) < 1) {
     message("The requested Cell Sets are empty. Returning empty results.")
     return(list())
   }
 
-  #Construct ids to subset object
-  if (!filter_by_all) {
+  #Collect ids to subset object
+  if (!is_filtered_by_all) {
     subsetIds <- filter_by$cellIds
   } else {
     subsetIds <- list()
-    for (i in seq_along(filter_by$children)) {
-      set <- cell_sets[[i]]
-      subsetIds <- append(subsetIds, set$cellIds)
+    for (i in seq_along(filter_by)) {
+      filter_parent <- filter_by[[i]]$children
+      for(j in seq_along(filter_parent)) {
+        subsetIds <- append(subsetIds, filter_parent[[j]]$cellIds)
+      }
     }
   }
 
-  #Subset seurat object
+  #Subset cell Ids
   if (length(subsetIds)) {
     meta_data_subset <- data@meta.data[match(subsetIds, data@meta.data$cells_id), ]
     current_cells <- rownames(meta_data_subset)
@@ -48,13 +52,13 @@ runDotPlot <- function(req, data) {
   }
 
   #Construct the custom slot
-  for (i in seq_along(cell_sets)) {
-    set <- cell_sets[[i]]
-    filtered_cells <- intersect(set$cellIds, cells_id)
-    if (set$name %in% data$custom) {
-      data$custom[cells_id %in% filtered_cells] <- paste0(set$name, i)
+  for (i in seq_along(group_by_cell_sets)) {
+    cell_set <- group_by_cell_sets[[i]]
+    filtered_cells <- intersect(cell_set$cellIds, cells_id)
+    if (cell_set$name %in% data$custom) {
+      data$custom[cells_id %in% filtered_cells] <- paste0(cell_set$name, i)
     } else {
-      data$custom[cells_id %in% filtered_cells] <- set$name
+      data$custom[cells_id %in% filtered_cells] <- cell_set$name
     }
   }
   # If NA values are left in the group, dotplot function will fail.
@@ -62,8 +66,8 @@ runDotPlot <- function(req, data) {
 
   #Get marker genes or requested gene names.
   if (useMarkerGenes) {
-    nFeatures <- req$body$numberOfMarkers
-    all_markers <- getTopMarkerGenes(nFeatures, data, cell_sets)
+    num_features <- req$body$numberOfMarkers
+    all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
   } else {
@@ -72,6 +76,7 @@ runDotPlot <- function(req, data) {
     annot_subset <- subset(annot, toupper(name) %in% toupper(req_genes))
     features <- annot_subset[, c("input", "name")]
   }
+
   dotplot_data <- Seurat::DotPlot(data, features = features$input, group.by = "custom")$data
   # features.plot has the ensemble ids
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
