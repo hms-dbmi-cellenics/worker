@@ -49,11 +49,12 @@ class TestTaskFactory:
     def test_returns_result_list_with_properly_defined_task(
         self, valid_task_name
     ):
-        results = self.task_factory.submit({"body": {"name": valid_task_name}})
-        assert isinstance(results, list)
+        result = self.task_factory.submit({"body": {"name": valid_task_name}})
+        assert isinstance(result, list)
 
     def test_each_element_in_result_list_is_a_result_object(self):
-        results = self.task_factory.submit(
+        result = self.task_factory.submit(
             {"body": {"name": "GetEmbedding", "type": "pca"}}
         )
-        assert all(isinstance(result, Result) for result in results)
+        
+        assert isinstance(result, Result)

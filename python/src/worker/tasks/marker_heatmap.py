@@ -17,10 +17,8 @@ class MarkerHeatmap(Task):
         self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
-        # JSONify result.
-        result = json.dumps(result)
         # Return a list of formatted results.
-        return [Result(result)]
+        return Result(result)
 
     @xray_recorder.capture("MarkerHeatmap.compute")
     @backoff.on_exception(
