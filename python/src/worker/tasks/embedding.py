@@ -10,12 +10,9 @@ from ..tasks import Task
 
 
 class GetEmbedding(Task):
-    def _format_result(self, raw):
-        # JSONify result.
-        raw_result = json.dumps(raw)
-
+    def _format_result(self, result):
         # Return a list of formatted results.
-        return [Result(raw_result), Result(raw_result)]
+        return Result(result)
 
     @xray_recorder.capture("ComputeEmbedding.compute")
     @backoff.on_exception(

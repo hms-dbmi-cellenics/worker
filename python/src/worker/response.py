@@ -1,4 +1,6 @@
+import io
 import json
+import gzip
 import uuid
 from functools import reduce
 from logging import info
@@ -12,42 +14,38 @@ from .config import config
 
 
 class Response:
-    def __init__(self, request, results):
+    def __init__(self, request, result):
         self.request = request
-        self.results = results
+        self.result = result
 
-        self.error = False
-        for result in self.results:
-            self.error = self.error or result.error
-
-        if self.error:
-            self.cacheable = False
-        else:
-            self.cacheable = True
-            for result in self.results:
-                self.cacheable = self.cacheable and result.cacheable
+        self.error = result.error
+        self.cacheable = (not result.error) and result.cacheable
 
         self.s3_bucket = config.RESULTS_BUCKET
 
-    def _construct_response_msg(self, brief=False):
+    def _construct_data_for_upload(self):
+        info("Starting compression before upload to s3")
+        gzipped_body = io.BytesIO()
+        with gzip.open(gzipped_body, 'wt', encoding="utf-8") as zipfile:
+            json.dump(self.result.data, zipfile)
+
+        gzipped_body.seek(0)
+        
+        info("Compression finished")
+        return gzipped_body
+
+    def _construct_response_msg(self):
         message = {
             "request": self.request,
             "response": {"cacheable": self.cacheable, "error": self.error},
         }
-
-        if not brief:
-            result_objs = [
-                res.get_result_object(resp_format=True) for res in self.results
-            ]
-            message["results"] = list(result_objs)
         
         return message
 
     @xray_recorder.capture("Response._upload")
-    def _upload(self, response_msg):
+    def _upload(self, response_data):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
-        body = json.dumps(response_msg)
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
@@ -56,7 +54,7 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.put_object(Key=ETag, Bucket=self.s3_bucket, Body=body)
+        client.upload_fileobj(response_data, self.s3_bucket, ETag)
 
         client.put_object_tagging(
             Key=ETag,
@@ -97,12 +95,12 @@ class Response:
 
             io.Emit(
                 f'{self.request["experimentId"]}-{self.request["body"]["name"]}',
-                self._construct_response_msg(brief=True)
+                self._construct_response_msg()
             )
         else:
             io.Emit(
                 f'WorkResponse-{self.request["ETag"]}',
-                self._construct_response_msg(brief=True)
+                self._construct_response_msg()
             )
 
     
@@ -110,13 +108,13 @@ class Response:
 
     @xray_recorder.capture("Response.publish")
     def publish(self):
-        response_msg = self._construct_response_msg()
-
         info(f"Request {self.request['ETag']} processed, response:")
 
-        if not response_msg["response"]["error"] and response_msg["response"]["cacheable"]:
+        if not self.error and self.cacheable:
+            response_data = self._construct_data_for_upload()
+
             info("Uploading response to S3")
-            self._upload(response_msg)
+            self._upload(response_data)
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()

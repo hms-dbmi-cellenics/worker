@@ -12,10 +12,8 @@ from ..tasks import Task
 
 class GeneExpression(Task):
     def _format_result(self, result):
-        # JSONify result.
-        result = json.dumps(result)
         # Return a list of formatted results.
-        return [Result(result)]
+        return Result(result)
 
     @xray_recorder.capture("GeneExpression.compute")
     @backoff.on_exception(

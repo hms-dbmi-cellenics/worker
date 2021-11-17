@@ -4,13 +4,13 @@ import json
 class Result:
     def __init__(
         self,
-        result,
+        data,
         content_type="application/json",
         content_encoding="utf-8",
         error=False,
         cacheable=True,
     ):
-        self.result = result
+        self.data = data
         self.content_type = content_type
         self.content_encoding = content_encoding
         self.error = error
@@ -20,7 +20,7 @@ class Result:
         obj = {
             "content-type": self.content_type,
             "content-encoding": self.content_encoding,
-            "body": self.result,
+            "body": self.data,
         }
 
         if resp_format:

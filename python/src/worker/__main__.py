@@ -38,8 +38,8 @@ def main():
 
         msg = consume()
         if msg:
-            results = task_factory.submit(msg)
-            response = Response(request=msg, results=results)
+            result = task_factory.submit(msg)
+            response = Response(request=msg, result=result)
             response.publish()
 
             last_activity = datetime.datetime.utcnow()
