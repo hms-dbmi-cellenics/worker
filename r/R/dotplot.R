@@ -20,7 +20,7 @@ runDotPlot <- function(req, data) {
   data$custom <- NA
   group_by_cell_sets <- req$body$groupBy$children
   filter_by <- req$body$filterBy
-  is_filtered_by_all <- req$body$isFilterByAll
+  is_filter_by_all <- req$body$isFilterByAll
 
   if (length(group_by_cell_sets) < 1) {
     message("The requested Cell Sets are empty. Returning empty results.")
@@ -28,7 +28,7 @@ runDotPlot <- function(req, data) {
   }
 
   #Collect ids to subset object
-  if (!is_filtered_by_all) {
+  if (!is_filter_by_all) {
     subsetIds <- filter_by$cellIds
   } else {
     subsetIds <- list()

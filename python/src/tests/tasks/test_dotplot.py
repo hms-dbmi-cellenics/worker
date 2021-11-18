@@ -8,9 +8,14 @@ class TestDotplot:
         self.correct_request = {
             "body": {
                 "name": "DotPlot",
-                "subset": {"cellClassKey": "louvain", "cellSetKey": "all"},
-                "markerGenes": True,
-                "input": {"nGenes": 5},
+                "useMarkerGenes" : True,
+                "numberOfMarkers": 3,
+                "customGenesList": ["Gene1", "Gene2", "Gene3"],
+                "groupBy": "louvain",
+                "filterBy": {
+                    "group": "All",
+                    "key": "All"
+                }
             }
         }
 
