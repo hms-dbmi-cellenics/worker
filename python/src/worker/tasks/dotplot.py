@@ -27,15 +27,14 @@ class DotPlot(Task):
 
         # Getting the cell ids for subsetting the seurat object with a group of cells.
         groupByCellSet = [cellSet for cellSet in cellSets if cellSet['key'] == self.task_def["groupBy"]][0]
-        otherCellSets = [cellSet for cellSet in cellSets if cellSet['key'] != self.task_def["groupBy"]]
 
-        filterByDefinition = self.task_def["filterBy"]
-        isFilterByAll = filterByDefinition['group'].lower() == "all"
-        filterByCellSet = otherCellSets
+        filterBy = self.task_def["filterBy"]
+        applyFilter = filterBy['group'].lower() != "all"
+        filterByCellSet = groupByCellSet
 
-        if not isFilterByAll:
-            children = [cellSet for cellSet in cellSets if cellSet["key"] == filterByDefinition['group']][0]["children"]
-            filterByCellSet = [child for child in children if child["key"] == filterByDefinition['key']][0]
+        if applyFilter:
+            children = [cellSet for cellSet in cellSets if cellSet["key"] == filterBy['group']][0]["children"]
+            filterByCellSet = [child for child in children if child["key"] == filterBy['key']][0]
 
         request = {
             "useMarkerGenes": self.task_def["useMarkerGenes"],
@@ -43,7 +42,7 @@ class DotPlot(Task):
             "customGenesList": self.task_def["customGenesList"],
             "groupBy": groupByCellSet,
             "filterBy": filterByCellSet,
-            "isFilterByAll": isFilterByAll,
+            "applyFilter": applyFilter,
         }
 
         r = requests.post(
