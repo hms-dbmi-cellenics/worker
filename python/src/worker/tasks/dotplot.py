@@ -1,7 +1,6 @@
 import json
 
 import backoff
-import numpy as np
 import requests
 from aws_xray_sdk.core import xray_recorder
 
@@ -9,8 +8,6 @@ from ..config import config
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
-
-
 class DotPlot(Task):
     def __init__(self, msg):
         super().__init__(msg)
@@ -25,19 +22,28 @@ class DotPlot(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = {"nGenes": self.task_def["nGenes"], "type":self.task_def["type"], "config":self.task_def["config"]}
-        
-        if self.task_def["type"] is "custom":
-            request["genes"] = self.task_def["genes"]
-        else:
-            request["nGenes"] = self.task_def["nGenes"]
-
-        typeOfSets = self.task_def["typeOfSets"]
-
+        # getting cell ids for the groups we want to display.
         cellSets = get_cell_sets(self.experiment_id)
 
-        setNames = [set["key"] for set in cellSets]
-        request["cellSets"] = cellSets[setNames.index(typeOfSets)]
+        # Getting the cell ids for subsetting the seurat object with a group of cells.
+        groupByCellSet = [cellSet for cellSet in cellSets if cellSet['key'] == self.task_def["groupBy"]][0]
+
+        filterBy = self.task_def["filterBy"]
+        applyFilter = filterBy['group'].lower() != "all"
+        filterByCellSet = groupByCellSet
+
+        if applyFilter:
+            children = [cellSet for cellSet in cellSets if cellSet["key"] == filterBy['group']][0]["children"]
+            filterByCellSet = [child for child in children if child["key"] == filterBy['key']][0]
+
+        request = {
+            "useMarkerGenes": self.task_def["useMarkerGenes"],
+            "numberOfMarkers": self.task_def["numberOfMarkers"],
+            "customGenesList": self.task_def["customGenesList"],
+            "groupBy": groupByCellSet,
+            "filterBy": filterByCellSet,
+            "applyFilter": applyFilter,
+        }
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
