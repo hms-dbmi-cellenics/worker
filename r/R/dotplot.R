@@ -16,7 +16,7 @@
 #'
 #' @examples
 runDotPlot <- function(req, data) {
-  useMarkerGenes <- req$body$useMarkerGenes
+  use_marker_genes <- req$body$useMarkerGenes
   data$dotplot.groups <- NA
   group_by_cell_sets <- req$body$groupBy$children
   filter_by <- req$body$filterBy
