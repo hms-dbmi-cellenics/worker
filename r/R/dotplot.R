@@ -26,26 +26,26 @@ runDotPlot <- function(req, data) {
     return(list())
   }
 
-  #Collect ids to subset object
+  # Collect ids to subset object
   if (apply_filter) {
     subset_ids <- filter_by$cellIds
   } else {
-    subset_ids <- unlist(lapply(filter_by$children, `[[`, 'cellIds'))
+    subset_ids <- unlist(lapply(filter_by$children, `[[`, "cellIds"))
   }
 
-  #Subset cell Ids
+  # Subset cell Ids
   if (length(subset_ids)) {
-    data <- subset_ids(data,subset_ids)
+    data <- subset_ids(data, subset_ids)
     cells_id <- data$cells_id
   } else {
     message("The ids to subset the object are empty. Returning empty results.")
     return(list())
   }
 
-  #Construct the dotplot_groups slot
+  # Construct the dotplot_groups slot
   data$dotplot_groups <- NA
-  #This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
-  cell_set_names<- make.unique(sapply(group_by_cell_sets, `[[`, 'name'))
+  # This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
+  cell_set_names <- make.unique(sapply(group_by_cell_sets, `[[`, "name"))
   for (i in seq_along(group_by_cell_sets)) {
     cell_set <- group_by_cell_sets[[i]]
     cell_set_name <- cell_set_names[i]
@@ -57,7 +57,7 @@ runDotPlot <- function(req, data) {
   subset_cells <- colnames(data)[!is.na(data$dotplot_groups)]
   data <- subset(data, cells = subset_cells)
 
-  #Get marker genes or requested gene names.
+  # Get marker genes or requested gene names.
   if (use_marker_genes) {
     num_features <- req$body$numberOfMarkers
     all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
