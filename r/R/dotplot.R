@@ -44,12 +44,12 @@ runDotPlot <- function(req, data) {
 
   #Construct the dotplot_groups slot
   data$dotplot_groups <- NA
+  #This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
   cell_set_names<- make.unique(sapply(group_by_cell_sets, `[[`, 'name'))
   for (i in seq_along(group_by_cell_sets)) {
     cell_set <- group_by_cell_sets[[i]]
     cell_set_name <- cell_set_names[i]
     filtered_cells <- intersect(cell_set$cellIds, cells_id)
-    #This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
     data$dotplot_groups[cells_id %in% filtered_cells] <- cell_set_name
   }
 
