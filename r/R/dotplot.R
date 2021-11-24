@@ -42,19 +42,19 @@ runDotPlot <- function(req, data) {
     return(list())
   }
 
-  #Construct the dotplot.groups slot
-  data$dotplot.groups <- NA
+  #Construct the dotplot_groups slot
+  data$dotplot_groups <- NA
   cell_set_names<- make.unique(sapply(group_by_cell_sets, `[[`, 'name'))
   for (i in seq_along(group_by_cell_sets)) {
     cell_set <- group_by_cell_sets[[i]]
     cell_set_name <- cell_set_names[i]
     filtered_cells <- intersect(cell_set$cellIds, cells_id)
     #This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
-    data$dotplot.groups[cells_id %in% filtered_cells] <- cell_set_name
+    data$dotplot_groups[cells_id %in% filtered_cells] <- cell_set_name
   }
 
   # If NA values are left in the group, dotplot function will fail.
-  subset_cells <- colnames(data)[!is.na(data$dotplot.groups)]
+  subset_cells <- colnames(data)[!is.na(data$dotplot_groups)]
   data <- subset(data, cells = subset_cells)
 
   #Get marker genes or requested gene names.
@@ -70,7 +70,7 @@ runDotPlot <- function(req, data) {
     features <- annot_subset[, c("input", "name")]
   }
 
-  dotplot_data <- Seurat::DotPlot(data, features = features$input, group.by = "dotplot.groups")$data
+  dotplot_data <- Seurat::DotPlot(data, features = features$input, group.by = "dotplot_groups")$data
   # features.plot has the ensemble ids
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
