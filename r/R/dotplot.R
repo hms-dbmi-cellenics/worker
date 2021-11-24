@@ -16,8 +16,7 @@
 #'
 #' @examples
 runDotPlot <- function(req, data) {
-  useMarkerGenes <- req$body$useMarkerGenes
-  data$dotplot.groups <- NA
+  use_marker_genes <- req$body$useMarkerGenes
   group_by_cell_sets <- req$body$groupBy$children
   filter_by <- req$body$filterBy
   apply_filter <- req$body$applyFilter
@@ -29,17 +28,14 @@ runDotPlot <- function(req, data) {
 
   #Collect ids to subset object
   if (apply_filter) {
-    subsetIds <- filter_by$cellIds
+    subset_ids <- filter_by$cellIds
   } else {
-    subsetIds <- list()
-    for (child in filter_by$children) {
-      subsetIds <- append(subsetIds, child$cellIds)
-    }
+    subset_ids <- unlist(lapply(filter_by$children, `[[`, 'cellIds'))
   }
 
   #Subset cell Ids
-  if (length(subsetIds)) {
-    data <- subset_ids(data,subsetIds)
+  if (length(subset_ids)) {
+    data <- subset_ids(data,subset_ids)
     cells_id <- data$cells_id
   } else {
     message("The ids to subset the object are empty. Returning empty results.")
@@ -47,21 +43,22 @@ runDotPlot <- function(req, data) {
   }
 
   #Construct the dotplot.groups slot
+  data$dotplot.groups <- NA
+  cell_set_names<- make.unique(sapply(group_by_cell_sets, `[[`, 'name'))
   for (i in seq_along(group_by_cell_sets)) {
     cell_set <- group_by_cell_sets[[i]]
+    cell_set_name <- cell_set_names[i]
     filtered_cells <- intersect(cell_set$cellIds, cells_id)
     #This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
-    if (cell_set$name %in% data$dotplot.groups) {
-      data$dotplot.groups[cells_id %in% filtered_cells] <- paste0(cell_set$name, i)
-    } else {
-      data$dotplot.groups[cells_id %in% filtered_cells] <- cell_set$name
-    }
+    data$dotplot.groups[cells_id %in% filtered_cells] <- cell_set_name
   }
+
   # If NA values are left in the group, dotplot function will fail.
-  data <- subset(data, subset = dotplot.groups != "NA")
+  subset_cells <- colnames(data)[!is.na(data$dotplot.groups)]
+  data <- subset(data, cells = subset_cells)
 
   #Get marker genes or requested gene names.
-  if (useMarkerGenes) {
+  if (use_marker_genes) {
     num_features <- req$body$numberOfMarkers
     all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
     features <- as.data.frame(getMarkerNames(data, all_markers))
@@ -77,7 +74,7 @@ runDotPlot <- function(req, data) {
   # features.plot has the ensemble ids
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
-  dotplot_data <- dotplot_data %>% transmute(cellSets = as.character(id), geneName = as.character(name), avgExpression = avg.exp, cellsPercentage = pct.exp)
+  dotplot_data <- dotplot_data %>% transmute(cellSets = as.character(id), geneName = as.character(name), avgExpression = avg.exp.scaled, cellsPercentage = pct.exp)
 
   res <- purrr::transpose(dotplot_data)
   return(res)
