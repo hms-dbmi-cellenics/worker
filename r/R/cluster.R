@@ -17,13 +17,24 @@ runClusters <- function(req, data) {
   resol <- req$body$config$resolution
   type <- req$body$type
 
-  data <- getClusters(type, resol, data)
-  res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
-  # In the meta data slot the clustering is stored with the resolution used to calculate it
-  # RNA_snn_res.#resolution
-  df <- data.frame(cluster = data@meta.data[, res_col], cell_ids = data@meta.data$cells_id)
-  # get the cell barcodes as rownames
-  rownames(df) <- rownames(data@meta.data)
+  if ('Spatial' %in% Seurat::Assays(data)) {
+    df <- data.frame(
+      cluster = data$seurat_clusters,
+      cell_ids = data@meta.data$cells_id,
+      row.names = rownames(data@meta.data))
+
+  } else {
+    data <- getClusters(type, resol, data)
+    res_col <- paste0(data@active.assay, "_snn_res.",toString(resol))
+    # In the meta data slot the clustering is stored with the resolution used to calculate it
+    # RNA_snn_res.#resolution
+    df <- data.frame(
+      cluster = data@meta.data[, res_col],
+      cell_ids = data@meta.data$cells_id,
+      row.names = rownames(data@meta.data))
+
+  }
+
   return(df)
 }
 
