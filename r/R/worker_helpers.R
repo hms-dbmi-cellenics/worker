@@ -21,17 +21,33 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets) {
 
   all_markers <- presto::wilcoxauc(data, group_by = "marker_groups", assay = "data", seurat_assay = "RNA")
   all_markers$group <- as.numeric(all_markers$group)
-  # Filtering out repeated genes to avoid displaying the same genes for two groups, based on lowest p-value
-  all_markers <- all_markers %>%
-    dplyr::filter(logFC > 0) %>%
-    group_by(feature) %>%
-    slice(which.min(pval))
 
-  top_markers <- all_markers %>%
-    group_by(group) %>%
-    arrange(desc(logFC)) %>%
-    dplyr::slice_head(n = nFeatures) %>%
-    arrange(group)
+  top_markers <- presto::top_markers(all_markers,
+    n = nFeatures,
+    pct_in_min = 20,
+    pct_out_max = 20,
+    auc_min = 0.5
+  ) %>%
+    select(-rank) %>%
+    unclass() %>%
+    stack() %>%
+    pull(values) %>%
+    unique() %>%
+    .[!is.na(.)]
+
+  # Filtering out repeated genes to avoid displaying the same genes for two groups, based on lowest p-value
+  # all_markers <- all_markers %>%
+  #   dplyr::filter(logFC > 0) %>%
+  #   group_by(feature) %>%
+  #   slice(which.min(pval))
+
+  # top_markers <- all_markers %>%
+  #   group_by(group) %>%
+  #   arrange(desc(logFC)) %>%
+  #   dplyr::slice_head(n = nFeatures) %>%
+  #   arrange(group)
+
+  top_markers <- data.frame(feature = top_markers)
 
   return(top_markers)
 }
