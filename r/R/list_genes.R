@@ -24,6 +24,7 @@ getList <- function(req, data) {
 
   # Gene dispersion slot generated in data ingest script with the same info as the meta.features slot but with the annotated genes
   gene_results <- data@misc$gene_dispersion
+  colnames(gene_results)[1:3] <- c('mean', 'variance', 'variance.standardized')
 
   colnames(gene_results)[colnames(gene_results) == "SYMBOL"] <- "gene_names"
   colnames(gene_results)[colnames(gene_results) == "variance.standardized"] <- "dispersions"
