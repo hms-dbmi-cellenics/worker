@@ -19,7 +19,7 @@
 runEmbedding <- function(req, data) {
     type <- req$body$type
     config <- req$body$config
-    pca_nPCs <- 30
+    # pca_nPCs <- 30
 
     # To run embedding, we need to set the reduction.
     if ("active.reduction" %in% names(data@misc)) {
@@ -37,6 +37,8 @@ runEmbedding <- function(req, data) {
     message("Active numPCs --> ", pca_nPCs)
     message("Number of cells/sample:")
     table(data$samples)
+
+    if ('Spatial' %in% Seurat::Assays(data)) type <- 'spatial'
 
     if (type == "pca") {
         # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA
@@ -63,6 +65,13 @@ runEmbedding <- function(req, data) {
                         umap.method = "umap-learn")
 
         df_embedding <- Embeddings(data, reduction = type)
+
+    } else if (type == 'spatial') {
+        df_embedding <- Seurat::GetTissueCoordinates(data)
+        df_embedding$imagerow <- scales::rescale(df_embedding$imagerow, to = c(-5, 15))
+        df_embedding$imagecol <- scales::rescale(df_embedding$imagecol, to = c(-5, 15))
+        df_embedding <- df_embedding[, rev(colnames(df_embedding))]
+
     }
 
     # Order embedding by cells id in ascending form
@@ -76,4 +85,5 @@ runEmbedding <- function(req, data) {
     map2_fun <- function(x, y) {if (is.na(x)) return(NULL) else return(c(x, y))}
     res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], map2_fun)
     return(res)
+
 }
