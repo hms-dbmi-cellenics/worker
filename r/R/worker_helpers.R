@@ -9,7 +9,7 @@ subset_ids <- function(scdata, cells_id) {
   return(scdata)
 }
 
-getTopMarkerGenes <- function(nFeatures, data, cellSets) {
+getTopMarkerGenes <- function(nFeatures, data, cellSets, pctInMin = 35, pctOutMax = 20) {
   data$marker_groups <- NA
 
   object_ids <- data$cells_id
@@ -20,12 +20,14 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets) {
   }
 
   all_markers <- presto::wilcoxauc(data, group_by = "marker_groups", assay = "data", seurat_assay = "RNA")
+  all_markers <- all_markers %>% dplyr::filter(logFC > 0)
   all_markers$group <- as.numeric(all_markers$group)
 
+  # presto::top_markers creates unique marker vector selecting randomly if dups
   top_markers <- presto::top_markers(all_markers,
     n = nFeatures,
-    pct_in_min = 20,
-    pct_out_max = 20,
+    pct_in_min = pctInMin,
+    pct_out_max = pctOutMax,
     auc_min = 0.5
   ) %>%
     select(-rank) %>%
