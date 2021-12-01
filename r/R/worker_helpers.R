@@ -35,18 +35,6 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets) {
     unique() %>%
     .[!is.na(.)]
 
-  # Filtering out repeated genes to avoid displaying the same genes for two groups, based on lowest p-value
-  # all_markers <- all_markers %>%
-  #   dplyr::filter(logFC > 0) %>%
-  #   group_by(feature) %>%
-  #   slice(which.min(pval))
-
-  # top_markers <- all_markers %>%
-  #   group_by(group) %>%
-  #   arrange(desc(logFC)) %>%
-  #   dplyr::slice_head(n = nFeatures) %>%
-  #   arrange(group)
-
   top_markers <- data.frame(feature = top_markers)
 
   return(top_markers)
