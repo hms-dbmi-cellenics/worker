@@ -9,7 +9,19 @@ subset_ids <- function(scdata, cells_id) {
   return(scdata)
 }
 
-getTopMarkerGenes <- function(nFeatures, data, cellSets, pctInMin = 35, pctOutMax = 20) {
+process_presto_markers <- function(presto_markers) {
+  # converts presto markers df to a chr vector
+  
+  presto_markers %>%
+    select(-rank) %>%
+    unclass() %>%
+    stack() %>%
+    pull(values) %>%
+    unique() %>%
+    .[!is.na(.)]
+}
+
+getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin = 35, pctOutMax = 20) {
   data$marker_groups <- NA
 
   object_ids <- data$cells_id
@@ -28,15 +40,9 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, pctInMin = 35, pctOutMa
     n = nFeatures,
     pct_in_min = pctInMin,
     pct_out_max = pctOutMax,
-    auc_min = 0.5
-  ) %>%
-    select(-rank) %>%
-    unclass() %>%
-    stack() %>%
-    pull(values) %>%
-    unique() %>%
-    .[!is.na(.)]
-
+    auc_min = aucMin
+  ) %>% process_presto_markers()
+    
   top_markers <- data.frame(feature = top_markers)
 
   return(top_markers)
