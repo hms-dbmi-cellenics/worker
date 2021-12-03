@@ -137,17 +137,6 @@ These development environments should be pre-configured with the same requiremen
 produciton instances, as well as the necessary VS Code extensions required to debug and
 lint code.
 
-### Running R worker interactively in Rstudio
-
-The R worker is provided as a Rstudio project, complete with a `renv`
-definition. It might be useful to run things interactively in certain
-development scenarios; to do so, you should have the correct R version installed
-(check `renv.lock.init` file for it). Open the `.Rproj` file with Rstudio and
-run in the R terminal:
-
-``` R
-renv::restore()
-```
 
 ## More details
 
