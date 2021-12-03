@@ -12,6 +12,26 @@ The R part of the worker computes single cell analysis tasks on a pre-processed 
 To run the worker locally, you will need to build it and then run it, passing
 the id of the processed experiment that you want to use the worker with.
 
+### 0. Prerequisites
+
+#### Docker resource allocation
+
+Make sure that sufficient resources are allocated in Docker to be able to
+compile everything. 10gb RAM and 20gb disk image size should be more than
+enough. Be mindful when allocating RAM, too much and you could end up freezing
+your computer.
+
+#### Github Access Token
+
+Create a [Github Access
+Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+and export it as an environment variable before building. You should consider
+adding it to your `.bashrc` (or `.zshrc`) for convenience.
+
+``` shell
+export GITHUB_API_TOKEN=<your-token>
+```
+
 ### 1. Building the worker
 While in the `worker/` root folder on the host, you can use `make build`.
 
@@ -116,6 +136,7 @@ respectively. The terminals spawn terminals within the containers, as expected.
 These development environments should be pre-configured with the same requirements as the
 produciton instances, as well as the necessary VS Code extensions required to debug and
 lint code.
+
 
 ## More details
 
