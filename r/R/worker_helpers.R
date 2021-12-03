@@ -19,7 +19,7 @@ flatten_presto_markers <- function(presto_markers) {
     .[!is.na(.)]
 }
 
-getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin = 35, pctOutMax = 20) {
+getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin = 30, pctOutMax = 20) {
   data$marker_groups <- NA
 
   object_ids <- data$cells_id
