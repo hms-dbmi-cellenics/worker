@@ -65,7 +65,7 @@ runDE <- function(req, data) {
   limit <- pagination$limit
   filters <- pagination$filters
 
-  result <- handleFilters(result, filters)
+  result <- applyFilters(result, filters)
   result <- handlePagination(result, offset, limit, order_by, order_decreasing)
 
   return(result)
