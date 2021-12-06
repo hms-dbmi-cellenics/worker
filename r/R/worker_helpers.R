@@ -151,7 +151,7 @@ applyFilters <- function(gene_results, filters) {
   gene.idx <- which(filter_columns == 'gene_names')[1]
   if (!is.na(gene.idx)) {
     gene <- filters[[gene.idx]]$expression
-    gene_results <- gene_results[grepl(gene, gene_results$gene_name, ignore.case = TRUE), ]
+    gene_results <- gene_results[grepl(gene, gene_results$gene_names, ignore.case = TRUE), ]
   }
 
   # apply numeric filters
