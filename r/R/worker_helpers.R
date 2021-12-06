@@ -70,19 +70,34 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin 
   all_markers$group <- as.numeric(all_markers$group)
 
   # may not return nFeatures markers per cluster if values are too stringent
-  all_markers <- all_markers %>%
+  filtered_markers <- all_markers %>%
     dplyr::filter(.data$logFC > 0 &
       .data$auc >= aucMin &
       .data$pct_in >= pctInMin &
       .data$pct_out <= pctOutMax) %>%
     dplyr::group_by(feature) %>%
-    dplyr::slice(which.min(.data$pval))
+    dplyr::slice(which.min(.data$pval)) %>%
+    dplyr::ungroup()
 
-  top_markers <- all_markers %>%
+  top_markers <- filtered_markers %>%
     dplyr::group_by(group) %>%
     dplyr::arrange(desc(logFC)) %>%
     dplyr::slice_head(n = nFeatures) %>%
-    dplyr::arrange(group)
+    dplyr::arrange(group) %>%
+    dplyr::ungroup()
+
+  # ensure number of markers per cluster equals nFeatures
+  incomplete_clusters <- get_incomplete_clusters(top_markers, nFeatures)
+  message(sprintf("Incomplete clusters: %s", incomplete_clusters))
+
+  if (length(incomplete_clusters > 0)) {
+    extra_markers <- get_low_quality_markers(all_markers,
+      top_markers,
+      clusters = incomplete_clusters,
+      nFeatures = nFeatures
+    )
+    top_markers <- bind_rows(top_markers, extra_markers)
+  }
 
   message(sprintf("%d markers selected", nrow(top_markers)))
   return(top_markers)
