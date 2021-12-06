@@ -23,7 +23,6 @@
 #'
 runDE <- function(req, data) {
 
-  saveRDS(list(req=req, data=data), '/debug/runDE.rds')
   # add comparison group to 'custom' slot
   data <- addComparisonGroup(req, data)
 
