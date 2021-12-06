@@ -9,6 +9,53 @@ subset_ids <- function(scdata, cells_id) {
   return(scdata)
 }
 
+get_incomplete_clusters <- function(top_markers, nFeatures) {
+  top_markers %>%
+    dplyr::group_by(group) %>%
+    dplyr::tally() %>%
+    dplyr::filter(n < nFeatures) %>%
+    dplyr::pull(group)
+}
+
+missing_markers <- function(top_markers, nFeatures, clusters) {
+  # tibble with number of missing genes per cluster
+  top_markers %>%
+    dplyr::filter(group %in% clusters) %>%
+    dplyr::group_by(group) %>%
+    dplyr::tally() %>%
+    dplyr::mutate(missing_genes = nFeatures - n) %>%
+    dplyr::select(-n)
+}
+
+unique_missing_markers <- function(all_markers, top_markers, clusters, desired_genes) {
+  all_markers %>%
+    # remove markers present in other clusters
+    dplyr::filter(group %in% clusters) %>%
+    dplyr::anti_join(top_markers, by = "feature") %>%
+    # get number of genes needed
+    dplyr::left_join(desired_genes, by = "group") %>%
+    dplyr::group_by(feature) %>%
+    dplyr::slice(which.min(.data$pval)) %>%
+    dplyr::ungroup()
+}
+
+get_low_quality_markers <- function(all_markers, top_markers, clusters, nFeatures) {
+  desired_genes <- missing_markers(top_markers, nFeatures, clusters)
+  message(sprintf("desired_genes: %d", nrow(desired_genes)))
+  unique_markers <- unique_missing_markers(all_markers, top_markers, clusters, desired_genes)
+  message(sprintf("unique_markers: %d", nrow(unique_markers)))
+
+
+  unique_markers %>%
+    # use logFC as decision criteria
+    dplyr::arrange(dplyr::desc(logFC)) %>%
+    dplyr::group_by(group) %>%
+    # actually get them
+    dplyr::slice(seq(dplyr::first(missing_genes))) %>%
+    dplyr::select(-missing_genes) %>%
+    dplyr::ungroup()
+}
+
 getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin = 20, pctOutMax = 20) {
   data$marker_groups <- NA
 
