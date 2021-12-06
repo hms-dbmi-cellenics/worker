@@ -9,16 +9,6 @@ subset_ids <- function(scdata, cells_id) {
   return(scdata)
 }
 
-flatten_presto_markers <- function(presto_markers) {
-  # converts presto markers df to a chr vector
-  
-  presto_markers %>%
-    dplyr::select(-rank) %>%
-    purrr::flatten_chr() %>%
-    unique() %>%
-    .[!is.na(.)]
-}
-
 getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin = 30, pctOutMax = 20) {
   data$marker_groups <- NA
 
@@ -30,19 +20,20 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin 
   }
 
   all_markers <- presto::wilcoxauc(data, group_by = "marker_groups", assay = "data", seurat_assay = "RNA")
-  all_markers <- all_markers %>% dplyr::filter(logFC > 0)
   all_markers$group <- as.numeric(all_markers$group)
 
-  # presto::top_markers creates unique marker vector selecting randomly if dups
-  top_markers <- presto::top_markers(all_markers,
-    n = nFeatures,
-    pct_in_min = pctInMin,
-    pct_out_max = pctOutMax,
-    auc_min = aucMin
-  ) %>% flatten_presto_markers()
-    
-  top_markers <- data.frame(feature = top_markers)
+  all_markers <- all_markers %>%
+    dplyr::filter(.data$logFC > 0 & .data$auc >= aucMin & .data$pct_in >= pctInMin & .data$pct_out <= pctOutMax) %>%
+    dplyr::group_by(feature) %>%
+    dplyr::slice(which.min(.data$pval))
 
+  top_markers <- all_markers %>%
+    dplyr::group_by(group) %>%
+    dplyr::arrange(desc(logFC)) %>%
+    dplyr::slice_head(n = nFeatures) %>%
+    dplyr::arrange(group)
+
+  message(sprintf("%d markers selected", nrow(top_markers)))
   return(top_markers)
 }
 
