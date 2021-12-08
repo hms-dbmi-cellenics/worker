@@ -14,28 +14,18 @@ get_incomplete_clusters <- function(top_markers, nFeatures) {
     dplyr::group_by(group) %>%
     dplyr::tally() %>%
     dplyr::filter(n < nFeatures) %>%
-    dplyr::pull(group)
+    dplyr::mutate(missing_genes = nFeatures - n)
 }
 
-missing_markers <- function(top_markers, nFeatures, clusters) {
-  # returns tibble with number of missing genes per cluster
-  top_markers %>%
-    dplyr::filter(group %in% clusters) %>%
-    dplyr::group_by(group) %>%
-    dplyr::tally() %>%
-    dplyr::mutate(missing_genes = nFeatures - n) %>%
-    dplyr::select(-n)
-}
-
-unique_missing_markers <- function(all_markers, top_markers, clusters, desired_genes) {
+unique_missing_markers <- function(all_markers, top_markers, clusters) {
   # returns tibble with markers of incomplete clusters but not present in
   # top markers
   all_markers %>%
     # remove markers present in other clusters
-    dplyr::filter(group %in% clusters) %>%
+    dplyr::filter(group %in% clusters$group) %>%
     dplyr::anti_join(top_markers, by = "feature") %>%
     # get number of genes needed
-    dplyr::left_join(desired_genes, by = "group") %>%
+    dplyr::left_join(clusters, by = "group") %>%
     dplyr::group_by(feature) %>%
     dplyr::slice(which.min(.data$pval)) %>%
     dplyr::ungroup()
@@ -44,11 +34,8 @@ unique_missing_markers <- function(all_markers, top_markers, clusters, desired_g
 get_low_quality_markers <- function(all_markers, top_markers, clusters, nFeatures) {
   # returns tibble with new markers of incomplete clusters
 
-  desired_genes <- missing_markers(top_markers, nFeatures, clusters)
-  message(sprintf("desired_genes: %d", nrow(desired_genes)))
-  unique_markers <- unique_missing_markers(all_markers, top_markers, clusters, desired_genes)
+  unique_markers <- unique_missing_markers(all_markers, top_markers, clusters)
   message(sprintf("unique_markers: %d", nrow(unique_markers)))
-
 
   unique_markers %>%
     # use logFC as decision criteria
@@ -60,7 +47,7 @@ get_low_quality_markers <- function(all_markers, top_markers, clusters, nFeature
     dplyr::ungroup()
 }
 
-getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin = 20, pctOutMax = 20) {
+getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
 
   object_ids <- data$cells_id
@@ -75,32 +62,33 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.5, pctInMin 
 
   # may not return nFeatures markers per cluster if values are too stringent
   filtered_markers <- all_markers %>%
-    dplyr::filter(.data$logFC > 0 &
-      .data$auc >= aucMin &
-      .data$pct_in >= pctInMin &
-      .data$pct_out <= pctOutMax) %>%
+    dplyr::filter(logFC > 0 &
+      auc >= aucMin &
+      pct_in >= pctInMin &
+      pct_out <= pctOutMax) %>%
     dplyr::group_by(feature) %>%
-    dplyr::slice(which.min(.data$pval)) %>%
-    dplyr::ungroup()
+    dplyr::slice(which.min(pval)) %>%
+    ungroup()
 
   top_markers <- filtered_markers %>%
+    dplyr::arrange(group, desc(logFC)) %>%
     dplyr::group_by(group) %>%
-    dplyr::arrange(desc(logFC)) %>%
     dplyr::slice_head(n = nFeatures) %>%
-    dplyr::arrange(group) %>%
     dplyr::ungroup()
 
   # check if there are incomplete clusters
   incomplete_clusters <- get_incomplete_clusters(top_markers, nFeatures)
-  message(sprintf("Incomplete clusters: %s", incomplete_clusters))
+  message("Incomplete clusters:")
+  message(print(incomplete_clusters))
 
-  if (length(incomplete_clusters > 0)) {
-    extra_markers <- get_low_quality_markers(all_markers,
+  if (nrow(incomplete_clusters > 0)) {
+    extra_markers <- get_low_quality_markers(
+      all_markers,
       top_markers,
-      clusters = incomplete_clusters,
-      nFeatures = nFeatures
+      incomplete_clusters,
+      nFeatures
     )
-    top_markers <- bind_rows(top_markers, extra_markers)
+    top_markers <- dplyr::bind_rows(top_markers, extra_markers) %>% dplyr::arrange(group, dplyr::desc(logFC))
   }
 
   message(sprintf("%d markers selected", nrow(top_markers)))
