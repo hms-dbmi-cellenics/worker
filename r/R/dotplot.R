@@ -34,15 +34,14 @@ runDotPlot <- function(req, data) {
     subset_ids <- unlist(lapply(filter_by$children, `[[`, "cellIds"))
   }
 
-  # Subset cell Ids
-  if (length(subset_ids)) {
-    data <- subset_ids(data, subset_ids)
-    cells_id <- data$cells_id
-
-  } else {
+  if (!length(subset_ids)) {
     message("The ids to subset the object are empty. Returning empty results.")
     return(list())
   }
+
+  # Subset cell Ids
+  data <- subset_ids(data, subset_ids)
+  cells_id <- data$cells_id
 
   # Construct the dotplot_groups slot
   data$dotplot_groups <- NA
