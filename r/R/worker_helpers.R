@@ -9,44 +9,6 @@ subset_ids <- function(scdata, cells_id) {
   return(scdata)
 }
 
-get_incomplete_clusters <- function(top_markers, nFeatures) {
-  top_markers %>%
-    dplyr::group_by(group) %>%
-    dplyr::tally() %>%
-    dplyr::filter(n < nFeatures) %>%
-    dplyr::mutate(missing_genes = nFeatures - n)
-}
-
-unique_missing_markers <- function(all_markers, top_markers, clusters) {
-  # returns tibble with markers of incomplete clusters but not present in
-  # top markers
-  all_markers %>%
-    # remove markers present in other clusters
-    dplyr::filter(group %in% clusters$group) %>%
-    dplyr::anti_join(top_markers, by = "feature") %>%
-    # get number of genes needed
-    dplyr::left_join(clusters, by = "group") %>%
-    dplyr::group_by(feature) %>%
-    dplyr::slice(which.min(.data$pval)) %>%
-    dplyr::ungroup()
-}
-
-get_low_quality_markers <- function(all_markers, top_markers, clusters, nFeatures) {
-  # returns tibble with new markers of incomplete clusters
-
-  unique_markers <- unique_missing_markers(all_markers, top_markers, clusters)
-  message(sprintf("unique_markers: %d", nrow(unique_markers)))
-
-  unique_markers %>%
-    # use logFC as decision criteria
-    dplyr::arrange(dplyr::desc(logFC)) %>%
-    dplyr::group_by(group) %>%
-    # actually get markers
-    dplyr::slice(seq(dplyr::first(missing_genes))) %>%
-    dplyr::select(-missing_genes) %>%
-    dplyr::ungroup()
-}
-
 getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
 
@@ -75,21 +37,6 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin 
     dplyr::group_by(group) %>%
     dplyr::slice_head(n = nFeatures) %>%
     dplyr::ungroup()
-
-  # check if there are incomplete clusters
-  incomplete_clusters <- get_incomplete_clusters(top_markers, nFeatures)
-  message("Incomplete clusters:")
-  message(print(incomplete_clusters))
-
-  if (nrow(incomplete_clusters > 0)) {
-    extra_markers <- get_low_quality_markers(
-      all_markers,
-      top_markers,
-      incomplete_clusters,
-      nFeatures
-    )
-    top_markers <- dplyr::bind_rows(top_markers, extra_markers) %>% dplyr::arrange(group, dplyr::desc(logFC))
-  }
 
   message(sprintf("%d markers selected", nrow(top_markers)))
   return(top_markers)
