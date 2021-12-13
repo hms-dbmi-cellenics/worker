@@ -29,14 +29,13 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin 
       pct_in >= pctInMin &
       pct_out <= pctOutMax) %>%
     dplyr::group_by(feature) %>%
-    dplyr::slice(which.min(pval)) %>%
-    ungroup()
+    dplyr::slice(which.min(pval))
 
   top_markers <- filtered_markers %>%
-    dplyr::arrange(group, desc(logFC)) %>%
     dplyr::group_by(group) %>%
+    dplyr::arrange(dplyr::desc(logFC)) %>%
     dplyr::slice_head(n = nFeatures) %>%
-    dplyr::ungroup()
+    dplyr::arrange(group)
 
   message(sprintf("%d markers selected", nrow(top_markers)))
   return(top_markers)
