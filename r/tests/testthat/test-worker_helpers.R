@@ -4,7 +4,8 @@ mock_gene_results <- function() {
 
     result <- presto::wilcoxauc(exprs, y)
     result <- result[result$group == "A", ]
-    rownames(result) <- result$gene_names <- result$feature
+    rownames(result) <- result$feature
+    result$gene_names <- result$feature
     result <- result[, c("gene_names", "pval", "logFC", "pct_in", "pct_out", "padj", "auc")]
     colnames(result) <- list("gene_names", "p_val", "logFC", "pct_1", "pct_2", "p_val_adj", "auc")
     return(result)
