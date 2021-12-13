@@ -38,6 +38,9 @@ runDotPlot <- function(req, data) {
     data <- subset_ids(data, subset_ids)
   }
 
+  # remaining cells
+  cells_id <- data$cells_id
+
   # Construct the dotplot_groups slot
   data$dotplot_groups <- NA
 
