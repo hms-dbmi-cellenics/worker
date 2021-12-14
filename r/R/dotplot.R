@@ -6,7 +6,6 @@
 #'               customGenesList: List of Strings. List of marker genes to use
 #'               groupBy: Cellsets to show in the plot. Determines whether to show Louvain/Samples/Custom
 #'               filterBy: Cellsets to subset the experiment with.
-#'               isFilterByAll: Bool value. If true, the experiment will be subsetted to all the cellSets ids.
 #'              }
 #'            }
 #' @param data SeuratObject
