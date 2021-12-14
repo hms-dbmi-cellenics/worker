@@ -86,17 +86,6 @@ test_that("runDE works with gene name filter", {
     expect_equal(row.names(res$gene_results), 'CST3')
 })
 
-test_that("runDE works with gene name filter", {
-    data <- mock_scdata()
-    req <- mock_req()
-    req$body$pagination$filters <-
-        list(list(columnName = 'gene_names', expression = 'CST3'))
-
-
-    res <- runDE(req, data)
-    expect_equal(row.names(res$gene_results), 'CST3')
-})
-
 test_that("runDE works with numeric filters", {
     data <- mock_scdata()
     req <- mock_req()
