@@ -2,6 +2,7 @@ mock_req <- function() {
     req <- list(
         body = list(
             useMarkerGenes = TRUE,
+            customGenesList = c('PF4', 'CST3'),
             numberOfMarkers = 5,
             applyFilter = FALSE,
             filter_by = list(
@@ -38,5 +39,17 @@ test_that("useMarkerGenes works", {
     data <- mock_scdata()
     req <- mock_req()
 
-    runDotPlot(req, data)
+    res <- runDotPlot(req, data)
+    expect_snapshot(res)
+})
+
+test_that("customGenesList is used if useMarkerGenes is FALSE", {
+    data <- mock_scdata()
+    req <- mock_req()
+    req$body$useMarkerGenes <- FALSE
+
+    res <- runDotPlot(req, data)
+    genes_used <- unique(sapply(res, `[[`, 'geneName'))
+
+    expect_true(all(genes_used %in% req$body$customGenesList))
 })
