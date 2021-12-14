@@ -5,8 +5,8 @@ mock_req <- function() {
             customGenesList = c('PF4', 'CST3'),
             numberOfMarkers = 5,
             applyFilter = FALSE,
-            filter_by = list(
-                cellIds = 0:100
+            filterBy = list(
+                cellIds = c(0:25, 51:75)
             ),
             groupBy = list(
                 children = list(
@@ -35,6 +35,19 @@ mock_scdata <- function() {
     return(pbmc_small)
 }
 
+test_that("dotplot generates the expected list format", {
+    data <- mock_scdata()
+    req <- mock_req()
+
+    res <- runDotPlot(req, data)
+    item <- res[[1]]
+    expect_named(item, c('cellSets', 'geneName', 'avgExpression', 'cellsPercentage'))
+    expect_type(item$cellSets, 'character')
+    expect_type(item$geneName, 'character')
+    expect_type(item$avgExpression, 'double')
+    expect_type(item$cellsPercentage, 'double')
+})
+
 test_that("useMarkerGenes works", {
     data <- mock_scdata()
     req <- mock_req()
@@ -52,4 +65,16 @@ test_that("customGenesList is used if useMarkerGenes is FALSE", {
     genes_used <- unique(sapply(res, `[[`, 'geneName'))
 
     expect_true(all(genes_used %in% req$body$customGenesList))
+})
+
+test_that("subsetting is applied and changes dotpot output", {
+    data <- mock_scdata()
+    req <- mock_req()
+
+    res_unfilt <- runDotPlot(req, data)
+
+    req$body$applyFilter <- TRUE
+    res_filt <- runDotPlot(req, data)
+
+    expect_false(identical(res_unfilt, res_filt))
 })
