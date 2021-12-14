@@ -15,6 +15,7 @@
 #
 #' @export
 getList <- function(req, data) {
+
   select_fields <- req$body$selectFields
   order_by <- req$body$orderBy
   order_decreasing <- req$body$orderDirection == "DESC"
@@ -27,12 +28,14 @@ getList <- function(req, data) {
   colnames(gene_results)[colnames(gene_results) == "SYMBOL"] <- "gene_names"
   colnames(gene_results)[colnames(gene_results) == "variance.standardized"] <- "dispersions"
 
-  filter <- NULL
-  if ("geneNamesFilter" %in% names(req$body)) {
-    filter <- req$body$geneNamesFilter
+  # apply gene name filter
+  gene_pattern <- req$body$geneNamesFilter
+  if (!is.null(gene_pattern)) {
+    gene_filter <- list(list(columnName = 'gene_names', expression = gene_pattern))
+    gene_results <- applyFilters(gene_results, gene_filter)
   }
 
-  paginated_results <- handle_pagination(gene_results, offset, limit, order_by, order_decreasing, filter)
+  paginated_results <- handlePagination(gene_results, offset, limit, order_by, order_decreasing)
   gene_results <- paginated_results$gene_results
 
   columns <- c("gene_names", "dispersions")

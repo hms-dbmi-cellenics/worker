@@ -9,7 +9,7 @@ subset_ids <- function(scdata, cells_id) {
   return(scdata)
 }
 
-getTopMarkerGenes <- function(nFeatures, data, cellSets) {
+getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
 
   object_ids <- data$cells_id
@@ -21,18 +21,23 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets) {
 
   all_markers <- presto::wilcoxauc(data, group_by = "marker_groups", assay = "data", seurat_assay = "RNA")
   all_markers$group <- as.numeric(all_markers$group)
-  # Filtering out repeated genes to avoid displaying the same genes for two groups, based on lowest p-value
-  all_markers <- all_markers %>%
-    dplyr::filter(logFC > 0) %>%
-    group_by(feature) %>%
-    slice(which.min(pval))
 
-  top_markers <- all_markers %>%
-    group_by(group) %>%
-    arrange(desc(logFC)) %>%
+  # may not return nFeatures markers per cluster if values are too stringent
+  filtered_markers <- all_markers %>%
+    dplyr::filter(logFC > 0 &
+      auc >= aucMin &
+      pct_in >= pctInMin &
+      pct_out <= pctOutMax) %>%
+    dplyr::group_by(feature) %>%
+    dplyr::slice(which.min(pval))
+
+  top_markers <- filtered_markers %>%
+    dplyr::group_by(group) %>%
+    dplyr::arrange(dplyr::desc(logFC)) %>%
     dplyr::slice_head(n = nFeatures) %>%
-    arrange(group)
+    dplyr::arrange(group)
 
+  message(sprintf("%d markers selected", nrow(top_markers)))
   return(top_markers)
 }
 
@@ -143,10 +148,43 @@ getClusters <- function(type, resolution, data) {
   return(data)
 }
 
-handle_pagination <- function(gene_results, offset, limit, order_by, order_decreasing, filter) {
-  if (!is.null(filter)) {
-    gene_results <- gene_results[grepl(filter, gene_results$gene_name, ignore.case = TRUE), ]
+applyFilters <- function(gene_results, filters) {
+
+  filter_columns <- sapply(filters, `[[`, 'columnName')
+
+  # apply gene text filter
+  gene.idx <- which(filter_columns == 'gene_names')[1]
+  if (!is.na(gene.idx)) {
+    gene <- filters[[gene.idx]]$expression
+    gene_results <- gene_results[grepl(gene, gene_results$gene_names, ignore.case = TRUE), ]
   }
+
+  # apply numeric filters
+  numeric_columns <- c('logFC', 'p_val_adj', 'pct_1', 'pct_2', 'auc')
+
+  for (idx in seq_along(filter_columns)) {
+    column <- filter_columns[idx]
+    if (!column %in% numeric_columns) next()
+    filter <- filters[[idx]]
+
+    gene_results <- applyNumericFilter(gene_results, column, filter$comparison, filter$value)
+  }
+
+  return(gene_results)
+}
+
+applyNumericFilter <- function(gene_results, column, comparison, value) {
+  if (comparison == 'greaterThan') {
+    keep <- gene_results[[column]] > value
+  } else if (comparison == 'lessThan') {
+    keep <- gene_results[[column]] < value
+  }
+
+  gene_results <- gene_results[keep, ]
+  return(gene_results)
+}
+
+handlePagination <- function(gene_results, offset, limit, order_by, order_decreasing) {
 
   full_count <- nrow(gene_results)
 

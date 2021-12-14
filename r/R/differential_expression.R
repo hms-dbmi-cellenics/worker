@@ -22,6 +22,7 @@
 #' @export
 #'
 runDE <- function(req, data) {
+
   # add comparison group to 'custom' slot
   data <- addComparisonGroup(req, data)
 
@@ -62,13 +63,10 @@ runDE <- function(req, data) {
   order_decreasing <- pagination$orderDirection == "DESC"
   offset <- pagination$offset
   limit <- pagination$limit
+  filters <- pagination$filters
 
-  filter <- NULL
-  if ("geneNamesFilter" %in% names(req$body)) {
-    filter <- req$body$geneNamesFilter
-  }
-
-  result <- handle_pagination(result, offset, limit, order_by, order_decreasing, filter)
+  result <- applyFilters(result, filters)
+  result <- handlePagination(result, offset, limit, order_by, order_decreasing)
 
   return(result)
 }
