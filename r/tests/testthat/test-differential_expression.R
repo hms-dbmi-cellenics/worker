@@ -54,16 +54,6 @@ test_that("runDE limit won't return more than available genes", {
     expect_equal(nrow(res$gene_results), nrow(data))
 })
 
-test_that("runDE limit won't return more than available genes", {
-    data <- mock_scdata()
-    req <- mock_req()
-
-    req$body$pagination$limit <- nrow(data) + 50
-
-    res <- runDE(req, data)
-    expect_equal(nrow(res$gene_results), nrow(data))
-})
-
 test_that("runDE was able to convert from ensembl ids to gene symbols", {
     data <- mock_scdata()
     req <- mock_req()
