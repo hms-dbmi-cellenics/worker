@@ -1,4 +1,4 @@
-#' Run Request for Dot Plot
+#' Run request for DotPlot
 #'
 #' @param req {body: {
 #'               useMarkerGenes: TRUE/FALSE determines whether to use marker genes or predefined genes
