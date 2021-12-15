@@ -104,14 +104,6 @@ class MockS3Class:
     def setResponse(response_key):
         MockS3Class.response = cell_set_responses[response_key]
 
-    # def Table(*args, **kwargs):
-    #     MockS3Class.no_called = 0
-    #     return MockS3Class.MockTable()
-
-    # def download_fileobj(*args, **kwargs):
-    #     MockS3Class.no_called += 1
-    #     return {"Body": json.dumps({"cellSets": MockS3Class.response})}
-
     def download_fileobj(*args, **kwargs):
         Bucket, Key, Fileobj = itemgetter("Bucket", "Key", "Fileobj")(kwargs)
 
@@ -123,9 +115,6 @@ class MockS3Class:
         )
 
         return
-        # MockS3Class.no_called += 1
-        # return {"Body": json.dumps({"cellSets": MockS3Class.response})}
-
 
 class TestDifferentialExpression:
     def get_request(
@@ -294,32 +283,3 @@ class TestDifferentialExpression:
         de = DifferentialExpression(self.get_request())
 
         assert de.experiment_id == config.EXPERIMENT_ID
-
-"""
-    def test_dynamodb_call_is_made_once_when_vs_rest(self, mock_dynamo_get):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        MockDynamoClass.setResponse("two_sets")
-
-        DifferentialExpression(self.get_request()).compute()
-
-        assert dynamodb.no_called == 1
-
-    def test_appropriate_genes_returned_when_a_limit_is_specified(
-        self, mock_dynamo_get
-    ):
-        m, dynamodb = mock_dynamo_get
-        m.return_value = dynamodb
-
-        request = self.get_request(maxNum=2)
-
-        res = DifferentialExpression(request).compute()
-        res = res[0].result
-        res = json.loads(res)["rows"]
-
-        assert len(res) <= request["body"]["maxNum"]
-
-    # In these three tests we don't actually care about the end result of the r worker, we just need to see the request generated
-    # on the python side, so we can leave responses.activate enabled with an empty response {}.
-"""
