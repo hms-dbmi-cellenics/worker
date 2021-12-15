@@ -1,7 +1,6 @@
 import json
 from operator import itemgetter
 
-
 cell_set_responses = {
     "one_set": [
         {"name": "my amazing cluster", "key": "cluster1", "cellIds": [4, 5]},
@@ -94,10 +93,10 @@ cell_set_responses = {
 class MockS3Class:
     response = cell_set_responses["one_set"]
 
-    def setResponse(self, response_key):
+    def setResponse(response_key):
         MockS3Class.response = cell_set_responses[response_key]
 
-    def download_fileobj(self, *args, **kwargs):
+    def download_fileobj(*args, **kwargs):
         Bucket, Key, Fileobj = itemgetter("Bucket", "Key", "Fileobj")(kwargs)
 
         if not Bucket or not Key or not Fileobj:
