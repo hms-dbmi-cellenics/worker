@@ -16,12 +16,9 @@ class DotPlot(Task):
     def _format_result(self, result):
         # Return a list of formatted results.
         return Result(result)
-
-    @xray_recorder.capture("DotPlot.compute")
-    @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
-    )
-    def compute(self):
+    
+    def _construct_request(self):
+        
         # getting cell ids for the groups we want to display.
         cellSets = get_cell_sets(self.experiment_id)
 
@@ -44,7 +41,17 @@ class DotPlot(Task):
             "filterBy": filterByCellSet,
             "applyFilter": applyFilter,
         }
+        
+        return request
 
+    @xray_recorder.capture("DotPlot.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
+    def compute(self):
+        
+        request = self._construct_request()
+        
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
             headers={"content-type": "application/json"},
