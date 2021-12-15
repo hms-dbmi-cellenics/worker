@@ -26,7 +26,7 @@ class Response:
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
         gzipped_body = io.BytesIO()
-        with gzip.open(gzipped_body, 'wt', compresslevel=5 , encoding="utf-8") as zipfile:
+        with gzip.open(gzipped_body, 'wt', compresslevel=1 , encoding="utf-8") as zipfile:
             json.dump(self.result.data, zipfile)
 
         gzipped_body.seek(0)
