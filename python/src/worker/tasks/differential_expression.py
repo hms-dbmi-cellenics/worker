@@ -31,24 +31,7 @@ class DifferentialExpression(Task):
         # Return a list of formatted results.
         return Result({"total": total, "rows": result})
 
-    # Get cells values for the cell set.
-    def get_cells_in_set(self, name, resp, first_cell_set_name):
-        cells = []
-
-        # If "rest", then get all cells in the same hierarchy as the first cell set
-        #  that arent part of "first"
-        if "rest" in name.lower():
-            cells = find_cell_ids_in_same_hierarchy(first_cell_set_name, resp)
-        else:
-            cells = find_cells_by_set_id(name, resp)
-
-        return cells
-
-    @xray_recorder.capture("DifferentialExpression.compute")
-    @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
-    )
-    def compute(self):
+    def _format_request(self):
         # get cell sets from database
         resp = get_cell_sets(self.experiment_id)
 
@@ -121,6 +104,29 @@ class DifferentialExpression(Task):
             gene_filter = self.pagination["filters"][0]["expression"]
             request["geneNamesFilter"] = remove_regex(gene_filter)
 
+        return request
+
+    # Get cells values for the cell set.
+    def get_cells_in_set(self, name, resp, first_cell_set_name):
+        cells = []
+
+        # If "rest", then get all cells in the same hierarchy as the first cell set
+        #  that arent part of "first"
+        if "rest" in name.lower():
+            cells = find_cell_ids_in_same_hierarchy(first_cell_set_name, resp)
+        else:
+            cells = find_cells_by_set_id(name, resp)
+
+        return cells
+
+    @xray_recorder.capture("DifferentialExpression.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
+    def compute(self):
+        
+        request = self._format_request()
+        
         # send request to r worker
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
