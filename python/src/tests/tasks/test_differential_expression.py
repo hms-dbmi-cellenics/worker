@@ -64,5 +64,61 @@ class TestDifferentialExpression:
             "baseCells",
             "backgroundCells",
         ]
-        
+
         assert all(key in request for key in expected_keys)
+
+    @responses.activate
+    def test_cells_in_sets_intersection_are_filtered_out(self, mock_S3_get):
+        MockS3Class.setResponse("two_sets_intersected")
+
+        request = DifferentialExpression(
+            self.get_request(cellSet="cluster1", compareWith="cluster2")
+        )._format_request()
+
+        baseCells = request["baseCells"]
+        backgroundCells = request["backgroundCells"]
+
+
+        # Check 1 cell of each of the cell sets is left out
+        assert len(baseCells) == len(backgroundCells) == 2
+
+        # Check the cells that haven't been left out are
+        # those that are not in the intersection of both sets
+        assert len(set(baseCells).intersection(set(backgroundCells))) == 0
+
+
+    @responses.activate
+    def test_cells_not_in_basis_sample_are_filtered_out(self, mock_S3_get):
+        MockS3Class.setResponse("three_sets")
+
+        request = DifferentialExpression(
+            self.get_request(
+                cellSet="cluster1",
+                compareWith="cluster2",
+                basis="basisCluster",
+            )
+        )._format_request()
+
+        baseCells = request["baseCells"]
+        backgroundCells = request["backgroundCells"]
+
+        # Check cells not in basis are taken out
+        assert len(baseCells) == 1
+        assert len(backgroundCells) == 2
+
+    @responses.activate
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(
+        self, mock_S3_get
+    ):
+        MockS3Class.setResponse("hierarchichal_sets")
+
+        request = DifferentialExpression(
+            self.get_request(cellSet="cluster1", compareWith="rest")
+        )._format_request()
+
+        baseCells = request["baseCells"]
+        backgroundCells = request["backgroundCells"]
+
+        # Check there is only one cell in each set
+        assert len(baseCells) == 1
+        assert len(backgroundCells) == 1
