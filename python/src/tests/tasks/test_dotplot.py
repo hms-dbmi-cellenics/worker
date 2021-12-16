@@ -6,9 +6,8 @@ from worker.tasks.dotplot import DotPlot
 
 
 class TestDotplot:
-    @pytest.fixture(autouse=True)
-    def load_correct_definition(self):
-        self.correct_request = {
+    def get_request(self):
+        request = {
             "body": {
                 "name": "DotPlot",
                 "useMarkerGenes": True,
@@ -18,6 +17,8 @@ class TestDotplot:
                 "filterBy": {"group": "All", "key": "All"},
             }
         }
+
+        return request
 
     """
     Mocks the S3 query for fetching cell sets. Returns an
@@ -38,7 +39,7 @@ class TestDotplot:
     @responses.activate
     def test_generates_correct_request_keys(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
-        request = DotPlot(self.correct_request)._format_request()
+        request = DotPlot(self.get_request())._format_request()
         assert isinstance(request, dict)
 
         # all expected keys are in the request
@@ -55,5 +56,5 @@ class TestDotplot:
     @responses.activate
     def test_group_by_equals_filter_by_when_filter_by_equals_all(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
-        request = DotPlot(self.correct_request)._format_request()
+        request = DotPlot(self.get_request())._format_request()
         assert request["filterBy"] == request["groupBy"]
