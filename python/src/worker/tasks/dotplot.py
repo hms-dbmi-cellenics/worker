@@ -52,7 +52,7 @@ class DotPlot(Task):
     )
     def compute(self):
 
-        request = self._construct_request()
+        request = self._format_request()
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
