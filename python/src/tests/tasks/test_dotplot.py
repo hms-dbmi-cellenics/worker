@@ -36,7 +36,7 @@ class TestDotplot:
             DotPlot()
 
     @responses.activate
-    def test_generates_correct_request(self, mock_S3_get):
+    def test_generates_correct_request_keys(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
         request = DotPlot(self.correct_request)._format_request()
         assert isinstance(request, dict)
@@ -53,7 +53,7 @@ class TestDotplot:
         assert all(key in request for key in expected_keys)
 
     @responses.activate
-    def test_group_by_equals_filter_by_when_filter_by_is_all(self, mock_S3_get):
+    def test_group_by_equals_filter_by_when_filter_by_equals_all(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
         request = DotPlot(self.correct_request)._format_request()
         assert request["filterBy"] == request["groupBy"]

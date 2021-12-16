@@ -51,3 +51,18 @@ class TestDifferentialExpression:
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             DifferentialExpression()
+
+    @responses.activate
+    def test_generates_correct_request_keys(self, mock_S3_get):
+        MockS3Class.setResponse("one_set")
+        request = DifferentialExpression(self.get_request())._format_request()
+        print(request)
+        assert isinstance(request, dict)
+
+        # all expected keys are in the request
+        expected_keys = [
+            "baseCells",
+            "backgroundCells",
+        ]
+        
+        assert all(key in request for key in expected_keys)
