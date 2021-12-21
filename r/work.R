@@ -62,7 +62,28 @@ run_post <- function(req, post_fun, data) {
             message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
             message("✅ Finished ", req$body$name)
             message(rep("✧",100))
-            return(res)
+            
+            # print("resDebug")
+            # print(res)
+
+            serialized_res <- RJSONIO::toJSON(res)
+            
+            # print("serialized_resDebug")
+            # print(serialized_res)
+
+            compressed_res <- memCompress(serialized_res, "gzip")
+
+            decompressed_res <- memDecompress(compressed_res, "gzip", asChar = TRUE)
+
+            decompressed_res_no_char <- memDecompress(compressed_res, "gzip")
+
+            print("decompressed_res_no_charDEBUG")
+            print(decompressed_res_no_char)
+
+            # print("compressed_resDebug")
+            # print(compressed_res)
+
+            return(compressed_res)
         },
         error = function(e) {
             message("🚩 --------- 🚩")
