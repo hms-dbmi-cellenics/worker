@@ -18,26 +18,6 @@ class TestListGenes:
                 "limit": 20,
             }
         }
-        self.correct_asc = {
-            "body": {
-                "name": "ListGenes",
-                "selectFields": ["gene_names", "dispersions"],
-                "orderBy": "dispersions",
-                "orderDirection": "ASC",
-                "offset": 0,
-                "limit": 20,
-            }
-        }
-        self.correct_names = {
-            "body": {
-                "name": "ListGenes",
-                "selectFields": ["gene_names", "dispersions"],
-                "orderBy": "gene_names",
-                "orderDirection": "DESC",
-                "offset": 0,
-                "limit": 20,
-            }
-        }
         self.correct_filter = {
             "body": {
                 "name": "ListGenes",
@@ -49,7 +29,7 @@ class TestListGenes:
                 "geneNamesFilter": "LIN",
             }
         }
-        self.correct_startswith = {
+        self.clean_regex = {
             "body": {
                 "name": "ListGenes",
                 "selectFields": ["gene_names", "dispersions"],
@@ -57,10 +37,10 @@ class TestListGenes:
                 "orderDirection": "DESC",
                 "offset": 0,
                 "limit": 40,
-                "geneNamesFilter": "^LIN",
+                "geneNamesFilter": "{}|()?¿*+|/.<><>LIN().?{}|()?¿*+|/.<>",
             }
         }
-        self.correct_empty = {
+        self.partial_clean_regex = {
             "body": {
                 "name": "ListGenes",
                 "selectFields": ["gene_names", "dispersions"],
@@ -68,12 +48,10 @@ class TestListGenes:
                 "orderDirection": "DESC",
                 "offset": 0,
                 "limit": 40,
-                "geneNamesFilter": "^Glefjskamsmesascc",
+                "geneNamesFilter": "^${}|()?¿*+|/.<><>LIN().?{}|()?¿*+|/.<>",
             }
         }
-        self.correct_response = json.load(
-            open(os.path.join("tests", "lg_result.json"))
-        )
+        self.correct_response = json.load(open(os.path.join("tests", "lg_result.json")))
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -82,6 +60,27 @@ class TestListGenes:
     def test_works_with_request(self):
         ListGenes(self.correct_desc)
 
+    def test_construct_request(self):
+        assert (
+            ListGenes(self.correct_desc)._construct_request()
+            == self.correct_desc["body"]
+        )
+
+    def test_construct_request_works_with_filter(self):
+        assert (
+            ListGenes(self.correct_filter)._construct_request()
+            == self.correct_filter["body"]
+        )
+
+    def test_construct_request_cleans_regex(self):
+        request = ListGenes(self.clean_regex)._construct_request()
+        assert request["geneNamesFilter"] == "LIN"
+
+    def test_construct_request_cleans_regex(self):
+        request = ListGenes(self.clean_regex)._construct_request()
+        assert request["geneNamesFilter"] == "^$LIN"
+
+"""
     def test_descending(self):
         res = ListGenes(self.correct_desc).compute()
         res = json.loads(res[0].result)
@@ -131,3 +130,4 @@ class TestListGenes:
         res = ListGenes(self.correct_empty).compute()
         res = json.loads(res[0].result)
         assert res == {"rows": [], "total": 0}
+"""
