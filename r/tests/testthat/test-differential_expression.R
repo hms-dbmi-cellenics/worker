@@ -98,9 +98,9 @@ test_that("runDE works when no genes match filters", {
 
     req$body$pagination$filters <-
         list(list(
-          columnName = "logFC",
-          comparison = "greaterThan",
-          value = Inf
+            columnName = "logFC",
+            comparison = "greaterThan",
+            value = Inf
         ))
 
     res <- runDE(req, data)
