@@ -86,3 +86,23 @@ test_that("runDE works with numeric filters", {
     res <- runDE(req, data)
     expect_true(all(res$gene_results$logFC > 0))
 })
+
+test_that("runDE works when no genes match filters", {
+    data <- mock_scdata()
+    req <- mock_req()
+    req$body$pagination$filters <-
+        list(list(columnName = "gene_names", expression = "mythical_gene"))
+
+    res <- runDE(req, data)
+    expect_equal(nrow(res$gene_results), 0)
+
+    req$body$pagination$filters <-
+        list(list(
+          columnName = "logFC",
+          comparison = "greaterThan",
+          value = Inf
+        ))
+
+    res <- runDE(req, data)
+    expect_equal(nrow(res$gene_results), 0)
+})
