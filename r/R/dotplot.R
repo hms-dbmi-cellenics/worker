@@ -76,7 +76,7 @@ runDotPlot <- function(req, data) {
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
   dotplot_data <- dotplot_data %>%
-    transmute(cellSets = as.character(id),
+    dplyr::transmute(cellSets = as.character(id),
               geneName = as.character(name),
               avgExpression = avg.exp.scaled,
               cellsPercentage = pct.exp)
