@@ -42,7 +42,6 @@ class ListGenes(Task):
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
-
     def compute(self):
         request = self._construct_request()
 
