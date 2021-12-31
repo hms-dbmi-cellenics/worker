@@ -70,7 +70,7 @@ runDE <- function(req, data) {
 
   if("pathwayAnalysis" %in% names(req$body)){
     if(pathwayAnalysis$returnOnlyGenes){
-      n_genes = pathwayAnalysis$nGenesToReturn
+      n_genes = min(pathwayAnalysis$nGenesToReturn, length(result$gene))
       result <- list(gene_results=result$Gene[1:n_genes],full_count=n_genes)
     }
   }else{
