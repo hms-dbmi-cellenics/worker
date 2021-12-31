@@ -104,14 +104,21 @@ test_that("Pagination works", {
 })
 
 test_that("Start with pattern is applied", {
+    pat <- "^GZ"
     data <- mock_scdata()
-    req <- mock_req(orderBy = "gene_names", orderDirection = "DESC",offset = 0, limit = 40,geneNamesFilter = "^GZ")
+    req <- mock_req(orderBy = "gene_names",
+                    orderDirection = "DESC",
+                    offset = 0,
+                    limit = 40,
+                    geneNamesFilter = pat)
 
     res <- getList(req, data)
 
-    expect_true(all(grepl("^GZ",res$gene_results$gene_names)))
-    grep_results <- grepl("^GZ",rownames(data))
-    expect_equal(res$full_count,sum(grep_results==TRUE))
+    expect_true(all(grepl(pat, res$gene_results$gene_names)))
+    
+    grep_results <- grepl(pat, rownames(data))
+    expect_setequal(res$gene_results$gene_names, grep_results)
+    expect_equal(res$full_count, sum(grep_results == TRUE))
 })
 
 test_that("Ends with pattern is applied", {
