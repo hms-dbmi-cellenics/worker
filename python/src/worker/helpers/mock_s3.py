@@ -82,7 +82,7 @@ cell_set_responses = {
                 {
                     "name": "set1",
                     "key": "cluster4",
-                    "cellIds": [1],
+                    "cellIds": [1,10,11,12,13,14],
                 },
             ],
         },
