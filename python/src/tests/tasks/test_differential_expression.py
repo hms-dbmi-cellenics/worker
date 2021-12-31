@@ -120,4 +120,4 @@ class TestDifferentialExpression:
 
         # Check there is only one cell in each set
         assert len(baseCells) == 1
-        assert len(backgroundCells) == 1
+        assert len(backgroundCells) == 2
