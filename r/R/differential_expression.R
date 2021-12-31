@@ -68,10 +68,10 @@ runDE <- function(req, data) {
 
   result <- applyFilters(result, filters)
 
-  if ("pathwayAnalysis" %in% names(req$body)) {
-    if (pathwayAnalysis$returnOnlyGenes) {
-      n_genes <- pathwayAnalysis$nGenesToReturn
-      result <- list(gene_results = result$Gene[1:n_genes], full_count = n_genes)
+  if("pathwayAnalysis" %in% names(req$body)){
+    if(pathwayAnalysis$returnOnlyGenes){
+      n_genes = min(pathwayAnalysis$nGenesToReturn, length(result$gene))
+      result <- list(gene_results=result$Gene[1:n_genes],full_count=n_genes)
     }
   } else {
     result <- handlePagination(result, offset, limit, order_by, order_decreasing)
