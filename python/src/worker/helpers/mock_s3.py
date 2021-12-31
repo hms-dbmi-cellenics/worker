@@ -65,7 +65,7 @@ cell_set_responses = {
                 {
                     "name": "another set",
                     "key": "cluster2",
-                    "cellIds": [5],
+                    "cellIds": [5,6],
                 },
             ],
         },
