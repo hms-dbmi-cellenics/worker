@@ -19,11 +19,7 @@ class ListGenes(Task):
         # Return a list of formatted results.
         return Result({"total": total, "rows": result})
 
-    @xray_recorder.capture("ListGenes.compute")
-    @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
-    )
-    def compute(self):
+    def _construct_request(self):
         request = self.task_def
         #
         # Remove potentialy hazardous characters from the names filter
@@ -38,6 +34,16 @@ class ListGenes(Task):
         if "geneNamesFilter" in request:
             gene_filter = request["geneNamesFilter"]
             request["geneNamesFilter"] = remove_regex(gene_filter)
+
+        return request
+
+
+    @xray_recorder.capture("ListGenes.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
+    def compute(self):
+        request = self._construct_request()
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/listGenes",
