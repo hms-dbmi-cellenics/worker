@@ -56,7 +56,6 @@ class TestDifferentialExpression:
     def test_generates_correct_request_keys(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
         request = DifferentialExpression(self.get_request())._format_request()
-        print(request)
         assert isinstance(request, dict)
 
         # all expected keys are in the request
