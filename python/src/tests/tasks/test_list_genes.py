@@ -77,7 +77,7 @@ class TestListGenes:
         assert request["geneNamesFilter"] == "LIN"
 
     def test_construct_request_cleans_regex(self):
-        request = ListGenes(self.clean_regex)._construct_request()
+        request = ListGenes(self.partial_clean_regex)._construct_request()
         assert request["geneNamesFilter"] == "^$LIN"
 
 """
