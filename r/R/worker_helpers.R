@@ -67,7 +67,7 @@ getExpressionValues <- function(genes, data) {
   geneExpression <- geneExpression[order(geneExpression$cells_id), ]
   geneExpression <- geneExpression %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    select(-cells_id)
+    dplyr::select(-cells_id)
   # worried about duplicate gene row.names in @data
   symbol_idx <- match(colnames(geneExpression), genes$input)
   colnames(geneExpression) <- genes$name[symbol_idx]

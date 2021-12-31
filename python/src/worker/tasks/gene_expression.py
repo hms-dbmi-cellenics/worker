@@ -15,17 +15,17 @@ class GeneExpression(Task):
         # Return a list of formatted results.
         return Result(result)
 
+    def _construct_request(self):
+        request = self.task_def
+        return request
+
     @xray_recorder.capture("GeneExpression.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        # the genes to get expression data for
-        genes = self.task_def["genes"]
-        # whether to perform feature scaling (defaults to True)
-        # In r we currently use the data matrix of the Seurat object.
-        # scale = self.task_def.get("scale", True)
-        request = {"genes": genes}
+        request = self._construct_request()
+        
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runExpression",
             headers={"content-type": "application/json"},
