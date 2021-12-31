@@ -77,7 +77,7 @@ cell_set_responses = {
                 {
                     "name": "set",
                     "key": "cluster3",
-                    "cellIds": [0],
+                    "cellIds": [0,1,2,3],
                 },
                 {
                     "name": "set1",
