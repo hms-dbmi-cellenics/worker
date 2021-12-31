@@ -43,7 +43,7 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin 
 
 getMarkerNames <- function(data, all_markers) {
   all_markers$name <- data@misc$gene_annotations[all_markers$feature, "name"]
-  all_markers <- all_markers %>% transmute(input = feature, name = name)
+  all_markers <- all_markers %>% dplyr::transmute(input = feature, name = name)
   rownames(all_markers) <- c()
   return(all_markers)
 }
