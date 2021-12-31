@@ -23,6 +23,11 @@ test_that("Marker Heatmap returns appropiate format", {
 
     expect_equal(names(res),c("rawExpression","truncatedExpression"))
 
+    # number of rows is number of cells
+    expect_equal(ncol(data),nrow(res$rawExpression))
+
+    # returning only at most limit number of genes
+    expect_lte(ncol(res$rawExpression),req$body$nGenes*length(req$body$cellSets$children))
 })
 
 
