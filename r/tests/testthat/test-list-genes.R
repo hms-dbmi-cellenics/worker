@@ -119,7 +119,7 @@ test_that("Start with pattern is applied", {
   expect_true(all(grepl(pat, res$gene_results$gene_names)))
 
   grep_results <- grepl(pat, rownames(data))
-  expect_setequal(res$gene_results$gene_names, data@misc$gene_annotations[grep_results,"name"])
+  expect_true(all(res$gene_results$gene_names %in% data@misc$gene_annotations[grep_results, "name"]))
   expect_equal(res$full_count, sum(grep_results == TRUE))
 })
 
@@ -139,7 +139,7 @@ test_that("Ends with pattern is applied", {
   expect_true(all(grepl(pat, res$gene_results$gene_names)))
 
   grep_results <- grepl(pat, rownames(data))
-  expect_setequal(res$gene_results$gene_names, data@misc$gene_annotations[grep_results,"name"])
+  expect_true(all(res$gene_results$gene_names %in% data@misc$gene_annotations[grep_results, "name"]))
   expect_equal(res$full_count, sum(grep_results == TRUE))
 })
 
@@ -159,6 +159,6 @@ test_that("Contains pattern is applied", {
   expect_true(all(grepl(pat, res$gene_results$gene_names)))
 
   grep_results <- grepl(pat, rownames(data))
-  expect_setequal(res$gene_results$gene_names, data@misc$gene_annotations[grep_results,"name"])
+  expect_true(all(res$gene_results$gene_names %in% data@misc$gene_annotations[grep_results, "name"]))
   expect_equal(res$full_count, sum(grep_results == TRUE))
 })
