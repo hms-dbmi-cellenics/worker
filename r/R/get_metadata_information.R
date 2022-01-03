@@ -46,7 +46,7 @@ getMitochondrialContent <- function(req, data) {
 
     # Be aware of possible na values
     if(any(is.na(result)))
-        warning("There are missing values in the doublet_scores results")
+        warning("There are missing values in the percent.mt results")
 
     return(result)
 
