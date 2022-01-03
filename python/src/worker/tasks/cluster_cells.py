@@ -1,11 +1,11 @@
 import json
+from logging import info
 
 import backoff
 import pandas as pd
 import requests
 from aws_xray_sdk.core import xray_recorder
 from natsort import natsorted
-from logging import info
 
 from ..config import config
 from ..helpers.color_pool import COLOR_POOL
@@ -44,9 +44,9 @@ class ClusterCells(Task):
                     "cellIds": list(view.map(int)),
                 }
             )
-        
+
         return cell_set
-    
+
     def _update_through_api(self, cell_set_object):
         r = requests.patch(
             f"{config.API_URL}/v1/experiments/{self.request['experimentId']}/cellSets",
@@ -63,26 +63,32 @@ class ClusterCells(Task):
                 },
                 {
                     "$prepend": cell_set_object,
-                }
+                },
             ],
         )
 
         info(r.status_code)
-    
+
     def _format_result(self, cell_set_object):
         return Result(cell_set_object, cacheable=False)
 
-    @xray_recorder.capture("ClusterCells.compute")
-    @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
-    )
-    def compute(self):
+    def _construct_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
 
         request = {
             "type": self.task_def["type"],
             "config": self.task_def.get("config", {"resolution": resolution}),
         }
+
+        return request
+
+    @xray_recorder.capture("ClusterCells.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
+    def compute(self):
+
+        request = self._construct_request()
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/getClusters",
