@@ -30,6 +30,11 @@ class TestClusterCells:
                 "config": {"resolution": 0.5},
             },
         }
+        self.parsed_request = {
+            "type": self.correct_request["body"]["type"],
+            "config": self.correct_request["body"]["config"],
+        }
+
         self.correctResponse = json.load(
             open(os.path.join("tests", "cluster_result.json"))
         )
@@ -40,6 +45,12 @@ class TestClusterCells:
 
     def test_works_with_request(self):
         ClusterCells(self.correct_request)
+
+    def test_construct_request(self):
+        assert (
+            ClusterCells(self.correct_request)._construct_request()
+            == self.parsed_request
+        )
 
     """ def test_louvain_clustering_works(self):
         res = ClusterCells(self.correct_request).compute()
