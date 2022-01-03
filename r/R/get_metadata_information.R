@@ -4,24 +4,8 @@
 # use the package Scrublet [1]
 #' @export
 getDoubletScore <- function(req, data) {
-  # Check if the experiment has doublet_scores stored in rds file
-  if(!"doublet_scores"%in%colnames(data@meta.data)){
-    stop("Doublet scores are not computed for this experiment.")
-  }
-
-  # Subset the doublet_scores ordering by cells_id
-  result <- data@meta.data[order(data$cells_id, decreasing = F), "doublet_scores"]
-  result<- as.data.frame(result)
-  result$cells_id <- data@meta.data$cells_id[order(data$cells_id, decreasing = F)]
-  result <- result %>% tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
-  result <- t(unname(result))
-  result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
-
-  # Be aware of possible na values
-  if(any(is.null(result)))
-    warning("There are missing values in the doublet_scores results")
+  result <- formatMetadataResult(data, "doublet_scores")
   return(result)
-
 }
 
 # Function to retrieve all the mt-content score for the current experiment.
@@ -30,27 +14,33 @@ getDoubletScore <- function(req, data) {
 # the MT-genes only in MMusculus and Homo Sapiens by grepping "MT"
 #' @export
 getMitochondrialContent <- function(req, data) {
+  result <- formatMetadataResult(data, "percent.mt")
+  return(result)
+}
 
-    # Check if the experiment has percent.mt stored in rds file
-    if(!"percent.mt"%in%colnames(data@meta.data)){
-        stop("MT content is not computed for this experiment")
-    }
+formatMetadataResult <- function(data, column) {
 
-    # Subset the percent.mt ordering by cells_id (DESC)
-    cells_id_order <- order(data$cells_id, decreasing = FALSE)
-    result <- data@meta.data[cells_id_order, "percent.mt"]
-    result<- as.data.frame(result)
-    result$cells_id <- data@meta.data$cells_id[cells_id_order]
-    result <- result %>% tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
-    result <- t(unname(result))
-    result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
+  # check if the experiment has specified column
+  if(!column %in% colnames(data@meta.data)){
+    stop(column, " is not computed for this experiment.")
+  }
 
-    # Be aware of possible na values
-    if(any(is.na(result)))
-        warning("There are missing values in the percent.mt results")
+  # get the specified column, ordering by cells_id
+  cells_id_order <- order(data$cells_id, decreasing = FALSE)
+  result <- data@meta.data[cells_id_order, column]
+  result<- as.data.frame(result)
+  result$cells_id <- data@meta.data$cells_id[cells_id_order]
+  result <- result %>%
+    tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
+    select(-cells_id)
+  result <- t(unname(result))
+  result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
 
-    return(result)
+  # Be aware of possible NA values
+  if(any(is.null(result)))
+    warning("There are missing values in the ", column, " results")
 
+  return(result)
 }
 
 
