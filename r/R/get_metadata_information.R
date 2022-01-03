@@ -37,9 +37,10 @@ getMitochondrialContent <- function(req, data) {
     }
 
     # Subset the percent.mt ordering by cells_id (DESC)
-    result <- data@meta.data[order(data$cells_id, decreasing = F), "percent.mt"]
+    cells_id_order <- order(data$cells_id, decreasing = FALSE)
+    result <- data@meta.data[cells_id_order, "percent.mt"]
     result<- as.data.frame(result)
-    result$cells_id <- data@meta.data$cells_id[order(data$cells_id, decreasing = F)]
+    result$cells_id <- data@meta.data$cells_id[cells_id_order]
     result <- result %>% tidyr::complete(cells_id = seq(0,max(data@meta.data$cells_id))) %>% select(-cells_id)
     result <- t(unname(result))
     result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
