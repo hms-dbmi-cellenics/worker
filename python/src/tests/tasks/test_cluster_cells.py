@@ -38,6 +38,9 @@ class TestClusterCells:
         with pytest.raises(TypeError):
             ClusterCells()
 
+    def test_works_with_request(self):
+        ClusterCells(self.correct_request)
+
     def test_louvain_clustering_works(self):
         res = ClusterCells(self.correct_request).compute()
         res = res[0].result
