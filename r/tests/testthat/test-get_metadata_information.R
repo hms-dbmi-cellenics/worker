@@ -19,6 +19,7 @@ mock_scdata <- function() {
 
     set.seed(0)
     pbmc_small[["percent.mt"]] <- rnorm(ncol(pbmc_small), 5, 1)
+    pbmc_small[["doublet_scores"]] <- rnorm(ncol(pbmc_small), 0.5, 0.1)
 
     return(pbmc_small)
 }
@@ -40,17 +41,43 @@ test_that("GetMitochondrialContent generates the expected return format", {
     expect_equal(unlist(res), unname(data$percent.mt))
 })
 
-test_that("GetMitochondrialContent adds placeholders for filtered cells", {
+test_that("getDoubletScore generates the expected return format", {
     data <- mock_scdata()
     req <- mock_req()
+
+    res <- getDoubletScore(req, data)
+
+    # number of values is number of cells
+    expect_length(res, ncol(data))
+
+    #result is a list of numeric values
+    expect_type(res, 'list')
+    expect_type(unlist(res), 'double')
+
+    # result derived from percent.mt column
+    expect_equal(unlist(res), unname(data$doublet_scores))
+})
+
+test_that("formatMetadataResult throws an error if metadata column is missing", {
+    data <- mock_scdata()
+
+    # these exist and are used
+    expect_error(formatMetadataResult(data, column = 'percent.mt'), NA)
+    expect_error(formatMetadataResult(data, column = 'doublet_scores'), NA)
+
+    # but not this
+    expect_error(formatMetadataResult(data, column = 'blah'), 'blah is not computed for this experiment.')
+})
+
+test_that("formatMetadataResult adds placeholders for filtered cells", {
+    data <- mock_scdata()
 
     # remove 2 cells
     ncells.init <- ncol(data)
     data <- data[, -c(5, 6)]
     expect_equal(ncol(data)+2, ncells.init)
 
-
-    res <- getMitochondrialContent(req, data)
+    res <- formatMetadataResult(data, column = 'percent.mt')
 
     # result fills them in
     expect_length(res, ncells.init)
@@ -65,16 +92,15 @@ test_that("GetMitochondrialContent adds placeholders for filtered cells", {
 })
 
 
-test_that("getMitochondrialContent returns results in order of increasing cells_id", {
+test_that("formatMetadataResult returns results in order of increasing cells_id", {
     data <- mock_scdata()
-    req <- mock_req()
 
     # swap order of two cells
     ord <- new.ord <- seq_len(ncol(data))
     new.ord[c(2, 3)] <- ord[c(3, 2)]
     data@meta.data <- data@meta.data[new.ord, ]
 
-    res <- getMitochondrialContent(req, data)
+    res <- formatMetadataResult(data, column = 'percent.mt')
 
     # res not the same at percent.mt column (order is different)
     expect_false(identical(unlist(res), unname(data$percent.mt)))
