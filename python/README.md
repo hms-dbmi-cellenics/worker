@@ -17,8 +17,8 @@ See the main README for instructions on how to run the workers in Docker.
 ### Process tasks
 Tasks are automatically processed when they are received from the SQS queue specified.
 
-For **local development**, make sure you have [InfraMock](https://github.com/biomage-ltd/inframock)
-running alongside the [ui](https://github.com/biomage-ltd/ui) and [api](https://github.com/biomage-ltd/api)
+For **local development**, make sure you have [InfraMock](https://github.com/hms-dbmi-cellenics/inframock)
+running alongside the [ui](https://github.com/hms-dbmi-cellenics/ui) and [api](https://github.com/hms-dbmi-cellenics/api)
 projects. Refer to their respective documentations on how to run them locally. Once all of these are running,
 tasks should automatically be submitted and processed when you perform actions on the `ui`. There is nothing else to do.
 
@@ -76,7 +76,7 @@ run those tests.
 
 ### Task formatting
 Task definitions are stored in the `api` project as an OpenAPI schema.
-You can find this [here](https://github.com/biomage-ltd/api/blob/master/src/specs/api.yaml).
+You can find this [here](https://github.com/hms-dbmi-cellenics/api/blob/master/src/specs/api.yaml).
 
 Download the schema and open it using Stoplight Studio. Looking into `WorkRequest` should give you
 the schemas and parameters for all supported tasks.
