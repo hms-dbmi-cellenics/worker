@@ -33,6 +33,29 @@ test_that("clustering returns correct keys", {
   }
 })
 
-test_that("leiden clustering works", {
+test_that("clustering returns one value per cell", {
+  algos <- c("louvain", "leiden")
+  data <- mock_scdata()
+  expected_n_cells <- ncol(data)
 
+  for (algo in algos) {
+    req <- mock_req(type = algo)
+    res <- runClusters(req, data)
+    n_cells <- nrow(res)
+
+    expect_equal(n_cells, expected_n_cells)
+  }
+})
+
+test_that("clustering orders barcodes correctly", {
+  algos <- c("louvain", "leiden")
+  data <- mock_scdata()
+  expected_barcodes <- colnames(data)
+
+  for (algo in algos) {
+    req <- mock_req(type = algo)
+    res <- runClusters(req, data)
+    barcodes <- rownames(res)
+    expect_equal(barcodes, expected_barcodes)
+  }
 })
