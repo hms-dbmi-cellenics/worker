@@ -3,7 +3,7 @@ mock_req <- function(type = "louvain") {
     body =
       list(
         config = list(
-          resolution = 0.5
+          resolution = 2
         ),
         type = type
       )
@@ -57,5 +57,17 @@ test_that("clustering orders barcodes correctly", {
     res <- runClusters(req, data)
     barcodes <- rownames(res)
     expect_equal(barcodes, expected_barcodes)
+  }
+})
+
+test_that("clustering returns at least one cluster", {
+  algos <- c("louvain", "leiden")
+  data <- mock_scdata()
+
+  for (algo in algos) {
+    req <- mock_req(type = algo)
+    res <- runClusters(req, data)
+    n_clusters <- length(unique(res$cluster))
+    expect_gte(n_clusters, 1)
   }
 })
