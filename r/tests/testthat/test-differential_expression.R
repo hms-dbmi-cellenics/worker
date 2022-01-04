@@ -34,14 +34,14 @@ test_that("runDE generates the expected return format", {
     expect_equal(res$full_count, nrow(data))
 
     # returning only at most limit number of genes
-    expect_equal(nrow(res$gene_results), req$body$pagination$limit)
+    expect_equal(length(res$gene_results), req$body$pagination$limit)
 
     # ordering is correct
     expect_equal(res$gene_results$logFC, sort(res$gene_results$logFC, decreasing = TRUE))
 
     # have the correct column names
     expect_columns <- c('p_val', 'logFC', 'pct_1', 'pct_2', 'p_val_adj', 'auc', 'gene_names', 'Gene')
-    expect_equal(colnames(res$gene_results), expect_columns)
+    expect_equal(unique(names(unlist(res$gene_results))), expect_columns)
 })
 
 test_that("runDE limit won't return more than available genes", {
@@ -51,7 +51,7 @@ test_that("runDE limit won't return more than available genes", {
     req$body$pagination$limit <- nrow(data) + 50
 
     res <- runDE(req, data)
-    expect_equal(nrow(res$gene_results), nrow(data))
+    expect_equal(length(res$gene_results), nrow(data))
 })
 
 test_that("runDE was able to convert from ensembl ids to gene symbols", {
