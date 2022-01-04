@@ -22,7 +22,7 @@ class TestGetMitochondrialContent:
         GetMitochondrialContent(self.correct_request)
 
     def test_generates_correct_request_keys(self):
-        request = GetDoubletScore(self.correct_request)._format_request()
+        request = GetMitochondrialContent(self.correct_request)._format_request()
         assert isinstance(request, dict)
 
         # all expected keys are in the request
