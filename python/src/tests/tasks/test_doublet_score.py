@@ -17,30 +17,14 @@ class TestGetDoubletScore:
                 "name": "getDoubletScore",
             },
         }
-
-    @pytest.fixture(autouse=True)
-    def set_responses(self):
-        with open(os.path.join("tests", "DoubletScore_result.json")) as f:
-            data = json.load(f)
-            responses.add(
-                responses.POST,
-                f"{config.R_WORKER_URL}/v0/getDoubletScore",
-                json=data,
-                status=200,
-            )
-
     def test_works_with_request(self):
         GetDoubletScore(self.correct_request)
 
-    @responses.activate
-    def test_returns_json(self):
-        res = GetDoubletScore(self.correct_request).compute()
-        res = res[0].result
-        json.loads(res)
+    def test_generates_correct_request_keys(self):
+        request = GetDoubletScore(self.correct_request)._format_request()
+        assert isinstance(request, dict)
 
-    @responses.activate
-    def test_returns_a_json_object(self):
-        res = GetDoubletScore(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        assert isinstance(res, list)
+        # all expected keys are in the request
+        expected_keys = []
+        assert all(key in request for key in expected_keys)
+
