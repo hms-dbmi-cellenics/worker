@@ -33,7 +33,7 @@ formatMetadataResult <- function(data, column) {
   result <- result %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
     dplyr::select(-cells_id)
-  result <- t(unname(result))
+  result <- t(unname(as.data.frame(result)))
   result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
 
   # Be aware of possible NA values
