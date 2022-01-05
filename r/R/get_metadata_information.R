@@ -32,7 +32,7 @@ formatMetadataResult <- function(data, column) {
   result$cells_id <- data@meta.data$cells_id[cells_id_order]
   result <- result %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    select(-cells_id)
+    dplyr::select(-cells_id)
   result <- t(unname(result))
   result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
 
