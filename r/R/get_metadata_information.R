@@ -11,7 +11,7 @@ getDoubletScore <- function(req, data) {
 # Function to retrieve all the mt-content score for the current experiment.
 # The MT-content was computing in the data-ingest script. To compute then, we
 # use the function PercentageFeatureSet fom Seurat package. We have been able to identify
-# the MT-genes only in MMusculus and Homo Sapiens by grepping "MT"
+# the MT-genes only in Mus musculus, Homo sapiens  or drosophila by grepping "MT[-:]"
 #' @export
 getMitochondrialContent <- function(req, data) {
   result <- formatMetadataResult(data, "percent.mt")
