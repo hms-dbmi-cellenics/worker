@@ -21,6 +21,14 @@ mock_scdata <- function() {
     name = row.names(pbmc_small),
     row.names = row.names(pbmc_small)
   )
+
+  # change a few names, to ease testing getMarkerNames
+  N <- 100
+  ngenes <- nrow(pbmc_small)
+  sampled_genes <- sample(1:ngenes, N)
+  new_names <- paste0("name_", sampled_genes)
+  pbmc_small@misc$gene_annotations$name[sampled_genes] <- new_names
+
   return(pbmc_small)
 }
 
@@ -98,20 +106,17 @@ test_that("running applyFilters sequentially is equivalent to running together",
 # subset_ids
 
 test_that("subset_ids returns same class as input data", {
-
   data <- mock_scdata()
-  cell_ids <- c(1,2,3,5,7, 11, 13, 17, 19)
+  cell_ids <- c(1, 2, 3, 5, 7, 11, 13, 17, 19)
 
   data_subset <- subset_ids(data, cell_ids)
 
   expect_true(class(data) == class(data_subset))
-
 })
 
 test_that("subset_ids returns seurat object correctly", {
-
   data <- mock_scdata()
-  cell_ids <- c(1,2,3,5,7, 11, 13, 17, 19)
+  cell_ids <- c(1, 2, 3, 5, 7, 11, 13, 17, 19)
 
   data_subset <- subset_ids(data, cell_ids)
 
@@ -121,18 +126,15 @@ test_that("subset_ids returns seurat object correctly", {
 })
 
 test_that("subset_ids errors when empty cell_ids", {
-
   data <- mock_scdata()
   cell_ids <- c()
 
   expect_error(subset_ids(data, cell_ids))
-
 })
 
 # getTopMarkerGenes
 
 test_that("getTopMarkerGenes returns an object with correct columns", {
-
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 5
@@ -154,11 +156,9 @@ test_that("getTopMarkerGenes returns an object with correct columns", {
   res <- getTopMarkerGenes(nFeatures, data, cellSets)
 
   expect_equal(colnames(res), expected_columns)
-
 })
 
 test_that("getTopMarkerGenes returns at least 1 gene and n_genes * n_cellSets at the most", {
-
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 1000
@@ -167,11 +167,9 @@ test_that("getTopMarkerGenes returns at least 1 gene and n_genes * n_cellSets at
 
   expect_gte(nrow(res), 1)
   expect_lte(nrow(res), nFeatures * length(cellSets))
-
 })
 
 test_that("getTopMarkerGenes returns correctly filtered marker genes", {
-
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
@@ -193,11 +191,9 @@ test_that("getTopMarkerGenes returns correctly filtered marker genes", {
   expect_true(all(res$auc >= aucMin))
   expect_true(all(res$pct_in >= pctInMin))
   expect_true(all(res$pct_out <= pctOutMax))
-
 })
 
 test_that("getTopMarkerGenes returns empty if no genes match filters", {
-
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
@@ -217,20 +213,103 @@ test_that("getTopMarkerGenes returns empty if no genes match filters", {
     )
 
   expect_equal(nrow(res), 0)
+})
 
+test_that("getTopMarkerGenes markers in correct order", {
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  res <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets
+    )
+
+  expect_equal(res, dplyr::arrange(res, group))
 })
 
 # getMarkerNames
 
-test_that("getMarkerNames returns object with correct columns", {})
+test_that("getMarkerNames returns object with correct columns", {
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  all_markers <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets
+    )
 
-test_that("getMarkerNames returns same number of gene names as gene_ids", {})
+  res <- getMarkerNames(data, all_markers)
+  expected_columns <- c("group", "input", "name")
 
-test_that("getMarkerNames returns same number of gene names as gene_ids", {})
+  expect_equal(names(res), expected_columns)
+})
 
-# this might not make sense, the name column contains the ID if there's no gene
-# name
-test_that("getMarkerNames returns gene_id if there's no gene name", {})
+test_that("getMarkerNames returns same number of gene names as requested", {
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  all_markers <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets
+    )
+
+  res <- getMarkerNames(data, all_markers)
+
+  expect_equal(nrow(res), nrow(all_markers))
+})
+
+test_that("getMarkerNames correct gene names", {
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  all_markers <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets
+    )
+
+  res <- getMarkerNames(data, all_markers)
+
+  expected_names <- data@misc$gene_annotations %>%
+    dplyr::filter(input %in% all_markers$feature) %>%
+    dplyr::pull(name)
+
+  # getTopMarkerGenes orders them by group
+  expect_setequal(res$name, expected_names)
+})
+
+test_that("getMarkerNames returns input if there's no gene name", {
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  all_markers <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets
+    )
+
+  res <- getMarkerNames(data, all_markers)
+
+  expected_noname_genes <- data@misc$gene_annotations %>%
+    dplyr::filter(!grepl("^name_", name))
+
+  named_genes <- res %>%
+    dplyr::filter(grepl("^name_", name))
+
+  noname_genes <- res %>%
+    dplyr::filter(!grepl("^name_", name))
+
+  expect_true(all(noname_genes$input %in% expected_noname_genes$input))
+  expect_false(any(named_genes$input %in% expected_noname_genes$input))
+})
 
 
 # getExpressionValues
