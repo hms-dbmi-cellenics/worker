@@ -24,6 +24,16 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
+mock_cellSets <- function() {
+  cellSets <- list(
+    children = list(
+      louvain1 = list(cellIds = 0:39),
+      louvain2 = list(cellIds = 40:79)
+    )
+  )
+  cellSets
+}
+
 test_that("applyFilters works with gene with exact match", {
   gene_results <- mock_gene_results()
   filters <- list(list(columnName = "gene_names", expression = "G5"))
@@ -87,19 +97,128 @@ test_that("running applyFilters sequentially is equivalent to running together",
 
 # subset_ids
 
-test_that("subset_ids subsets seurat object correctly", {})
+test_that("subset_ids returns same class as input data", {
 
-test_that("subset_ids returns same seurat object if empty cells_id", {})
+  data <- mock_scdata()
+  cell_ids <- c(1,2,3,5,7, 11, 13, 17, 19)
+
+  data_subset <- subset_ids(data, cell_ids)
+
+  expect_true(class(data) == class(data_subset))
+
+})
+
+test_that("subset_ids returns seurat object correctly", {
+
+  data <- mock_scdata()
+  cell_ids <- c(1,2,3,5,7, 11, 13, 17, 19)
+
+  data_subset <- subset_ids(data, cell_ids)
+
+  expect_equal(length(cell_ids), ncol(data_subset))
+  expect_equal(data_subset@meta.data$cells_id, cell_ids)
+  expect_true(all(colnames(data_subset) %in% colnames(data)))
+})
+
+test_that("subset_ids errors when empty cell_ids", {
+
+  data <- mock_scdata()
+  cell_ids <- c()
+
+  expect_error(subset_ids(data, cell_ids))
+
+})
 
 # getTopMarkerGenes
 
-test_that("getTopMarkerGenes returns an object with correct columns", {})
+test_that("getTopMarkerGenes returns an object with correct columns", {
 
-test_that("getTopMarkerGenes returns n_genes * n_clusters at the most", {})
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 5
 
-test_that("getTopMarkerGenes returns correctly filtered marker genes", {})
+  expected_columns <-
+    c(
+      "feature",
+      "group",
+      "avgExpr",
+      "logFC",
+      "statistic",
+      "auc",
+      "pval",
+      "padj",
+      "pct_in",
+      "pct_out"
+    )
 
-test_that("getTopMarkerGenes returns empty if no genes match filters", {})
+  res <- getTopMarkerGenes(nFeatures, data, cellSets)
+
+  expect_equal(colnames(res), expected_columns)
+
+})
+
+test_that("getTopMarkerGenes returns at least 1 gene and n_genes * n_cellSets at the most", {
+
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 1000
+
+  res <- getTopMarkerGenes(nFeatures, data, cellSets)
+
+  expect_gte(nrow(res), 1)
+  expect_lte(nrow(res), nFeatures * length(cellSets))
+
+})
+
+test_that("getTopMarkerGenes returns correctly filtered marker genes", {
+
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  aucMin <- 0.2
+  pctInMin <- 17
+  pctOutMax <- 73
+
+
+  res <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets,
+      aucMin,
+      pctInMin,
+      pctOutMax
+    )
+
+  expect_true(all(res$auc >= aucMin))
+  expect_true(all(res$pct_in >= pctInMin))
+  expect_true(all(res$pct_out <= pctOutMax))
+
+})
+
+test_that("getTopMarkerGenes returns empty if no genes match filters", {
+
+  data <- mock_scdata()
+  cellSets <- mock_cellSets()$children
+  nFeatures <- 42
+  aucMin <- 1
+  pctInMin <- 100
+  pctOutMax <- 0
+
+
+  res <-
+    getTopMarkerGenes(
+      nFeatures,
+      data,
+      cellSets,
+      aucMin,
+      pctInMin,
+      pctOutMax
+    )
+
+  expect_equal(nrow(res), 0)
+
+})
 
 # getMarkerNames
 
