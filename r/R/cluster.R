@@ -47,7 +47,7 @@ getClusters <- function(type, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[type]]
 
-  # need the reduction that is used in FindNeighbors.
+  # use the reduction from data integration for nearest neighbors graph
   if ("active.reduction" %in% names(data@misc)) {
     active.reduction <- data@misc[["active.reduction"]]
   } else {
