@@ -1,20 +1,15 @@
-#
-# getClusters
-# returns the clusters in the shape of a dataframe with a clusters column,
-# cell ids column and cell barcode as rownames.
-#
-# req$body has:
-# type: can be "louvain"/"leiden"
-# config:{
-#          resolution: integer, range: 0 - 2
-#         }
-#
-#
-# We currently CANT support leiden, we need to discuss this in bioinformatics,
-#  the algorithm is not working.
-#
+# IMPORTANT: this function/utilities mirrored in pipeline. If update change both.
+
+#' Get Clusters
+#'
+#' @param clustering_method
+#' @param resolution
+#' @param data
+#'
+#' @return
 #' @export
 #'
+#' @examples
 runClusters <- function(req, data) {
   resol <- req$body$config$resolution
   type <- req$body$type
@@ -32,7 +27,6 @@ runClusters <- function(req, data) {
   rownames(df) <- rownames(data@meta.data)
   return(df)
 }
-
 
 #' Compute clusters and return object with clusters
 #'
@@ -102,4 +96,3 @@ getSNNiGraph <- function(data, active.reduction) {
   )
   return(g)
 }
-

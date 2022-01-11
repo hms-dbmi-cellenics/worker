@@ -1,3 +1,5 @@
+# IMPORTANT: these tests are also present in the pipeline If update, change both.
+
 mock_req <- function(type = "louvain") {
   req <- list(
     body =
