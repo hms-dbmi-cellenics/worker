@@ -1,4 +1,4 @@
-# IMPORTANT: this function/utilities mirrored in pipeline. If update change both.
+# IMPORTANT: functions in this file are duplicated in the pipeline. If you update, change both.
 
 #' Get Clusters
 #'

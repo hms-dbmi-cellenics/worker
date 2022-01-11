@@ -1,4 +1,4 @@
-# IMPORTANT: these tests are also present in the pipeline If update, change both.
+# IMPORTANT: these tests are duplicated in the pipeline. If you update, change both.
 
 mock_req <- function(type = "louvain") {
   req <- list(
