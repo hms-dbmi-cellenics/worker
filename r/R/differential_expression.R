@@ -70,7 +70,13 @@ runDE <- function(req, data) {
   result <- applyFilters(result, filters)
 
   if("pathwayAnalysis" %in% names(req$body)){
-      n_genes = min(pathwayAnalysis$nGenesToReturn, length(result$gene))
+
+      n_genes = nrow(result)
+
+      if(pathwayAnalysis$nGenesToReturn != 'All') {
+        n_genes = min(pathwayAnalysis$nGenesToReturn, length(result$gene))
+      }
+      
       result <- result[order(result[, order_by], decreasing = order_decreasing), ]
       result <- list(gene_results=result$Gene[1:n_genes],full_count=n_genes)
       return(result)
