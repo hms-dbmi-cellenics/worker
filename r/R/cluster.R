@@ -57,7 +57,7 @@ getClusters <- function(type, resolution, data) {
   if (type == "leiden") {
 
     # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
-    g <- getSNNiGraph(data)
+    g <- getSNNiGraph(data, active.reduction)
     clus_res <- igraph::cluster_leiden(g, "modularity", resolution_parameter = resolution)
     clusters <- clus_res$membership
     names(clusters) <- clus_res$names
@@ -85,13 +85,13 @@ getClusters <- function(type, resolution, data) {
 #'
 #' @return boolean indicating if SNN Graph object exists
 #'
-getSNNiGraph <- function(data) {
+getSNNiGraph <- function(data, active.reduction) {
 
   # check to see if we already have Seurat SNN Graph object
   snn_name <- paste0(data@active.assay, "_snn")
 
   # if doesn't exist, run SNN
-  if (!snn_name %in% names(data)) data <- Seurat::FindNeighbors(data)
+  if (!snn_name %in% names(data)) data <- Seurat::FindNeighbors(data, reduction = active.reduction)
 
   # convert Seurat Graph object to igraph
   # similar to https://github.com/joshpeters/westerlund/blob/46609a68855d64ed06f436a6e2628578248d3237/R/functions.R#L85

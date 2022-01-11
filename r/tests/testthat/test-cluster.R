@@ -71,3 +71,29 @@ test_that("runClusters returns at least one cluster", {
     expect_gte(n_clusters, 1)
   }
 })
+
+
+test_that("runClusters uses active.reduction in misc slot", {
+
+  algos <- c("louvain", "leiden")
+  data <- mock_scdata()
+
+  # get error if no PCA/SNN graph
+  blah_reduction <- data@reductions$pca
+  data@reductions$pca <- NULL
+  data@graphs$RNA_snn <- NULL
+
+  for (algo in algos) {
+    req <- mock_req(type = algo)
+    expect_error(runClusters(req, data), "Cannot find 'pca'")
+  }
+
+  # will use active.reduction to get SNN graph
+  data@reductions$blah_reduction <- blah_reduction
+  data@misc$active.reduction <- 'blah_reduction'
+
+  for (algo in algos) {
+    req <- mock_req(type = algo)
+    expect_error(runClusters(req, data), NA)
+  }
+})
