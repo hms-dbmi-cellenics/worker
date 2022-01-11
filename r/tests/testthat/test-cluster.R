@@ -21,7 +21,7 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
-test_that("clustering returns correct keys", {
+test_that("runClusters returns correct keys", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_keys <- c("cluster", "cell_ids")
@@ -33,7 +33,7 @@ test_that("clustering returns correct keys", {
   }
 })
 
-test_that("clustering returns one value per cell", {
+test_that("runClusters returns one value per cell", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_n_cells <- ncol(data)
@@ -47,7 +47,7 @@ test_that("clustering returns one value per cell", {
   }
 })
 
-test_that("clustering orders barcodes correctly", {
+test_that("runClusters orders barcodes correctly", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
   expected_barcodes <- colnames(data)
@@ -60,7 +60,7 @@ test_that("clustering orders barcodes correctly", {
   }
 })
 
-test_that("clustering returns at least one cluster", {
+test_that("runClusters returns at least one cluster", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
 
