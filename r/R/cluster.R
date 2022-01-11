@@ -11,7 +11,7 @@
 #
 #
 # We currently CANT support leiden, we need to discuss this in bioinformatics,
-#  the algorithm is not working.
+# the algorithm is not working.
 #
 #' @export
 #'
