@@ -20,8 +20,13 @@ class DifferentialExpression(Task):
         super().__init__(msg)
         self.experiment_id = config.EXPERIMENT_ID
         self.pagination = {}
+        self.pathway_analysis = {}
+
         if "pagination" in msg:
             self.pagination = msg["pagination"]
+
+        if "pathwayAnalysis" in msg:
+            self.pathway_analysis = msg["pathwayAnalysis"]
 
     def _format_result(self, result):
         # Return a list of formatted results.
@@ -95,6 +100,9 @@ class DifferentialExpression(Task):
 
         if self.pagination:
             request["pagination"] = self.pagination
+
+        if self.pathway_analysis:
+            request["pathwayAnalysis"] = self.pathway_analysis
 
         if "filters" in self.pagination:
             gene_filter = self.pagination["filters"][0]["expression"]

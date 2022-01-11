@@ -60,6 +60,7 @@ runDE <- function(req, data) {
   message("Paginating results:  ", str(result))
   pagination <- req$body$pagination
   pathwayAnalysis <- req$body$pathwayAnalysis
+  
   order_by <- pagination$orderBy
   order_decreasing <- pagination$orderDirection == "DESC"
   offset <- pagination$offset
@@ -69,14 +70,14 @@ runDE <- function(req, data) {
   result <- applyFilters(result, filters)
 
   if("pathwayAnalysis" %in% names(req$body)){
-    if(pathwayAnalysis$returnOnlyGenes){
       n_genes = min(pathwayAnalysis$nGenesToReturn, length(result$gene))
+      result <- result[order(result[, order_by], decreasing = order_decreasing), ]
       result <- list(gene_results=result$Gene[1:n_genes],full_count=n_genes)
-    }
-  } else {
-    result <- handlePagination(result, offset, limit, order_by, order_decreasing)
-    result$gene_results <- purrr::transpose(result$gene_results)
+      return(result)
   }
+
+  result <- handlePagination(result, offset, limit, order_by, order_decreasing)
+  result$gene_results <- purrr::transpose(result$gene_results)
 
   return(result)
 }
