@@ -46,7 +46,8 @@ runClusters <- function(req, data) {
 getClusters <- function(type, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[type]]
-  # To run clustering, we need to identify the active.reduction that is used in FindNeighbors.
+
+  # need the reduction that is used in FindNeighbors.
   if ("active.reduction" %in% names(data@misc)) {
     active.reduction <- data@misc[["active.reduction"]]
   } else {
@@ -54,6 +55,7 @@ getClusters <- function(type, resolution, data) {
   }
 
   if (type == "leiden") {
+
     # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
     g <- getSNNiGraph(data)
     clus_res <- igraph::cluster_leiden(g, "modularity", resolution_parameter = resolution)
@@ -61,13 +63,16 @@ getClusters <- function(type, resolution, data) {
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
+
   } else {
-    graph.name <- paste0(DefaultAssay(data), "_snn")
+
+    graph.name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph.name %in% names(data)) {
-      data <- Seurat::FindNeighbors(data, k.param = 20, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
+      data <- Seurat::FindNeighbors(data, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
     }
-    data <- FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
+    data <- Seurat::FindClusters(data, resolution = resolution, verbose = FALSE, algorithm = algorithm)
   }
+
   return(data)
 }
 
