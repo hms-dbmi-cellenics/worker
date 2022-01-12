@@ -60,7 +60,7 @@ runDE <- function(req, data) {
   message("Paginating results:  ", str(result))
   pagination <- req$body$pagination
   genes_only <- FALSE
-  
+
   order_by <- pagination$orderBy
   order_decreasing <- pagination$orderDirection == "DESC"
   offset <- pagination$offset
@@ -75,16 +75,16 @@ runDE <- function(req, data) {
   result <- applyFilters(result, filters)
 
   if (genes_only) {
-    n_genes = min(limit, nrow(result))
-    
+    n_genes <- min(limit, nrow(result))
+
     result <- result[order(result[, order_by], decreasing = order_decreasing), ]
 
-    new_result = list(
-      gene_names=result$gene_names[1:n_genes],
-      gene_id=result$Gene[1:n_genes]
+    new_result <- list(
+      gene_names = result$gene_names[1:n_genes],
+      gene_id = result$Gene[1:n_genes]
     )
 
-    result <- list(gene_results=new_result,full_count=n_genes)
+    result <- list(gene_results = new_result, full_count = n_genes)
     return(result)
   }
 
