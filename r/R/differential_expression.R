@@ -79,12 +79,12 @@ runDE <- function(req, data) {
 
     result <- result[order(result[, order_by], decreasing = order_decreasing), ]
 
-    new_result <- list(
+    gene_results <- list(
       gene_names = result$gene_names[1:n_genes],
       gene_id = result$Gene[1:n_genes]
     )
 
-    result <- list(gene_results = new_result, full_count = n_genes)
+    result <- list(gene_results = gene_results, full_count = n_genes)
     return(result)
   }
 
