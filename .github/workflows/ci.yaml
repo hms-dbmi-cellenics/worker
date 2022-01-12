@@ -195,6 +195,12 @@ jobs:
 
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+   
+      - id: upload-coverage
+        name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./r/coverage.xml
 
    #  - id: run-R-tests
     #    name: Run R tests
