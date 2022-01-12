@@ -25,9 +25,6 @@ class DifferentialExpression(Task):
         if "pagination" in msg:
             self.pagination = msg["pagination"]
 
-        if "pathwayAnalysis" in msg:
-            self.pathway_analysis = msg["pathwayAnalysis"]
-
     def _format_result(self, result):
         # Return a list of formatted results.
         return Result({"total": result["full_count"], "rows": result["gene_results"]})
@@ -100,9 +97,6 @@ class DifferentialExpression(Task):
 
         if self.pagination:
             request["pagination"] = self.pagination
-
-        if self.pathway_analysis:
-            request["pathwayAnalysis"] = self.pathway_analysis
 
         if "filters" in self.pagination:
             gene_filter = self.pagination["filters"][0]["expression"]
