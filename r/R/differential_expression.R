@@ -71,7 +71,6 @@ runDE <- function(req, data) {
 
   if ("genesOnly" %in% names(req$body)) {
     genes_only <- req$body$genesOnly
-    
   }
 
   if (genes_only) {
