@@ -96,7 +96,7 @@ class DifferentialExpression(Task):
         if self.pagination:
             request["pagination"] = self.pagination
 
-        if "filters" in self.pagination:
+        if "filters" in self.pagination and self.pagination["filters"][0]["type"] == "text":
             gene_filter = self.pagination["filters"][0]["expression"]
             request["geneNamesFilter"] = remove_regex(gene_filter)
 
@@ -134,5 +134,5 @@ class DifferentialExpression(Task):
         #  will fail
         r.raise_for_status()
         r = r.json()
-
+        
         return self._format_result(r)
