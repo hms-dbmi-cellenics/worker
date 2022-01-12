@@ -184,17 +184,28 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
-      - id: start-container
-        name: Start R container in background
+      - id: codecov
+        name: Generate codecov report
         run: |-
-          pwd
-          ls
-          gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
-          docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.R
-          docker ps -a
-          timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
+          docker run \
+            --entrypoint /bin/bash \
+            -v $(pwd):/app $IMAGE_NAME \
+            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
+
         env:
-          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+  
+    #  - id: run-R-tests
+    #    name: Run R tests
+    #    run: |-
+    #      pwd
+    #      ls
+    #      gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
+    #      docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.R
+    #      docker ps -a
+    #      timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
+    #    env:
+    #      R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
       # - id: test
       #   name: Test, generate code coverage report and upload it
