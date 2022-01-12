@@ -14,5 +14,5 @@ runExpression <- function(req, data) {
     df <- data@misc$gene_annotations
     genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
     genesSubset <- genesSubset[,c("input","name")]
-    return(list())
+    return(getExpressionValues(genesSubset,data))
 }
