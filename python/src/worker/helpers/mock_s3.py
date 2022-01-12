@@ -99,7 +99,7 @@ class MockS3Class:
     def download_fileobj(*args, **kwargs):
         Bucket, Key, Fileobj = itemgetter("Bucket", "Key", "Fileobj")(kwargs)
 
-        if not Bucket or not Key or not Fileobj:
+        if not Fileobj:
             raise Exception("Parameters not received")
 
         Fileobj.write(
