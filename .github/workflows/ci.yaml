@@ -189,13 +189,13 @@ jobs:
         run: |-
           docker run \
             --entrypoint /bin/bash \
-            -v $(pwd):/app $IMAGE_NAME \
+            -v $(pwd):/app $R_IMAGE_NAME \
             -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
 
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-  
-    #  - id: run-R-tests
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+
+   #  - id: run-R-tests
     #    name: Run R tests
     #    run: |-
     #      pwd
