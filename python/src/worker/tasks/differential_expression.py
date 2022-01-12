@@ -20,7 +20,6 @@ class DifferentialExpression(Task):
         super().__init__(msg)
         self.experiment_id = config.EXPERIMENT_ID
         self.pagination = {}
-        self.pathway_analysis = {}
 
         if "pagination" in msg:
             self.pagination = msg["pagination"]
@@ -93,6 +92,7 @@ class DifferentialExpression(Task):
         request = {
             "baseCells": [int(x) for x in first_cell_set],
             "backgroundCells": [int(x) for x in second_cell_set],
+            "genesOnly": self.task_def["genesOnly"],
         }
 
         if self.pagination:

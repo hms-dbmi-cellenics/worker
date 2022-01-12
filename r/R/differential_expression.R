@@ -66,9 +66,10 @@ runDE <- function(req, data) {
   offset <- pagination$offset
   limit <- pagination$limit
   filters <- pagination$filters
-
-  if ("genesOnly" %in% names(pagination)) {
-    genes_only <- pagination$genesOnly
+  
+  if ("genesOnly" %in% names(req$body)) {
+    genes_only <- req$body$genesOnly
+    message("genesOnly: ", genes_only)
   }
 
   result <- applyFilters(result, filters)
