@@ -203,14 +203,12 @@ jobs:
           files: ./r/coverage.xml
 
       - id: test
-        name: Test, generate code coverage report and upload it
+        name: Run unit tests
         run: |-
-          docker run -v /home/runner/work/worker/worker/data:/data $ci_env -e CI=true --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME /bin/bash -c "
-          python3 -m pytest --cov=.
-          "
+          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
         env:
           PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-
+          
       - id: push
         name: Push docker images to ECR
         run: |-
