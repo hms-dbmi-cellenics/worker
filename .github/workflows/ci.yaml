@@ -188,8 +188,9 @@ jobs:
         name: Generate codecov report
         run: |-
           docker run \
+            --name worker-r \
             --entrypoint /bin/bash \
-            -v $(pwd):/app $R_IMAGE_NAME \
+            -v /home/runner/work/worker/worker/r:/app $R_IMAGE_NAME \
             -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
 
         env:
