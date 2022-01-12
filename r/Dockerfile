@@ -31,6 +31,8 @@ ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
 RUN R -e "install.packages('covr')"
+RUN R -e "install.packages("xml2")"
+
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
