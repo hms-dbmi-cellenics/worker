@@ -30,6 +30,7 @@ RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
+RUN R -e "install.packages('covr')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
