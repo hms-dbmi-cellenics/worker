@@ -61,7 +61,7 @@ pandasql==0.7.3
 pathspec==0.8.0
 pathtools==0.1.2
 patsy==0.5.1
-Pillow==8.3.2
+Pillow==9.0.0
 pluggy==0.13.1
 py==1.10.0
 pyasn1==0.4.8
