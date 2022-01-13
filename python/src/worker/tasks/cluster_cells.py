@@ -72,7 +72,7 @@ class ClusterCells(Task):
     def _format_result(self, cell_set_object):
         return Result(cell_set_object, cacheable=False)
 
-    def _construct_request(self):
+    def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
 
         request = {
@@ -88,7 +88,7 @@ class ClusterCells(Task):
     )
     def compute(self):
 
-        request = self._construct_request()
+        request = self._format_request()
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/getClusters",
