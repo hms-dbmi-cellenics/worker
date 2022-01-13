@@ -184,31 +184,31 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
 
-      - id: start-container
-        name: Start R container in background
+      - id: codecov
+        name: Generate codecov report
         run: |-
-          pwd
-          ls
-          gunzip -k /home/runner/work/worker/worker/data/test/r.rds.gz
-          docker run --rm --name worker-r -d -v /home/runner/work/worker/worker/data:/data --entrypoint="Rscript" -e EXPERIMENT_ID=test -p 4000:4000 $R_IMAGE_NAME work.R
-          docker ps -a
-          timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:4000/health)" != "200" ]]; do sleep 5; done' || false
+          docker run \
+            --name worker-r \
+            --entrypoint /bin/bash \
+            -v /home/runner/work/worker/worker/r:/app $R_IMAGE_NAME \
+            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
+
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+   
+      - id: upload-coverage
+        name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./r/coverage.xml
 
-      # - id: test
-      #   name: Test, generate code coverage report and upload it
-      #   run: |-
-      #     pip install pytest-cov
-      #     ci_env=`bash <(curl -s https://codecov.io/env)`
-
-      #     docker run -v /home/runner/work/worker/worker/data:/data $ci_env -e CI=true --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME /bin/bash -c "
-      #       python3 -m pytest --cov=. --cov-report=xml
-      #       bash <(curl -s https://codecov.io/bash)
-      #       "
-      #   env:
-      #     PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-
+      #- id: test
+      #  name: Run unit tests
+      #  run: |-
+      #    docker run -v $(pwd):/python:rw --env CLUSTER_ENV=test --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
+      #  env:
+      #    PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          
       - id: push
         name: Push docker images to ECR
         run: |-
