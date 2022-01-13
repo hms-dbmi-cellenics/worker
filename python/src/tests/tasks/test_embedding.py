@@ -48,7 +48,7 @@ class TestEmbedding:
 
     def test_works_with_request(self):
         GetEmbedding(self.correct_request_pca)
-
+#The embedding might be moved to the pipeline, because results are not replicable in R throughout multiple runs.
     def generate_request_works(self):
         assert GetEmbedding(self.correct_request_umap)._format_request == {"type":"umap","config":{"minimumDistance": 0.1, "distanceMetric": "cosine"}}
 
