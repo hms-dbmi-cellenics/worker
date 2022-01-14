@@ -11,6 +11,20 @@ mock_req <- function() {
   ))
 }
 
+mock_req_genes_only <- function() {
+  req <- list(body = list(
+    backgroundCells = 0:50,
+    baseCells = 51:100,
+    pagination = list(
+      orderBy = "logFC",
+      orderDirection = "DESC",
+      offset = 0,
+      limit = 200
+    ),
+    genesOnly=TRUE
+  ))
+}
+
 mock_scdata <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
@@ -124,4 +138,19 @@ test_that("runDE works when no genes match filters", {
 
   res <- runDE(req, data)
   expect_equal(length(res$gene_results), 0)
+})
+
+test_that("DE with genes_only returns list of ENSEMBLIDS and gene symbols ", {
+  data <- mock_scdata()
+  req <- mock_req_genes_only()
+
+  res <- runDE(req, data)
+
+  expect_equal(length(res), 2)
+  expect_true("gene_results" %in% names(res))
+
+  gene_results_names <- names(res$gene_results)
+  expect_true("gene_id" %in% gene_results_names & "gene_names" %in% gene_results_names)
+
+  expect_equal(length(res$gene_results[[1]]),res$full_count)
 })
