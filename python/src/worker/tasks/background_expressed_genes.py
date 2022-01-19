@@ -11,21 +11,18 @@ from ..helpers.find_cells_by_set_id import find_cells_by_set_id
 from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
-from ..tasks import Task
+from . import Task
 
 
-class DifferentialExpression(Task):
+class GetBackgroundExpressedGenes(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.experiment_id = config.EXPERIMENT_ID
         self.pagination = {}
 
-        if "pagination" in msg:
-            self.pagination = msg["pagination"]
-
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result({"total": result["full_count"], "rows": result["gene_results"]})
+        return Result({"genes": result["genes"]})
 
     def _format_request(self):
         # get cell sets from database
@@ -91,15 +88,7 @@ class DifferentialExpression(Task):
         request = {
             "baseCells": [int(x) for x in first_cell_set],
             "backgroundCells": [int(x) for x in second_cell_set],
-            "genesOnly": self.task_def.get("genesOnly", False)
         }
-
-        if self.pagination:
-            request["pagination"] = self.pagination
-
-        if "filters" in self.pagination and self.pagination["filters"][0]["type"] == "text":
-            gene_filter = self.pagination["filters"][0]["expression"]
-            request["geneNamesFilter"] = remove_regex(gene_filter)
 
         return request
 
@@ -116,7 +105,7 @@ class DifferentialExpression(Task):
 
         return cells
 
-    @xray_recorder.capture("DifferentialExpression.compute")
+    @xray_recorder.capture("getBackgroundExpressedGenes.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -126,7 +115,7 @@ class DifferentialExpression(Task):
         
         # send request to r worker
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/DifferentialExpression",
+            f"{config.R_WORKER_URL}/v0/getBackgroundExpressedGenes",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
