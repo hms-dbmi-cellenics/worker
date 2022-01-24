@@ -104,6 +104,7 @@ class TestDifferentialExpression:
         # Check cells not in basis are taken out
         assert len(baseCells) == 1
         assert len(backgroundCells) == 2
+        
 
     @responses.activate
     def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(
@@ -121,3 +122,36 @@ class TestDifferentialExpression:
         # Check there is only one cell in each set
         assert len(baseCells) == 1
         assert len(backgroundCells) == 2
+
+
+    @responses.activate
+    def test_default_comparison_type_added_to_request(self, mock_S3_get):
+
+        request = DifferentialExpression(
+            self.get_request(
+                cellSet="cluster1",
+                compareWith="cluster2",
+                basis="basisCluster",
+            )
+        )._format_request()
+
+        # Check that comparisonType defaults to within
+        comparisonType = request["comparisonType"]
+        assert comparisonType == "within"
+
+
+    @responses.activate
+    def test_specified_comparison_type_added_to_request(self, mock_S3_get):
+
+        request = DifferentialExpression(
+            self.get_request(
+                cellSet="cluster1",
+                compareWith="cluster2",
+                basis="basisCluster",
+                comparisonType="between"
+            )
+        )._format_request()
+
+        # Check that comparisonType defaults to within
+        comparisonType = request["comparisonType"]
+        assert comparisonType == "between"
