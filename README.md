@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/biomage-ltd/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/biomage-ltd/worker)
+[![codecov](https://codecov.io/gh/hms-dbmi-cellenics/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/hms-dbmi-cellenics/worker)
 worker
 ======
 
@@ -103,7 +103,7 @@ loads successfully. You should see a green icon in the leftmost part of the stat
 which indicates that the remote container plugin has been installed.
 
 #### Git LFS
-File(s) under `data/test` are downloaded by [inframock](https://github.com/biomage-ltd/inframock), uploaded to mock S3 and used by the workers. As some of these files are over Github's file size limit (100 MB), they are stored using [Git LFS](https://git-lfs.github.com/). Follow the installation instructions on their website to setup Git LFS locally.
+File(s) under `data/test` are downloaded by [inframock](https://github.com/hms-dbmi-cellenics/inframock), uploaded to mock S3 and used by the workers. As some of these files are over Github's file size limit (100 MB), they are stored using [Git LFS](https://git-lfs.github.com/). Follow the installation instructions on their website to setup Git LFS locally.
 
 Once you have installed Git LFS, you can open the worker root directory in a terminal and run 
 

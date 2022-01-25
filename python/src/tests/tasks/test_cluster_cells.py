@@ -42,7 +42,7 @@ class TestClusterCells:
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ClusterCells()
-
+            
     def test_works_with_request(self):
         ClusterCells(self.correct_request)
 
@@ -51,3 +51,4 @@ class TestClusterCells:
             ClusterCells(self.correct_request)._format_request()
             == self.parsed_request
         )
+        
