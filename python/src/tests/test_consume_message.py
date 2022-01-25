@@ -112,6 +112,7 @@ class TestConsumeMessage:
             "experimentId": "random-experiment-id",
             "timeout": "2000-01-01 00:00:00",
             "uuid": "random-uuid",
+            "ETag": "random-etag",
         }
 
         with mock.patch("worker.consume_message._read_sqs_message") as m:
@@ -125,6 +126,7 @@ class TestConsumeMessage:
             "experimentId": "random-experiment-id",
             "timeout": "2900-01-01 00:00:00",
             "uuid": "random-uuid",
+            "ETag": "random-etag",
         }
 
         with mock.patch("worker.consume_message._read_sqs_message") as m:
@@ -135,4 +137,5 @@ class TestConsumeMessage:
                 "experimentId": "random-experiment-id",
                 "timeout": "2900-01-01 00:00:00",
                 "uuid": "random-uuid",
+                "ETag": "random-etag",
             }

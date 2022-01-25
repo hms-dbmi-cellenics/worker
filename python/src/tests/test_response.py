@@ -13,9 +13,13 @@ class TestResponse:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.request = {
+            "body": {
+                "name": "A Great Experiment",
+            },
             "experimentId": "random-experiment-id",
             "timeout": "2099-12-31 00:00:00",
             "uuid": "random-uuid",
+            "ETag": "random-etag"
         }
 
     def test_throws_on_empty_response_init(self):
@@ -36,12 +40,12 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        r = Result("{ }")
-        resp = Response(self.request, [r])
+        r = Result({"error": "random error message"})
+        resp = Response(self.request, r)
         key = resp._upload(r)
         key_folder, *rest = key.split("/")
 
-        assert key_folder == self.request["uuid"]
+        assert key_folder == self.request["ETag"]
 
     @mock.patch("boto3.client")
     def test_send_notification_pushes_notification_to_sns(self, mocked_client):
