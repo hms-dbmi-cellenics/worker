@@ -79,10 +79,6 @@ test_that("runClusters uses active.reduction in misc slot", {
 
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
-  data <- Seurat::NormalizeData(data, normalization.method = "LogNormalize", verbose = FALSE)
-  data <- Seurat::FindVariableFeatures(data, verbose = FALSE)
-  data <- Seurat::ScaleData(data, verbose = FALSE)
-  data <- Seurat::RunPCA(data, npcs = 20, verbose = FALSE)
 
   # get error if no PCA/SNN graph
   blah_reduction <- data@reductions$pca
