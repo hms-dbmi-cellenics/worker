@@ -2,9 +2,11 @@
 #'
 #' @param req request parameters
 #'   e.g. list(
-#'     list(geneName = 'Gene1', comparisonType = 'greaterThan', thresholdValue = 0.5),
-#'     list(geneName = 'Gene2', comparisonType = 'lessThan', thresholdValue = 0.5),
-#'     ...
+#'       body = list(
+#'         list(geneName = 'Gene1', comparisonType = 'greaterThan', thresholdValue = 0.5),
+#'         list(geneName = 'Gene2', comparisonType = 'lessThan', thresholdValue = 0.5),
+#'         ...
+#'       )
 #'   )
 #' @param data SeuratObject
 #'
@@ -13,28 +15,32 @@
 #'
 getExpressionCellsetIDs <- function(req, data) {
 
-    # get gene symbol for each requested gene name
-    gene_names <- sapply(req, `[[`, 'geneName')
+    # get entrez id for each requested gene name
+    filters <- req$body
+    gene_names <- sapply(filters, `[[`, 'geneName')
     gene_annotations <- data@misc$gene_annotations
     name.match <- match(gene_names, gene_annotations$name)
 
     # fail if any requested gene names are missing (can't return requested cellset)
     if (anyNA(name.match))
-        stop("Requested ExpressionCellset with geneName(s) that are not present.")
+        stop("Requested ExpressionCellset with gene name(s) that are not present.")
 
-    gene_symbols <- gene_annotations$input[name.match]
+    enids <- gene_annotations$input[name.match]
 
     # get expression matrix
     expression_mat <- data[['RNA']]@data
 
     # subset cells for each filter
     keep.cells <- rep(TRUE, ncol(data))
-    comparisons <- c(greaterThan = `>`, lessThan = `<`)
+    comparisons <- list(greaterThan = `>`, lessThan = `<`)
 
-    for (filter in req) {
+    for (i in seq_along(filters)) {
+        filter <- filters[[i]]
+        enid <- enids[i]
+
         # using comparison as functions e.g. `<`(x, y)
-        comparison <- comparisons[filter$comparisonType]
-        pass.filter <- comparison(expression_mat[filter$geneName, ], filter$thresholdValue)
+        comparison <- comparisons[[filter$comparisonType]]
+        pass.filter <- comparison(expression_mat[enid, ], filter$thresholdValue)
 
         # keep cells that pass previous filter(s) and current
         keep.cells <- keep.cells & pass.filter
