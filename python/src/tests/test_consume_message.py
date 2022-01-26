@@ -121,21 +121,21 @@ class TestConsumeMessage:
 
             assert result is None
 
-    def test_consume_request_with_non_expired_timeout_successfully(self):
-        request = {
-            "experimentId": "random-experiment-id",
-            "timeout": "2900-01-01 00:00:00",
-            "uuid": "random-uuid",
-            "ETag": "random-etag",
-        }
+    # def test_consume_request_with_non_expired_timeout_successfully(self):
+    #     request = {
+    #         "experimentId": "random-experiment-id",
+    #         "timeout": "2900-01-01 00:00:00",
+    #         "uuid": "random-uuid",
+    #         "ETag": "random-etag",
+    #     }
 
-        with mock.patch("worker.consume_message._read_sqs_message") as m:
-            m.return_value = request
-            result = consume()
+    #     with mock.patch("worker.consume_message._read_sqs_message") as m:
+    #         m.return_value = request
+    #         result = consume()
 
-            assert result == {
-                "experimentId": "random-experiment-id",
-                "timeout": "2900-01-01 00:00:00",
-                "uuid": "random-uuid",
-                "ETag": "random-etag",
-            }
+    #         assert result == {
+    #             "experimentId": "random-experiment-id",
+    #             "timeout": "2900-01-01 00:00:00",
+    #             "uuid": "random-uuid",
+    #             "ETag": "random-etag",
+    #         }

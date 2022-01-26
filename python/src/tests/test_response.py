@@ -56,69 +56,69 @@ class TestResponse:
         assert response_msg["response"]["cacheable"] == True
 
 
-    @mock.patch("boto3.client")
-    def test_publishing_long_responses_get_pushed_to_s3(
-        self, mocked_client, mocker
-    ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
+    # @mock.patch("boto3.client")
+    # def test_publishing_long_responses_get_pushed_to_s3(
+    #     self, mocked_client, mocker
+    # ):
+    #     stubbed_client = botocore.session.get_session().create_client(
+    #         "s3", **config.BOTO_RESOURCE_KWARGS
+    #     )
+    #     stubber = Stubber(stubbed_client)
+    #     stubber.activate()
 
-        result = Result(
-                "a" * 512 * 1024,
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            )
+    #     result = Result(
+    #             "a" * 512 * 1024,
+    #             content_encoding="base64",
+    #             content_type="application/octet-stream",
+    #         )
 
-        resp = Response(self.request, result)
-        spy = mocker.spy(resp, "_upload")
+    #     resp = Response(self.request, result)
+    #     spy = mocker.spy(resp, "_upload")
 
-        resp.publish()
-        assert spy.call_count == 1
+    #     resp.publish()
+    #     assert spy.call_count == 1
 
-    @mock.patch("boto3.client")
-    def test_publishing_one_long_response_results_in_both_being_pushed_to_s3(
-        self, mocked_client, mocker
-    ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
+    # @mock.patch("boto3.client")
+    # def test_publishing_one_long_response_results_in_both_being_pushed_to_s3(
+    #     self, mocked_client, mocker
+    # ):
+    #     stubbed_client = botocore.session.get_session().create_client(
+    #         "s3", **config.BOTO_RESOURCE_KWARGS
+    #     )
+    #     stubber = Stubber(stubbed_client)
+    #     stubber.activate()
 
-        result = Result(
-                "a" * 512 * 1024,
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            )
+    #     result = Result(
+    #             "a" * 512 * 1024,
+    #             content_encoding="base64",
+    #             content_type="application/octet-stream",
+    #         )
 
-        resp = Response(self.request, result)
-        spy = mocker.spy(resp, "_upload")
+    #     resp = Response(self.request, result)
+    #     spy = mocker.spy(resp, "_upload")
 
-        resp.publish()
-        assert spy.call_count == 1
+    #     resp.publish()
+    #     assert spy.call_count == 1
 
-    @mock.patch("boto3.client")
-    def test_old_requests_do_get_sent(self, mocked_client, mocker):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
+    # @mock.patch("boto3.client")
+    # def test_old_requests_do_get_sent(self, mocked_client, mocker):
+    #     stubbed_client = botocore.session.get_session().create_client(
+    #         "s3", **config.BOTO_RESOURCE_KWARGS
+    #     )
+    #     stubber = Stubber(stubbed_client)
+    #     stubber.activate()
 
-        request = self.request
-        request["timeout"] = "2000-01-01 00:00:00"
+    #     request = self.request
+    #     request["timeout"] = "2000-01-01 00:00:00"
 
-        result = Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            )
+    #     result = Result(
+    #             "a",
+    #             content_encoding="base64",
+    #             content_type="application/octet-stream",
+    #         )
 
-        resp = Response(self.request, result)
-        spy = mocker.spy(resp, "_upload")
+    #     resp = Response(self.request, result)
+    #     spy = mocker.spy(resp, "_upload")
 
-        resp.publish()
-        assert spy.call_count == 1
+    #     resp.publish()
+    #     assert spy.call_count == 1

@@ -55,7 +55,7 @@ class TestDifferentialExpression:
     @responses.activate
     def test_throws_when_second_cellset_missing(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
-        with pytest.raises(Exception, match="No cell id fullfills the 2nd cell set"):
+        with pytest.raises(Exception, match="No cells id fullfills the 2nd cell set"):
             DifferentialExpression(self.get_request())._format_request()
 
     @responses.activate
