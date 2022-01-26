@@ -71,7 +71,7 @@ runDotPlot <- function(req, data) {
     features <- annot_subset[, c("input", "name")]
   }
 
-  dotplot_data <- Seurat::DotPlot(data, features = features$input, group.by = "dotplot_groups")$data
+  dotplot_data <- Seurat::DotPlot(data, assay="RNA", features = features$input, group.by = "dotplot_groups")$data
   # features.plot has the ensemble ids: get gene symbols
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
