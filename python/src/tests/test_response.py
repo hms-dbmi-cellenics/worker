@@ -14,13 +14,13 @@ class TestResponse:
     def load_correct_definition(self):
         self.request = {
             "body": {
-                "name": "A Great Experiment",
+                "name": "DifferentialExpression",
             },
             "experimentId": "random-experiment-id",
             "timeout": "2099-12-31 00:00:00",
             "uuid": "random-uuid",
             "ETag": "random-etag",
-            "socketId": "random-socketId"
+            "socketId": "random-etag"
         }
 
     def test_throws_on_empty_response_init(self):
@@ -32,7 +32,7 @@ class TestResponse:
             Response({})
 
     @mock.patch("boto3.client")
-    def test_upload_returns_key_with_uuid_as_folder_when_uploading(
+    def test_upload_returns_etag_as_key_when_uploading(
         self, mocked_client
     ):
         stubbed_client = botocore.session.get_session().create_client(
@@ -41,64 +41,20 @@ class TestResponse:
         stubber = Stubber(stubbed_client)
         stubber.activate()
 
-        r = Result({"error": "random error message"})
+        r = Result({})
         resp = Response(self.request, r)
         key = resp._upload(r)
-        key_folder, *rest = key.split("/")
 
-        assert key_folder == self.request["ETag"]
+        assert key == self.request["ETag"]
 
-    @mock.patch("boto3.client")
-    def test_send_notification_pushes_notification_to_sns(self, mocked_client):
-        response = {
-            "MessageId": "83a8d61a-1056-5e9c-972e-8134130e1d1b",
-            "ResponseMetadata": {
-                "requestId": "ac541ad0-560f-5cb4-8382-4dfe5557ff33",
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "x-amzn-requestid": "ac541ad0-560f-5cb4-8382-4dfe5557ff33",
-                    "content-type": "text/xml",
-                    "content-length": "294",
-                    "date": "Thu, 07 May 2020 12:37:43 GMT",
-                },
-                "RetryAttempts": 0,
-            },
-        }
 
-        result_object = {"obj_key": "obj_value"}
-
-        self.request = {
-            "TargetArn": "arn:aws:sns:{}:{}:{}".format(
-                config.AWS_REGION, config.AWS_ACCOUNT_ID, 'SNS-topic'
-            ),
-            "Message": json.dumps({"default": json.dumps(result_object)}),
-            "MessageStructure": "json",
-            "MessageAttributes": {
-                "type": {"DataType": "String", "StringValue": "WorkResponse"}
-            },
-            "socketId": "random-socket",
-            "ETag": "random-etag"
-        }
-
-        stubbed_client = botocore.session.get_session().create_client(
-            "sns", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.add_response("publish", response, self.request)
-        stubber.activate()
-        mocked_client.return_value = stubbed_client
-
-        resp = Response(self.request, Result("result"))
-
-        resp._send_notification()
-        stubber.assert_no_pending_responses()
-
-    def test_construct_response_msg_returns_original_request_object(self):
+    def test_construct_response_msg_works(self):
         resp = Response(self.request, Result({"result1key": "result1val"}))
+        response_msg = resp._construct_response_msg()
 
-        print(resp._construct_response_msg())
+        assert response_msg["request"] == self.request
+        assert response_msg["response"]["cacheable"] == True
 
-        assert resp._construct_response_msg()["request"] == self.request
 
     @mock.patch("boto3.client")
     def test_publishing_long_responses_get_pushed_to_s3(
@@ -120,7 +76,7 @@ class TestResponse:
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
-        assert spy.call_count == 2
+        assert spy.call_count == 1
 
     @mock.patch("boto3.client")
     def test_publishing_one_long_response_results_in_both_being_pushed_to_s3(
@@ -142,95 +98,7 @@ class TestResponse:
         spy = mocker.spy(resp, "_upload")
 
         resp.publish()
-        assert spy.call_count == 2
-
-    @mock.patch("boto3.client")
-    def test_publishing_one_short_file_results_in_no_s3_uploads(
-        self, mocked_client, mocker
-    ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
-        results = Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            ),
-
-        resp = Response(self.request, results)
-        spy = mocker.spy(resp, "_upload")
-
-        resp.publish()
-        assert spy.call_count == 0
-
-    @mock.patch("boto3.client")
-    def test_publishing_multiple_short_files_results_in_no_s3_uploads(
-        self, mocked_client, mocker
-    ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
-        result = Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            )
-
-        resp = Response(self.request, result)
-        spy = mocker.spy(resp, "_upload")
-
-        resp.publish()
-        assert spy.call_count == 0
-
-    @mock.patch("boto3.client")
-    def test_publishing_a_short_file_results_in_inlined_response(
-        self, mocked_client, mocker
-    ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
-        result = Result(
-                "a",
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            ),
-
-        resp = Response(self.request, result)
-        result = resp.publish()
-
-        assert "inline" in result
-        assert "s3-path" not in result
-
-    @mock.patch("boto3.client")
-    def test_publishing_a_long_file_reuslts_in_s3_path_response(
-        self, mocked_client, mocker
-    ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
-        result = Result(
-                "a" * 512 * 1024,
-                content_encoding="base64",
-                content_type="application/octet-stream",
-            )
-
-        resp = Response(self.request, result)
-        result = resp.publish()
-
-        assert "inline" not in result
-        assert "s3-path" in result
+        assert spy.call_count == 1
 
     @mock.patch("boto3.client")
     def test_old_requests_do_get_sent(self, mocked_client, mocker):
@@ -250,6 +118,7 @@ class TestResponse:
             )
 
         resp = Response(self.request, result)
-        result = resp.publish()
+        spy = mocker.spy(resp, "_upload")
 
-        assert result
+        resp.publish()
+        assert spy.call_count == 1
