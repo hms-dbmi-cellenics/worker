@@ -53,18 +53,10 @@ class TestDifferentialExpression:
             DifferentialExpression()
 
     @responses.activate
-    def test_generates_correct_request_keys(self, mock_S3_get):
+    def test_throws_when_second_cellset_missing(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
-        request = DifferentialExpression(self.get_request())._format_request()
-        assert isinstance(request, dict)
-
-        # all expected keys are in the request
-        expected_keys = [
-            "baseCells",
-            "backgroundCells",
-        ]
-
-        assert all(key in request for key in expected_keys)
+        with pytest.raises(Exception, match="No cells id fullfills the 2nd cell set"):
+            DifferentialExpression(self.get_request())._format_request()
 
     @responses.activate
     def test_cells_in_sets_intersection_are_filtered_out(self, mock_S3_get):
