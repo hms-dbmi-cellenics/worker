@@ -19,7 +19,8 @@ class TestResponse:
             "experimentId": "random-experiment-id",
             "timeout": "2099-12-31 00:00:00",
             "uuid": "random-uuid",
-            "ETag": "random-etag"
+            "ETag": "random-etag",
+            "socketId": "random-socketId"
         }
 
     def test_throws_on_empty_response_init(self):
@@ -68,13 +69,15 @@ class TestResponse:
 
         self.request = {
             "TargetArn": "arn:aws:sns:{}:{}:{}".format(
-                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
+                config.AWS_REGION, config.AWS_ACCOUNT_ID, 'SNS-topic'
             ),
             "Message": json.dumps({"default": json.dumps(result_object)}),
             "MessageStructure": "json",
             "MessageAttributes": {
                 "type": {"DataType": "String", "StringValue": "WorkResponse"}
             },
+            "socketId": "random-socket",
+            "ETag": "random-etag"
         }
 
         stubbed_client = botocore.session.get_session().create_client(
@@ -85,26 +88,17 @@ class TestResponse:
         stubber.activate()
         mocked_client.return_value = stubbed_client
 
-        resp = Response(self.request, [])
+        resp = Response(self.request, Result("result"))
 
-        resp._send_notification(result_object)
+        resp._send_notification()
         stubber.assert_no_pending_responses()
 
-    def test_get_response_msg_returns_original_request_object(self):
+    def test_construct_response_msg_returns_original_request_object(self):
         resp = Response(self.request, Result({"result1key": "result1val"}))
 
-        print(resp._get_response_msg())
+        print(resp._construct_response_msg())
 
-        assert resp._get_response_msg()["request"] == self.request
-
-    def test_get_response_msg_returns_result_object_definitions(self):
-        resp = Response(self.request, Result({"result1key": "result1val"}, content_encoding="base64"))
-
-        results_msg = resp._get_response_msg()["results"]
-
-        for msg in results_msg:
-            assert msg["content-encoding"] == "base64"
-            assert msg["type"] == "inline"
+        assert resp._construct_response_msg()["request"] == self.request
 
     @mock.patch("boto3.client")
     def test_publishing_long_responses_get_pushed_to_s3(
@@ -120,7 +114,7 @@ class TestResponse:
                 "a" * 512 * 1024,
                 content_encoding="base64",
                 content_type="application/octet-stream",
-            ),
+            )
 
         resp = Response(self.request, result)
         spy = mocker.spy(resp, "_upload")
