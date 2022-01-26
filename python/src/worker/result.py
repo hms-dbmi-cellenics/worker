@@ -16,17 +16,3 @@ class Result:
         self.error = error
         self.cacheable = cacheable
 
-    def get_result_object(self, resp_format=False):
-        obj = {
-            "content-type": self.content_type,
-            "content-encoding": self.content_encoding,
-            "body": self.data,
-        }
-
-        if resp_format:
-            obj["type"] = "inline"
-
-        return obj
-
-    def get_result_length(self):
-        return len(json.dumps(self.get_result_object()))
