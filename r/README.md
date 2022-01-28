@@ -1,7 +1,7 @@
 worker-r
 ========
 
-The Cellenics single cell analysis tasks executor, written in R.
+The Cellenics single cell data analysis tasks executor, written in R.
 
 Setup
 -----
