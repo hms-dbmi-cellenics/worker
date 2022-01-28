@@ -63,7 +63,7 @@ data
 ```
 
 You can obtain this folder structure if you do either of the following:
-- Start the rest of the Cellscope platform components locally, then upload samples from Data Management and launch analysis.
+- Start the rest of the Cellenics components locally, then upload samples from Data Management and launch analysis. A prerequisite for this step is configuring the pipeline to run locally.
 
 OR
 
