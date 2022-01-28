@@ -1,6 +1,8 @@
 worker-python
 =============
 
+The Cellenics single cell analysis tasks wrapper, written in Python.
+
 Overview
 --------
 The Python part of the worker is the main entry point for data analysis tasks. It fullfills the following functions:
