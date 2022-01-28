@@ -78,3 +78,25 @@ test_that("subsetting is applied and changes dotpot output", {
 
     expect_false(identical(res_unfilt, res_filt))
 })
+
+test_that("Dotplot returns the correct values", {
+    data <- mock_scdata()
+    req <- mock_req()
+    req$body$useMarkerGenes <- FALSE
+
+    dotPlot_res <- runDotPlot(req, data)
+    correct_res <- data.frame()
+
+    for (group in req$body$groupBy$children){
+        group_counts <- data@assays$RNA@counts[req$body$customGenesList,intersect(group$cellIds,data$cells_id)]
+        for (gene in rownames(group_counts)){
+            correct_res[group$name,gene] <- mean(expm1(group_counts[gene,]))
+        }
+    }
+
+    scaled_res <- scale(correct_res)
+    scaled_res <- MinMax(scaled_res,min=-2.5,max=2.5)
+    scaled_res <- as.list(x = t(x = scaled_res))
+    dotPlot_res <- unname(purrr::transpose(dotPlot_res)$avgExpression)
+    expect_equal(dotPlot_res,scaled_res)
+})
