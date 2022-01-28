@@ -2,11 +2,13 @@
 worker
 ======
 
-The single-cell pipeline work executor. It consists of two containers: a Python container and an R container. 
+The Cellenics data analysis tasks executor. It consists of two containers: a Python container and an R container. 
 
 The Python part of the worker is a wrapper around the R part: it receives tasks from the API, parses them, sends them to the R part for computation, then formats the results, uploads them to S3 and sends a notification to the API that they are ready.
 
-The R part of the worker computes single cell analysis tasks on a pre-processed Seurat rds object. It can communicate only with the Python part of the worker.
+The R part of the worker computes single cell analysis tasks on a pre-processed Seurat rds object, loaded into memory from S3. The R part of the worker can communicate only with the Python part of the worker.
+
+More specific details about the Python or the R part of the worker can be found in the README file in the respective folder (python/ or r/).
 
 ## Running locally
 To run the worker locally, you will need to build it and then run it, passing

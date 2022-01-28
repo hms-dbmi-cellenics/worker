@@ -1,7 +1,7 @@
 worker-r
 ========
 
-The single-cell pipeline work executor for R.
+The single cell analysis tasks executor, written in R.
 
 Setup
 -----
