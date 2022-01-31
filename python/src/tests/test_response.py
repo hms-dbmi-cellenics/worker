@@ -20,7 +20,7 @@ class TestResponse:
             "timeout": "2099-12-31 00:00:00",
             "uuid": "random-uuid",
             "ETag": "random-etag",
-            "socketId": "random-etag"
+            "socketId": "random-socketId"
         }
 
     def test_throws_on_empty_response_init(self):
