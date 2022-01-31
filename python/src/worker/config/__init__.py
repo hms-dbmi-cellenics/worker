@@ -115,7 +115,6 @@ config = Config(
     AWS_ACCOUNT_ID=aws_account_id,
     AWS_REGION=aws_region,
     BOTO_RESOURCE_KWARGS={"region_name": aws_region},
-    DYNAMO_TABLE=f"experiments-{cluster_env}",
     CELL_SETS_BUCKET=f"cell-sets-{cluster_env}",
     SOURCE_BUCKET=f"processed-matrix-{cluster_env}",
     RESULTS_BUCKET=f"worker-results-{cluster_env}",

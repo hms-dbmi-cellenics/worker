@@ -18,6 +18,7 @@ from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
+from .background_expressed_genes import GetBackgroundExpressedGenes
 
 
 class TaskFactory:
@@ -28,6 +29,7 @@ class TaskFactory:
             ListGenes,
             DifferentialExpression,
             GeneExpression,
+            GetBackgroundExpressedGenes,
             ClusterCells,
             DotPlot,
             GetDoubletScore,
