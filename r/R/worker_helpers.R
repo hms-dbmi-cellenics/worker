@@ -85,18 +85,17 @@ getExpressionValues <- function(genes, data) {
 
 
 applyFilters <- function(gene_results, filters) {
-
-  filter_columns <- sapply(filters, `[[`, 'columnName')
+  filter_columns <- sapply(filters, `[[`, "columnName")
 
   # apply gene text filter
-  gene.idx <- which(filter_columns == 'gene_names')[1]
+  gene.idx <- which(filter_columns == "gene_names")[1]
   if (!is.na(gene.idx)) {
     gene <- filters[[gene.idx]]$expression
     gene_results <- gene_results[grepl(gene, gene_results$gene_names, ignore.case = TRUE), ]
   }
 
   # apply numeric filters
-  numeric_columns <- c('logFC', 'p_val_adj', 'pct_1', 'pct_2', 'auc')
+  numeric_columns <- c("logFC", "p_val_adj", "pct_1", "pct_2", "auc")
 
   for (idx in seq_along(filter_columns)) {
     column <- filter_columns[idx]
@@ -110,9 +109,9 @@ applyFilters <- function(gene_results, filters) {
 }
 
 applyNumericFilter <- function(gene_results, column, comparison, value) {
-  if (comparison == 'greaterThan') {
+  if (comparison == "greaterThan") {
     keep <- gene_results[[column]] > value
-  } else if (comparison == 'lessThan') {
+  } else if (comparison == "lessThan") {
     keep <- gene_results[[column]] < value
   }
 
@@ -121,7 +120,6 @@ applyNumericFilter <- function(gene_results, column, comparison, value) {
 }
 
 handlePagination <- function(gene_results, offset, limit, order_by, order_decreasing) {
-
   full_count <- nrow(gene_results)
 
   if (order_by %in% names(gene_results)) {
