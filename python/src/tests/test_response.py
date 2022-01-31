@@ -55,8 +55,9 @@ class TestResponse:
         assert response_msg["request"] == self.request
         assert response_msg["response"]["cacheable"] == True
         assert response_msg["response"]["error"] == False
-# These tests only work locally with inframock running. Keeping in case
-# we want to mock to be able to run these tests.
+
+    # These tests only work locally with inframock running. Keeping in case
+    # we want to mock to be able to run these tests.
     # @mock.patch("boto3.client")
     # def test_publishing_long_responses_get_pushed_to_s3(
     #     self, mocked_client, mocker
