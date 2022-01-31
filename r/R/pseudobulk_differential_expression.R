@@ -1,11 +1,11 @@
-runPseudobulkDE <- function(data) {
+runPseudobulkDE <- function(scdata) {
     library(edgeR)
-    group <- data$custom
+    group <- scdata$custom
 
     y <- edgeR::DGEList(
-        data[['RNA']]@counts,
+        scdata[['RNA']]@counts,
         samples = data.frame(group),
-        genes = data@misc$gene_annotations[, "name", drop = FALSE])
+        genes = scdata@misc$gene_annotations[, "name", drop = FALSE])
 
 
     y <- y[edgeR::filterByExpr(y, group=group),]
