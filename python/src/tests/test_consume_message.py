@@ -121,6 +121,9 @@ class TestConsumeMessage:
 
             assert result is None
 
+    # These tests only work locally with inframock running. Keeping in case
+    # we want to mock to be able to run these tests.
+    #
     # def test_consume_request_with_non_expired_timeout_successfully(self):
     #     request = {
     #         "experimentId": "random-experiment-id",
