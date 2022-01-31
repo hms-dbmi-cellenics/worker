@@ -1,3 +1,10 @@
+#' Run Pseudobulk Differential Expression
+#'
+#' @param pbulk a SeuratObject with counts aggregated by sample for one cluster.
+#'
+#' @return a data.frame of differential expression results.
+#' @export
+#'
 runPseudobulkDE <- function(pbulk) {
     group <- pbulk$custom
 
