@@ -64,21 +64,6 @@ extension installed. Make sure you restart VS Code after installing to make sure
 loads successfully. You should see a green icon in the leftmost part of the status bar,
 which indicates that the remote container plugin has been installed.
 
-### Git LFS
-File(s) under `data/test` are downloaded by [inframock](https://github.com/hms-dbmi-cellenics/inframock), uploaded to mock S3 and used by the workers. As some of these files are over Github's file size limit (100 MB), they are stored using [Git LFS](https://git-lfs.github.com/). Follow the installation instructions on their website to setup Git LFS locally.
-
-Once you have installed Git LFS, you can open the worker root directory in a terminal and run 
-
-    git lfs install
-
-
-If Git LFS is installed successfully, it should print
-
-    Updated git hooks.
-    Git LFS initialized.
-
-You can see the list of files tracked by Git LFS in `.gitattributes`.
-
 ### Setup
 
 To open the R workspace, you can type `code r/r.workspace` while in the terminal inside
