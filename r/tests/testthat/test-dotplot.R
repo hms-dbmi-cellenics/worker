@@ -95,7 +95,7 @@ test_that("Dotplot returns the correct values", {
   }
 
   scaled_res <- scale(correct_res)
-  scaled_res <- MinMax(scaled_res, min = -2.5, max = 2.5)
+  scaled_res <- Seurat::MinMax(scaled_res, min = -2.5, max = 2.5)
   scaled_res <- as.list(x = t(x = scaled_res))
   dotPlot_res <- unname(purrr::transpose(dotPlot_res)$avgExpression)
   expect_equal(dotPlot_res, scaled_res)
