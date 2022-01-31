@@ -21,7 +21,7 @@ getMitochondrialContent <- function(req, data) {
 formatMetadataResult <- function(data, column) {
 
   # check if the experiment has specified column
-  if(!column %in% colnames(data@meta.data)){
+  if (!column %in% colnames(data@meta.data)) {
     stop(column, " is not computed for this experiment.")
   }
 
@@ -34,11 +34,18 @@ formatMetadataResult <- function(data, column) {
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
     dplyr::select(-cells_id)
   result <- t(unname(as.data.frame(result)))
-  result <- purrr::map(result, function(x) { if(is.na(x)) { return(NULL) } else { return(x) } } )
+  result <- purrr::map(result, function(x) {
+    if (is.na(x)) {
+      return(NULL)
+    } else {
+      return(x)
+    }
+  })
 
   # Be aware of possible NA values
-  if(any(is.null(result)))
+  if (any(is.null(result))) {
     warning("There are missing values in the ", column, " results")
+  }
 
   return(result)
 }
@@ -47,4 +54,3 @@ formatMetadataResult <- function(data, column) {
 # [1] Wolock SL, Lopez R, Klein AM. Scrublet: Computational Identification of Cell Doublets in Single-Cell
 # Transcriptomic Data. Cell Syst. 2019 Apr 24;8(4):281-291.e9. doi: 10.1016/j.cels.2018.11.005. Epub 2019 Apr 3.
 # PMID: 30954476; PMCID: PMC6625319.
-

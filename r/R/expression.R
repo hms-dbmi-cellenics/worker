@@ -6,7 +6,7 @@
 # genes: list of gene common names to search for in the annotation.
 #
 #
-#For now we return the values stored in data (normalized values). When the correct config parameter is set on the UI, we'll add the scaled values.
+# For now we return the values stored in data (normalized values). When the correct config parameter is set on the UI, we'll add the scaled values.
 #
 #' @export
 runExpression <- function(req, data) {

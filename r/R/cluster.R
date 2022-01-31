@@ -11,7 +11,6 @@
 #' @export
 #'
 #' @examples
-#'
 runClusters <- function(req, data) {
   resol <- req$body$config$resolution
   type <- req$body$type
@@ -59,9 +58,7 @@ getClusters <- function(type, resolution, data) {
     names(clusters) <- clus_res$names
     clusters <- clusters[colnames(data)]
     data$seurat_clusters <- data@meta.data[, res_col] <- factor(clusters - 1)
-
   } else {
-
     graph.name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph.name %in% names(data)) {
       data <- Seurat::FindNeighbors(data, annoy.metric = "cosine", verbose = FALSE, reduction = active.reduction)
@@ -93,8 +90,8 @@ getSNNiGraph <- function(data, active.reduction) {
   # similar to https://github.com/joshpeters/westerlund/blob/46609a68855d64ed06f436a6e2628578248d3237/R/functions.R#L85
   adj_matrix <- Matrix::Matrix(as.matrix(data@graphs[[snn_name]]), sparse = TRUE)
   g <- igraph::graph_from_adjacency_matrix(adj_matrix,
-                                           mode = "undirected",
-                                           weighted = TRUE
+    mode = "undirected",
+    weighted = TRUE
   )
   return(g)
 }
