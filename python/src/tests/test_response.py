@@ -54,7 +54,7 @@ class TestResponse:
 
         assert response_msg["request"] == self.request
         assert response_msg["response"]["cacheable"] == True
-
+        assert response_msg["response"]["error"] == False
 
     # @mock.patch("boto3.client")
     # def test_publishing_long_responses_get_pushed_to_s3(
