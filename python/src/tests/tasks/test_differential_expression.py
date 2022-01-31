@@ -152,6 +152,6 @@ class TestDifferentialExpression:
             )
         )._format_request()
 
-        # Check that comparisonType defaults to within
+        # Check that comparisonType uses set value of between instead of default (within)
         comparisonType = request["comparisonType"]
         assert comparisonType == "between"
