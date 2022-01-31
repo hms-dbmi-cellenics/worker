@@ -45,6 +45,7 @@ class DifferentialExpression(Task):
             "baseCells": [int(x) for x in baseCells],
             "backgroundCells": [int(x) for x in backgroundCells],
             "genesOnly": self.task_def.get("genesOnly", False),
+            "comparisonType": self.task_def.get("comparisonType", "within")
         }
 
         if self.pagination:
