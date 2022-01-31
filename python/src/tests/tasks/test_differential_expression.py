@@ -9,7 +9,7 @@ from worker.helpers.mock_s3 import MockS3Class
 
 class TestDifferentialExpression:
     def get_request(
-        self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
+        self, cellSet="cluster1", compareWith="rest", basis="all", comparisonType=None, maxNum=None
     ):
         request = {
             "experimentId": "e52b39624588791a7889e39c617f669e1",
@@ -21,6 +21,9 @@ class TestDifferentialExpression:
                 "basis": basis,
             },
         }
+
+        if comparisonType:
+            request["body"]["comparisonType"] = comparisonType
 
         if maxNum:
             request["body"]["maxNum"] = maxNum
