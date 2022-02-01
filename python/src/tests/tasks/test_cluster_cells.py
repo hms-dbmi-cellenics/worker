@@ -30,6 +30,11 @@ class TestClusterCells:
                 "config": {"resolution": 0.5},
             },
         }
+        self.parsed_request = {
+            "type": self.correct_request["body"]["type"],
+            "config": self.correct_request["body"]["config"],
+        }
+
         self.correctResponse = json.load(
             open(os.path.join("tests", "cluster_result.json"))
         )
@@ -37,26 +42,13 @@ class TestClusterCells:
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ClusterCells()
+            
+    def test_works_with_request(self):
+        ClusterCells(self.correct_request)
 
-    def test_louvain_clustering_works(self):
-        res = ClusterCells(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-
-        # Leaving this tests here to recognize different fail situations
-
-        assert isinstance(res, dict)
-        assert res["key"] == "louvain"
-        assert len(res["children"]) > 0
-        assert len(res["children"][0]["cellIds"]) > 0
-        assert res == self.correctResponse
-
-    def test_leiden_clustering_works(self):
-
-        res = ClusterCells(self.alternative_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        assert isinstance(res, dict)
-        assert res["key"] == "leiden"
-        assert len(res["children"]) > 0
-        assert len(res["children"][0]["cellIds"]) > 0
+    def test_format_request(self):
+        assert (
+            ClusterCells(self.correct_request)._format_request()
+            == self.parsed_request
+        )
+        

@@ -20,23 +20,27 @@ class MarkerHeatmap(Task):
         # Return a list of formatted results.
         return Result(result)
 
-    @xray_recorder.capture("MarkerHeatmap.compute")
-    @backoff.on_exception(
-        backoff.expo, requests.exceptions.RequestException, max_time=30
-    )
-    def compute(self):
+    def _format_request(self):
         request = {"nGenes": self.task_def["nGenes"]}
-        
+
         cellSetKey = self.task_def["cellSetKey"]
 
         cellSets = get_cell_sets(self.experiment_id)
 
         for set in cellSets:
-            if(set["key"]==cellSetKey):
+            if set["key"] == cellSetKey:
                 cellSets = set
                 break
-        
+
         request["cellSets"] = cellSets
+        return request
+
+    @xray_recorder.capture("MarkerHeatmap.compute")
+    @backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=30
+    )
+    def compute(self):
+        request = self._format_request()
 
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runMarkerHeatmap",
@@ -79,11 +83,11 @@ class MarkerHeatmap(Task):
                 minimum = float(np.nanmin(viewnpTr))
                 maximum = float(np.nanmax(viewnpTr))
                 data[gene]["truncatedExpression"] = {
-                                    "min": minimum,
-                                    "max": maximum,
-                                    "expression": viewTr,
-                                }    
-                order.append(gene)  
+                    "min": minimum,
+                    "max": maximum,
+                    "expression": viewTr,
+                }
+                order.append(gene)
         result["data"] = data
-        result["order"] = order   
+        result["order"] = order
         return self._format_result(result)

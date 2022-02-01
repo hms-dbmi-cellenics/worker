@@ -1,15 +1,14 @@
-#' Title
+#' Run request for DotPlot
 #'
 #' @param req {body: {
-#'               useMarkerGenes: True/False determines whether to use marker genes or predefined genes
+#'               useMarkerGenes: TRUE/FALSE determines whether to use marker genes or predefined genes
 #'               numberOfMarkers: Int. Number of marker genes to use
 #'               customGenesList: List of Strings. List of marker genes to use
 #'               groupBy: Cellsets to show in the plot. Determines whether to show Louvain/Samples/Custom
 #'               filterBy: Cellsets to subset the experiment with.
-#'               isFilterByAll: Bool value. If true, the experiment will be subsetted to all the cellSets ids.
 #'              }
 #'            }
-#' @param data
+#' @param data SeuratObject
 #'
 #' @return
 #' @export
@@ -26,26 +25,27 @@ runDotPlot <- function(req, data) {
     return(list())
   }
 
-  # Collect ids to subset object
+  # subset object to requested cells
   if (apply_filter) {
     subset_ids <- filter_by$cellIds
-  } else {
-    subset_ids <- unlist(lapply(filter_by$children, `[[`, "cellIds"))
+
+    if (!length(subset_ids)) {
+      message("The ids to subset the object are empty. Returning empty results.")
+      return(list())
+    }
+
+    data <- subset_ids(data, subset_ids)
   }
 
-  # Subset cell Ids
-  if (length(subset_ids)) {
-    data <- subset_ids(data, subset_ids)
-    cells_id <- data$cells_id
-  } else {
-    message("The ids to subset the object are empty. Returning empty results.")
-    return(list())
-  }
+  # remaining cells
+  cells_id <- data$cells_id
 
   # Construct the dotplot_groups slot
   data$dotplot_groups <- NA
+
   # This covers a border case where two cell_sets have the same name (but different ID). Can happen in scratchpad
   cell_set_names <- make.unique(sapply(group_by_cell_sets, `[[`, "name"))
+
   for (i in seq_along(group_by_cell_sets)) {
     cell_set <- group_by_cell_sets[[i]]
     cell_set_name <- cell_set_names[i]
@@ -63,6 +63,7 @@ runDotPlot <- function(req, data) {
     all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
+
   } else {
     req_genes <- req$body$customGenesList
     annot <- data@misc$gene_annotations
@@ -70,11 +71,15 @@ runDotPlot <- function(req, data) {
     features <- annot_subset[, c("input", "name")]
   }
 
-  dotplot_data <- Seurat::DotPlot(data, features = features$input, group.by = "dotplot_groups")$data
-  # features.plot has the ensemble ids
+  dotplot_data <- Seurat::DotPlot(data, assay="RNA", features = features$input, group.by = "dotplot_groups")$data
+  # features.plot has the ensemble ids: get gene symbols
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
-  dotplot_data <- dotplot_data %>% transmute(cellSets = as.character(id), geneName = as.character(name), avgExpression = avg.exp.scaled, cellsPercentage = pct.exp)
+  dotplot_data <- dotplot_data %>%
+    dplyr::transmute(cellSets = as.character(id),
+              geneName = as.character(name),
+              avgExpression = avg.exp.scaled,
+              cellsPercentage = pct.exp)
 
   res <- purrr::transpose(dotplot_data)
   return(res)

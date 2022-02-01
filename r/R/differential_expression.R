@@ -22,6 +22,7 @@
 #' @export
 #'
 runDE <- function(req, data) {
+
   # add comparison group to 'custom' slot
   data <- addComparisonGroup(req, data)
 
@@ -51,24 +52,43 @@ runDE <- function(req, data) {
 
 
   if (!("pagination" %in% names(req$body))) {
-    result <- list(gene_results = result,full_count=nrow(result))
+    result <- list(gene_results = purrr::transpose(result), full_count = nrow(result))
     message("Pagination not enabled, returning results: ", str(result))
     return(result)
   }
 
   message("Paginating results:  ", str(result))
   pagination <- req$body$pagination
+  genes_only <- FALSE
+
   order_by <- pagination$orderBy
   order_decreasing <- pagination$orderDirection == "DESC"
   offset <- pagination$offset
   limit <- pagination$limit
+  filters <- pagination$filters
 
-  filter <- NULL
-  if ("geneNamesFilter" %in% names(req$body)) {
-    filter <- req$body$geneNamesFilter
+  result <- applyFilters(result, filters)
+
+  if ("genesOnly" %in% names(req$body)) {
+    genes_only <- req$body$genesOnly
   }
 
-  result <- handle_pagination(result, offset, limit, order_by, order_decreasing, filter)
+  if (genes_only) {
+    n_genes <- min(limit, nrow(result))
+
+    result <- result[order(result[, order_by], decreasing = order_decreasing), ]
+
+    gene_results <- list(
+      gene_names = result$gene_names[1:n_genes],
+      gene_id = result$Gene[1:n_genes]
+    )
+
+    result <- list(gene_results = gene_results, full_count = n_genes)
+    return(result)
+  }
+
+  result <- handlePagination(result, offset, limit, order_by, order_decreasing)
+  result$gene_results <- purrr::transpose(result$gene_results)
 
   return(result)
 }

@@ -48,36 +48,9 @@ class TestEmbedding:
 
     def test_works_with_request(self):
         GetEmbedding(self.correct_request_pca)
-
-    def test_pca_edits_object_appropriately(self):
-
-        old = str(self.correctResponse["pca"])
-        res = GetEmbedding(self.correct_request_pca).compute()[0].result
-
-        assert res == old
-
-    def test_umap_edits_object_appropriately(self):
-
-        old = str(self.correctResponse["umap"])
-        res = GetEmbedding(self.correct_request_umap).compute()[0].result
-
-        assert res == old
-
-    def test_umap_different_params(self):
-
-        old = str(self.correctResponse["umap_cosine"])
-        res = (
-            GetEmbedding(self.correct_request_umap_cosine).compute()[0].result
-        )
-
-        assert res == old
-
-    def test_tsne_edits_object_appropriately(self):
-
-        old = str(self.correctResponse["tsne"])
-        res = GetEmbedding(self.correct_request_tsne).compute()[0].result
-
-        assert res == old
+#The embedding might be moved to the pipeline, because results are not replicable in R throughout multiple runs.
+    def generate_request_works(self):
+        assert GetEmbedding(self.correct_request_umap)._format_request == {"type":"umap","config":{"minimumDistance": 0.1, "distanceMetric": "cosine"}}
 
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):

@@ -1,11 +1,15 @@
 worker-python
 =============
 
+The Cellenics single cell analysis tasks wrapper, written in Python.
+
 Overview
 --------
-The purpose of the worker is to carry out data analysis tasks. `worker-python` is the main entry point
-for data analysis tasks. Each bioinformatics task to be performed is received from an AWS SQS queue.
-Results are submitted to an SNS topic that is listened to by the `api` module.
+The Python part of the worker is the main entry point for data analysis tasks. It fullfills the following functions:
+- Receives tasks from the API by listening to an SQS queue associated with the relevant experiment ID.
+- Prepares the received task for the R part of the worker. This is task dependent and may include additional task validation, cleaning and formatting the data or fetching additional data from AWS services.
+- Forwards the task to the R part of the worker, using the local network.
+- Receives the results back from the R part of the worker, uploads the data to S3 and sends a notification to Redis that the task has been computed, using [socket io API](https://pypi.org/project/socket.io-emitter/).
 
 Running the worker
 ------------------
@@ -17,22 +21,11 @@ See the main README for instructions on how to run the workers in Docker.
 ### Process tasks
 Tasks are automatically processed when they are received from the SQS queue specified.
 
-For **local development**, make sure you have [InfraMock](https://github.com/biomage-ltd/inframock)
-running alongside the [ui](https://github.com/biomage-ltd/ui) and [api](https://github.com/biomage-ltd/api)
+For **local development**, make sure you have [InfraMock](https://github.com/hms-dbmi-cellenics/inframock)
+running alongside the [ui](https://github.com/hms-dbmi-cellenics/ui) and [api](https://github.com/hms-dbmi-cellenics/api)
 projects. Refer to their respective documentations on how to run them locally. Once all of these are running,
 tasks should automatically be submitted and processed when you perform actions on the `ui`. There is nothing else to do.
 
-### Advanced: using the worker with live AWS queues
-
-If you want to fetch and process data from **the live** `staging` or `production` clusters, you need to set
-the `CLUSTER_ENV` environment variable to be either `staging` or `production`, respectively. The name of the SQS queue used
-by the worker to subsribe to work is stored in the `WORKER_QUEUE` environment variable. You can set it to any active queue
-that you know is currently being used, but it defaults to `development-queue.fifo`. This is created specifically and only
-for local testing purposes.
-
-In order to push work to the worker you can either:
-* a) Submit work via the AWS console, using the SQS interface
-* b) Submit work from the terminal using `aws-cli`
 
 ### Advanced: pushing custom work to the local worker
 
@@ -76,56 +69,6 @@ run those tests.
 
 ### Task formatting
 Task definitions are stored in the `api` project as an OpenAPI schema.
-You can find this [here](https://github.com/biomage-ltd/api/blob/master/src/specs/api.yaml).
+You can find this [here](https://github.com/hms-dbmi-cellenics/api/blob/master/src/specs/api.yaml).
 
-Download the schema and open it using Stoplight Studio. Looking into `WorkRequest` should give you
-the schemas and parameters for all supported tasks.
-
-### Sample tasks
-Here are some examples:
-
-* `GetEmbedding`:
-
-    {
-        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
-        "socketId": "Y1poEygzBfrDmIWpAAAA",
-        "experimentId": "5928a56c7cbff9de78974ab50765ed20",
-        "timeout": "2021-01-01T00:00:00Z",
-        "body": {
-            "name": "GetEmbedding",
-            "type": "pca"
-        }
-    }
-
-* `ListGenes`:
-
-    {
-        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
-        "socketId": "Y1poEygzBfrDmIWpAAAA",
-        "experimentId": "5928a56c7cbff9de78974ab50765ed20",
-        "timeout": "2021-01-01T00:00:00Z",
-        "body": {
-            "name": "ListGenes",
-            "selectFields": ["highly_variable", "gene_names", "dispersions"],
-            <!-- "geneNamesFilter": "%IN%", add this to filter results so only gene_names that contain IN in their names appear -->
-            "orderBy": "dispersions",
-            "orderDirection": "desc",
-            "offset": 0,
-            "limit": 20
-        }
-    }
-
-* `GeneExpression`:
-
-    {
-        "uuid": "509520fe-d329-437d-8752-b5868ad59425",
-        "socketId": "Y1poEygzBfrDmIWpAAAA",
-        "experimentId": "5928a56c7cbff9de78974ab50765ed20",
-        "timeout": "2099-12-31 00:00:00",
-        "body": {
-            "name": "GeneExpression",
-            "cellSets": ["louvain-0", "louvain-1", "louvain-2", "louvain-3", "louvain-4", "louvain-5", "louvain-6"],
-            "genes": ["TGFB1", "CST3"]
-        }
-    }
-
+Download the schema and open it using Stoplight Studio. Looking into `WorkRequest` should give you the schemas and parameters for all supported tasks.
