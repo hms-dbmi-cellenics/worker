@@ -1,12 +1,12 @@
-library(Matrix)
-
 mock_pbulk <- function() {
+    require(Matrix)
 
     # mock pseudobulk SeuratObject with annotation
     pbmc_raw <- read.table(
         file = system.file('extdata', 'pbmc_raw.txt', package = 'Seurat'),
         as.is = TRUE
     )
+
 
     pbmc_raw <- as(pbmc_raw, 'dgCMatrix')
     row.names(pbmc_raw) <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
