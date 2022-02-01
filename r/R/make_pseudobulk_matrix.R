@@ -21,17 +21,17 @@ makePseudobulkMatrix <- function(scdata) {
   agg <- Matrix::Matrix(agg, sparse = TRUE)
   agg <- Matrix::t(agg)
 
-  row.names(agg) <- row.names(counts)
+  rownames(agg) <- rownames(counts)
   colnames(agg) <- levels(pbulk_groups)
 
   # recover metadata
-  pbulk_groups <- colnames(agg)
-  pbulk_groups <- transpose(strsplit(pbulk_groups, split = "_"))
-  samples <- pbulk_groups[[1]]
-  custom <- pbulk_groups[[2]]
+  pbulk_metadata <- colnames(agg)
+  pbulk_metadata <- data.table::tstrsplit(pbulk_metadata, split = "_")
+  samples <- pbulk_metadata[[1]]
+  custom <- pbulk_metadata[[2]]
 
   # create seurat, and add metadata
-  pbulk <- CreateSeuratObject(agg)
+  pbulk <- Seurat::CreateSeuratObject(agg)
   pbulk$samples <- samples
   pbulk$custom <- custom
   pbulk@misc$gene_annotations <- gene_annotations
