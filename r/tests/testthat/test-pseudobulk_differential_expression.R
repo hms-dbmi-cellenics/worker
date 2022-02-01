@@ -1,5 +1,4 @@
 mock_pbulk <- function() {
-    require(Matrix)
 
     # mock pseudobulk SeuratObject with annotation
     pbmc_raw <- read.table(
@@ -8,7 +7,7 @@ mock_pbulk <- function() {
     )
 
 
-    pbmc_raw <- as(pbmc_raw, 'dgCMatrix')
+    pbmc_raw <- Matrix::Matrix(as.matrix(pbmc_raw), sparse = TRUE)
     row.names(pbmc_raw) <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
 
     groups <- rep(letters[1:4], each = 20)
