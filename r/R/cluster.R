@@ -51,7 +51,6 @@ runClusters <- function(req, data) {
 getClusters <- function(type, resolution, data) {
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[type]]
-<<<<<<< HEAD
 
   # use the reduction from data integration for nearest neighbors graph
   if ("active.reduction" %in% names(data@misc)) {
@@ -93,7 +92,6 @@ getClusters <- function(type, resolution, data) {
 #'
 getSNNiGraph <- function(data, active.reduction) {
 
-=======
 
   # use the reduction from data integration for nearest neighbors graph
   if ("active.reduction" %in% names(data@misc)) {
@@ -135,7 +133,6 @@ getSNNiGraph <- function(data, active.reduction) {
 #'
 getSNNiGraph <- function(data, active.reduction) {
 
->>>>>>> 467e807 (merge master)
   # check to see if we already have Seurat SNN Graph object
   snn_name <- paste0(data@active.assay, "_snn")
 
