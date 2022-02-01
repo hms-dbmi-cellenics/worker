@@ -74,3 +74,23 @@ test_that("the result of runPseudobulkDE contains the gene_annotations 'name' co
     expect_true(all(res$name %in% pbulk@misc$gene_annotations$name))
 })
 
+
+test_that("the result of runPseudobulkDE includes all genes, including filtered ones", {
+    pbulk <- mock_pbulk()
+    pbulk <- pbulk_to_seurat(pbulk)
+
+    pbulk@misc$gene_annotations$name
+
+    res <- runPseudobulkDE(pbulk)
+
+    # all gene names in result
+    expect_setequal(res$name, pbulk@misc$gene_annotations$name)
+
+    # all ensemble ids in result
+    expect_setequal(row.names(res), pbulk@misc$gene_annotations$input)
+
+    # some values in the table are NA (filtered genes)
+    expect_true(anyNA(res))
+})
+
+
