@@ -2,17 +2,27 @@
 worker
 ======
 
-The single-cell pipeline work executor. It consists of two containers: a Python container and an R container. 
+The Cellenics data analysis tasks executor. It consists of two containers: a Python container and an R container. For more details on the individual containers, check out the README files in their respective directories.
 
-The Python part of the worker is a wrapper around the R part: it receives tasks from the API, parses them, sends them to the R part for computation, then formats the results, uploads them to S3 and sends a notification to the API that they are ready.
+The Python part of the worker is a wrapper around the R part: it receives tasks from the API, parses them, sends them to the R part for computation, then formats the results, uploads them to S3 and sends a notification to the API via Redis-backed socket connection that they are ready.
 
-The R part of the worker computes single cell analysis tasks on a pre-processed Seurat rds object. It can communicate only with the Python part of the worker.
+The R part of the worker computes single cell analysis tasks on a pre-processed Seurat rds object, loaded into memory from S3. The R part of the worker can communicate only with the Python part of the worker.
 
-## Running locally
-To run the worker locally, you will need to build it and then run it, passing
-the id of the processed experiment that you want to use the worker with.
+More specific details about the Python or the R part of the worker can be found in the README file in the respective folder (python/ or r/).
 
-### 0. Prerequisites
+## Deployment
+
+The worker is deployed as a Helm chart to an AWS-managed Kubernetes cluster and runs on a Fargate-managed node. The Helm chart template for the worker is located in `chart-infra/` folder.
+
+ The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/hms-dbmi-cellenics/worker/blob/master/.github/workflows/ci.yaml). 
+
+During a deployment, the worker Github Actions workflow does the following:
+- It pushes new worker images to ECR.
+- Adds deployment-specific configurations to the worker Helm chart. Pushes those deployment-specific configuration changes in [releases/](https://github.com/hms-dbmi-cellenics/iac/tree/master/releases) folder in iac, under the relevant environment.
+
+## Development
+
+### Prerequisites
 
 #### Docker resource allocation
 
@@ -32,50 +42,6 @@ adding it to your `.bashrc` (or `.zshrc`) for convenience.
 export GITHUB_API_TOKEN=<your-token>
 ```
 
-### 1. Building the worker
-While in the `worker/` root folder on the host, you can use `make build`.
-
-To build and run the R and python containers, you can do:
-
-    make build
-
-Note that during the first time, the build can take up to 40-50 minutes to complete.
-If you get an error, see the `Troubleshoooting` section for help.
-
-To get a development log stream of both containers running, you can use:
-
-    make logs
-
-### 2. Running the worker
-Before running the worker, you need to have a folder named with the experiment id that you want to load. The folder should be saved under `worker/data` and it has to contain:
- - Processed rds object file, called `r.rds`
- - A json file of the cell_sets for that experiment, called `cell_sets.json`
-
-Here is an example folder structure for experiment id `1234`:
-
-```bash
-data
-├── 1234
-│   ├── cell_sets.json
-│   └── r.rds
-```
-
-You can obtain this folder structure if you do either of the following:
-- Start the rest of the Cellscope platform components locally, then upload samples from Data Management and launch analysis.
-
-OR
-
-- Download the r.rds object and the cell_sets.json file for an already processed experiment from S3 and then manually add them in `worker/data` under a new folder named with the experiment id.
-
-You can have one or more experiments under `worker/data`.
-
-To run the worker with the experiment id of your choice, do the following:
-In a terminal, while in the `worker/` root folder, type the following:
-
-    EXPERIMENT_ID=1234 make run
-    
-where `1234` is the experiment id of your choice.
-
 ### Running tests
 Assuming the containers are running, you can execute the (pytest) unit tests using:
 
@@ -87,11 +53,7 @@ To shut down the development containers, you can use:
 
     make kill
 
-## Development
-
-### Prerequisites
-
-#### Remote - Containers
+### Remote - Containers
 Development is done inside a development container that is automatically built,
 run, and managed by Visual Studio Code. You do not need R, R Studio, or a Python
 virtual environment to be installed locally.
@@ -101,21 +63,6 @@ As such, you must have the
 extension installed. Make sure you restart VS Code after installing to make sure it
 loads successfully. You should see a green icon in the leftmost part of the status bar,
 which indicates that the remote container plugin has been installed.
-
-#### Git LFS
-File(s) under `data/test` are downloaded by [inframock](https://github.com/hms-dbmi-cellenics/inframock), uploaded to mock S3 and used by the workers. As some of these files are over Github's file size limit (100 MB), they are stored using [Git LFS](https://git-lfs.github.com/). Follow the installation instructions on their website to setup Git LFS locally.
-
-Once you have installed Git LFS, you can open the worker root directory in a terminal and run 
-
-    git lfs install
-
-
-If Git LFS is installed successfully, it should print
-
-    Updated git hooks.
-    Git LFS initialized.
-
-You can see the list of files tracked by Git LFS in `.gitattributes`.
 
 ### Setup
 
@@ -137,10 +84,53 @@ These development environments should be pre-configured with the same requiremen
 produciton instances, as well as the necessary VS Code extensions required to debug and
 lint code.
 
+## Running locally
+To run the worker locally, you will need to build it and then run it, passing
+the id of the processed experiment that you want to use the worker with.
 
-## More details
+### Step 1. Building the worker
+While in the `worker/` root folder on the host, you can use `make build`.
 
-For more details on the individual runners, check out the README files in their respective directories.
+To build and run the R and python containers, you can do:
+
+    make build
+
+Note that during the first time, the build can take up to 40-50 minutes to complete.
+If you get an error, see the `Troubleshoooting` section for help.
+
+To get a development log stream of both containers running, you can use:
+
+    make logs
+
+### Step 2. Running the worker
+Before running the worker, you need to have a folder named with the experiment id that you want to load. The folder should be saved under `worker/data` and it has to contain:
+ - Processed rds object file, called `r.rds`
+ - A json file of the cell_sets for that experiment, called `cell_sets.json`
+
+Here is an example folder structure for experiment id `1234`:
+
+```bash
+data
+├── 1234
+│   ├── cell_sets.json
+│   └── r.rds
+```
+
+You can obtain this folder structure if you do either of the following:
+- Start the rest of the Cellenics components locally, then upload samples from Data Management and launch analysis. A prerequisite for this step is configuring the pipeline to run locally.
+
+OR
+
+- Download the r.rds object and the cell_sets.json file for an already processed experiment from S3 and then manually add them in `worker/data` under a new folder named with the experiment id.
+
+You can have one or more experiments under `worker/data`.
+
+To run the worker with the experiment id of your choice, do the following:
+In a terminal, while in the `worker/` root folder, type the following:
+
+    EXPERIMENT_ID=1234 make run
+    
+where `1234` is the experiment id of your choice.
 
 ## Troubleshooting
 
@@ -185,7 +175,7 @@ extra_hosts:
 
 IMPORTANT: Don't include this in a PR, because it will break stuff on macOS.
 
-## Debugging locally
+### Debugging locally
 
 **TLDR:** Save anything in /debug in the container and it will be available at `$(pwd)/data/debug`.
 
