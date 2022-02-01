@@ -1,5 +1,8 @@
 #' Make aggregated matrix for pseudo bulk differential expression
 #'
+#' The SeuratObject requires a `custom` meta.data slot, specifying which cells
+#' belong to the `base` and `background` groups. It also needs a `samples`
+#' meta.data slot.
 #'
 #' @param scdata a SeuratObject,
 #'
