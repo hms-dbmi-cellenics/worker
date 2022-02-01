@@ -13,8 +13,12 @@ runPseudobulkDE <- function(pbulk) {
         samples = data.frame(group),
         genes = pbulk@misc$gene_annotations[, "name", drop = FALSE])
 
+    keep <- edgeR::filterByExpr(y, group=group)
 
-    y <- y[edgeR::filterByExpr(y, group=group),]
+    # get filtered genes to add to results
+    disc <- row.names(y)[!keep]
+
+    y <- y[keep,]
     y <- edgeR::calcNormFactors(y)
 
     design <- stats::model.matrix(~0 + group)
@@ -30,5 +34,11 @@ runPseudobulkDE <- function(pbulk) {
 
     eb_fit <- limma::eBayes(fit, robust=TRUE)
     res <- limma::topTable(eb_fit, coef = contrast, sort.by="p", n=Inf)
+
+    # add filtered genes so that searchable
+    res[disc, ] <- NA
+    res[disc, 'name'] <- pbulk@misc$gene_annotations[disc, 'name']
+
+
     return(res)
 }
