@@ -35,7 +35,7 @@ makePseudobulkMatrix <- function(scdata) {
 
   # create seurat, and add metadata
   pbulk <- Seurat::CreateSeuratObject(agg)
-  pbulk <- AddMetaData(pbulk, metadata)
+  pbulk <- Seurat::AddMetaData(pbulk, metadata)
   pbulk@misc$gene_annotations <- gene_annotations
 
   return(pbulk)
