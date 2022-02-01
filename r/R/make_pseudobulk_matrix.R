@@ -12,7 +12,7 @@ makePseudobulkMatrix <- function(scdata) {
 
   # create groups for aggregation
   pbulk_groups <-
-    factor(paste(scdata$groups, scdata$custom, sep = "_"))
+    factor(paste(scdata$samples, scdata$custom, sep = "_"))
 
   agg <- presto::sumGroups(counts, pbulk_groups, MARGIN = 1)
   agg <- Matrix::Matrix(agg, sparse = TRUE)
