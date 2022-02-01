@@ -10,6 +10,9 @@
 #' @export
 #'
 makePseudobulkMatrix <- function(scdata) {
+
+  scdata <- scdata[,!is.na(scdata@meta.data$custom)]
+
   counts <- scdata[["RNA"]]@counts
   gene_annotations <- scdata@misc$gene_annotations
 
