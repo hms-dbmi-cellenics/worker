@@ -12,7 +12,13 @@ mock_pbulk <- function() {
     pbulk <- Matrix.utils::aggregate.Matrix(Matrix::t(pbmc_raw), groupings = groups, fun = "sum")
     pbulk <- Matrix::t(pbulk)
 
-    pbulk <- CreateSeuratObject(counts = pbulk)
+    return(pbulk)
+
+}
+
+pbulk_to_seurat <- function(pbulk) {
+
+    pbulk <- SeuratObject::CreateSeuratObject(counts = pbulk)
     pbulk@misc$gene_annotations <- data.frame(
         input = paste0("ENSG", seq_len(nrow(pbulk))),
         name = row.names(pbulk),
@@ -28,7 +34,29 @@ mock_pbulk <- function() {
 
 test_that("runPseudobulkDE runs", {
     pbulk <- mock_pbulk()
+    pbulk <- pbulk_to_seurat(pbulk)
 
     res <- runPseudobulkDE(pbulk)
     expect_equal(class(res), 'data.frame')
+})
+
+
+test_that("the result of runPseudobulkDE detects up-regulated and down-regulated genes", {
+    pbulk <- mock_pbulk()
+
+    # add up-regulated and down-regulated gene
+    fake <- matrix(c(564, 562, 24, 10,
+                     2, 5, 121, 130),
+                   byrow = TRUE, nrow = 2, dimnames = list(c('UP', 'DOWN')))
+
+    pbulk <- rbind(fake, pbulk)
+    pbulk <- pbulk_to_seurat(pbulk)
+    res <- runPseudobulkDE(pbulk)
+
+    # correct direction
+    expect_true(res['UP', 'logFC'] > 0)
+    expect_true(res['DOWN', 'logFC'] < 0)
+
+    # highest significance
+    expect_setequal(head(row.names(res), 2), c('UP', 'DOWN'))
 })

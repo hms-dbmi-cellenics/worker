@@ -17,7 +17,7 @@ runPseudobulkDE <- function(pbulk) {
     y <- y[edgeR::filterByExpr(y, group=group),]
     y <- edgeR::calcNormFactors(y)
 
-    design <- stats::model.matrix(~0 + group, data = group)
+    design <- stats::model.matrix(~0 + group)
     colnames(design) <- gsub('^group', '', colnames(design))
 
     v <- limma::voomWithQualityWeights(y, design)
