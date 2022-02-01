@@ -1192,6 +1192,13 @@
       "Repository": "CRAN",
       "Hash": "72200a58cae0d7046e416e6be6d9d322"
     },
+    "statmod": {
+      "Package": "statmod",
+      "Version": "1.4.36",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "67924522fc37b515396de7d9e2408cc2"
+    },
     "stringi": {
       "Package": "stringi",
       "Version": "1.6.2",

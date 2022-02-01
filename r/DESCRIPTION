@@ -16,5 +16,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: 
     limma,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    statmod
 Config/testthat/edition: 3
