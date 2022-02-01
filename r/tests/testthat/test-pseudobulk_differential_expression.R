@@ -19,6 +19,7 @@ mock_pbulk <- function() {
 
 }
 
+# separated so that can add fake up/down-regulated genes
 pbulk_to_seurat <- function(pbulk) {
 
     pbulk <- SeuratObject::CreateSeuratObject(counts = pbulk)
