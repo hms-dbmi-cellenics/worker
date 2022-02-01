@@ -36,6 +36,5 @@ makePseudobulkMatrix <- function(scdata) {
   pbulk$custom <- custom
   pbulk@misc$gene_annotations <- gene_annotations
 
-  pbulk
-
+  return(pbulk)
 }
