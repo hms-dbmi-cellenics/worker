@@ -12,7 +12,7 @@ More specific details about the Python or the R part of the worker can be found 
 
 ## Deployment
 
-The API is deployed as a Helm chart to an AWS-managed Kubernetes cluster and runs on a Fargate-managed node. The Helm chart template for the worker is located in `chart-infra/` folder.
+The worker is deployed as a Helm chart to an AWS-managed Kubernetes cluster and runs on a Fargate-managed node. The Helm chart template for the worker is located in `chart-infra/` folder.
 
  The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/hms-dbmi-cellenics/worker/blob/master/.github/workflows/ci.yaml). 
 
