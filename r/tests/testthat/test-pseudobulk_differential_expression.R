@@ -1,3 +1,5 @@
+library(Matrix)
+
 mock_pbulk <- function() {
 
     # mock pseudobulk SeuratObject with annotation
