@@ -1,33 +1,38 @@
-
-
-make_pbulk_seurat <- function(scdata) {
-  # create pseudobulk groupings
-  scdata$pbulk_groups <-
-    paste(scdata$groups, scdata$custom, sep = "_")
-
-  # extract annotations,
+#' Make aggregated matrix for pseudo bulk differential expression
+#'
+#'
+#' @param scdata a SeuratObject,
+#'
+#' @return a SeuratObject with counts aggregated by sample for one cluster
+#' @export
+#'
+makePseudobulkMatrix <- function(scdata) {
+  counts <- scdata[["RNA"]]@counts
   gene_annotations <- scdata@misc$gene_annotations
 
-  pbulk <- AggregateExpression(
-    scdata,
-    slot = "counts",
-    group.by = "pbulk_groups",
-    return.seurat = TRUE,
-    verbose = FALSE
-  )
+  # create groups for aggregation
+  pbulk_groups <-
+    factor(paste(scdata$groups, scdata$custom, sep = "_"))
 
-  # add annotations to aggregated object
-  pbulk@misc$gene_annotations <- gene_annotations
+  agg <- presto::sumGroups(counts, pbulk_groups, MARGIN = 1)
+  agg <- Matrix::Matrix(agg, sparse = TRUE)
+  agg <- Matrix::t(agg)
 
-  # fix meta.data
-  pbulk_groups <- rownames(pbulk@meta.data)
+  row.names(agg) <- row.names(counts)
+  colnames(agg) <- levels(pbulk_groups)
+
+  # recover metadata
+  pbulk_groups <- colnames(agg)
   pbulk_groups <- transpose(strsplit(pbulk_groups, split = "_"))
-
   samples <- pbulk_groups[[1]]
   custom <- pbulk_groups[[2]]
 
-  pbulk@meta.data$samples <- samples
-  pbulk@meta.data$custom <- custom
+  # create seurat, and add metadata
+  pbulk <- CreateSeuratObject(agg)
+  pbulk$samples <- samples
+  pbulk$custom <- custom
+  pbulk@misc$gene_annotations <- gene_annotations
 
   pbulk
+
 }
