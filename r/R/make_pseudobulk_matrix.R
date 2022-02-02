@@ -11,7 +11,7 @@
 #'
 makePseudobulkMatrix <- function(scdata) {
   # filter out cells not in base/background groups
-  scdata <- scdata[, !is.na(scdata@meta.data$custom)]
+  scdata <- scdata[, !is.na(scdata$custom)]
 
   counts <- scdata[["RNA"]]@counts
   gene_annotations <- scdata@misc$gene_annotations
