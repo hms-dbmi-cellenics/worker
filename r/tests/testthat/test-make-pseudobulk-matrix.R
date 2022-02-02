@@ -64,3 +64,23 @@ test_that("makePseudobulkMatrix returns correct custom and samples slots", {
 
   expect_equal(res@meta.data[, c("samples", "custom")], expected_metadata)
 })
+
+
+test_that("makePseudobulkMatrix correctly aggregates counts", {
+  scdata <- mock_scdata()
+
+  for (sample in unique(scdata$samples)) {
+    sample_cells <- scdata@meta.data %>%
+      dplyr::filter(!is.na(custom), samples == sample) %>%
+      rownames()
+
+    # aggregate manually,
+    cell_counts <- scdata[["RNA"]]@counts[, sample_cells]
+    expected_agg_counts <- rowSums(cell_counts)
+
+    res <- makePseudobulkMatrix(scdata)
+    res_agg_counts <- res[["RNA"]]@counts[, sample]
+
+    expect_equal(res_agg_counts, expected_agg_counts)
+  }
+})
