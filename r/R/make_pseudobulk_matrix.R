@@ -16,7 +16,7 @@ makePseudobulkMatrix <- function(scdata) {
   counts <- scdata[["RNA"]]@counts
   gene_annotations <- scdata@misc$gene_annotations
 
-  groups <- factor(scdata@meta.data$samples)
+  groups <- factor(scdata$samples)
   group_key <- getSampleGroupKey(scdata)
 
   agg <- presto::sumGroups(counts, groups, MARGIN = 1)
