@@ -14,7 +14,7 @@ mock_scdata <- function() {
   # add custom sets
   sample <- scdata$samples
   scdata$custom <-
-    case_when(
+    dplyr::case_when(
       sample == "s1" ~ "base",
       sample == "s2" ~ "base",
       sample == "s3" ~ "background",
@@ -76,7 +76,7 @@ test_that("makePseudobulkMatrix correctly aggregates counts", {
 
     # aggregate manually,
     cell_counts <- scdata[["RNA"]]@counts[, sample_cells]
-    expected_agg_counts <- rowSums(cell_counts)
+    expected_agg_counts <- Matrix::rowSums(cell_counts)
 
     res <- makePseudobulkMatrix(scdata)
     res_agg_counts <- res[["RNA"]]@counts[, sample]
