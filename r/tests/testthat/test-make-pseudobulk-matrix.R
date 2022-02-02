@@ -1,7 +1,6 @@
 mock_scdata <- function() {
   scdata <- pbmc_small
 
-
   scdata$samples <-
     rep(c("s1", "s2", "s3", "s4"), each = nrow(scdata@meta.data) / 4)
 
@@ -53,16 +52,15 @@ test_that("makePseudobulkMatrix returns correct gene annotations", {
 })
 
 
-test_that("makePseudobulkMatrix returns correct custom and samples slots",
-          {
-            scdata <- mock_scdata()
-            res <- makePseudobulkMatrix(scdata)
+test_that("makePseudobulkMatrix returns correct custom and samples slots", {
+  scdata <- mock_scdata()
+  res <- makePseudobulkMatrix(scdata)
 
-            expected_metadata <- scdata@meta.data %>%
-              dplyr::filter(!is.na(custom)) %>%
-              dplyr::select(samples, custom) %>%
-              unique() %>%
-              `rownames<-`(.$samples)
+  expected_metadata <- scdata@meta.data %>%
+    dplyr::filter(!is.na(custom)) %>%
+    dplyr::select(samples, custom) %>%
+    unique() %>%
+    `rownames<-`(.$samples)
 
-            expect_equal(res@meta.data[, c("samples", "custom")], expected_metadata)
-          })
+  expect_equal(res@meta.data[, c("samples", "custom")], expected_metadata)
+})
