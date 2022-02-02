@@ -30,12 +30,15 @@ makePseudobulkMatrix <- function(scdata) {
   colnames(agg) <- levels(samples)
 
   # recover original metadata
-  metadata <- data.frame(samples = colnames(agg),
-                         custom = scdata$custom[!duplicated(samples)],
-                         row.names = colnames(agg))
+  metadata <- data.frame(
+    samples = colnames(agg),
+    custom = scdata$custom[!duplicated(samples)],
+    row.names = colnames(agg)
+  )
 
   # create seurat, and add metadata
   pbulk <- Seurat::CreateSeuratObject(agg, meta.data = metadata)
   pbulk@misc$gene_annotations <- gene_annotations
 
   return(pbulk)
+}
