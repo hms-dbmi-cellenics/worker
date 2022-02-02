@@ -25,7 +25,7 @@ makePseudobulkMatrix <- function(scdata) {
   agg <- Matrix::Matrix(agg, sparse = TRUE)
   agg <- Matrix::t(agg)
 
-  #row/colnames are lost in aggregation
+  # row/colnames are lost in aggregation
   rownames(agg) <- rownames(counts)
   colnames(agg) <- levels(samples)
 
