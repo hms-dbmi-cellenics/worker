@@ -1,4 +1,5 @@
 mock_scdata <- function() {
+  data("pbmc_small", package = "SeuratObject", envir = environment())
   scdata <- pbmc_small
 
   scdata$samples <-
