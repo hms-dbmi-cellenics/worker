@@ -79,16 +79,17 @@ class Response:
         io = Emitter({"client": config.REDIS_CLIENT})
 
         if self.request["broadcast"]:
-            # Work results sent to "broadcast" are sent to all browsers subscribed to a
-            # specific experimentId.
+            # Broadcast result of work request
             io.Emit(
                 f'ExperimentUpdates-{self.request["experimentId"]}',
                 self._construct_response_msg(),
             )
-        else:
-            io.Emit(
-                f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg()
+
+            info(
+                f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
+
+        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
