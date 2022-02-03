@@ -35,7 +35,7 @@ test_that("makePseudobulkMatrix returns object of correct type and dims", {
 
   expected_rows <- nrow(scdata)
   expected_cols <-
-    length(unique(scdata@meta.data$samples[!is.na(scdata@meta.data$custom)]))
+    length(unique(scdata$samples[!is.na(scdata$custom)]))
 
   expect_equal(nrow(res), expected_rows)
   expect_equal(ncol(res), expected_cols)
