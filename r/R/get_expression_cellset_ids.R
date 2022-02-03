@@ -33,7 +33,9 @@ getExpressionCellsetIDs <- function(req, data) {
     # subset cells for each filter
     keep.cells <- rep(TRUE, ncol(data))
     comparisons <- list(greaterThan = `>`, lessThan = `<`)
+    comparison_strings <- list(greaterThan =">",lessThan ="<")
 
+    cell_set_name <- ""
     for (i in seq_along(filters)) {
         filter <- filters[[i]]
         enid <- enids[i]
@@ -42,13 +44,29 @@ getExpressionCellsetIDs <- function(req, data) {
         comparison <- comparisons[[filter$comparisonType]]
         pass.filter <- comparison(expression_mat[enid, ], filter$thresholdValue)
 
+        cell_set_name <- paste0(cell_set_name,
+                                filters[[i]]$geneName,
+                                comparison_strings[filter$comparisonType],
+                                filter$thresholdValue
+                                )
+
+        if(i!=length(filters)){
+            cell_set_name <- paste0(cell_set_name,", ")
+        }
         # keep cells that pass previous filter(s) and current
         keep.cells <- keep.cells & pass.filter
     }
 
     keep_ids <- data$cells_id[keep.cells]
-    return(keep_ids)
+
+
+    new_cell_set <- list(key= req$body$cellSetUuid, name= cell_set_name, rootNode=FALSE, color= sample(r@misc$color_pool,1),cellIds= keep_ids)
+    cell_set_key <- "scratchpad"
+    insert_set_child_through_api(new_cell_set, req$body$apiUrl, req$body$experimentId, cell_set_key, req$body$authJwt)
+    return(new_cell_set)
 }
+
+insert_set_child_through_api <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT)
 
 # adds 'custom' slot to identitify background and base cells
 addComparisonGroup <- function(req, data) {
