@@ -78,8 +78,7 @@ class Response:
     def _send_notification(self):
         io = Emitter({"client": config.REDIS_CLIENT})
 
-        if self.request["broadcast"]:
-            # Broadcast result of work request
+        if self.request.get("broadcast"):
             io.Emit(
                 f'ExperimentUpdates-{self.request["experimentId"]}',
                 self._construct_response_msg(),
