@@ -36,3 +36,14 @@ run in the R terminal:
 ``` R
 renv::restore()
 ```
+
+### Running R worker Tests
+
+In Rstudio:
+devtools::test() or cmd+shift+T
+
+Outside Rstudio:
+
+Go to worker/r folder
+Start an R session (R in the terminal)
+Run devtools::test()
