@@ -25,7 +25,7 @@ mock_scdata <- function() {
   # add cells not belonging to groups to compare
   scdata$custom[floor(ncol(scdata) / 10) * 1:10] <- NA
 
-  scdata
+  return(scdata)
 }
 
 
