@@ -33,6 +33,7 @@ runPseudobulkDE <- function(pbulk) {
     contrast_matrix <- limma::makeContrasts(contrasts = contrast, levels = design)
     fit <- limma::contrasts.fit(fit, contrast_matrix)
 
+    # calculate logFC or run DE based on sample size
     nsample <- ncol(y)
     if (nsample  == 2) {
         # only logFC if two samples
