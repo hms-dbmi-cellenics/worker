@@ -13,6 +13,7 @@ runPseudobulkDE <- function(pbulk) {
         samples = data.frame(group),
         genes = pbulk@misc$gene_annotations[, "name", drop = FALSE])
 
+
     keep <- edgeR::filterByExpr(y, group=group)
 
     # get filtered genes to add to results
@@ -32,8 +33,20 @@ runPseudobulkDE <- function(pbulk) {
     contrast_matrix <- limma::makeContrasts(contrasts = contrast, levels = design)
     fit <- limma::contrasts.fit(fit, contrast_matrix)
 
-    eb_fit <- limma::eBayes(fit, robust=TRUE)
-    res <- limma::topTable(eb_fit, coef = contrast, sort.by="p", n=Inf)
+    nsample <- ncol(y)
+    if (nsample  == 2) {
+        # only logFC if two samples
+        res <- data.frame(fit$genes,
+                          logFC = fit$coefficients[, contrast],
+                          AveExpr = fit$Amean)
+
+        res <- res[order(abs(res$logFC), decreasing = TRUE), ]
+
+    } else {
+        # differential expression if 3+ samples
+        eb_fit <- limma::eBayes(fit, robust=TRUE)
+        res <- limma::topTable(eb_fit, coef = contrast, sort.by="p", n=Inf)
+    }
 
     # add filtered genes so that searchable
     res[disc, ] <- NA
