@@ -189,9 +189,9 @@ create_app <- function(last_modified, data, fpath) {
         }
     )
     app$add_post(
-        path = "/v0/getExpressionCellsetIDs",
+        path = "/v0/getExpressionCellSets",
         FUN = function(req, res) {
-            result <- run_post(req, getExpressionCellsetIDs, data)
+            result <- run_post(req, getExpressionCellSets, data)
             res$set_body(result)
         }
     )

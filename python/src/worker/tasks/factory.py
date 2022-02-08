@@ -18,6 +18,7 @@ from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
+from .expression_cellsets import GetExpressionCellSets
 
 
 class TaskFactory:
@@ -32,7 +33,8 @@ class TaskFactory:
             DotPlot,
             GetDoubletScore,
             GetMitochondrialContent,
-            MarkerHeatmap
+            MarkerHeatmap,
+            GetExpressionCellSets
         )
     }
 
