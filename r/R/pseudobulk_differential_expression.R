@@ -25,7 +25,7 @@ runPseudobulkDE <- function(pbulk) {
     design <- stats::model.matrix(~0 + group)
     colnames(design) <- gsub('^group', '', colnames(design))
 
-    v <- limma::voomWithQualityWeights(y, design)
+    v <- suppressWarnings(limma::voomWithQualityWeights(y, design))
     fit <- limma::lmFit(v)
 
     # make sure we get the right contrast

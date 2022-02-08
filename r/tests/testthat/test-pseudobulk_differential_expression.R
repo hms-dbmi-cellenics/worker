@@ -93,4 +93,49 @@ test_that("the result of runPseudobulkDE includes all genes, including filtered 
     expect_true(anyNA(res))
 })
 
+test_that("runPseudobulkDE works for 1 sample vs 1 sample comparisons", {
+    pbulk <- mock_pbulk()
+    pbulk <- pbulk_to_seurat(pbulk)
+
+    # make 1 vs 1 sample
+    pbulk <- pbulk[, c(1, 3)]
+    expect_setequal(pbulk$custom, c('base', 'background'))
+
+    res <- runPseudobulkDE(pbulk)
+
+    # all gene names in result
+    expect_setequal(res$name, pbulk@misc$gene_annotations$name)
+
+    # all ensemble ids in result
+    expect_setequal(row.names(res), pbulk@misc$gene_annotations$input)
+
+    # all expected columns in result
+    expect_setequal(colnames(res), c('name', 'logFC', 'AveExpr'))
+})
+
+test_that("runPseudobulkDE sort by absolute logFC for 1 sample vs 1 sample comparisons", {
+    pbulk <- mock_pbulk()
+
+    # add up-regulated and down-regulated gene
+    fake <- matrix(c(564, 562, 1, 1,
+                     2, 2, 1210, 1300),
+                   byrow = TRUE, nrow = 2, dimnames = list(c('UP', 'DOWN')))
+
+    pbulk <- rbind(fake, pbulk)
+    pbulk <- pbulk_to_seurat(pbulk)
+
+    # make 1 vs 1 sample
+    pbulk <- pbulk[, c(1, 3)]
+    expect_setequal(pbulk$custom, c('base', 'background'))
+
+    res <- runPseudobulkDE(pbulk)
+
+    # correct direction
+    expect_true(res['UP', 'logFC'] > 0)
+    expect_true(res['DOWN', 'logFC'] < 0)
+
+    # sorted by logFC
+    expect_equal(res$name, res$name[order(abs(res$logFC), decreasing = TRUE)])
+})
+
 
