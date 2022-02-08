@@ -54,6 +54,5 @@ runPseudobulkDE <- function(pbulk) {
     res[disc, ] <- NA
     res[disc, 'name'] <- pbulk@misc$gene_annotations[disc, 'name']
 
-
     return(res)
 }
