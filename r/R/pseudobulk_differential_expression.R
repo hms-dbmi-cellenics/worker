@@ -25,6 +25,7 @@ runPseudobulkDE <- function(pbulk) {
     design <- stats::model.matrix(~0 + group)
     colnames(design) <- gsub('^group', '', colnames(design))
 
+    # silences warning when no replication (1 vs 1 sample comparisons)
     v <- suppressWarnings(limma::voomWithQualityWeights(y, design))
     fit <- limma::lmFit(v)
 
