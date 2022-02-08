@@ -198,17 +198,17 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.6",
+      "Version": "1.0.8",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "dbb5e436998a7eba5a9d682060533338"
+      "Hash": "22b546dd7e337f6c0c58a39983a496bc"
     },
     "RcppAnnoy": {
       "Package": "RcppAnnoy",
-      "Version": "0.0.18",
+      "Version": "0.0.19",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "4c61a26f751659e875f46045df6d5fad"
+      "Hash": "5681153e3eb103725e35ac5f7ebca910"
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
@@ -267,10 +267,10 @@
     },
     "SeuratObject": {
       "Package": "SeuratObject",
-      "Version": "4.0.2",
+      "Version": "4.0.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "e5959242d66cfe4de9116fdcec327f80"
+      "Hash": "cf97a1d4d9991d4b58c92b27a8b9447b"
     },
     "SummarizedExperiment": {
       "Package": "SummarizedExperiment",
@@ -740,11 +740,11 @@
       "Version": "1.2.6.9118",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteUsername": "igraph",
+      "RemoteHost": "api.github.com",
       "RemoteRepo": "rigraph",
+      "RemoteUsername": "igraph",
       "RemoteRef": "master",
       "RemoteSha": "46bfafd9623b4c9d6cbad9b6768ba3fb297fc06b",
-      "RemoteHost": "api.github.com",
       "Hash": "d0bc05b3feb0bb04b8f6aae3d4d14271"
     },
     "irlba": {
@@ -1278,10 +1278,10 @@
     },
     "uwot": {
       "Package": "uwot",
-      "Version": "0.1.10",
+      "Version": "0.1.11",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a9737c75f5f949695617b05e78281b2f"
+      "Hash": "f83dba1458cca3b1523e27944edb9da5"
     },
     "vctrs": {
       "Package": "vctrs",
