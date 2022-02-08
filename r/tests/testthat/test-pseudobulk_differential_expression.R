@@ -113,7 +113,7 @@ test_that("runPseudobulkDE works for 1 sample vs 1 sample comparisons", {
     expect_setequal(colnames(res), c('name', 'logFC', 'AveExpr'))
 })
 
-test_that("runPseudobulkDE sort by absolute logFC for 1 sample vs 1 sample comparisons", {
+test_that("runPseudobulkDE sorts by absolute logFC for 1 sample vs 1 sample comparisons", {
     pbulk <- mock_pbulk()
 
     # add up-regulated and down-regulated gene
