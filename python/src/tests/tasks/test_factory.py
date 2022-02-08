@@ -1,6 +1,6 @@
 import pytest
 from mock import Mock, patch
-from worker.result import Result
+
 from worker.tasks.factory import TaskFactory
 
 
@@ -24,9 +24,7 @@ class TestTaskFactory:
 
     def test_throws_exception_on_non_existent_task(self):
         with pytest.raises(Exception) as e:
-            self.task_factory.submit(
-                {"body": {"name": "ClearlyAnInvalidTaskName"}}
-            )
+            self.task_factory.submit({"body": {"name": "ClearlyAnInvalidTaskName"}})
         assert (
             e.value.args[0]
             == "Task class with name ClearlyAnInvalidTaskName was not found"
@@ -35,4 +33,3 @@ class TestTaskFactory:
     def test_creates_class_on_existent_task(self):
         r = self.task_factory._factory({"body": {"name": "GetEmbedding"}})
         assert isinstance(r, object)
-
