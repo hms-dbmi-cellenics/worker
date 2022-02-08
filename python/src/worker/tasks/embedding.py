@@ -14,16 +14,20 @@ class GetEmbedding(Task):
         # Return a list of formatted results.
         return Result(result)
 
+    def _format_request(self):
+        request = {
+            "type": self.task_def["type"],
+            "config": self.task_def["config"],
+        }
+        return request
+
     @xray_recorder.capture("ComputeEmbedding.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = {
-            "type": self.task_def["type"],
-            "config": self.task_def["config"],
-        }
-
+        request = self._format_request()
+        
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/getEmbedding",
             headers={"content-type": "application/json"},
