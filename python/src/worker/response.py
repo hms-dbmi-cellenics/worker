@@ -68,7 +68,7 @@ class Response:
             },
         )
 
-        info(f"Repsonse was uploaded in bucket {self.s3_bucket} at key {ETag}.")
+        info(f"Response was uploaded in bucket {self.s3_bucket} at key {ETag}.")
 
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(True)
