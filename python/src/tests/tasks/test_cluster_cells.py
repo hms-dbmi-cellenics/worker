@@ -1,7 +1,5 @@
-import json
-import os
-
 import pytest
+
 from worker.tasks.cluster_cells import ClusterCells
 
 
@@ -35,20 +33,14 @@ class TestClusterCells:
             "config": self.correct_request["body"]["config"],
         }
 
-        self.correctResponse = json.load(
-            open(os.path.join("tests", "cluster_result.json"))
-        )
-
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
             ClusterCells()
-            
+
     def test_works_with_request(self):
         ClusterCells(self.correct_request)
 
     def test_format_request(self):
         assert (
-            ClusterCells(self.correct_request)._format_request()
-            == self.parsed_request
+            ClusterCells(self.correct_request)._format_request() == self.parsed_request
         )
-        

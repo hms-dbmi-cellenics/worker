@@ -1,8 +1,6 @@
+import gzip
 import io
 import json
-import gzip
-import uuid
-from functools import reduce
 from logging import info
 
 import aws_xray_sdk as xray
