@@ -144,11 +144,12 @@ insert_set_child_through_api <- function(new_cell_set, api_url, experiment_id, c
       list("$match" = list(
         query = httr_query,
         value = list("children" = children)
-      ))),
-      encode = "json",
-      httr::add_headers(
-        "Content-Type" = "application/boschni-json-merger+json",
-        "Authorization" = auth_JWT
-      )
+      ))
+    ),
+    encode = "json",
+    httr::add_headers(
+      "Content-Type" = "application/boschni-json-merger+json",
+      "Authorization" = auth_JWT
+    )
   )
 }
