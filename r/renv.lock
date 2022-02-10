@@ -50,6 +50,12 @@
       "Source": "Bioconductor",
       "Hash": "338a72852f019b3b51ae87dc82391eb3"
     },
+    "BiocVersion": {
+      "Package": "BiocVersion",
+      "Version": "3.12.0",
+      "Source": "Bioconductor",
+      "Hash": "ee4d027afb8f52fec1f46b9f0a8660e9"
+    },
     "DBI": {
       "Package": "DBI",
       "Version": "1.1.1",
@@ -120,6 +126,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "4ed05e9c9726267e4a5872e09c04587c"
+    },
+    "Matrix.utils": {
+      "Package": "Matrix.utils",
+      "Version": "0.9.8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "74d1586cef483fdd0703316240ed8c1e"
     },
     "MatrixGenerics": {
       "Package": "MatrixGenerics",
@@ -501,6 +514,12 @@
       "Repository": "CRAN",
       "Hash": "3ce2af5ead3b01c518fd453c7fe5a51a"
     },
+    "edgeR": {
+      "Package": "edgeR",
+      "Version": "3.32.1",
+      "Source": "Bioconductor",
+      "Hash": "9728a55a7f19cfab9c54d84b4e59f143"
+    },
     "ellipsis": {
       "Package": "ellipsis",
       "Version": "0.3.2",
@@ -660,6 +679,13 @@
       "Repository": "CRAN",
       "Hash": "7d7f283939f563670a697165b2cf5560"
     },
+    "grr": {
+      "Package": "grr",
+      "Version": "0.9.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "195f3206842ea5ae11968e8d462bb828"
+    },
     "gtable": {
       "Package": "gtable",
       "Version": "0.3.0",
@@ -714,11 +740,11 @@
       "Version": "1.2.6.9118",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "rigraph",
       "RemoteUsername": "igraph",
+      "RemoteRepo": "rigraph",
       "RemoteRef": "master",
       "RemoteSha": "46bfafd9623b4c9d6cbad9b6768ba3fb297fc06b",
+      "RemoteHost": "api.github.com",
       "Hash": "d0bc05b3feb0bb04b8f6aae3d4d14271"
     },
     "irlba": {
@@ -1165,6 +1191,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "72200a58cae0d7046e416e6be6d9d322"
+    },
+    "statmod": {
+      "Package": "statmod",
+      "Version": "1.4.36",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "67924522fc37b515396de7d9e2408cc2"
     },
     "stringi": {
       "Package": "stringi",

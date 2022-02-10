@@ -1,9 +1,5 @@
-import json
-import os
-
 import pytest
-import responses
-from worker.config import config
+
 from worker.tasks.mitochondrial_content import GetMitochondrialContent
 
 
@@ -15,7 +11,7 @@ class TestGetMitochondrialContent:
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "getMitochondrialContent",
-            }
+            },
         }
 
     def test_works_with_request(self):
@@ -28,4 +24,3 @@ class TestGetMitochondrialContent:
         # all expected keys are in the request
         expected_keys = []
         assert all(key in request for key in expected_keys)
-

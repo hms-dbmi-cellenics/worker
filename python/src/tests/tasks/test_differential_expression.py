@@ -9,7 +9,7 @@ from worker.helpers.mock_s3 import MockS3Class
 
 class TestDifferentialExpression:
     def get_request(
-        self, cellSet="cluster1", compareWith="rest", basis="all", maxNum=None
+        self, cellSet="cluster1", compareWith="rest", basis="all", comparisonType=None, maxNum=None
     ):
         request = {
             "experimentId": "e52b39624588791a7889e39c617f669e1",
@@ -21,6 +21,9 @@ class TestDifferentialExpression:
                 "basis": basis,
             },
         }
+
+        if comparisonType:
+            request["body"]["comparisonType"] = comparisonType
 
         if maxNum:
             request["body"]["maxNum"] = maxNum
@@ -53,18 +56,10 @@ class TestDifferentialExpression:
             DifferentialExpression()
 
     @responses.activate
-    def test_generates_correct_request_keys(self, mock_S3_get):
+    def test_throws_when_second_cellset_missing(self, mock_S3_get):
         MockS3Class.setResponse("one_set")
-        request = DifferentialExpression(self.get_request())._format_request()
-        assert isinstance(request, dict)
-
-        # all expected keys are in the request
-        expected_keys = [
-            "baseCells",
-            "backgroundCells",
-        ]
-
-        assert all(key in request for key in expected_keys)
+        with pytest.raises(Exception, match="fullfills the 2nd cell set"):
+            DifferentialExpression(self.get_request())._format_request()
 
     @responses.activate
     def test_cells_in_sets_intersection_are_filtered_out(self, mock_S3_get):
@@ -104,6 +99,7 @@ class TestDifferentialExpression:
         # Check cells not in basis are taken out
         assert len(baseCells) == 1
         assert len(backgroundCells) == 2
+        
 
     @responses.activate
     def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(
@@ -121,3 +117,36 @@ class TestDifferentialExpression:
         # Check there is only one cell in each set
         assert len(baseCells) == 1
         assert len(backgroundCells) == 2
+
+
+    @responses.activate
+    def test_default_comparison_type_added_to_request(self, mock_S3_get):
+
+        request = DifferentialExpression(
+            self.get_request(
+                cellSet="cluster1",
+                compareWith="cluster2",
+                basis="basisCluster",
+            )
+        )._format_request()
+
+        # Check that comparisonType defaults to within
+        comparisonType = request["comparisonType"]
+        assert comparisonType == "within"
+
+
+    @responses.activate
+    def test_specified_comparison_type_added_to_request(self, mock_S3_get):
+
+        request = DifferentialExpression(
+            self.get_request(
+                cellSet="cluster1",
+                compareWith="cluster2",
+                basis="basisCluster",
+                comparisonType="between"
+            )
+        )._format_request()
+
+        # Check that comparisonType uses set value of between instead of default (within)
+        comparisonType = request["comparisonType"]
+        assert comparisonType == "between"

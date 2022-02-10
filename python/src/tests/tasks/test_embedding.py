@@ -1,7 +1,5 @@
-import json
-import os
-
 import pytest
+
 from worker.tasks.embedding import GetEmbedding
 
 
@@ -35,12 +33,6 @@ class TestEmbedding:
                 "config": {"perplexity": 30, "learningRate": 200},
             }
         }
-        """
-        The test file has been created with the multisample dataset, expId: e52b39624588791a7889e39c617f669e
-        """
-        self.correctResponse = json.load(
-            open(os.path.join("tests", "emb_result.json"))
-        )
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -48,9 +40,13 @@ class TestEmbedding:
 
     def test_works_with_request(self):
         GetEmbedding(self.correct_request_pca)
-#The embedding might be moved to the pipeline, because results are not replicable in R throughout multiple runs.
+
     def generate_request_works(self):
-        assert GetEmbedding(self.correct_request_umap)._format_request == {"type":"umap","config":{"minimumDistance": 0.1, "distanceMetric": "cosine"}}
+        embedding_instance = GetEmbedding(self.correct_request_umap)
+        assert embedding_instance._format_request == {
+            "type": "umap",
+            "config": {"minimumDistance": 0.1, "distanceMetric": "cosine"},
+        }
 
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
