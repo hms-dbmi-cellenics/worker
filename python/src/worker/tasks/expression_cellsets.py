@@ -16,10 +16,12 @@ class GetExpressionCellSets(Task):
 
     def _construct_request(self):
         request = self.task_def
-        request["config"]["experimentId"] = config.EXPERIMENT_ID
-        request["config"]["apiUrl"] = config.API_URL
-        return request
 
+        request["config"] = {
+            "experimentId": config.EXPERIMENT_ID,
+            "apiUrl": config.API_URL,
+        }
+        return request
 
     @xray_recorder.capture("getExpressionCellSets.compute")
     @backoff.on_exception(
