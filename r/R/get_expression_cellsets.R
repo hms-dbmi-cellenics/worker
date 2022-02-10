@@ -20,13 +20,9 @@ getExpressionCellSets <- function(req, data) {
   new_cell_set_data <- getExpressionCellSetsIds(req$body$genesConfig, data)
   keep_ids <- unname(new_cell_set_data$keep_ids)
   cell_set_name <- new_cell_set_data$cell_set_name
-  cell_set_key = uuid::UUIDgenerate(use.time=TRUE)
-  new_cell_set <- list(key = cell_set_key, name = cell_set_name, rootNode = FALSE, color = sample(data@misc$color_pool, 1), cellIds = keep_ids)
+  new_cell_set <- list(key = uuid::UUIDgenerate(use.time = TRUE), name = cell_set_name, rootNode = FALSE, color = sample(data@misc$color_pool, 1), cellIds = keep_ids)
   cell_set_class_key <- "scratchpad"
   config <- req$body$config
-
-  message("*** New cell set")
-  message(new_cell_set)
 
   insert_set_child_through_api(new_cell_set, config$apiUrl, config$experimentId, cell_set_class_key, config$authJwt)
   return(new_cell_set)
@@ -53,7 +49,7 @@ getExpressionCellSetsIds <- function(filters, data) {
   comparisons <- list(greaterThan = `>`, lessThan = `<`)
   comparison_strings <- list(greaterThan = ">", lessThan = "<")
 
-  cell_set_name <- ""
+  cell_set_name_vector <- list()
   for (i in seq_along(filters)) {
     filter <- filters[[i]]
     enid <- enids[i]
@@ -62,21 +58,20 @@ getExpressionCellSetsIds <- function(filters, data) {
     comparison <- comparisons[[filter$comparisonType]]
     pass.filter <- comparison(expression_mat[enid, ], filter$thresholdValue)
 
-    cell_set_name <- paste0(
-      cell_set_name,
-      filters[[i]]$geneName,
-      comparison_strings[filter$comparisonType],
-      filter$thresholdValue
+    cell_set_name_vector <- append(
+      cell_set_name_vector,
+      paste0(
+        filters[[i]]$geneName,
+        comparison_strings[filter$comparisonType],
+        filter$thresholdValue
+      )
     )
-
-    if (i != length(filters)) {
-      cell_set_name <- paste0(cell_set_name, ", ")
-    }
     # keep cells that pass previous filter(s) and current
     keep.cells <- keep.cells & pass.filter
   }
 
-  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells],"cell_set_name"=cell_set_name)
+  cell_set_name <- paste0(cell_set_name_vector, collapse = ", ")
+  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], "cell_set_name" = cell_set_name)
   return(new_cell_set_data)
 }
 
