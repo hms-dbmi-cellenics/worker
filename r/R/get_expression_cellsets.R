@@ -14,8 +14,9 @@
 #' @export
 #'
 getExpressionCellSets <- function(req, data) {
-  new_cellSet_ids <- getExpressionCellSetsIds(req$body$genesConfig, data)
-
+  new_cell_set_data <- getExpressionCellSetsIds(req$body$genesConfig, data)
+  keep_ids <- new_cell_set_data$keep_ids
+  cell_set_name <- new_cell_set_data$cell_set_name
   new_cell_set <- list(key = req$body$cellSetUuid, name = cell_set_name, rootNode = FALSE, color = sample(r@misc$color_pool, 1), cellIds = keep_ids)
   cell_set_key <- "scratchpad"
   config <- req$body$config
@@ -24,7 +25,7 @@ getExpressionCellSets <- function(req, data) {
   return(new_cell_set)
 }
 
-getExpressionCellsetIDs <- function(filters, data) {
+getExpressionCellSetsIds <- function(filters, data) {
   # get entrez id for each requested gene name
   gene_names <- sapply(filters, `[[`, "geneName")
   gene_annotations <- data@misc$gene_annotations
@@ -68,8 +69,8 @@ getExpressionCellsetIDs <- function(filters, data) {
     keep.cells <- keep.cells & pass.filter
   }
 
-  keep_ids <- data$cells_id[keep.cells]
-  return(keep_ids)
+  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells],"cell_set_name"=cell_set_name)
+  return(new_cell_set_data)
 }
 
 # adds 'custom' slot to identitify background and base cells
