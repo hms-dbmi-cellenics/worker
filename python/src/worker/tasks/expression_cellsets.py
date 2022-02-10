@@ -10,6 +10,10 @@ from ..tasks import Task
 
 
 class GetExpressionCellSets(Task):
+    def __init__(self, msg):
+        super().__init__(msg)
+        self.request = msg
+
     def _format_result(self, result):
         # Return a list of formatted results.
         return Result(result)
@@ -20,6 +24,7 @@ class GetExpressionCellSets(Task):
         request["config"] = {
             "experimentId": config.EXPERIMENT_ID,
             "apiUrl": config.API_URL,
+            "authJwt": self.request["Authorization"],
         }
         return request
 

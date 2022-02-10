@@ -13,15 +13,22 @@
 #' @return vector of cell ids.
 #' @export
 #'
+
+
+
 getExpressionCellSets <- function(req, data) {
   new_cell_set_data <- getExpressionCellSetsIds(req$body$genesConfig, data)
-  keep_ids <- new_cell_set_data$keep_ids
+  keep_ids <- unname(new_cell_set_data$keep_ids)
   cell_set_name <- new_cell_set_data$cell_set_name
-  new_cell_set <- list(key = req$body$cellSetUuid, name = cell_set_name, rootNode = FALSE, color = sample(r@misc$color_pool, 1), cellIds = keep_ids)
-  cell_set_key <- "scratchpad"
+  cell_set_key = uuid::UUIDgenerate(use.time=TRUE)
+  new_cell_set <- list(key = cell_set_key, name = cell_set_name, rootNode = FALSE, color = sample(data@misc$color_pool, 1), cellIds = keep_ids)
+  cell_set_class_key <- "scratchpad"
   config <- req$body$config
 
-  insert_set_child_through_api(new_cell_set, config$apiUrl, config$experimentId, cell_set_key, config$authJwt)
+  message("*** New cell set")
+  message(new_cell_set)
+
+  insert_set_child_through_api(new_cell_set, config$apiUrl, config$experimentId, cell_set_class_key, config$authJwt)
   return(new_cell_set)
 }
 
