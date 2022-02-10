@@ -3,13 +3,20 @@ import json
 import mock
 import pytest
 import responses
+
 from worker.config import config
-from worker.tasks.differential_expression import DifferentialExpression
 from worker.helpers.mock_s3 import MockS3Class
+from worker.tasks.differential_expression import DifferentialExpression
+
 
 class TestDifferentialExpression:
     def get_request(
-        self, cellSet="cluster1", compareWith="rest", basis="all", comparisonType=None, maxNum=None
+        self,
+        cellSet="cluster1",
+        compareWith="rest",
+        basis="all",
+        comparisonType=None,
+        maxNum=None,
     ):
         request = {
             "experimentId": "e52b39624588791a7889e39c617f669e1",
@@ -72,14 +79,12 @@ class TestDifferentialExpression:
         baseCells = request["baseCells"]
         backgroundCells = request["backgroundCells"]
 
-
         # Check 1 cell of each of the cell sets is left out
         assert len(baseCells) == len(backgroundCells) == 2
 
         # Check the cells that haven't been left out are
         # those that are not in the intersection of both sets
         assert len(set(baseCells).intersection(set(backgroundCells))) == 0
-
 
     @responses.activate
     def test_cells_not_in_basis_sample_are_filtered_out(self, mock_S3_get):
@@ -99,12 +104,9 @@ class TestDifferentialExpression:
         # Check cells not in basis are taken out
         assert len(baseCells) == 1
         assert len(backgroundCells) == 2
-        
 
     @responses.activate
-    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(
-        self, mock_S3_get
-    ):
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_S3_get):
         MockS3Class.setResponse("hierarchichal_sets")
 
         request = DifferentialExpression(
@@ -117,7 +119,6 @@ class TestDifferentialExpression:
         # Check there is only one cell in each set
         assert len(baseCells) == 1
         assert len(backgroundCells) == 2
-
 
     @responses.activate
     def test_default_comparison_type_added_to_request(self, mock_S3_get):
@@ -134,7 +135,6 @@ class TestDifferentialExpression:
         comparisonType = request["comparisonType"]
         assert comparisonType == "within"
 
-
     @responses.activate
     def test_specified_comparison_type_added_to_request(self, mock_S3_get):
 
@@ -143,7 +143,7 @@ class TestDifferentialExpression:
                 cellSet="cluster1",
                 compareWith="cluster2",
                 basis="basisCluster",
-                comparisonType="between"
+                comparisonType="between",
             )
         )._format_request()
 

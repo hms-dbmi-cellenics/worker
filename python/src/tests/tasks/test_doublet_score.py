@@ -1,9 +1,5 @@
-import json
-import os
-
 import pytest
-import responses
-from worker.config import config
+
 from worker.tasks.doublet_score import GetDoubletScore
 
 
@@ -17,6 +13,7 @@ class TestGetDoubletScore:
                 "name": "getDoubletScore",
             },
         }
+
     def test_works_with_request(self):
         GetDoubletScore(self.correct_request)
 
@@ -27,4 +24,3 @@ class TestGetDoubletScore:
         # all expected keys are in the request
         expected_keys = []
         assert all(key in request for key in expected_keys)
-
