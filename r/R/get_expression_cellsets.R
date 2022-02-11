@@ -49,7 +49,7 @@ getExpressionCellSetIDs <- function(filters, data) {
   comparisons <- list(greaterThan = `>`, lessThan = `<`)
   comparison_strings <- list(greaterThan = ">", lessThan = "<")
 
-  cell_set_name_vector <- list()
+  cell_set_name_vector <- c()
   for (i in seq_along(filters)) {
     filter <- filters[[i]]
     enid <- enids[i]
@@ -58,7 +58,7 @@ getExpressionCellSetIDs <- function(filters, data) {
     comparison <- comparisons[[filter$comparisonType]]
     pass.filter <- comparison(expression_mat[enid, ], filter$thresholdValue)
 
-    cell_set_name_vector <- append(
+    cell_set_name_vector <- c(
       cell_set_name_vector,
       paste0(
         filters[[i]]$geneName,
@@ -70,8 +70,8 @@ getExpressionCellSetIDs <- function(filters, data) {
     keep.cells <- keep.cells & pass.filter
   }
 
-  cell_set_name <- paste0(cell_set_name_vector, collapse = ", ")
-  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], "cell_set_name" = cell_set_name)
+  cell_set_name <- paste(cell_set_name_vector, collapse = ", ")
+  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], cell_set_name = cell_set_name)
   return(new_cell_set_data)
 }
 
