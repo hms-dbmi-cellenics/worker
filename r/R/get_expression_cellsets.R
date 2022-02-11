@@ -71,7 +71,7 @@ getExpressionCellSetIDs <- function(filters, data) {
   }
 
   cell_set_name <- paste0(cell_set_name_vector, collapse = ", ")
-  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], "cell_set_name" = cell_set_name)
+  new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], cell_set_name = cell_set_name)
   return(new_cell_set_data)
 }
 
