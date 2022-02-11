@@ -75,16 +75,3 @@ getExpressionCellSetIDs <- function(filters, data) {
   return(new_cell_set_data)
 }
 
-# adds 'custom' slot to identitify background and base cells
-addComparisonGroup <- function(req, data) {
-  cells_id <- data$cells_id
-
-  # Remove filtered cells
-  background <- intersect(req$body$backgroundCells, cells_id)
-  base <- intersect(req$body$baseCells, cells_id)
-
-  data$custom <- NA
-  data$custom[cells_id %in% background] <- "background"
-  data$custom[cells_id %in% base] <- "base"
-  return(data)
-}
