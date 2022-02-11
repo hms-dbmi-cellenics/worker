@@ -58,7 +58,7 @@ getExpressionCellSetIDs <- function(filters, data) {
     comparison <- comparisons[[filter$comparisonType]]
     pass.filter <- comparison(expression_mat[enid, ], filter$thresholdValue)
 
-    cell_set_name_vector <- append(
+    cell_set_name_vector <- c(
       cell_set_name_vector,
       paste0(
         filters[[i]]$geneName,
