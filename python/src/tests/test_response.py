@@ -1,5 +1,3 @@
-import json
-
 import botocore.session
 import mock
 import pytest
@@ -34,12 +32,6 @@ class TestResponse:
 
     @mock.patch("boto3.client")
     def test_upload_returns_etag_as_key_when_uploading(self, mocked_client):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
         r = Result({})
         resp = Response(self.request, r)
         key = resp._upload(r)
@@ -51,19 +43,13 @@ class TestResponse:
         response_msg = resp._construct_response_msg()
 
         assert response_msg["request"] == self.request
-        assert response_msg["response"]["cacheable"] == True
-        assert response_msg["response"]["error"] == False
+        assert response_msg["response"]["cacheable"] is True
+        assert response_msg["response"]["error"] is False
 
-    # These tests only work locally with inframock running. Keeping in case
-    # we want to mock to be able to run these tests.
+    # # These tests only work locally with inframock running. Keeping in case
+    # # we want to mock to be able to run these tests.
     @mock.patch("boto3.client")
     def test_publishing_long_responses_get_pushed_to_s3(self, mocked_client, mocker):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
         result = Result(
             "a" * 512 * 1024,
             content_encoding="base64",
@@ -82,12 +68,6 @@ class TestResponse:
     def test_publishing_one_long_response_results_in_both_being_pushed_to_s3(
         self, mocked_client, mocker
     ):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
         result = Result(
             "a" * 512 * 1024,
             content_encoding="base64",
@@ -104,12 +84,6 @@ class TestResponse:
 
     @mock.patch("boto3.client")
     def test_old_requests_do_get_sent(self, mocked_client, mocker):
-        stubbed_client = botocore.session.get_session().create_client(
-            "s3", **config.BOTO_RESOURCE_KWARGS
-        )
-        stubber = Stubber(stubbed_client)
-        stubber.activate()
-
         request = self.request
         request["timeout"] = "2000-01-01 00:00:00"
 

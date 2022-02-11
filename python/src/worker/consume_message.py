@@ -82,11 +82,15 @@ def _response_exists(mssg_body):
     client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
     ETag = mssg_body["ETag"]
 
+    print("&&&&&&&&&&& ", client)
     response = client.list_objects_v2(
         Bucket=config.RESULTS_BUCKET,
         Prefix=ETag,
     )
+
+    print("^^^^^^^^^^^^ ", response)
     for obj in response.get("Contents", []):
+        print("++++++ ", obj)
         if obj["Key"] == ETag:
             return obj["Size"]
 
@@ -113,8 +117,9 @@ def consume():
             f"Skipping processing task with ETag {mssg_body['ETag']} "
             f"as a response with this hash is already in S3."
         )
-
+        print("IT exists")
         return None
 
+    print("IT doesn't exist")
     info(json.dumps(mssg_body, indent=2, sort_keys=True))
     return mssg_body
