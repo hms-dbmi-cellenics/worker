@@ -17,7 +17,7 @@
 
 
 getExpressionCellSets <- function(req, data) {
-  new_cell_set_data <- getExpressionCellSetsIds(req$body$genesConfig, data)
+  new_cell_set_data <- getExpressionCellSetIDs(req$body$genesConfig, data)
   keep_ids <- unname(new_cell_set_data$keep_ids)
   cell_set_name <- new_cell_set_data$cell_set_name
   new_cell_set <- list(key = uuid::UUIDgenerate(use.time = TRUE), name = cell_set_name, rootNode = FALSE, color = sample(data@misc$color_pool, 1), cellIds = keep_ids)
@@ -28,7 +28,7 @@ getExpressionCellSets <- function(req, data) {
   return(new_cell_set)
 }
 
-getExpressionCellSetsIds <- function(filters, data) {
+getExpressionCellSetIDs <- function(filters, data) {
   # get entrez id for each requested gene name
   gene_names <- sapply(filters, `[[`, "geneName")
   gene_annotations <- data@misc$gene_annotations
