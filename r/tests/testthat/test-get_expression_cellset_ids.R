@@ -20,7 +20,7 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
-test_that("getExpressionCellSetIDs with a single expression filter returns corect cell ids", {
+test_that("getExpressionCellSetIDs with a single expression filter returns correct cell ids", {
   data <- mock_scdata()
   req <- list(list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5))
   res <- getExpressionCellSetIDs(req, data)
@@ -31,7 +31,7 @@ test_that("getExpressionCellSetIDs with a single expression filter returns corec
   expect_equal(res$keep_ids, expected)
 })
 
-test_that("getExpressionCellSetIDs with two expression filters returns corect cell ids", {
+test_that("getExpressionCellSetIDs with two expression filters returns correct cell ids", {
   data <- mock_scdata()
   req <- list(
     list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5),
