@@ -17,6 +17,7 @@ mock_scdata <- function() {
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- gene_annotations
+  pbmc_small@misc$color_pool <- list("#e377c2","#8c564b","#d62728","#2ca02c","#ff7f0e")
   return(pbmc_small)
 }
 
@@ -100,3 +101,10 @@ test_that("CellSet naming is correct", {
 
   expect_equal(res$cell_set_name, "CD79B>0, MS4A1<0.5")
 })
+
+test_that("We are patching API", {
+  data <- mock_scdata()
+  req <- list(body=list(genesConfig=list(list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5)),config=list(apiUrl="http://host.docker.internal:3000",experimentId="12345",authJwt="1234")))
+  expect_error(getExpressionCellSets(req, data),"Could not resolve host: host.docker.internal")
+})
+
