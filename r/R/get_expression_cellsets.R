@@ -49,7 +49,7 @@ getExpressionCellSetIDs <- function(filters, data) {
   comparisons <- list(greaterThan = `>`, lessThan = `<`)
   comparison_strings <- list(greaterThan = ">", lessThan = "<")
 
-  cell_set_name_vector <- list()
+  cell_set_name_vector <- c()
   for (i in seq_along(filters)) {
     filter <- filters[[i]]
     enid <- enids[i]
