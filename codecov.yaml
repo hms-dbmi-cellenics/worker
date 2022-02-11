@@ -17,8 +17,6 @@ coverage:
       default:
         enabled: no
 
-fixes:
-  - "::python/src/"
 
 ignore:
-  - "python/src/r/R/development_helpers.R"
+  - "r/R/development_helpers.R"
