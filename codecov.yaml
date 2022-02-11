@@ -21,4 +21,4 @@ fixes:
   - "::python/src/"
 
 ignore:
-  - "/r/R/development_helpers.R"
+  - "python/src/r/R/development_helpers.R"
