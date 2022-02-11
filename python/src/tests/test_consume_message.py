@@ -1,6 +1,7 @@
 import boto3
 import mock
 from botocore.stub import ANY, Stubber
+
 from worker.config import config
 from worker.consume_message import _read_sqs_message, consume
 

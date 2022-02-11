@@ -1,10 +1,7 @@
-import json
-import os
-
 import mock
-import numpy as np
 import pytest
 import responses
+
 from worker.helpers.mock_s3 import MockS3Class
 from worker.tasks.marker_heatmap import MarkerHeatmap
 
@@ -23,49 +20,6 @@ class TestMarkerHeatmap:
                 "config": {"resolution": 0.5},
             },
         }
-        # Correct response with flexible ngenes
-        self.correct_response_genes = [
-            "Il7r",
-            "S100a10",
-            "Crip1",
-            "Atp2b1",
-            "Il18r1",
-            "Cd163l1",
-            "Trdv4",
-            "Tmem176b",
-            "Ltb4r1",
-            "Tmem176a",
-            "Ccr7",
-            "Slamf6",
-            "Smc4",
-            "Gm8369",
-            "S100a6",
-            "Ccl5",
-            "Xcl1",
-            "Ly6c2",
-            "Klrd1",
-            "Nkg7",
-            "Gzma",
-            "Ncr1",
-            "Klra7",
-            "Klra9",
-            "Klre1",
-            "Cd300c2",
-            "Spi1",
-            "Alox5ap",
-            "Cd300a",
-            "Clec4a3",
-            "Cd79a",
-            "Iglc2",
-            "Ebf1",
-            "Iglc3",
-            "Ly6d",
-            "Emp2",
-            "Tspan7",
-            "Tmem100",
-            "Cyyr1",
-            "Clic5",
-        ]
 
     @pytest.fixture
     def mock_S3_get(self):

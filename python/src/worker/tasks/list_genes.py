@@ -37,7 +37,6 @@ class ListGenes(Task):
 
         return request
 
-
     @xray_recorder.capture("ListGenes.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
