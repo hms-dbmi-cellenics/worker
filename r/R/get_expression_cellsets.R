@@ -21,7 +21,13 @@ getExpressionCellSets <- function(req, data) {
   cell_set_class_key <- "scratchpad"
   config <- req$body$config
 
-  insert_set_child_through_api(new_cell_set, config$apiUrl, config$experimentId, cell_set_class_key, config$authJwt)
+insertSetChildThroughApi(
+  new_cell_set,
+  config$apiUrl,
+  config$experimentId,
+  cell_set_class_key,
+  config$authJwt
+)
   return(new_cell_set)
 }
 
