@@ -13,7 +13,7 @@
 #' @return vector of cell ids.
 #' @export
 #'
-getExpressionCellSets <- function(req, data) {
+getExpressionCellSet <- function(req, data) {
   new_cell_set_data <- getExpressionCellSetIDs(req$body$genesConfig, data)
   keep_ids <- unname(new_cell_set_data$keep_ids)
   cell_set_name <- new_cell_set_data$cell_set_name
@@ -21,13 +21,13 @@ getExpressionCellSets <- function(req, data) {
   cell_set_class_key <- "scratchpad"
   config <- req$body$config
 
-insertSetChildThroughApi(
-  new_cell_set,
-  config$apiUrl,
-  config$experimentId,
-  cell_set_class_key,
-  config$authJwt
-)
+  insertSetChildThroughApi(
+    new_cell_set,
+    config$apiUrl,
+    config$experimentId,
+    cell_set_class_key,
+    config$authJwt
+  )
   return(new_cell_set)
 }
 
@@ -35,14 +35,14 @@ getExpressionCellSetIDs <- function(filters, data) {
   # get entrez id for each requested gene name
   gene_names <- sapply(filters, `[[`, "geneName")
   gene_annotations <- data@misc$gene_annotations
-  name.match <- match(gene_names, gene_annotations$name)
+  name_match <- match(gene_names, gene_annotations$name)
 
   # fail if any requested gene names are missing (can't return requested cellset)
-  if (anyNA(name.match)) {
+  if (anyNA(name_match)) {
     stop("Requested ExpressionCellset with gene name(s) that are not present.")
   }
 
-  enids <- gene_annotations$input[name.match]
+  enids <- gene_annotations$input[name_match]
 
   # get expression matrix
   expression_mat <- data[["RNA"]]@data

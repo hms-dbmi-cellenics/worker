@@ -36,7 +36,7 @@ class GetExpressionCellSets(Task):
         request = self._construct_request()
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/getExpressionCellSets",
+            f"{config.R_WORKER_URL}/v0/getExpressionCellSet",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
