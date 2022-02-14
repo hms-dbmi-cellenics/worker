@@ -104,7 +104,26 @@ test_that("CellSet naming is correct", {
 
 test_that("We attempt to patch the API.", {
   data <- mock_scdata()
-  req <- list(body=list(genesConfig=list(list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5)),config=list(apiUrl="http://host.docker.internal:3000",experimentId="12345",authJwt="1234")))
-  expect_error(getExpressionCellSets(req, data),"Could not resolve host: host.docker.internal")
+  req <- list(
+    body = list(
+      genesConfig = list(
+        list(
+          geneName = "MS4A1",
+          comparisonType = "greaterThan",
+          thresholdValue = 0.5
+        )
+      ),
+      config = list(
+        apiUrl = "http://host.docker.internal:3000",
+        experimentId = "12345",
+        authJwt = "1234"
+      )
+    )
+  )
+  
+  expect_error(
+    getExpressionCellSets(req, data),
+    "Could not resolve host: host.docker.internal"
+  )
 })
 
