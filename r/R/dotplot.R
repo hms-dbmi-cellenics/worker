@@ -64,7 +64,7 @@ runDotPlot <- function(req, data) {
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
   } else {
-    req_ge nes <- req$body$customGenesList
+    req_genes <- req$body$customGenesList
     annot <- data@misc$gene_annotations
     annot_subset <- subset(annot, toupper(name) %in% toupper(req_genes))
     features <- annot_subset[, c("input", "name")]
