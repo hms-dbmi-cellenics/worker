@@ -13,9 +13,6 @@
 #' @return vector of cell ids.
 #' @export
 #'
-
-
-
 getExpressionCellSets <- function(req, data) {
   new_cell_set_data <- getExpressionCellSetIDs(req$body$genesConfig, data)
   keep_ids <- unname(new_cell_set_data$keep_ids)
