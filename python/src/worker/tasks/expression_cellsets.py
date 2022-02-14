@@ -28,7 +28,7 @@ class GetExpressionCellSets(Task):
         }
         return request
 
-    @xray_recorder.capture("getExpressionCellSets.compute")
+    @xray_recorder.capture("getExpressionCellSet.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
