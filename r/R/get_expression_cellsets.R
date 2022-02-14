@@ -1,4 +1,4 @@
-#' Get expression genes for pathway analysis
+#' Get IDs for a new cell set that matches expression filters.
 #'
 #' @param req request parameters
 #'   e.g. list(
