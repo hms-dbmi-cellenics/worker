@@ -134,7 +134,7 @@ handlePagination <- function(gene_results, offset, limit, order_by, order_decrea
   return(list(gene_results = gene_results, full_count = full_count))
 }
 
-insert_set_child_through_api <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT) {
+insertSetChildThroughApi <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT) {
   httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
   children <- list(list("$insert" = list(index = "-", value = new_cell_set)))
 
