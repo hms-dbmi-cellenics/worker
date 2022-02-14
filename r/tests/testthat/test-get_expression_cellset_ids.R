@@ -120,9 +120,9 @@ test_that("We attempt to patch the API.", {
       )
     )
   )
-  
+
   expect_error(
-    getExpressionCellSets(req, data),
+    getExpressionCellSet(req, data),
     "Could not resolve host: host.docker.internal"
   )
 })
