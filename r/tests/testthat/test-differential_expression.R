@@ -26,13 +26,21 @@ mock_req_genes_only <- function() {
 }
 
 mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
+  pbmc_raw <- read.table(
+    file = system.file('extdata', 'pbmc_raw.txt', package = 'Seurat'),
+    as.is = TRUE
   )
+  enids <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
+  gene_annotations <- data.frame(
+    input = enids,
+    name = row.names(pbmc_raw),
+    row.names = enids)
+
+  row.names(pbmc_raw) <- enids
+  pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
+
+  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
+  pbmc_small@misc$gene_annotations <- gene_annotations
   return(pbmc_small)
 }
 

@@ -49,6 +49,10 @@ runPseudobulkDE <- function(pbulk) {
     # differential expression if 3+ samples
     eb_fit <- limma::eBayes(fit, robust = TRUE)
     res <- limma::topTable(eb_fit, coef = contrast, sort.by = "p", n = Inf)
+
+    # rename columns to match up with wilcoxauc
+    res <- res[, c('P.Value', 'logFC', 'AveExpr', 'adj.P.Val')]
+    colnames(res) <- c('p_val', 'logFC', 'AveExpr', 'p_val_adj')
   }
 
   # add filtered genes so that searchable
