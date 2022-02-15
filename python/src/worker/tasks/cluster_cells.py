@@ -69,8 +69,8 @@ class ClusterCells(Task):
 
         info(r.status_code)
 
-    def _format_result(self, cell_set_object):
-        return Result(cell_set_object, error=self.error, cacheable=False)
+    def _format_result(self, result):
+        return Result(result, error=self.error, cacheable=False)
 
     def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
