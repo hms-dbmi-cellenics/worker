@@ -35,7 +35,11 @@ class Response:
     def _construct_response_msg(self):
         message = {
             "request": self.request,
-            "response": {"cacheable": self.cacheable, "error": self.error},
+            "response": {
+                "cacheable": self.cacheable,
+                "error": self.error,
+                "data": self.result.data,
+            },
             "type": "WorkResponse",
         }
 

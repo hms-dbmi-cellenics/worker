@@ -28,7 +28,14 @@ getExpressionCellSet <- function(req, data) {
     cell_set_class_key,
     config$authJwt
   )
-  return(new_cell_set)
+
+  return(
+      list(
+        key = new_cell_set$key,
+        name = new_cell_set$name,
+        numCells = length(new_cell_set$cellIds)
+     )
+  )
 }
 
 getExpressionCellSetIDs <- function(filters, data) {
