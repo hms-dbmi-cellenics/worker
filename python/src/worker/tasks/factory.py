@@ -3,23 +3,22 @@ import traceback
 from logging import error
 
 from aws_xray_sdk.core import xray_recorder
-from worker.tasks.marker_heatmap import MarkerHeatmap
 
 from ..config import config
 from ..helpers.count_matrix import CountMatrix
 from ..result import Result
 from ..tasks import Task
+from .background_expressed_genes import GetBackgroundExpressedGenes
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
 from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
+from .expression_cellsets import GetExpressionCellSets
 from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
-from .expression_cellsets import GetExpressionCellSets
-from .background_expressed_genes import GetBackgroundExpressedGenes
 
 
 class TaskFactory:
@@ -36,7 +35,7 @@ class TaskFactory:
             GetDoubletScore,
             GetMitochondrialContent,
             MarkerHeatmap,
-            GetExpressionCellSets
+            GetExpressionCellSets,
         )
     }
 
@@ -52,8 +51,10 @@ class TaskFactory:
             result = task.compute()
             return result
         except Exception as e:
-            trace = f"Exception for task {task.__class__.__name__}:\n" \
-                    f"{traceback.format_exc()}"
+            trace = (
+                f"Exception for task {task.__class__.__name__}:\n"
+                f"{traceback.format_exc()}"
+            )
 
             error(trace)
             xray_recorder.current_segment().add_exception(e, trace)
@@ -78,6 +79,4 @@ class TaskFactory:
         try:
             return self.tasks[task_name](msg)
         except KeyError as e:
-            raise ValueError(
-                f"Task class with name {task_name} was not found"
-            ) from e
+            raise ValueError(f"Task class with name {task_name} was not found") from e
