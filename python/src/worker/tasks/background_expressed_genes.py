@@ -50,15 +50,18 @@ class GetBackgroundExpressedGenes(Task):
         request = self._format_request()
 
         # send request to r worker
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getBackgroundExpressedGenes",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json()
+        # raise an exception if an HTTPError if one occurred because otherwise response.json()
         #  will fail
-        r.raise_for_status()
-        r = r.json()
+        response.raise_for_status()
+        result = response.json()
+        self.set_error(result)
+        if self.error:
+            return self._format_result(None)
 
-        return self._format_result(r)
+        return self._format_result(result)

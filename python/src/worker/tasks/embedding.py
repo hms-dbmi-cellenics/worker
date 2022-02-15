@@ -27,15 +27,19 @@ class GetEmbedding(Task):
     )
     def compute(self):
         request = self._format_request()
-        
-        r = requests.post(
+
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getEmbedding",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
-        r.raise_for_status()
+        # raise an exception if an HTTPError if one occurred because otherwise response.json() will fail
+        response.raise_for_status()
         # The index order relies on cells_id in an ascending form. The order is made in the R part.
-        result = r.json()
+        result = response.json()
+        self.set_error(result)
+        if self.error:
+            return self._format_result(None)
+
         return self._format_result(result)

@@ -35,14 +35,18 @@ class GetExpressionCellSets(Task):
     def compute(self):
         request = self._construct_request()
 
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getExpressionCellSet",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
         # raise an exception if an HTTPError if one occurred because otherwise
-        #  r.json() will fail
-        r.raise_for_status()
-        result = r.json()
+        #  response.json() will fail
+        response.raise_for_status()
+        result = response.json()
+        self.set_error(result)
+        if self.error:
+            return self._format_result(None)
+
         return self._format_result(result)

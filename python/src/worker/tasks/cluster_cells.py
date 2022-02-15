@@ -70,7 +70,7 @@ class ClusterCells(Task):
         info(r.status_code)
 
     def _format_result(self, cell_set_object):
-        return Result(cell_set_object, cacheable=False)
+        return Result(cell_set_object, error=self.error, cacheable=False)
 
     def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
@@ -90,25 +90,28 @@ class ClusterCells(Task):
 
         request = self._format_request()
 
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getClusters",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
-        r.raise_for_status()
-        resR = r.json()
+        # raise an exception if an HTTPError if one occurred because otherwise response.json() will fail
+        response.raise_for_status()
+        result = response.json()
+        self.set_error(result)
+        if self.error:
+            return self._format_result(None)
 
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
         # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,
         # at most O(n of cells), which is well within our time complexity because the taxing part will be clustering.
-        resR = pd.DataFrame(resR)
-        resR.set_index("_row", inplace=True)
-        resR["cluster"] = pd.Categorical(resR.cluster)
+        df = pd.DataFrame(result)
+        df.set_index("_row", inplace=True)
+        df["cluster"] = pd.Categorical(df.cluster)
 
         # Convert it into a JSON format and patch the API directly
-        cell_set_object = self._convert_to_cell_set_object(resR)
+        cell_set_object = self._convert_to_cell_set_object(df)
         self._update_through_api(cell_set_object)
 
         return self._format_result(cell_set_object)

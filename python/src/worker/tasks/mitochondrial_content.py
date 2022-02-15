@@ -24,15 +24,19 @@ class GetMitochondrialContent(Task):
     def compute(self):
         # Retrieve the MitochondrialContent of all the cells
         request = self._format_request()
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getMitochondrialContent",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
-        r.raise_for_status()
+        # raise an exception if an HTTPError if one occurred because otherwise response.json() will fail
+        response.raise_for_status()
         # The values are ordered by cells id
         # The result contains a list with the MT-content values
-        result = r.json()
+        result = response.json()
+        self.set_error(result)
+        if self.error:
+            return self._format_result(None)
+
         return self._format_result(result)

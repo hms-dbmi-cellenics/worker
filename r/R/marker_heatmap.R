@@ -14,5 +14,10 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getTopMarkerGenes(nFeatures, data, cellSets)
   top_markers <- getMarkerNames(data, top_markers)
 
+  res <- getExpressionValues(top_markers, data)
+  if (length(res$rawExpression) == 0) {
+    stop(paste("Couldn't get marker genes"))
+  }
+
   return(getExpressionValues(top_markers, data))
 }
