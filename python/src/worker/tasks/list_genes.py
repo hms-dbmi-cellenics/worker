@@ -12,12 +12,10 @@ from ..tasks import Task
 
 
 class ListGenes(Task):
-    def _format_result(self, result, total):
-        # convert result to list of row dicts
-        result = result.to_dict(orient="records")
+    def _format_result(self, result):
 
         # Return a list of formatted results.
-        return Result({"total": total, "rows": result})
+        return Result(result, error=self.error)
 
     def _construct_request(self):
         request = self.task_def
@@ -59,5 +57,9 @@ class ListGenes(Task):
             return self._format_result(None)
 
         total = result["full_count"]
+        
+        # convert result to list of row dicts
         df = pd.DataFrame.from_dict(result["gene_results"])
-        return self._format_result(df, total=total)
+        rows = df.to_dict(orient="records")
+
+        return self._format_result({"total": total, "rows": rows})

@@ -20,7 +20,7 @@ class GetBackgroundExpressedGenes(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result({"genes": result["genes"]})
+        return Result(result, error=self.error)
 
     def _format_request(self):
         # get cell sets from database
@@ -64,4 +64,4 @@ class GetBackgroundExpressedGenes(Task):
         if self.error:
             return self._format_result(None)
 
-        return self._format_result(result)
+        return self._format_result({"genes": result["genes"]})

@@ -16,7 +16,7 @@ class GetExpressionCellSets(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result)
+        return Result(result, error=self.error)
 
     def _construct_request(self):
         request = self.task_def

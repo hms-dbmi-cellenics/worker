@@ -12,7 +12,7 @@ from ..tasks import Task
 class GetMitochondrialContent(Task):
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result)
+        return Result(result, error=self.error)
 
     @xray_recorder.capture("GetMitochondrialContent.compute")
     @backoff.on_exception(

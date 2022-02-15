@@ -17,7 +17,7 @@ class DotPlot(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result)
+        return Result(result, error=self.error)
 
     def _format_request(self):
 
