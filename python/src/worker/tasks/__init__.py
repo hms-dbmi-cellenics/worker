@@ -16,4 +16,4 @@ class Task(ABC):
         ...
 
     def set_error(self, response):
-        self.error =  response.get('error', False)
+        self.error = response.get("error", False)
