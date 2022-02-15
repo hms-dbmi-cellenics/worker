@@ -90,6 +90,18 @@ test_that("getExpressionCellSetIDs fails if requested geneNames are not present 
   expect_error(getExpressionCellSetIDs(req, data), "gene name\\(s\\) that are not present[.]")
 })
 
+test_that("getExpressionCellSet fails if filters remove all cells", {
+  data <- mock_scdata()
+  genes_config <- list(
+    list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5),
+    list(geneName = "MS4A1", comparisonType = "lessThan", thresholdValue = 0.5)
+  )
+
+  req <- list(body = list(genesConfig = genes_config))
+  expect_error(getExpressionCellSet(req, data), 'No cells match requested filters.')
+})
+
+
 test_that("CellSet naming is correct", {
   data <- mock_scdata()
   req <- list(
