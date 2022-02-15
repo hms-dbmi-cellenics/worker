@@ -33,13 +33,7 @@ getExpressionCellSet <- function(req, data) {
     config$authJwt
   )
 
-  return(
-      list(
-        key = new_cell_set$key,
-        name = new_cell_set$name,
-        numCells = length(new_cell_set$cellIds)
-     )
-  )
+  return(new_cell_set)
 }
 
 getExpressionCellSetIDs <- function(filters, data) {
