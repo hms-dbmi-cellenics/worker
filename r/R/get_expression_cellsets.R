@@ -44,7 +44,7 @@ getExpressionCellSetIDs <- function(filters, data) {
 
   # fail if any requested gene names are missing (can't return requested cellset)
   if (anyNA(name_match)) {
-    stop("Requested ExpressionCellset with gene name(s) that are not present.")
+    stop("Requested ExpressionCellSet with gene name(s) that are not present.")
   }
 
   enids <- gene_annotations$input[name_match]
