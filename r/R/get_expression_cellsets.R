@@ -22,7 +22,7 @@ getExpressionCellSet <- function(req, data) {
   config <- req$body$config
 
   if(length(new_cell_set$cellIds) == 0) {
-    return(list(numCells = 0))
+    stop('No cells match requested filters.')
   }
 
   insertSetChildThroughApi(
