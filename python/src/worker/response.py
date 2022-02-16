@@ -1,8 +1,6 @@
+import gzip
 import io
 import json
-import gzip
-import uuid
-from functools import reduce
 from logging import info
 
 import aws_xray_sdk as xray
@@ -26,11 +24,11 @@ class Response:
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
         gzipped_body = io.BytesIO()
-        with gzip.open(gzipped_body, 'wt', encoding="utf-8") as zipfile:
+        with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
             json.dump(self.result.data, zipfile)
 
         gzipped_body.seek(0)
-        
+
         info("Compression finished")
         return gzipped_body
 
@@ -38,8 +36,9 @@ class Response:
         message = {
             "request": self.request,
             "response": {"cacheable": self.cacheable, "error": self.error},
+            "type": "WorkResponse",
         }
-        
+
         return message
 
     @xray_recorder.capture("Response._upload")
@@ -60,27 +59,14 @@ class Response:
             Key=ETag,
             Bucket=self.s3_bucket,
             Tagging={
-                'TagSet': [
-                    {
-                        'Key': 'experimentId',
-                        'Value': self.request['experimentId']
-                    },
-                    {
-                        'Key': 'requestType',
-                        'Value': self.request['body']['name']
-                    },
-
-                    # TODO: this needs to be removed and a proper
-                    # ACL system implemented at some point.
-                    {
-                        'Key': 'public',
-                        'Value': 'true',
-                    },
+                "TagSet": [
+                    {"Key": "experimentId", "Value": self.request["experimentId"]},
+                    {"Key": "requestType", "Value": self.request["body"]["name"]},
                 ]
-            }
+            },
         )
 
-        info(f"Repsonse was uploaded in bucket {self.s3_bucket} at key {ETag}.")
+        info(f"Response was uploaded in bucket {self.s3_bucket} at key {ETag}.")
 
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(True)
@@ -90,20 +76,18 @@ class Response:
     def _send_notification(self):
         io = Emitter({"client": config.REDIS_CLIENT})
 
-        if self.request["socketId"] == "broadcast":
-            print(f'{self.request["experimentId"]}-{self.request["body"]["name"]}');
-
+        if self.request.get("broadcast"):
             io.Emit(
-                f'{self.request["experimentId"]}-{self.request["body"]["name"]}',
-                self._construct_response_msg()
-            )
-        else:
-            io.Emit(
-                f'WorkResponse-{self.request["ETag"]}',
-                self._construct_response_msg()
+                f'ExperimentUpdates-{self.request["experimentId"]}',
+                self._construct_response_msg(),
             )
 
-    
+            info(
+                f"Broadcast results to users viewing experiment {self.request['experimentId']}."
+            )
+
+        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
+
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
     @xray_recorder.capture("Response.publish")

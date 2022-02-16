@@ -15,7 +15,7 @@ class GeneExpression(Task):
         # Return a list of formatted results.
         return Result(result)
 
-    def _construct_request(self):
+    def _format_request(self):
         request = self.task_def
         return request
 
@@ -24,8 +24,8 @@ class GeneExpression(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = self._construct_request()
-        
+        request = self._format_request()
+
         r = requests.post(
             f"{config.R_WORKER_URL}/v0/runExpression",
             headers={"content-type": "application/json"},
@@ -37,6 +37,7 @@ class GeneExpression(Task):
         truncatedR = resultR["truncatedExpression"]
         resultR = resultR["rawExpression"]
         result = {}
+
         if not len(resultR):
             result[genes[0]] = {
                 "error": 404,
@@ -67,8 +68,8 @@ class GeneExpression(Task):
                 minimum = float(np.nanmin(viewnpTr))
                 maximum = float(np.nanmax(viewnpTr))
                 result[gene]["truncatedExpression"] = {
-                                    "min": minimum,
-                                    "max": maximum,
-                                    "expression": viewTr,
-                                }              
+                    "min": minimum,
+                    "max": maximum,
+                    "expression": viewTr,
+                }
         return self._format_result(result)

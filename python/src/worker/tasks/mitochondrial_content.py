@@ -18,7 +18,6 @@ class GetMitochondrialContent(Task):
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
-
     def _format_request(self):
         return {}
 

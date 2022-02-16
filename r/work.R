@@ -119,6 +119,91 @@ create_app <- function(last_modified, data, fpath) {
   app <- RestRserve::Application$new(
     content_type = "application/json"
   )
+    app$add_get(
+        path = "/health",
+        FUN = function(request, response) {
+            response$set_body("up")
+        }
+    )
+    app$add_post(
+        path = "/v0/DifferentialExpression",
+        FUN = function(req, res) {
+            result <- run_post(req, runDE, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getEmbedding",
+        FUN = function(req, res) {
+            result <- run_post(req, runEmbedding, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getDoubletScore",
+        FUN = function(req, res) {
+            result <- run_post(req, getDoubletScore, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getMitochondrialContent",
+        FUN = function(req, res) {
+            result <- run_post(req, getMitochondrialContent, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/runExpression",
+        FUN = function(req, res) {
+            result <- run_post(req, runExpression, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/listGenes",
+        FUN = function(req, res) {
+            result <- run_post(req, getList, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getClusters",
+        FUN = function(req, res) {
+            result <- run_post(req, runClusters, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/runMarkerHeatmap",
+        FUN = function(req, res) {
+            result <- run_post(req, runMarkerHeatmap, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getBackgroundExpressedGenes",
+        FUN = function(req, res) {
+            result <- run_post(req, getBackgroundExpressedGenes, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/getExpressionCellSet",
+        FUN = function(req, res) {
+            result <- run_post(req, getExpressionCellSet, data)
+            res$set_body(result)
+        }
+    )
+    app$add_post(
+        path = "/v0/runDotPlot",
+        FUN = function(req, res) {
+            result <- run_post(req, runDotPlot, data)
+            res$set_body(result)
+        }
+    )
+    return(app)
+}
 
   app$append_middleware(last_modified_mw)
 
