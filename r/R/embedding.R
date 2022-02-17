@@ -60,7 +60,8 @@ runEmbedding <- function(req, data) {
                         verbose = FALSE,
                         min.dist = config$minimumDistance,
                         metric = config$distanceMetric,
-                        umap.method = "uwot-learn")
+                        umap.method = "uwot",
+                        return.model = TRUE)
 
         df_embedding <- Embeddings(data, reduction = type)
     }
