@@ -65,7 +65,7 @@ class TaskFactory:
             else:
                 result = [
                     Result(
-                        "An unexpected error occurred while performing the work.",
+                        e,
                         error=True,
                     )
                 ]

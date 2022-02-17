@@ -23,7 +23,7 @@ class DifferentialExpression(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result, error=self.error)
+        return Result(result)
 
     def _format_request(self):
         # get cell sets from database
@@ -75,9 +75,10 @@ class DifferentialExpression(Task):
         #  will fail
         response.raise_for_status()
         result = response.json()
-        self.set_error(result)
-        if self.error:
-            return self._format_result(None)
+
+        error = result.get("error", False)
+        if error:
+            raise Exception(error)
 
         work_result = {"total": result["full_count"], "rows": result["gene_results"]}
         return self._format_result(work_result)

@@ -15,7 +15,7 @@ class ListGenes(Task):
     def _format_result(self, result):
 
         # Return a list of formatted results.
-        return Result(result, error=self.error)
+        return Result(result)
 
     def _construct_request(self):
         request = self.task_def
@@ -52,12 +52,13 @@ class ListGenes(Task):
         #  response.json() will fail
         response.raise_for_status()
         result = response.json()
-        self.set_error(result)
-        if self.error:
-            return self._format_result(None)
+
+        error = result.get("error", False)
+        if error:
+            raise Exception(error)
 
         total = result["full_count"]
-        
+
         # convert result to list of row dicts
         df = pd.DataFrame.from_dict(result["gene_results"])
         rows = df.to_dict(orient="records")

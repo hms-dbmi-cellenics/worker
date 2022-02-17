@@ -12,7 +12,7 @@ from ..tasks import Task
 class GetEmbedding(Task):
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result, error=self.error)
+        return Result(result)
 
     def _format_request(self):
         request = {
@@ -38,8 +38,9 @@ class GetEmbedding(Task):
         response.raise_for_status()
         # The index order relies on cells_id in an ascending form. The order is made in the R part.
         result = response.json()
-        self.set_error(result)
-        if self.error:
-            return self._format_result(None)
+
+        error = result.get("error", False)
+        if error:
+            raise Exception(error)
 
         return self._format_result(result)

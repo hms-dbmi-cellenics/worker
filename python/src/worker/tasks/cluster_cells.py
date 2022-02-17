@@ -70,7 +70,7 @@ class ClusterCells(Task):
         info(r.status_code)
 
     def _format_result(self, result):
-        return Result(result, error=self.error, cacheable=False)
+        return Result(result, cacheable=False)
 
     def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
@@ -99,9 +99,10 @@ class ClusterCells(Task):
         # raise an exception if an HTTPError if one occurred because otherwise response.json() will fail
         response.raise_for_status()
         result = response.json()
-        self.set_error(result)
-        if self.error:
-            return self._format_result(None)
+
+        error = result.get("error", False)
+        if error:
+            raise Exception(error)
 
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
         # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,

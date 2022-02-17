@@ -35,8 +35,9 @@ class GetMitochondrialContent(Task):
         # The values are ordered by cells id
         # The result contains a list with the MT-content values
         result = response.json()
-        self.set_error(result)
-        if self.error:
-            return self._format_result(None)
+
+        error = result.get("error", False)
+        if error:
+            raise Exception(error)
 
         return self._format_result(result)

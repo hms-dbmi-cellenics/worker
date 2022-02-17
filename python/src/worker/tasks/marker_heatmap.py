@@ -49,14 +49,15 @@ class MarkerHeatmap(Task):
         )
         # raise an exception if an HTTPError if one occurred because otherwise response.json() will fail
         response.raise_for_status()
-        result = response.json()
-        self.set_error(result)
-        if self.error:
-            return self._format_result(None)
+        json_response = response.json()
 
-        truncatedExpression = result["truncatedExpression"]
-        rawExpression = result["rawExpression"]
-        work_result = {}
+        error = json_response.get("error", False)
+        if error:
+            raise Exception(error)
+
+        truncatedExpression = json_response["truncatedExpression"]
+        rawExpression = json_response["rawExpression"]
+        result = {}
         data = {}
         order = []
 
@@ -88,6 +89,6 @@ class MarkerHeatmap(Task):
             }
             order.append(gene)
 
-        work_result["data"] = data
-        work_result["order"] = order
-        return self._format_result(work_result)
+        result["data"] = data
+        result["order"] = order
+        return self._format_result(result)
