@@ -23,7 +23,7 @@ getExpressionCellSet <- function(req, data) {
 
   if(length(new_cell_set$cellIds) == 0) {
     stop(
-        generateErrorMessage(
+        generate_error_message(
             "R_WORKER_EMPTY_CELL_SET",
             'No cells match requested filters.'
         )

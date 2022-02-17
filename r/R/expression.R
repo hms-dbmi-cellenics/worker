@@ -17,7 +17,7 @@ runExpression <- function(req, data) {
     if (!nrow(genesSubset)) {
 
         stop(
-            generateErrorMessage(
+            generate_error_message(
                 "R_WORKER_GENE_NOT_FOUND",
                 paste("Gene(s):", paste(req$body$genes, collapse=', '), "not found!")
             )
