@@ -77,7 +77,7 @@ run_post <- function(req, post_fun, data) {
 handle_debug <- function(req, debug_step) {
   task_name <- basename(req$path)
   is_debug <- debug_step == task_name | debug_step == "all"
-
+  
   if (is_debug) {
     message(sprintf("⚠ DEBUG_STEP = %s. Saving `req` object.", task_name))
     req_fname <- sprintf("%s_%s_req.rds", experiment_id, task_name)
