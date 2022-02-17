@@ -79,8 +79,9 @@ class DifferentialExpression(Task):
 
         error = result.get("error", False)
         if error:
-            user_msg = result.get("user_msg", "")
-            raise RWorkerException(user_msg=user_msg, error=error)
+            err_message = error.get("message", "")
+            err_code = error.get("code", "")
+            raise RWorkerException(message=err_message, code=err_code)
 
         work_result = {"total": result["full_count"], "rows": result["gene_results"]}
         return self._format_result(work_result)

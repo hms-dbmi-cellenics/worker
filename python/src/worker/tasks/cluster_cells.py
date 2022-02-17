@@ -103,8 +103,9 @@ class ClusterCells(Task):
 
         error = result.get("error", False)
         if error:
-            user_msg = result.get("user_msg", "")
-            raise RWorkerException(user_msg=user_msg, error=error)
+            err_message = error.get("message", "")
+            err_code = error.get("code", "")
+            raise RWorkerException(message=err_message, code=err_code)
 
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
         # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,

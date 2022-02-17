@@ -5,6 +5,7 @@ from logging import error
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
+from ..helpers.r_worker_exception import RWorkerException
 from ..helpers.count_matrix import CountMatrix
 from ..result import Result
 from ..tasks import Task
@@ -43,6 +44,17 @@ class TaskFactory:
         self.count_matrix = CountMatrix()
         self.count_matrix.sync()
 
+    def _log_exception(task):
+        trace = (
+            f"Exception for task {task.__class__.__name__}:\n"
+            f"{traceback.format_exc()}"
+        )
+
+        error(trace)
+        xray_recorder.current_segment().add_exception(e, trace)
+
+        return trace
+
     def submit(self, msg):
         task = self._factory(msg)
 
@@ -50,14 +62,9 @@ class TaskFactory:
         try:
             result = task.compute()
             return result
-        except Exception as e:
-            trace = (
-                f"Exception for task {task.__class__.__name__}:\n"
-                f"{traceback.format_exc()}"
-            )
 
-            error(trace)
-            xray_recorder.current_segment().add_exception(e, trace)
+        except RWorkerException as r:
+            trace = self._log_exception(task)
 
             # Only send real traces in development.
             if config.CLUSTER_ENV == "development":
@@ -65,7 +72,25 @@ class TaskFactory:
             else:
                 result = [
                     Result(
-                        e,
+                        {
+                            "error": e.message,
+                            "code": e.code,
+                        },
+                        error=True,
+                    )
+                ]
+            return result
+
+        except Exception as e:
+            trace = self._log_exception(task)
+
+            # Only send real traces in development.
+            if config.CLUSTER_ENV == "development":
+                result = Result(trace, error=True)
+            else:
+                result = [
+                    Result(
+                        "An unexpected error occurred while performing the work.",
                         error=True,
                     )
                 ]
