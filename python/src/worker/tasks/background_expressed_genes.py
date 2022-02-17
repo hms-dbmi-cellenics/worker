@@ -6,6 +6,7 @@ from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..helpers.get_diff_expr_cellsets import get_diff_expr_cellsets
+from ..helpers.r_worker_exception import RWorkerException
 from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
@@ -20,7 +21,7 @@ class GetBackgroundExpressedGenes(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result)
+        return Result({"genes": result["genes"]})
 
     def _format_request(self):
         # get cell sets from database
@@ -63,6 +64,7 @@ class GetBackgroundExpressedGenes(Task):
 
         error = result.get("error", False)
         if error:
-            raise Exception(error)
+            user_msg = result.get("user_msg", "")
+            raise RWorkerException(user_msg=user_msg, error=error)
 
-        return self._format_result({"genes": result["genes"]})
+        return self._format_result(result)

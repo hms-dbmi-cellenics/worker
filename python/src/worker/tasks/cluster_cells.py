@@ -9,6 +9,7 @@ from natsort import natsorted
 
 from ..config import config
 from ..helpers.color_pool import COLOR_POOL
+from ..helpers.r_worker_exception import RWorkerException
 from ..result import Result
 from ..tasks import Task
 
@@ -102,7 +103,8 @@ class ClusterCells(Task):
 
         error = result.get("error", False)
         if error:
-            raise Exception(error)
+            user_msg = result.get("user_msg", "")
+            raise RWorkerException(user_msg=user_msg, error=error)
 
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
         # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,

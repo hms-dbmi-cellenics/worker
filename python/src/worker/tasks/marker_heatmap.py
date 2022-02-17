@@ -6,6 +6,7 @@ import requests
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
+from ..helpers.r_worker_exception import RWorkerException
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
@@ -51,9 +52,10 @@ class MarkerHeatmap(Task):
         response.raise_for_status()
         json_response = response.json()
 
-        error = json_response.get("error", False)
+        error = result.get("error", False)
         if error:
-            raise Exception(error)
+            user_msg = result.get("user_msg", "")
+            raise RWorkerException(user_msg=user_msg, error=error)
 
         truncatedExpression = json_response["truncatedExpression"]
         rawExpression = json_response["rawExpression"]

@@ -5,6 +5,7 @@ import requests
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
+from ..helpers.r_worker_exception import RWorkerException
 from ..result import Result
 from ..tasks import Task
 
@@ -41,6 +42,7 @@ class GetEmbedding(Task):
 
         error = result.get("error", False)
         if error:
-            raise Exception(error)
+            user_msg = result.get("user_msg", "")
+            raise RWorkerException(user_msg=user_msg, error=error)
 
         return self._format_result(result)
