@@ -22,7 +22,12 @@ getExpressionCellSet <- function(req, data) {
   config <- req$body$config
 
   if(length(new_cell_set$cellIds) == 0) {
-    stop('No cells match requested filters.')
+    stop(
+        generateErrorMessage(
+            "R_WORKER_EMPTY_CELL_SET",
+            'No cells match requested filters.'
+        )
+    )
   }
 
   insertSetChildThroughApi(
@@ -44,7 +49,13 @@ getExpressionCellSetIDs <- function(filters, data) {
 
   # fail if any requested gene names are missing (can't return requested cellset)
   if (anyNA(name_match)) {
-    stop("Requested ExpressionCellSet with gene name(s) that are not present.")
+
+    stop(
+        list(
+            "R_WORKER_EXPRESSION_NOT_FOUND",
+            "Requested ExpressionCellSet with gene name(s) that are not present.",
+        )
+    )
   }
 
   enids <- gene_annotations$input[name_match]

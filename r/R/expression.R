@@ -15,7 +15,13 @@ runExpression <- function(req, data) {
     genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
 
     if (!nrow(genesSubset)) {
-        stop(paste("Gene(s):", paste(req$body$genes, collapse=', '), "not found!"))
+
+        stop(
+            generateErrorMessage(
+                "R_WORKER_GENE_NOT_FOUND",
+                paste("Gene(s):", paste(req$body$genes, collapse=', '), "not found!")
+            )
+        )
     }
 
     genesSubset <- genesSubset[,c("input","name")]

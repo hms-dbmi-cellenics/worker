@@ -22,7 +22,12 @@ formatMetadataResult <- function(data, column) {
 
   # check if the experiment has specified column
   if (!column %in% colnames(data@meta.data)) {
-    stop(column, " is not computed for this experiment.")
+      stop(
+        generateErrorMessage(
+            "R_WORKER_COLUMN_NOT_FOUND",
+            paste(column, " is not computed for this experiment.")
+        )
+      )
   }
 
   # get the specified column, ordering by cells_id

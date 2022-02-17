@@ -153,3 +153,7 @@ insertSetChildThroughApi <- function(new_cell_set, api_url, experiment_id, cell_
     )
   )
 }
+
+generateErrorMessage <- function(code, message) {
+    return paste0(error, ":", message)
+}
