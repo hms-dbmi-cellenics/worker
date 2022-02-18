@@ -15,14 +15,6 @@
 #'
 #' @examples
 runDotPlot <- function(req, data) {
-
-    stop(
-        generateErrorMessage(
-            "R_RANDOM_ERROR",
-            "Some random error"
-        )
-    )
-
   use_marker_genes <- req$body$useMarkerGenes
   group_by_cell_sets <- req$body$groupBy$children
   filter_by <- req$body$filterBy
