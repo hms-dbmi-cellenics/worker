@@ -64,12 +64,23 @@ run_post <- function(req, post_fun, data) {
             message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
             message("✅ Finished ", req$body$name)
             message(rep("✧",100))
-            return(res)
+
+            return(
+              formatResponse(
+                res,
+                NULL
+              )
+            )
         },
         error = function(e) {
             message("🚩 --------- 🚩")
             message("Error at worker task: ", e$message)
-            return(list(error = extract_error_list(e$message)))
+            return(
+              formatResponse(
+                NULL,
+                extractErrorList(e$message)
+              )
+            )
         }
     )
 }
@@ -77,7 +88,7 @@ run_post <- function(req, post_fun, data) {
 handle_debug <- function(req, debug_step) {
   task_name <- basename(req$path)
   is_debug <- debug_step == task_name | debug_step == "all"
-  
+
   if (is_debug) {
     message(sprintf("⚠ DEBUG_STEP = %s. Saving `req` object.", task_name))
     req_fname <- sprintf("%s_%s_req.rds", experiment_id, task_name)

@@ -24,7 +24,8 @@ class DifferentialExpression(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result)
+
+        return Result({"total": result["full_count"], "rows": result["gene_results"]})
 
     def _format_request(self):
         # get cell sets from database
@@ -83,5 +84,6 @@ class DifferentialExpression(Task):
             err_code = error.get("code", "")
             raise RWorkerException(message=err_message, code=err_code)
 
-        work_result = {"total": result["full_count"], "rows": result["gene_results"]}
-        return self._format_result(work_result)
+        data = result.get("data")
+
+        return self._format_result(data)

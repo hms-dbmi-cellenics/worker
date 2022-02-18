@@ -17,9 +17,10 @@ runMarkerHeatmap <- function(req, data) {
   res <- getExpressionValues(top_markers, data)
   if (!length(res$rawExpression)) {
     stop(
-      generate_error_message(
+      generateErrorMessage(
         "R_WORKER_NO_MARKER_GENES",
         "Couldn't get marker genes"
+      )
     )
   }
 

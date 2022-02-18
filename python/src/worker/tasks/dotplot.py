@@ -78,4 +78,5 @@ class DotPlot(Task):
             err_code = error.get("code", "")
             raise RWorkerException(message=err_message, code=err_code)
 
-        return self._format_result(result)
+        data = result.get("data")
+        return self._format_result(data)

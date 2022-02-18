@@ -107,10 +107,12 @@ class ClusterCells(Task):
             err_code = error.get("code", "")
             raise RWorkerException(message=err_message, code=err_code)
 
+        data = result.get("data")
+
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
         # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,
         # at most O(n of cells), which is well within our time complexity because the taxing part will be clustering.
-        df = pd.DataFrame(result)
+        df = pd.DataFrame(data)
         df.set_index("_row", inplace=True)
         df["cluster"] = pd.Categorical(df.cluster)
 

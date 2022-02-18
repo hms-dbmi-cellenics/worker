@@ -154,14 +154,25 @@ insertSetChildThroughApi <- function(new_cell_set, api_url, experiment_id, cell_
   )
 }
 
-generate_error_message <- function(code, message) {
-    return paste(error, "|", message)
+generateErrorMessage <- function(code, message) {
+    return(paste(error, "|", message))
 }
 
-extract_error_list <- function(message) {
+extractErrorList <- function(message) {
     error_string <- strsplit(message, "|")[[1]]
-    return list(
-        code = error_string[1]
+    return(
+      list(
+        code = error_string[1],
         message = error_string[2]
+      )
+    )
+}
+
+formatResponse <- function(data, error) {
+    return (
+        list(
+            data=data,
+            error=error
+        )
     )
 }

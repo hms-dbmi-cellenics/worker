@@ -63,10 +63,11 @@ class GetBackgroundExpressedGenes(Task):
         result = response.json()
 
         error = result.get("error", False)
-        error = result.get("error", False)
         if error:
             err_message = error.get("message", "")
             err_code = error.get("code", "")
             raise RWorkerException(message=err_message, code=err_code)
 
-        return self._format_result(result)
+        data = result.get("data")
+
+        return self._format_result(data)

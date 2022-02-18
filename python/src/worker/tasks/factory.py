@@ -5,8 +5,8 @@ from logging import error
 from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
-from ..helpers.r_worker_exception import RWorkerException
 from ..helpers.count_matrix import CountMatrix
+from ..helpers.r_worker_exception import RWorkerException
 from ..result import Result
 from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
@@ -44,14 +44,14 @@ class TaskFactory:
         self.count_matrix = CountMatrix()
         self.count_matrix.sync()
 
-    def _log_exception(task):
+    def _log_exception(self, task, error_object):
         trace = (
             f"Exception for task {task.__class__.__name__}:\n"
             f"{traceback.format_exc()}"
         )
 
         error(trace)
-        xray_recorder.current_segment().add_exception(e, trace)
+        xray_recorder.current_segment().add_exception(error_object, trace)
 
         return trace
 
@@ -64,7 +64,7 @@ class TaskFactory:
             return result
 
         except RWorkerException as r:
-            trace = self._log_exception(task)
+            trace = self._log_exception(task, r)
 
             # Only send real traces in development.
             if config.CLUSTER_ENV == "development":
@@ -73,8 +73,8 @@ class TaskFactory:
                 result = [
                     Result(
                         {
-                            "error": e.message,
-                            "code": e.code,
+                            "error": r.message,
+                            "code": r.code,
                         },
                         error=True,
                     )
@@ -82,7 +82,7 @@ class TaskFactory:
             return result
 
         except Exception as e:
-            trace = self._log_exception(task)
+            trace = self._log_exception(task, e)
 
             # Only send real traces in development.
             if config.CLUSTER_ENV == "development":

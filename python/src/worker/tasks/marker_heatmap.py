@@ -19,7 +19,7 @@ class MarkerHeatmap(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result, error=self.error)
+        return Result(result)
 
     def _format_request(self):
         request = {"nGenes": self.task_def["nGenes"]}
@@ -52,14 +52,16 @@ class MarkerHeatmap(Task):
         response.raise_for_status()
         json_response = response.json()
 
-        error = result.get("error", False)
+        error = json_response.get("error", False)
         if error:
             err_message = error.get("message", "")
             err_code = error.get("code", "")
             raise RWorkerException(message=err_message, code=err_code)
 
-        truncatedExpression = json_response["truncatedExpression"]
-        rawExpression = json_response["rawExpression"]
+        response_data = json_response.get("data")
+
+        truncatedExpression = response_data["truncatedExpression"]
+        rawExpression = response_data["rawExpression"]
         result = {}
         data = {}
         order = []

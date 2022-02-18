@@ -42,8 +42,9 @@ class GeneExpression(Task):
             err_code = error.get("code", "")
             raise RWorkerException(message=err_message, code=err_code)
 
-        truncatedExpression = result["truncatedExpression"]
-        rawExpression = result["rawExpression"]
+        data = result.get("data")
+        truncatedExpression = data["truncatedExpression"]
+        rawExpression = data["rawExpression"]
         result = {}
 
         for gene in rawExpression.keys():
