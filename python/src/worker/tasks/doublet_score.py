@@ -32,8 +32,10 @@ class GetDoubletScore(Task):
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise response.json() will fail
+        # raise an exception if an HTTPError occurred
+        # as otherwise response.json() will fail
         response.raise_for_status()
+
         # The values are ordered by cells id
         # The result contains a list with the doublet scores values
         result = response.json()
@@ -41,7 +43,7 @@ class GetDoubletScore(Task):
         error = result.get("error", False)
         if error:
             user_message = error.get("user_message", "")
-            err_code = error.get("code", "")
+            err_code = error.get("error_code", "")
             raise RWorkerException(user_message, err_code)
 
         data = result.get("data")

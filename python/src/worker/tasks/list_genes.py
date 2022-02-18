@@ -13,15 +13,12 @@ from ..tasks import Task
 
 
 class ListGenes(Task):
-    def _format_result(self, result):
-        total = result["full_count"]
-
+    def _format_result(self, result, total):
         # convert result to list of row dicts
-        df = pd.DataFrame.from_dict(result["gene_results"])
-        rows = df.to_dict(orient="records")
+        result = result.to_dict(orient="records")
 
         # Return a list of formatted results.
-        return Result({"total": total, "rows": rows})
+        return Result({"total": total, "rows": result})
 
     def _construct_request(self):
         request = self.task_def
@@ -54,17 +51,20 @@ class ListGenes(Task):
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise
-        #  response.json() will fail
+        # raise an exception if an HTTPError occurred
+        # as otherwise response.json() will fail
         response.raise_for_status()
         result = response.json()
 
         error = result.get("error", False)
         if error:
             user_message = error.get("user_message", "")
-            err_code = error.get("code", "")
+            err_code = error.get("error_code", "")
             raise RWorkerException(user_message, err_code)
 
         data = result.get("data")
 
-        return self._format_result(data)
+        total = data["full_count"]
+        result = pd.DataFrame.from_dict(data["gene_results"])
+
+        return self._format_result(result, total)

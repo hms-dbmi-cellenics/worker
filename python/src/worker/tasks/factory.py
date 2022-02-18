@@ -63,31 +63,30 @@ class TaskFactory:
             result = task.compute()
             return result
 
-        except RWorkerException as r:
-            result = Result(
-                {
-                    "error_code": r.code,
-                    "user_message": r.user_message,
-                },
-                error=True,
-            )
-            return result
-
         except Exception as e:
             trace = self._log_exception(task, e)
 
-            # Only send real traces in development.
             if config.CLUSTER_ENV == "development":
                 result = Result(trace, error=True)
-            else:
-                result = Result(
+
+            if isinstance(e, RWorkerException):
+                return Result(
                     {
-                        "error_code": "PYTHON_WORKER_ERROR",
-                        "user_message": "An unexpected error occurred while performing the work.",
+                        "error_code": e.error_code,
+                        "user_message": e.user_message,
                     },
                     error=True,
                 )
-            return result
+
+                # Only send real traces in development.
+
+            return Result(
+                {
+                    "error_code": "PYTHON_WORKER_ERROR",
+                    "user_message": "An unexpected error occurred while performing the work.",
+                },
+                error=True,
+            )
 
     def _factory(self, msg) -> Task:
         self.count_matrix.sync()

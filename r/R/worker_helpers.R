@@ -164,7 +164,7 @@ extractErrorList <- function(error_message) {
 
   return(
     list(
-      code = error_string[1],
+      error_code = error_string[1],
       user_message = error_string[2]
     )
   )
