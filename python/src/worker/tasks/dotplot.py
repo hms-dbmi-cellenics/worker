@@ -72,14 +72,9 @@ class DotPlot(Task):
         response.raise_for_status()
         result = response.json()
 
-        print("*** result")
-        print(result)
-
         error = result.get("error", False)
 
         if error:
-
-            print("*** in error")
             user_message = error.get("user_message", "")
             err_code = error.get("code", "")
             raise RWorkerException(user_message, err_code)

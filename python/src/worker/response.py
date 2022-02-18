@@ -39,6 +39,10 @@ class Response:
             "type": "WorkResponse",
         }
 
+        if self.error:
+            message["response"]["error_code"] = self.result.data["error_code"]
+            message["response"]["user_message"] = self.result.data["user_message"]
+
         return message
 
     @xray_recorder.capture("Response._upload")
