@@ -54,9 +54,9 @@ class MarkerHeatmap(Task):
 
         error = json_response.get("error", False)
         if error:
-            err_message = error.get("message", "")
+            user_message = error.get("user_message", "")
             err_code = error.get("code", "")
-            raise RWorkerException(message=err_message, code=err_code)
+            raise RWorkerException(user_message, err_code)
 
         response_data = json_response.get("data")
 

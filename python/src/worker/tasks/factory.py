@@ -73,7 +73,7 @@ class TaskFactory:
                 result = [
                     Result(
                         {
-                            "error": r.message,
+                            "error": r.user_message,
                             "code": r.code,
                         },
                         error=True,
