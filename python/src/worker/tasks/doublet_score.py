@@ -13,7 +13,7 @@ from ..tasks import Task
 class GetDoubletScore(Task):
     def _format_result(self, result):
         # Return a list of formatted results.
-        return Result(result, error=self.error)
+        return Result(result)
 
     @xray_recorder.capture("DoubletScore.compute")
     @backoff.on_exception(
