@@ -13,15 +13,11 @@ The R part of the worker runs the data analysis tasks. It fullfills the followin
 
 ## Setup
 
-The R worker runs uses R version 4.0.5. To check your R version, you can run the following command
+The R worker (as of Jan 2022) uses R version **4.0.5**. To check your R version, you can run the following command in your terminal
 
-    # Enter the R REPL
-    $ R
+    R --version
 
-    > R.Version()$version.string
-    [1] "R version 4.0.5 (2021-03-31)"
-
-If you have a different version of R, please uninstall the installation. Once the package is uninstalled,download the required R version from the [CRAN hosted site](https://cran.r-project.org/bin/). Using the Homebrew distribution of R is not recommended.
+If you have a different version of R, please uninstall it, using the instructions in the [R manual](https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Uninstalling-under-macOS). Once the package is uninstalled, download the required R version from the [CRAN hosted site](https://cran.r-project.org/bin/). For macOS, the required binaries are [here](https://cran.r-project.org/bin/macosx/base/). **Using the Homebrew distribution of R is not recommended.**
 
 Some packages on MacOS X requires the Fortran compiler to compile. According to the [tooling page](https://cran.r-project.org/bin/macosx/tools/), R on Mac OSX requires GNU Fortran 8.2, which can be download from [gFortran for MacOS releases page](https://github.com/fxcoudert/gfortran-for-macOS/releases).
 
