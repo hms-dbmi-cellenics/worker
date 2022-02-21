@@ -76,7 +76,6 @@ test_that("runClusters returns at least one cluster", {
 
 
 test_that("runClusters uses active.reduction in misc slot", {
-
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
 
@@ -92,7 +91,7 @@ test_that("runClusters uses active.reduction in misc slot", {
 
   # will use active.reduction to get SNN graph
   data@reductions$blah_reduction <- blah_reduction
-  data@misc$active.reduction <- 'blah_reduction'
+  data@misc$active.reduction <- "blah_reduction"
 
   for (algo in algos) {
     req <- mock_req(type = algo)
