@@ -23,7 +23,7 @@ mock_req_genes_only <- function() {
       offset = 0,
       limit = 200
     ),
-    genesOnly=TRUE
+    genesOnly = TRUE
   ))
 }
 
@@ -64,14 +64,16 @@ test_that("runDE generates the expected return format for comparisons within sam
 
   # have the correct column names
   expect_columns <-
-    c("p_val",
+    c(
+      "p_val",
       "logFC",
       "pct_1",
       "pct_2",
       "p_val_adj",
       "auc",
       "gene_names",
-      "Gene")
+      "Gene"
+    )
   expect_equal(unique(names(unlist(res$gene_results))), expect_columns)
 })
 
@@ -222,5 +224,5 @@ test_that("DE with genes_only returns list of ENSEMBLIDS and gene symbols ", {
   gene_results_names <- names(res$gene_results)
   expect_true("gene_id" %in% gene_results_names & "gene_names" %in% gene_results_names)
 
-  expect_equal(length(res$gene_results[[1]]),res$full_count)
+  expect_equal(length(res$gene_results[[1]]), res$full_count)
 })

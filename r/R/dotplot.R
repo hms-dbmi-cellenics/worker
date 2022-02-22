@@ -63,7 +63,6 @@ runDotPlot <- function(req, data) {
     all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
-
   } else {
     req_genes <- req$body$customGenesList
     annot <- data@misc$gene_annotations
@@ -71,15 +70,17 @@ runDotPlot <- function(req, data) {
     features <- annot_subset[, c("input", "name")]
   }
 
-  dotplot_data <- Seurat::DotPlot(data, assay="RNA", features = features$input, group.by = "dotplot_groups")$data
+  dotplot_data <- Seurat::DotPlot(data, assay = "RNA", features = features$input, group.by = "dotplot_groups")$data
   # features.plot has the ensemble ids: get gene symbols
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
   dotplot_data <- dotplot_data %>%
-    dplyr::transmute(cellSets = as.character(id),
-              geneName = as.character(name),
-              avgExpression = avg.exp.scaled,
-              cellsPercentage = pct.exp)
+    dplyr::transmute(
+      cellSets = as.character(id),
+      geneName = as.character(name),
+      avgExpression = avg.exp.scaled,
+      cellsPercentage = pct.exp
+    )
 
   res <- purrr::transpose(dotplot_data)
   return(res)

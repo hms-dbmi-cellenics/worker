@@ -15,7 +15,6 @@
 #
 #' @export
 getList <- function(req, data) {
-
   select_fields <- req$body$selectFields
   order_by <- req$body$orderBy
   order_decreasing <- req$body$orderDirection == "DESC"
@@ -31,7 +30,7 @@ getList <- function(req, data) {
   # apply gene name filter
   gene_pattern <- req$body$geneNamesFilter
   if (!is.null(gene_pattern)) {
-    gene_filter <- list(list(columnName = 'gene_names', expression = gene_pattern))
+    gene_filter <- list(list(columnName = "gene_names", expression = gene_pattern))
     gene_results <- applyFilters(gene_results, gene_filter)
   }
 
@@ -40,7 +39,7 @@ getList <- function(req, data) {
 
   columns <- c("gene_names", "dispersions")
 
-  gene_results <- gene_results[,columns]
+  gene_results <- gene_results[, columns]
 
-  return(list(gene_results=gene_results,full_count=paginated_results$full_count))
+  return(list(gene_results = gene_results, full_count = paginated_results$full_count))
 }
