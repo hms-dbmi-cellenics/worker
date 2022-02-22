@@ -59,7 +59,7 @@ class MarkerHeatmap(Task):
         data = json_response.get("data")
         result = {
             "data": process_gene_expression(data),
-            "order": data["rawExpression"].keys(),
+            "order": list(data["rawExpression"]),
         }
 
         return self._format_result(result)
