@@ -3,9 +3,9 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.worker_exception import WorkerException
 from ..result import Result
 from ..tasks import Task
 
@@ -39,12 +39,7 @@ class GetDoubletScore(Task):
         # The values are ordered by cells id
         # The result contains a list with the doublet scores values
         result = response.json()
-
-        error = result.get("error", False)
-        if error:
-            user_message = error.get("user_message", "")
-            err_code = error.get("error_code", "")
-            raise WorkerException(err_code, user_message)
+        raise_if_error(result)
 
         data = result.get("data")
 

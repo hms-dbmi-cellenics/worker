@@ -1,12 +1,7 @@
-import json
-import traceback
-from logging import error
+from exceptions import WorkerException
 
-from aws_xray_sdk.core import xray_recorder
-
-from ..config import config
 from ..helpers.count_matrix import CountMatrix
-from ..helpers.worker_exception import WorkerException
+from ..helpers.xray_log_exception import xray_log_exception
 from ..result import Result
 from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
@@ -44,17 +39,6 @@ class TaskFactory:
         self.count_matrix = CountMatrix()
         self.count_matrix.sync()
 
-    def _log_exception(self, task, error_object):
-        trace = (
-            f"Exception for task {task.__class__.__name__}:\n"
-            f"{traceback.format_exc()}"
-        )
-
-        error(trace)
-        xray_recorder.current_segment().add_exception(error_object, trace)
-
-        return trace
-
     def submit(self, msg):
         task = self._factory(msg)
 
@@ -63,23 +47,18 @@ class TaskFactory:
             result = task.compute()
             return result
 
+        except WorkerException as e:
+            xray_log_exception(task, e)
+            return Result(
+                {
+                    "error_code": e.error_code,
+                    "user_message": e.user_message,
+                },
+                error=True,
+            )
+
         except Exception as e:
-            trace = self._log_exception(task, e)
-
-            if config.CLUSTER_ENV == "development":
-                result = Result(trace, error=True)
-
-            if isinstance(e, WorkerException):
-                return Result(
-                    {
-                        "error_code": e.error_code,
-                        "user_message": e.user_message,
-                    },
-                    error=True,
-                )
-
-                # Only send real traces in development.
-
+            xray_log_exception(task, e)
             return Result(
                 {
                     "error_code": "PYTHON_WORKER_GENERIC_ERROR",
@@ -96,4 +75,4 @@ class TaskFactory:
         try:
             return self.tasks[task_name](msg)
         except KeyError as e:
-            raise ValueError(f"Task class with name {task_name} was not found") from e
+            raise KeyError(f"Task class with name {task_name} was not found: {e}")

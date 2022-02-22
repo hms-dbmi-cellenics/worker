@@ -4,9 +4,10 @@ import backoff
 import numpy as np
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.worker_exception import WorkerException
+from ..helpers.process_gene_expression import process_gene_expression
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
@@ -53,49 +54,12 @@ class MarkerHeatmap(Task):
         # as otherwise response.json() will fail
         response.raise_for_status()
         json_response = response.json()
+        raise_if_error(json_response)
 
-        error = json_response.get("error", False)
-        if error:
-            user_message = error.get("user_message", "")
-            err_code = error.get("error_code", "")
-            raise WorkerException(err_code, user_message)
+        data = json_response.get("data")
+        result = {
+            "data": process_gene_expression(data),
+            "order": data["rawExpression"].keys(),
+        }
 
-        response_data = json_response.get("data")
-
-        truncatedExpression = response_data["truncatedExpression"]
-        rawExpression = response_data["rawExpression"]
-        result = {}
-        data = {}
-        order = []
-
-        for gene in rawExpression.keys():
-            view = rawExpression[gene]
-            # can't do summary stats on list with None's
-            # casting to np array replaces None with np.nan
-            viewnp = np.array(view, dtype=np.float)
-            # This is not necessary and is also costly, but I leave it commented as a reminder
-            # that this object has integer zeros and floating point for n!=0.
-            # expression = [float(item) for item in view]
-            mean = float(np.nanmean(viewnp))
-            stdev = float(np.nanstd(viewnp))
-            data[gene] = {"truncatedExpression": {}, "rawExpression": {}}
-            data[gene]["rawExpression"] = {
-                "mean": mean,
-                "stdev": stdev,
-                "expression": view,
-            }
-
-            viewTr = truncatedExpression[gene]
-            viewnpTr = np.array(viewTr, dtype=np.float)
-            minimum = float(np.nanmin(viewnpTr))
-            maximum = float(np.nanmax(viewnpTr))
-            data[gene]["truncatedExpression"] = {
-                "min": minimum,
-                "max": maximum,
-                "expression": viewTr,
-            }
-            order.append(gene)
-
-        result["data"] = data
-        result["order"] = order
         return self._format_result(result)

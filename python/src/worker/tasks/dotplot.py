@@ -3,9 +3,9 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.worker_exception import WorkerException
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
@@ -73,13 +73,7 @@ class DotPlot(Task):
         # as otherwise response.json() will fail
         response.raise_for_status()
         result = response.json()
-
-        error = result.get("error", False)
-
-        if error:
-            user_message = error.get("user_message", "")
-            err_code = error.get("error_code", "")
-            raise WorkerException(err_code, user_message)
+        raise_if_error(result)
 
         data = result.get("data")
         return self._format_result(data)
