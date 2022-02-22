@@ -39,6 +39,11 @@ class TestDifferentialExpression:
 
         return request
 
+    """
+    Returns a stubber and a stubbed s3 client that will get executed
+    in the code instead of the real s3 clients
+    """
+
     def get_s3_stub(self, content_type):
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         response = {
@@ -61,8 +66,6 @@ class TestDifferentialExpression:
             all_cell_set_types = json.load(f)
         content = all_cell_set_types[content_type]
         content_bytes = json.dumps(content, indent=2).encode("utf-8")
-        # with open(os.path.join("tests/data", "cell_sets.json"), "rb") as f:
-        #     content = f.read()
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
