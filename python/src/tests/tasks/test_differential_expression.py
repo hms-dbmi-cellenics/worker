@@ -39,21 +39,7 @@ class TestDifferentialExpression:
 
         return request
 
-    """
-    Mocks the S3 query for fetching cell sets. Returns an
-    empty cell set and yields the patched up object.
-    """
-
-    # @pytest.fixture
-    # def mock_S3_get(self):
-
-    #     return stubber
-
-    def test_throws_on_missing_parameters(self):
-        with pytest.raises(TypeError):
-            DifferentialExpression()
-
-    def test_throws_when_second_cellset_missing(self):
+    def get_s3_stub(self, content_type):
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         response = {
             "ContentLength": 10,
@@ -71,12 +57,9 @@ class TestDifferentialExpression:
         stubber.add_response("head_object", response, expected_params)
 
         # Get object
-        content = {
-            "cellSets": [
-                {"name": "my amazing cluster", "key": "cluster1", "cellIds": [4, 5]}
-            ]
-        }
-
+        with open(os.path.join("tests/data", "cell_set_types.json")) as f:
+            all_cell_set_types = json.load(f)
+        content = all_cell_set_types[content_type]
         content_bytes = json.dumps(content, indent=2).encode("utf-8")
         # with open(os.path.join("tests/data", "cell_sets.json"), "rb") as f:
         #     content = f.read()
@@ -93,87 +76,114 @@ class TestDifferentialExpression:
             },
         }
         stubber.add_response("get_object", response, expected_params)
+        return (stubber, s3)
+
+    def test_throws_on_missing_parameters(self):
+        with pytest.raises(TypeError):
+            DifferentialExpression()
+
+    def test_throws_when_second_cellset_missing(self):
+        stubber, s3 = self.get_s3_stub("one_set")
+
         with mock.patch("boto3.client") as n, stubber:
             n.return_value = s3
             with pytest.raises(
                 Exception, match="No cell id fullfills the 2nd cell set"
             ):
                 DifferentialExpression(self.get_request())._format_request()
+            stubber.assert_no_pending_responses()
 
-    # def test_cells_in_sets_intersection_are_filtered_out(self, mock_S3_get):
-    #     MockS3Class.setResponse("two_sets_intersected")
+    def test_cells_in_sets_intersection_are_filtered_out(self):
+        stubber, s3 = self.get_s3_stub("two_sets_intersected")
 
-    #     request = DifferentialExpression(
-    #         self.get_request(cellSet="cluster1", compareWith="cluster2")
-    #     )._format_request()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            request = DifferentialExpression(
+                self.get_request(cellSet="cluster1", compareWith="cluster2")
+            )._format_request()
 
-    #     baseCells = request["baseCells"]
-    #     backgroundCells = request["backgroundCells"]
+            baseCells = request["baseCells"]
+            backgroundCells = request["backgroundCells"]
 
-    #     # Check 1 cell of each of the cell sets is left out
-    #     assert len(baseCells) == len(backgroundCells) == 2
+            # Check 1 cell of each of the cell sets is left out
+            assert len(baseCells) == len(backgroundCells) == 2
 
-    #     # Check the cells that haven't been left out are
-    #     # those that are not in the intersection of both sets
-    #     assert len(set(baseCells).intersection(set(backgroundCells))) == 0
+            # Check the cells that haven't been left out are
+            # those that are not in the intersection of both sets
+            assert len(set(baseCells).intersection(set(backgroundCells))) == 0
+            stubber.assert_no_pending_responses()
 
-    # def test_cells_not_in_basis_sample_are_filtered_out(self, mock_S3_get):
-    #     MockS3Class.setResponse("three_sets")
+    def test_cells_not_in_basis_sample_are_filtered_out(self):
+        stubber, s3 = self.get_s3_stub("three_sets")
 
-    #     request = DifferentialExpression(
-    #         self.get_request(
-    #             cellSet="cluster1",
-    #             compareWith="cluster2",
-    #             basis="basisCluster",
-    #         )
-    #     )._format_request()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            request = DifferentialExpression(
+                self.get_request(
+                    cellSet="cluster1",
+                    compareWith="cluster2",
+                    basis="basisCluster",
+                )
+            )._format_request()
 
-    #     baseCells = request["baseCells"]
-    #     backgroundCells = request["backgroundCells"]
+            baseCells = request["baseCells"]
+            backgroundCells = request["backgroundCells"]
 
-    #     # Check cells not in basis are taken out
-    #     assert len(baseCells) == 1
-    #     assert len(backgroundCells) == 2
+            # Check cells not in basis are taken out
+            assert len(baseCells) == 1
+            assert len(backgroundCells) == 2
+            stubber.assert_no_pending_responses()
 
-    # def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self, mock_S3_get):
-    #     MockS3Class.setResponse("hierarchichal_sets")
+    def test_rest_keyword_only_adds_cells_in_the_same_hierarchy(self):
+        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
 
-    #     request = DifferentialExpression(
-    #         self.get_request(cellSet="cluster1", compareWith="rest")
-    #     )._format_request()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            request = DifferentialExpression(
+                self.get_request(cellSet="cluster1", compareWith="rest")
+            )._format_request()
 
-    #     baseCells = request["baseCells"]
-    #     backgroundCells = request["backgroundCells"]
+            baseCells = request["baseCells"]
+            backgroundCells = request["backgroundCells"]
 
-    #     # Check there is only one cell in each set
-    #     assert len(baseCells) == 1
-    #     assert len(backgroundCells) == 2
+            # Check there is only one cell in each set
+            assert len(baseCells) == 1
+            assert len(backgroundCells) == 2
+            stubber.assert_no_pending_responses()
 
-    # def test_default_comparison_type_added_to_request(self, mock_S3_get):
+    def test_default_comparison_type_added_to_request(self):
+        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
 
-    #     request = DifferentialExpression(
-    #         self.get_request(
-    #             cellSet="cluster1",
-    #             compareWith="cluster2",
-    #             basis="basisCluster",
-    #         )
-    #     )._format_request()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            request = DifferentialExpression(
+                self.get_request(
+                    cellSet="cluster1",
+                    compareWith="cluster2",
+                    basis="basisCluster",
+                )
+            )._format_request()
 
-    #     # Check that comparisonType defaults to within
-    #     comparisonType = request["comparisonType"]
-    #     assert comparisonType == "within"
+            # Check that comparisonType defaults to within
+            comparisonType = request["comparisonType"]
+            assert comparisonType == "within"
+            stubber.assert_no_pending_responses()
 
-    # def test_specified_comparison_type_added_to_request(self, mock_S3_get):
+    def test_specified_comparison_type_added_to_request(self):
+        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
 
-    #     request = DifferentialExpression(
-    #         self.get_request(
-    #             cellSet="cluster1",
-    #             compareWith="cluster2",
-    #             basis="basisCluster",
-    #             comparisonType="between",
-    #         )
-    #     )._format_request()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            request = DifferentialExpression(
+                self.get_request(
+                    cellSet="cluster1",
+                    compareWith="cluster2",
+                    basis="basisCluster",
+                    comparisonType="between",
+                )
+            )._format_request()
 
-    #     # Check that comparisonType uses set value of between instead of default (within)
-    #     comparisonType = request["comparisonType"]
-    #     assert comparisonType == "between"
+            # Check that comparisonType uses set value of between instead of default (within)
+            comparisonType = request["comparisonType"]
+            assert comparisonType == "between"
+            stubber.assert_no_pending_responses()
