@@ -3,6 +3,7 @@ from .find_cell_ids_in_same_hierarchy import (
     find_cell_ids_in_same_hierarchy,
 )
 from .find_cells_by_set_id import find_cells_by_set_id
+from .worker_exception import WorkerException
 
 
 def get_diff_expr_cellsets(
@@ -48,11 +49,15 @@ def get_diff_expr_cellsets(
 
     # Check if the first cell set is empty
     if len(first_cell_set) == 0:
-        raise Exception("No cell id fullfills the 1st cell set.")
+        raise WorkerException(
+            "PYTHON_WORKER_INPUT_ERROR", "No cell id fullfills the 1st cell set."
+        )
 
     # Check if the second cell set is empty
     if len(second_cell_set) == 0:
-        raise Exception("No cell id fullfills the 2nd cell set.")
+        raise WorkerException(
+            "PYTHON_WORKER_INPUT_ERROR", "No cell id fullfills the 2nd cell set."
+        )
 
     return first_cell_set, second_cell_set
 

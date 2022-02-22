@@ -6,7 +6,7 @@ from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..helpers.count_matrix import CountMatrix
-from ..helpers.r_worker_exception import RWorkerException
+from ..helpers.worker_exception import WorkerException
 from ..result import Result
 from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
@@ -69,7 +69,7 @@ class TaskFactory:
             if config.CLUSTER_ENV == "development":
                 result = Result(trace, error=True)
 
-            if isinstance(e, RWorkerException):
+            if isinstance(e, WorkerException):
                 return Result(
                     {
                         "error_code": e.error_code,
@@ -82,7 +82,7 @@ class TaskFactory:
 
             return Result(
                 {
-                    "error_code": "PYTHON_WORKER_ERROR",
+                    "error_code": "PYTHON_WORKER_GENERIC_ERROR",
                     "user_message": "An unexpected error occurred while performing the work.",
                 },
                 error=True,

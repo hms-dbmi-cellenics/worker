@@ -40,8 +40,8 @@ class Response:
         }
 
         if self.error:
-            message["response"]["error_code"] = self.result.data["error_code"]
-            message["response"]["user_message"] = self.result.data["user_message"]
+            message["response"]["errorCode"] = self.result.data["error_code"]
+            message["response"]["userMessage"] = self.result.data["user_message"]
 
         return message
 

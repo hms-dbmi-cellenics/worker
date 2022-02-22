@@ -6,7 +6,7 @@ from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..helpers.get_diff_expr_cellsets import get_diff_expr_cellsets
-from ..helpers.r_worker_exception import RWorkerException
+from ..helpers.worker_exception import WorkerException
 from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
@@ -82,7 +82,7 @@ class DifferentialExpression(Task):
         if error:
             user_message = error.get("user_message", "")
             err_code = error.get("error_code", "")
-            raise RWorkerException(user_message, err_code)
+            raise WorkerException(err_code, user_message)
 
         data = result.get("data")
 

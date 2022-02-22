@@ -9,7 +9,7 @@ from natsort import natsorted
 
 from ..config import config
 from ..helpers.color_pool import COLOR_POOL
-from ..helpers.r_worker_exception import RWorkerException
+from ..helpers.worker_exception import WorkerException
 from ..result import Result
 from ..tasks import Task
 
@@ -106,7 +106,7 @@ class ClusterCells(Task):
         if error:
             user_message = error.get("user_message", "")
             err_code = error.get("error_code", "")
-            raise RWorkerException(user_message, err_code)
+            raise WorkerException(err_code, user_message)
 
         data = result.get("data")
 
