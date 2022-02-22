@@ -15,7 +15,7 @@ class TestMarkerHeatmap:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "experimentId": config.EXPERIMENT_ID,
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "MarkerHeatmap",
@@ -81,7 +81,9 @@ class TestMarkerHeatmap:
 
         with mock.patch("boto3.client") as n, stubber:
             n.return_value = s3
-            request = MarkerHeatmap(self.correct_request)._format_request()
+            bla = MarkerHeatmap(self.correct_request)
+
+            request = bla._format_request()
             assert isinstance(request, dict)
 
             # all expected keys are in the request

@@ -60,6 +60,8 @@ class Config(types.SimpleNamespace):
 
     @property
     def EXPERIMENT_ID(self):
+        if cluster_env == "development":
+            return "test-experiment-id"
         return self.get_label("experimentId")
 
     @property
