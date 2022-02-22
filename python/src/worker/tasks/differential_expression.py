@@ -28,7 +28,6 @@ class DifferentialExpression(Task):
     def _format_request(self):
         # get cell sets from database
         cell_sets = get_cell_sets(self.experiment_id)
-
         first_cell_set_name = self.task_def["cellSet"]
         second_cell_set_name = self.task_def["compareWith"]
         basis_name = self.task_def["basis"]
@@ -41,7 +40,7 @@ class DifferentialExpression(Task):
             "baseCells": [int(x) for x in baseCells],
             "backgroundCells": [int(x) for x in backgroundCells],
             "genesOnly": self.task_def.get("genesOnly", False),
-            "comparisonType": self.task_def.get("comparisonType", "within")
+            "comparisonType": self.task_def.get("comparisonType", "within"),
         }
 
         if self.pagination:

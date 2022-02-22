@@ -1,0 +1,12 @@
+{
+    "cellSets": [
+        {
+            "name": "my amazing cluster",
+            "key": "cluster1",
+            "cellIds": [
+                4,
+                5
+            ]
+        }
+    ]
+}
