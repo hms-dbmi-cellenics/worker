@@ -18,7 +18,7 @@ runExpression <- function(req, data) {
 
         stop(
             generateErrorMessage(
-                "R_WORKER_GENE_NOT_FOUND",
+                errorCodes$GENE_NOT_FOUND,
                 paste("Gene(s):", paste(req$body$genes, collapse=', '), "not found!")
             )
         )

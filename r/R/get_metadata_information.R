@@ -24,7 +24,7 @@ formatMetadataResult <- function(data, column) {
   if (!column %in% colnames(data@meta.data)) {
       stop(
         generateErrorMessage(
-            "R_WORKER_COLUMN_NOT_FOUND",
+            errorCodes$COLUMN_NOT_FOUND,
             paste(column, "is not computed for this experiment.")
         )
       )
