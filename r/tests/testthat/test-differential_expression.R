@@ -1,7 +1,8 @@
 mock_req <- function() {
   req <- list(body = list(
-    backgroundCells = 0:50,
-    baseCells = 51:100,
+    comparisonType = "within",
+    backgroundCells = 0:39,
+    baseCells = 40:79,
     pagination = list(
       orderBy = "logFC",
       orderDirection = "DESC",
@@ -13,8 +14,9 @@ mock_req <- function() {
 
 mock_req_genes_only <- function() {
   req <- list(body = list(
-    backgroundCells = 0:50,
-    baseCells = 51:100,
+    comparisonType = "within",
+    backgroundCells = 0:39,
+    baseCells = 40:79,
     pagination = list(
       orderBy = "logFC",
       orderDirection = "DESC",
@@ -44,7 +46,7 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
-test_that("runDE generates the expected return format", {
+test_that("runDE generates the expected return format for comparisons within samples/groups", {
   data <- mock_scdata()
   req <- mock_req()
 
@@ -57,8 +59,8 @@ test_that("runDE generates the expected return format", {
   expect_equal(length(res$gene_results), req$body$pagination$limit)
 
   # ordering is correct
-  expect_equal(res$gene_results$logFC,
-               sort(res$gene_results$logFC, decreasing = TRUE))
+  logfc <- sapply(res$gene_results, `[[`, 'logFC')
+  expect_equal(logfc, sort(logfc, decreasing = TRUE))
 
   # have the correct column names
   expect_columns <-
@@ -68,6 +70,66 @@ test_that("runDE generates the expected return format", {
       "pct_2",
       "p_val_adj",
       "auc",
+      "gene_names",
+      "Gene")
+  expect_equal(unique(names(unlist(res$gene_results))), expect_columns)
+})
+
+test_that("runDE generates the expected return format for comparisons between samples/groups with 3+ samples", {
+  data <- mock_scdata()
+  data$samples <- rep(LETTERS[1:4], each = 20)
+  req <- mock_req()
+  req$body$comparisonType <- "between"
+
+
+
+  res <- runDE(req, data)
+
+  # number of genes is number of possible DE rows
+  expect_equal(res$full_count, nrow(data))
+
+  # returning only at most limit number of genes
+  expect_equal(length(res$gene_results), req$body$pagination$limit)
+
+  # ordering is correct
+  logfc <- sapply(res$gene_results, `[[`, 'logFC')
+  expect_equal(logfc, sort(logfc, decreasing = TRUE))
+
+  # have the correct column names
+  expect_columns <-
+    c("p_val",
+      "logFC",
+      "AveExpr",
+      "p_val_adj",
+      "gene_names",
+      "Gene")
+  expect_equal(unique(names(unlist(res$gene_results))), expect_columns)
+})
+
+test_that("runDE generates the expected return format for comparisons between samples/groups with less than 3 samples", {
+  data <- mock_scdata()
+  data$samples <- rep(LETTERS[1:2], each = 40)
+  req <- mock_req()
+  req$body$comparisonType <- "between"
+
+
+
+  res <- runDE(req, data)
+
+  # number of genes is number of possible DE rows
+  expect_equal(res$full_count, nrow(data))
+
+  # returning only at most limit number of genes
+  expect_equal(length(res$gene_results), req$body$pagination$limit)
+
+  # ordering is correct
+  logfc <- sapply(res$gene_results, `[[`, 'logFC')
+  expect_equal(logfc, sort(logfc, decreasing = TRUE))
+
+  # have the correct column names
+  expect_columns <-
+    c("logFC",
+      "AveExpr",
       "gene_names",
       "Gene")
   expect_equal(unique(names(unlist(res$gene_results))), expect_columns)

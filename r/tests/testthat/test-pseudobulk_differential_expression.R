@@ -65,30 +65,16 @@ test_that("the result of runPseudobulkDE detects up-regulated and down-regulated
   expect_setequal(head(row.names(res), 2), c("UP", "DOWN"))
 })
 
-test_that("the result of runPseudobulkDE contains the gene_annotations 'name' column", {
-  pbulk <- mock_pbulk()
-  pbulk <- pbulk_to_seurat(pbulk)
-
-  pbulk@misc$gene_annotations$name
-
-  res <- runPseudobulkDE(pbulk)
-  expect_true(all(res$name %in% pbulk@misc$gene_annotations$name))
-})
 
 
 test_that("the result of runPseudobulkDE includes all genes, including filtered ones", {
   pbulk <- mock_pbulk()
   pbulk <- pbulk_to_seurat(pbulk)
 
-  pbulk@misc$gene_annotations$name
-
   res <- runPseudobulkDE(pbulk)
 
-  # all gene names in result
-  expect_setequal(res$name, pbulk@misc$gene_annotations$name)
-
-  # all ensemble ids in result
-  expect_setequal(row.names(res), pbulk@misc$gene_annotations$input)
+  # all ensemble ids result
+  expect_setequal(row.names(res), row.names(pbulk))
 
   # some values in the table are NA (filtered genes)
   expect_true(anyNA(res))
@@ -104,14 +90,11 @@ test_that("runPseudobulkDE works for 1 sample vs 1 sample comparisons", {
 
   res <- runPseudobulkDE(pbulk)
 
-  # all gene names in result
-  expect_setequal(res$name, pbulk@misc$gene_annotations$name)
-
   # all ensemble ids in result
   expect_setequal(row.names(res), pbulk@misc$gene_annotations$input)
 
   # all expected columns in result
-  expect_setequal(colnames(res), c("name", "logFC", "AveExpr"))
+  expect_setequal(colnames(res), c("logFC", "AveExpr"))
 })
 
 test_that("runPseudobulkDE sorts by absolute logFC for 1 sample vs 1 sample comparisons", {

@@ -23,11 +23,11 @@ runDE <- function(req, data) {
 
   # replace name with gene names and add Ensembl IDs
   result$gene_names <- data@misc$gene_annotations[row.names(result), "name"]
-  result$ensembl_ids <- rownames(result)
+  result$Gene <- rownames(result)
 
   #replace NA gene symbols with ensembl ids
   na.genes <- is.na(result$gene_names)
-  result$gene_names[na.genes] <- result$ensembl_ids[na.genes]
+  result$gene_names[na.genes] <- result$Gene[na.genes]
 
 
   if (!("pagination" %in% names(req$body))) {

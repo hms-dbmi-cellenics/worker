@@ -39,7 +39,7 @@ runPseudobulkDE <- function(pbulk) {
   nsample <- ncol(y)
   if (nsample == 2) {
     # only logFC if two samples
-    res <- data.frame(fit$genes,
+    res <- data.frame(
       logFC = fit$coefficients[, contrast],
       AveExpr = fit$Amean
     )
@@ -55,9 +55,6 @@ runPseudobulkDE <- function(pbulk) {
     colnames(res) <- c('p_val', 'logFC', 'AveExpr', 'p_val_adj')
   }
 
-  # add filtered genes so that searchable
   res[disc, ] <- NA
-  res[disc, "name"] <- pbulk@misc$gene_annotations[disc, "name"]
-
   return(res)
 }
