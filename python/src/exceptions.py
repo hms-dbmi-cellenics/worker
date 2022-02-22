@@ -20,12 +20,12 @@ class PythonWorkerException(WorkerException):
 class ErrorCode(Enum):
     R_WORKER_ERROR = "R_WORKER_ERROR"
     PYTHON_WORKER_ERROR = "PYTHON_WORKER_ERROR"
-    INVALID_INPUT = "WORKER_INPUT_ERROR"
+    INVALID_INPUT = "INVALID_INPUT"
 
 
 def raise_if_error(result):
     error = result.get("error")
     if error:
-        user_message = error.get("user_message", "Unexpected error happened")
+        user_message = error.get("user_message", "Unexpected error occured")
         err_code = error.get("error_code", ErrorCode.R_WORKER_ERROR)
         raise RWorkerException(err_code, user_message)
