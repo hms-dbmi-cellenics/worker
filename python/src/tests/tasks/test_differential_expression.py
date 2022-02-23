@@ -1,12 +1,12 @@
 import io
 import json
-import os
 
 import boto3
 import mock
 import pytest
 from botocore.stub import Stubber
 
+from tests.data.cell_set_types import cell_set_types
 from worker.config import config
 from worker.tasks.differential_expression import DifferentialExpression
 
@@ -62,10 +62,13 @@ class TestDifferentialExpression:
         stubber.add_response("head_object", response, expected_params)
 
         # Get object
-        with open(os.path.join("tests/data", "cell_set_types.json")) as f:
-            all_cell_set_types = json.load(f)
-        content = all_cell_set_types[content_type]
-        content_bytes = json.dumps(content, indent=2).encode("utf-8")
+        # with open(os.path.join("tests/data", "cell_set_types.json")) as f:
+        #     all_cell_set_types = json.load(f)
+        # content = all_cell_set_types[content_type]
+        content_bytes = json.dumps(cell_set_types[content_type], indent=2).encode(
+            "utf-8"
+        )
+
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
