@@ -61,10 +61,6 @@ class TestDifferentialExpression:
         stubber = Stubber(s3)
         stubber.add_response("head_object", response, expected_params)
 
-        # Get object
-        # with open(os.path.join("tests/data", "cell_set_types.json")) as f:
-        #     all_cell_set_types = json.load(f)
-        # content = all_cell_set_types[content_type]
         content_bytes = json.dumps(cell_set_types[content_type], indent=2).encode(
             "utf-8"
         )

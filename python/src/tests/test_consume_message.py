@@ -28,6 +28,7 @@ class TestConsumeMessage:
         with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             _read_sqs_message()
+            stubber.assert_no_pending_responses()
 
     def test_read_sqs_message_returns_falsy_on_non_existent_queue(self):
         sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
@@ -43,6 +44,7 @@ class TestConsumeMessage:
             m.return_value = sqs
             r = consume()
             assert not r
+            stubber.assert_no_pending_responses()
 
     def test_read_sqs_message_returns_falsy_on_no_incoming_message(self):
         sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
@@ -65,8 +67,8 @@ class TestConsumeMessage:
         with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             r = _read_sqs_message()
-
             assert not r
+            stubber.assert_no_pending_responses()
 
     def test_read_sqs_message_returns_falsy_on_badly_formatted_message(self):
         sqs = boto3.resource("sqs", **config.BOTO_RESOURCE_KWARGS)
@@ -105,8 +107,8 @@ class TestConsumeMessage:
         with mock.patch("boto3.resource") as m, stubber:
             m.return_value = sqs
             r = _read_sqs_message()
-
             assert not r
+            stubber.assert_no_pending_responses()
 
     def test_request_with_expired_timeout_is_discarded(self):
         request = {
@@ -157,6 +159,7 @@ class TestConsumeMessage:
                     "uuid": "random-uuid",
                     "ETag": "random-etag",
                 }
+            stubber.assert_no_pending_responses()
 
     def test_consume_request_non_expired_timeout_results_in_s3(self):
         etag = "random-etag"
@@ -188,3 +191,4 @@ class TestConsumeMessage:
                 m.return_value = request
                 result = consume()
                 assert result is None
+            stubber.assert_no_pending_responses()
