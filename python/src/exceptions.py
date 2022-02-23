@@ -24,6 +24,15 @@ class ErrorCodes(Enum):
 
 
 def raise_if_error(result):
+    """Raise exception if result is an error.
+
+    Args:
+        result (Dict): JSON result returned from the R Worker
+
+    Raises:
+        RWorkerException: Raise R worker exception containing the error code
+            and user message of the error
+    """
     error = result.get("error")
     if error:
         user_message = error.get("user_message", "Unexpected error occured")
