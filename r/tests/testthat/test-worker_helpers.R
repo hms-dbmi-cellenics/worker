@@ -386,9 +386,17 @@ test_that("getSNNigraph returns an igraph object with correct dimensions", {
   g <- getSNNiGraph(data)
 })
 
-test_that("generate error message concatenates error code and user message with :|:", {
+test_that("generateErrorMessage concatenates error code and user message with :|:", {
 
-  msg <- 'blah'
-  code <- 'dog'
-  expect_equal(generateErrorMessage(code, msg), "dog:|:blah")
+  code <- 'error_code'
+  msg <- 'user_message'
+  expect_equal(generateErrorMessage(code, msg), "error_code:|:user_message")
+})
+
+
+test_that("extractErrorList extracts error code and user message seperated by :|:", {
+
+  error_list <- extractErrorList("error_code:|:user_message")
+  expect_equal(error_list$user_message, "user_message")
+  expect_equal(error_list$error_code, "error_code")
 })
