@@ -1,0 +1,8 @@
+error_codes <- list(
+  GENE_NOT_FOUND = "R_WORKER_GENE_NOT_FOUND",
+  EMPTY_CELL_SET = "R_WORKER_EMPTY_CELL_SET",
+  COLUMN_NOT_FOUND = "R_WORKER_COLUMN_NOT_FOUND",
+  NO_MARKER_GENES = "R_WORKER_NO_MARKER_GENES"
+)
+
+usethis::use_data(error_codes, internal = TRUE)
