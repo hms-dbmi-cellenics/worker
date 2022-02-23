@@ -155,17 +155,21 @@ insertSetChildThroughApi <- function(new_cell_set, api_url, experiment_id, cell_
 }
 
 generateErrorMessage <- function(code, user_message) {
-  return(paste0(code, "|", user_message))
+  return(paste0(code, ":|:", user_message))
 }
 
 extractErrorList <- function(error_message) {
 
-  error_string <- unlist(strsplit(error_message, "|", fixed=TRUE))
+  error_string <- unlist(strsplit(error_message, ":|:", fixed=TRUE))
+
+  is.expected <- !is.na(error_string[2])
+  error_code <- ifelse(is.expected, error_string[1], error_codes$UNHANDLED_ERROR)
+  user_message <- ifelse(is.expected, error_string[2], error_message)
 
   return(
     list(
-      error_code = error_string[1],
-      user_message = error_string[2]
+      error_code = error_code,
+      user_message = user_message
     )
   )
 }
