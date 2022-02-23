@@ -1,5 +1,9 @@
-import pytest
+from http.client import responses
 
+import pytest
+import responses
+from exceptions import RWorkerException
+from worker.config import config
 from worker.tasks.embedding import GetEmbedding
 
 
@@ -51,3 +55,24 @@ class TestEmbedding:
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
             GetEmbedding(self).compute("definitelynotavalidembedding")
+
+    @responses.activate
+    def test_should_throw_exception_on_r_worker_error(self):
+
+        error_code = "MOCK_R_WORKER_ERROR"
+        user_message = "Some worker error"
+
+        payload = {"error": {"error_code": error_code, "user_message": user_message}}
+
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/getEmbedding",
+            json=payload,
+            status=200,
+        )
+
+        with pytest.raises(RWorkerException) as exc_info:
+            GetEmbedding(self.correct_request_umap).compute()
+
+        assert exc_info.value.args[0] == error_code
+        assert exc_info.value.args[1] == user_message
