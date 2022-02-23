@@ -42,23 +42,23 @@ class TestGetDiffExprCellSets:
         first_cell_set_name = "louvain-1"
         second_cell_set_name = "louvain-2"
 
-        with pytest.raises(PythonWorkerException) as exc_info:
+        with pytest.raises(PythonWorkerException) as exception_info:
             get_diff_expr_cellsets(
                 basis_name, first_cell_set_name, second_cell_set_name, self.cellsets
             )
 
-        assert exc_info.value.args[0] == ErrorCodes.INVALID_INPUT
-        assert exc_info.value.args[1] == "No cell id fullfills the 1st cell set."
+        assert exception_info.value.args[0] == ErrorCodes.INVALID_INPUT
+        assert exception_info.value.args[1] == "No cell id fullfills the 1st cell set."
 
     def test_should_throw_error_if_2nd_cell_sets_is_empty(self):
         basis_name = "patient-a"
         first_cell_set_name = "louvain-1"
         second_cell_set_name = "louvain-2"
 
-        with pytest.raises(PythonWorkerException) as exc_info:
+        with pytest.raises(PythonWorkerException) as exception_info:
             get_diff_expr_cellsets(
                 basis_name, first_cell_set_name, second_cell_set_name, self.cellsets
             )
 
-        assert exc_info.value.args[0] == ErrorCodes.INVALID_INPUT
-        assert exc_info.value.args[1] == "No cell id fullfills the 2nd cell set."
+        assert exception_info.value.args[0] == ErrorCodes.INVALID_INPUT
+        assert exception_info.value.args[1] == "No cell id fullfills the 2nd cell set."

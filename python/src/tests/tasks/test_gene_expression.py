@@ -51,8 +51,8 @@ class TestGeneExpression:
             status=200,
         )
 
-        with pytest.raises(RWorkerException) as exc_info:
+        with pytest.raises(RWorkerException) as exception_info:
             GeneExpression(self.correct_request).compute()
 
-        assert exc_info.value.args[0] == error_code
-        assert exc_info.value.args[1] == user_message
+        assert exception_info.value.args[0] == error_code
+        assert exception_info.value.args[1] == user_message
