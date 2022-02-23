@@ -95,7 +95,7 @@ applyFilters <- function(gene_results, filters) {
   }
 
   # apply numeric filters
-  numeric_columns <- c("logFC", "p_val_adj", "pct_1", "pct_2", "auc")
+  numeric_columns <- colnames(gene_results)[sapply(gene_results, is.numeric)]
 
   for (idx in seq_along(filter_columns)) {
     column <- filter_columns[idx]
