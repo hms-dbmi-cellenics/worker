@@ -385,3 +385,10 @@ test_that("getSNNigraph returns an igraph object with correct dimensions", {
   data <- mock_scdata()
   g <- getSNNiGraph(data)
 })
+
+test_that("generate error message concatenates error code and user message with :|:", {
+
+  msg <- 'blah'
+  code <- 'dog'
+  expect_equal(generateErrorMessage(code, msg), "dog:|:blah")
+})
