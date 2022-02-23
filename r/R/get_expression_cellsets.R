@@ -24,7 +24,7 @@ getExpressionCellSet <- function(req, data) {
   if(length(new_cell_set$cellIds) == 0) {
     stop(
       generateErrorMessage(
-        errorCodes$EMPTY_CELL_SET,
+        ErrorCodes$EMPTY_CELL_SET,
         'No cells match requested filters.'
       )
     )
@@ -51,7 +51,7 @@ getExpressionCellSetIDs <- function(filters, data) {
   if (anyNA(name_match)) {
     stop(
       generateErrorMessage(
-        errorCodes$EMPTY_CELL_SET,
+        ErrorCodes$EMPTY_CELL_SET,
         "Requested ExpressionCellSet with gene name(s) that are not present."
       )
     )
