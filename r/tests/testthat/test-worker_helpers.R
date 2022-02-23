@@ -393,10 +393,18 @@ test_that("generateErrorMessage concatenates error code and user message with :|
   expect_equal(generateErrorMessage(code, msg), "error_code:|:user_message")
 })
 
-
 test_that("extractErrorList extracts error code and user message seperated by :|:", {
 
   error_list <- extractErrorList("error_code:|:user_message")
   expect_equal(error_list$user_message, "user_message")
   expect_equal(error_list$error_code, "error_code")
+})
+
+test_that("extractErrorList correctly formats unhandled error messages", {
+
+  unhandled_message <- tryCatch(stop("unhandled message!"), error = function(e) return(e$message))
+
+  error_list <- extractErrorList(unhandled_message)
+  expect_equal(error_list$user_message, unhandled_message)
+  expect_equal(error_list$error_code, "R_WORKER_UNHANDLED_ERROR")
 })
