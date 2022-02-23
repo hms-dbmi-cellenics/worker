@@ -175,10 +175,10 @@ extractErrorList <- function(error_message) {
 }
 
 formatResponse <- function(data, error) {
-  return (
+  return(
     list(
-        data=data,
-        error=error
+        data = data,
+        error = error
     )
   )
 }

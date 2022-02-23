@@ -408,3 +408,10 @@ test_that("extractErrorList correctly formats unhandled error messages", {
   expect_equal(error_list$user_message, unhandled_message)
   expect_equal(error_list$error_code, "R_WORKER_UNHANDLED_ERROR")
 })
+
+test_that("formatResponse creates a list with data and error objects", {
+
+  expect_equal(formatResponse(letters[1:5], 'error!'),
+               list(data = letters[1:5],
+                    error = 'error!'))
+})
