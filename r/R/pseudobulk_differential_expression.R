@@ -39,7 +39,7 @@ runPseudobulkDE <- function(pbulk) {
   nsample <- ncol(y)
   if (nsample == 2) {
     # only logFC if two samples
-    res <- data.frame(fit$genes,
+    res <- data.frame(
       logFC = fit$coefficients[, contrast],
       AveExpr = fit$Amean
     )
@@ -49,11 +49,12 @@ runPseudobulkDE <- function(pbulk) {
     # differential expression if 3+ samples
     eb_fit <- limma::eBayes(fit, robust = TRUE)
     res <- limma::topTable(eb_fit, coef = contrast, sort.by = "p", n = Inf)
+
+    # rename columns to match up with wilcoxauc
+    res <- res[, c('P.Value', 'logFC', 'AveExpr', 'adj.P.Val')]
+    colnames(res) <- c('p_val', 'logFC', 'AveExpr', 'p_val_adj')
   }
 
-  # add filtered genes so that searchable
   res[disc, ] <- NA
-  res[disc, "name"] <- pbulk@misc$gene_annotations[disc, "name"]
-
   return(res)
 }
