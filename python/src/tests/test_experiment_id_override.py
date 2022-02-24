@@ -8,7 +8,7 @@ class TestExperimentIDFetch:
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='key="value"\ntest="test"\nsandboxId="mockSandbox"\n',
+        read_data='key="value"\nsandboxId="mockSandbox"\n',
     )
     def test_config_reads_labels_from_file(self, mock_file):
         assert config.SANDBOX_ID == "mockSandbox"
