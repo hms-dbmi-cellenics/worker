@@ -86,6 +86,7 @@ def _response_exists(mssg_body):
         Bucket=config.RESULTS_BUCKET,
         Prefix=ETag,
     )
+
     for obj in response.get("Contents", []):
         if obj["Key"] == ETag:
             return obj["Size"]
@@ -113,7 +114,6 @@ def consume():
             f"Skipping processing task with ETag {mssg_body['ETag']} "
             f"as a response with this hash is already in S3."
         )
-
         return None
 
     info(json.dumps(mssg_body, indent=2, sort_keys=True))

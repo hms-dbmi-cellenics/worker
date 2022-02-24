@@ -3,6 +3,7 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.s3 import get_cell_sets
@@ -25,15 +26,23 @@ class DotPlot(Task):
         cellSets = get_cell_sets(self.experiment_id)
 
         # Getting the cell ids for subsetting the seurat object with a group of cells.
-        groupByCellSet = [cellSet for cellSet in cellSets if cellSet["key"] == self.task_def["groupBy"]][0]
+        groupByCellSet = [
+            cellSet
+            for cellSet in cellSets
+            if cellSet["key"] == self.task_def["groupBy"]
+        ][0]
 
         filterBy = self.task_def["filterBy"]
         applyFilter = filterBy["group"].lower() != "all"
         filterByCellSet = groupByCellSet
 
         if applyFilter:
-            children = [cellSet for cellSet in cellSets if cellSet["key"] == filterBy["group"]][0]["children"]
-            filterByCellSet = [child for child in children if child["key"] == filterBy["key"]][0]
+            children = [
+                cellSet for cellSet in cellSets if cellSet["key"] == filterBy["group"]
+            ][0]["children"]
+            filterByCellSet = [
+                child for child in children if child["key"] == filterBy["key"]
+            ][0]
 
         request = {
             "useMarkerGenes": self.task_def["useMarkerGenes"],
@@ -54,13 +63,16 @@ class DotPlot(Task):
 
         request = self._format_request()
 
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/runDotPlot",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
-        r.raise_for_status()
-        result = r.json()
 
-        return self._format_result(result)
+        response.raise_for_status()
+        result = response.json()
+        raise_if_error(result)
+
+        data = result.get("data")
+
+        return self._format_result(data)

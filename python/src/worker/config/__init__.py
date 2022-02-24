@@ -60,7 +60,10 @@ class Config(types.SimpleNamespace):
 
     @property
     def EXPERIMENT_ID(self):
-        return self.get_label("experimentId")
+        label = self.get_label("experimentId")
+        if label is None and cluster_env == "development":
+            return "test-experiment-id"
+        return label
 
     @property
     def SANDBOX_ID(self):

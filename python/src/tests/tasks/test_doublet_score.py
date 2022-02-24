@@ -1,8 +1,6 @@
-import json
-import os
-
 import pytest
 import responses
+from exceptions import RWorkerException
 from worker.config import config
 from worker.tasks.doublet_score import GetDoubletScore
 
@@ -17,6 +15,7 @@ class TestGetDoubletScore:
                 "name": "getDoubletScore",
             },
         }
+
     def test_works_with_request(self):
         GetDoubletScore(self.correct_request)
 
@@ -28,3 +27,23 @@ class TestGetDoubletScore:
         expected_keys = []
         assert all(key in request for key in expected_keys)
 
+    @responses.activate
+    def test_should_throw_exception_on_r_worker_error(self):
+
+        error_code = "MOCK_R_WORKER_ERROR"
+        user_message = "Some worker error"
+
+        payload = {"error": {"error_code": error_code, "user_message": user_message}}
+
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/getDoubletScore",
+            json=payload,
+            status=200,
+        )
+
+        with pytest.raises(RWorkerException) as exception_info:
+            GetDoubletScore(self.correct_request).compute()
+
+        assert exception_info.value.args[0] == error_code
+        assert exception_info.value.args[1] == user_message
