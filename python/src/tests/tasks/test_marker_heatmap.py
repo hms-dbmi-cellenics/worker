@@ -100,6 +100,7 @@ class TestMarkerHeatmap:
 
     @responses.activate
     def test_should_throw_exception_on_r_worker_error(self):
+        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
 
         error_code = "MOCK_R_WORKER_ERROR"
         user_message = "Some worker error"
@@ -113,8 +114,11 @@ class TestMarkerHeatmap:
             status=200,
         )
 
-        with pytest.raises(RWorkerException) as exc_info:
-            MarkerHeatmap(self.correct_request).compute()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
 
-        assert exc_info.value.args[0] == error_code
-        assert exc_info.value.args[1] == user_message
+            with pytest.raises(RWorkerException) as exc_info:
+                MarkerHeatmap(self.correct_request).compute()
+
+            assert exc_info.value.args[0] == error_code
+            assert exc_info.value.args[1] == user_message
