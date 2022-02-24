@@ -1,4 +1,4 @@
-from exceptions import WorkerException
+from exceptions import ErrorCodes, WorkerException
 
 from ..helpers.count_matrix import CountMatrix
 from ..helpers.xray_log_exception import xray_log_exception
@@ -61,7 +61,7 @@ class TaskFactory:
             xray_log_exception(task, e)
             return Result(
                 {
-                    "error_code": "PYTHON_WORKER_GENERIC_ERROR",
+                    "error_code": ErrorCodes.PYTHON_WORKER_ERROR,
                     "user_message": "An unexpected error occurred while performing the work.",
                 },
                 error=True,

@@ -1,6 +1,3 @@
-from enum import Enum
-
-
 class WorkerException(Exception):
     def __init__(self, error_code, user_message):
         self.error_code = error_code
@@ -17,7 +14,7 @@ class PythonWorkerException(WorkerException):
         super().__init__(error_code, user_message)
 
 
-class ErrorCodes(Enum):
+class ErrorCodes:
     PYTHON_WORKER_ERROR = "PYTHON_WORKER_ERROR"
     INVALID_INPUT = "INVALID_INPUT"
 
