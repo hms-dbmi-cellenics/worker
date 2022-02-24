@@ -73,8 +73,6 @@ class DifferentialExpression(Task):
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError occurred
-        # as otherwise response.json() will fail
         response.raise_for_status()
         result = response.json()
         raise_if_error(result)

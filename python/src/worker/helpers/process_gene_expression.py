@@ -2,14 +2,12 @@ import numpy as np
 
 
 def process_gene_expression(data):
-
     truncated_expr = data["truncatedExpression"]
     raw_expr = data["rawExpression"]
 
     result = {}
 
     for gene in raw_expr.keys():
-
         raw_gene_expr = raw_expr[gene]
         # can't do summary stats on list with None's
         # casting to np array replaces None with np.nan

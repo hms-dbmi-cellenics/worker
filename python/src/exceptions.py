@@ -34,4 +34,4 @@ def raise_if_error(result):
     """
     error = result.get("error")
     if error:
-        raise RWorkerException(error['error_code'],  error['user_message'])
+        raise RWorkerException(error["error_code"], error["user_message"])
