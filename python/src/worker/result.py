@@ -1,6 +1,3 @@
-import json
-
-
 class Result:
     def __init__(
         self,
@@ -15,4 +12,3 @@ class Result:
         self.content_encoding = content_encoding
         self.error = error
         self.cacheable = cacheable
-

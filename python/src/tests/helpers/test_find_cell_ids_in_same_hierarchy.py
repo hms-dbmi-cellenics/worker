@@ -3,7 +3,9 @@ import os
 
 import pytest
 from worker.helpers.find_cell_ids_in_same_hierarchy import (
-    find_all_cell_ids_in_cell_sets, find_cell_ids_in_same_hierarchy)
+    find_all_cell_ids_in_cell_sets,
+    find_cell_ids_in_same_hierarchy,
+)
 
 
 class TestFindCellIdsInSameHierarchy:
@@ -19,8 +21,7 @@ class TestFindCellIdsInSameHierarchy:
         assert find_all_cell_ids_in_cell_sets([]) == []
 
     def test_empty_cell_set_returns_appropriate_results_hierarchy(self):
-        print(find_cell_ids_in_same_hierarchy("condition-control", self.cellsets))
-        assert find_cell_ids_in_same_hierarchy("louvain-2", self.cellsets) == [
+        assert find_cell_ids_in_same_hierarchy("louvain-11", self.cellsets) == [
             1,
             2,
             3,
@@ -34,5 +35,31 @@ class TestFindCellIdsInSameHierarchy:
         ]
 
     def test_empty_cell_set_returns_appropriate_results(self):
-        print(find_all_cell_ids_in_cell_sets(self.cellsets))
-        assert find_all_cell_ids_in_cell_sets(self.cellsets) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        assert find_all_cell_ids_in_cell_sets(self.cellsets) == [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+        ]

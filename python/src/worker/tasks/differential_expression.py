@@ -30,7 +30,6 @@ class DifferentialExpression(Task):
     def _format_request(self):
         # get cell sets from database
         cell_sets = get_cell_sets(self.experiment_id)
-
         first_cell_set_name = self.task_def["cellSet"]
         second_cell_set_name = self.task_def["compareWith"]
         basis_name = self.task_def["basis"]
