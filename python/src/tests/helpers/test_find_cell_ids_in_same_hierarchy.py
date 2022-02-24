@@ -21,7 +21,7 @@ class TestFindCellIdsInSameHierarchy:
         assert find_all_cell_ids_in_cell_sets([]) == []
 
     def test_empty_cell_set_returns_appropriate_results_hierarchy(self):
-        assert find_cell_ids_in_same_hierarchy("louvain-11", self.cellsets) == [
+        assert find_cell_ids_in_same_hierarchy("louvain-2", self.cellsets) == [
             1,
             2,
             3,

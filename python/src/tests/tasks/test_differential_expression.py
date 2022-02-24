@@ -9,6 +9,7 @@ import pytest
 import responses
 from botocore.stub import Stubber
 from exceptions import RWorkerException
+from tests.data.cell_set_types import cell_set_types
 from worker.config import config
 from worker.tasks.differential_expression import DifferentialExpression
 
@@ -193,12 +194,11 @@ class TestDifferentialExpression:
             stubber.assert_no_pending_responses()
 
     @responses.activate
-    @patch("worker.helpers.s3.get_cell_sets")
-    def test_should_throw_exception_on_r_worker_error(self, mock_get_cell_sets):
+    def test_should_throw_exception_on_r_worker_error(self):
         error_code = "R_WORKER_ERROR"
         user_message = "User message"
 
-        mock_get_cell_sets.return_value = self.cellsets
+        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
 
         responses.add(
             responses.POST,
@@ -212,14 +212,17 @@ class TestDifferentialExpression:
             status=200,
         )
 
-        with pytest.raises(RWorkerException) as exc_info:
-            DifferentialExpression(
-                self.get_request(
-                    cellSet="louvain-1",
-                    compareWith="louvain-2",
-                    basis="condition-control",
-                )
-            ).compute()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            with pytest.raises(RWorkerException) as exc_info:
+                DifferentialExpression(
+                    self.get_request(
+                        cellSet="cluster1",
+                        compareWith="cluster2",
+                        basis="basisCluster",
+                        comparisonType="between",
+                    )
+                ).compute()
 
-        assert exc_info.value.args[0] == error_code
-        assert exc_info.value.args[1] == user_message
+            assert exc_info.value.args[0] == error_code
+            assert exc_info.value.args[1] == user_message
