@@ -4,8 +4,10 @@ import backoff
 import numpy as np
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
+from ..helpers.process_gene_expression import process_gene_expression
 from ..result import Result
 from ..tasks import Task
 
@@ -15,7 +17,7 @@ class GeneExpression(Task):
         # Return a list of formatted results.
         return Result(result)
 
-    def _construct_request(self):
+    def _format_request(self):
         request = self.task_def
         return request
 
@@ -24,51 +26,19 @@ class GeneExpression(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = self._construct_request()
-        
-        r = requests.post(
+        request = self._format_request()
+
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/runExpression",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
-        r.raise_for_status()
-        resultR = r.json()
-        truncatedR = resultR["truncatedExpression"]
-        resultR = resultR["rawExpression"]
-        result = {}
-        if not len(resultR):
-            result[genes[0]] = {
-                "error": 404,
-                "message": "Gene {} not found!".format(genes[0]),
-            }
 
-        else:
-            for gene in resultR.keys():
+        response.raise_for_status()
+        result = response.json()
+        raise_if_error(result)
 
-                view = resultR[gene]
-                # can't do summary stats on list with None's
-                # casting to np array replaces None with np.nan
-                viewnp = np.array(view, dtype=np.float)
-                # This is not necessary and is also costly, but I leave it commented as a reminder
-                # that this object has integer zeros and floating point for n!=0.
-                # expression = [float(item) for item in view]
-                mean = float(np.nanmean(viewnp))
-                stdev = float(np.nanstd(viewnp))
-                result[gene] = {"truncatedExpression": {}, "rawExpression": {}}
-                result[gene]["rawExpression"] = {
-                    "mean": mean,
-                    "stdev": stdev,
-                    "expression": view,
-                }
+        data = result.get("data")
+        result = process_gene_expression(data)
 
-                viewTr = truncatedR[gene]
-                viewnpTr = np.array(viewTr, dtype=np.float)
-                minimum = float(np.nanmin(viewnpTr))
-                maximum = float(np.nanmax(viewnpTr))
-                result[gene]["truncatedExpression"] = {
-                                    "min": minimum,
-                                    "max": maximum,
-                                    "expression": viewTr,
-                                }              
         return self._format_result(result)

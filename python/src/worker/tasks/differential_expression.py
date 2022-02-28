@@ -3,12 +3,9 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
-
-# from ..helpers.find_cell_ids_in_same_hierarchy import (
-#     find_all_cell_ids_in_cell_sets, find_cell_ids_in_same_hierarchy)
-# from ..helpers.find_cells_by_set_id import find_cells_by_set_id
 from ..helpers.get_diff_expr_cellsets import get_diff_expr_cellsets
 from ..helpers.remove_regex import remove_regex
 from ..helpers.s3 import get_cell_sets
@@ -27,12 +24,12 @@ class DifferentialExpression(Task):
 
     def _format_result(self, result):
         # Return a list of formatted results.
+
         return Result({"total": result["full_count"], "rows": result["gene_results"]})
 
     def _format_request(self):
         # get cell sets from database
         cell_sets = get_cell_sets(self.experiment_id)
-
         first_cell_set_name = self.task_def["cellSet"]
         second_cell_set_name = self.task_def["compareWith"]
         basis_name = self.task_def["basis"]
@@ -45,7 +42,7 @@ class DifferentialExpression(Task):
             "baseCells": [int(x) for x in baseCells],
             "backgroundCells": [int(x) for x in backgroundCells],
             "genesOnly": self.task_def.get("genesOnly", False),
-            "comparisonType": self.task_def.get("comparisonType", "within")
+            "comparisonType": self.task_def.get("comparisonType", "within"),
         }
 
         if self.pagination:
@@ -69,15 +66,16 @@ class DifferentialExpression(Task):
         request = self._format_request()
 
         # send request to r worker
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/DifferentialExpression",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json()
-        #  will fail
-        r.raise_for_status()
-        r = r.json()
+        response.raise_for_status()
+        result = response.json()
+        raise_if_error(result)
 
-        return self._format_result(r)
+        data = result.get("data")
+
+        return self._format_result(data)

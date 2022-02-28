@@ -13,7 +13,7 @@ cluster_env = os.getenv("CLUSTER_ENV")
 timeout = int(
     os.getenv(
         "WORK_TIMEOUT",
-        default=str(60 * 60 * 3) if kube_env == "production" else str(60 * 10)
+        default=str(60 * 60 * 3) if kube_env == "production" else str(60 * 10),
     )
 )
 
@@ -55,23 +55,23 @@ class Config(types.SimpleNamespace):
         # If unsuccessful, we return None.
         return labels.get(
             label_key,
-            os.getenv(
-                re.sub(r'(?<!^)(?=[A-Z])', '_', label_key).upper(),
-                default
-            )
+            os.getenv(re.sub(r"(?<!^)(?=[A-Z])", "_", label_key).upper(), default),
         )
 
     @property
     def EXPERIMENT_ID(self):
-        return self.get_label('experimentId')
+        label = self.get_label("experimentId")
+        if label is None and cluster_env == "development":
+            return "test-experiment-id"
+        return label
 
     @property
     def SANDBOX_ID(self):
-        return self.get_label('sandboxId')
+        return self.get_label("sandboxId")
 
     @property
     def WORK_QUEUE_HASH(self):
-        return self.get_label('workQueueHash')
+        return self.get_label("workQueueHash")
 
     @property
     def QUEUE_NAME(self):
@@ -104,7 +104,7 @@ class Config(types.SimpleNamespace):
             host=self.REDIS_ENDPOINT["Address"],
             port=self.REDIS_ENDPOINT["Port"],
             ssl=True,
-            ssl_cert_reqs=None
+            ssl_cert_reqs=None,
         )
 
 
@@ -125,7 +125,9 @@ config = Config(
     LOCAL_DIR=os.path.join(os.pardir, os.pardir, "data"),
 )
 
-config.API_URL = f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
+config.API_URL = (
+    f"http://api-{config.SANDBOX_ID}.api-{config.SANDBOX_ID}.svc.cluster.local:3000"
+)
 
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
@@ -136,9 +138,7 @@ if cluster_env == "development" or cluster_env == "test":
     global_sdk_config.set_sdk_enabled(False)
 
 if cluster_env == "development":
-    config.BOTO_RESOURCE_KWARGS[
-        "endpoint_url"
-    ] = "http://host.docker.internal:4566"
+    config.BOTO_RESOURCE_KWARGS["endpoint_url"] = "http://host.docker.internal:4566"
     config.R_WORKER_URL = "http://r:4000"
 
 if cluster_env != "test":

@@ -85,18 +85,17 @@ getExpressionValues <- function(genes, data) {
 
 
 applyFilters <- function(gene_results, filters) {
-
-  filter_columns <- sapply(filters, `[[`, 'columnName')
+  filter_columns <- sapply(filters, `[[`, "columnName")
 
   # apply gene text filter
-  gene.idx <- which(filter_columns == 'gene_names')[1]
+  gene.idx <- which(filter_columns == "gene_names")[1]
   if (!is.na(gene.idx)) {
     gene <- filters[[gene.idx]]$expression
     gene_results <- gene_results[grepl(gene, gene_results$gene_names, ignore.case = TRUE), ]
   }
 
   # apply numeric filters
-  numeric_columns <- c('logFC', 'p_val_adj', 'pct_1', 'pct_2', 'auc')
+  numeric_columns <- colnames(gene_results)[sapply(gene_results, is.numeric)]
 
   for (idx in seq_along(filter_columns)) {
     column <- filter_columns[idx]
@@ -110,9 +109,9 @@ applyFilters <- function(gene_results, filters) {
 }
 
 applyNumericFilter <- function(gene_results, column, comparison, value) {
-  if (comparison == 'greaterThan') {
+  if (comparison == "greaterThan") {
     keep <- gene_results[[column]] > value
-  } else if (comparison == 'lessThan') {
+  } else if (comparison == "lessThan") {
     keep <- gene_results[[column]] < value
   }
 
@@ -121,7 +120,6 @@ applyNumericFilter <- function(gene_results, column, comparison, value) {
 }
 
 handlePagination <- function(gene_results, offset, limit, order_by, order_decreasing) {
-
   full_count <- nrow(gene_results)
 
   if (order_by %in% names(gene_results)) {
@@ -134,4 +132,53 @@ handlePagination <- function(gene_results, offset, limit, order_by, order_decrea
 
   gene_results <- na.omit(gene_results[(offset):(offset + limit), ])
   return(list(gene_results = gene_results, full_count = full_count))
+}
+
+insertSetChildThroughApi <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT) {
+  httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
+  children <- list(list("$insert" = list(index = "-", value = new_cell_set)))
+
+  httr::PATCH(
+    paste0(api_url, "/v1/experiments/", experiment_id, "/cellSets"),
+    body = list(
+      list("$match" = list(
+        query = httr_query,
+        value = list("children" = children)
+      ))
+    ),
+    encode = "json",
+    httr::add_headers(
+      "Content-Type" = "application/boschni-json-merger+json",
+      "Authorization" = auth_JWT
+    )
+  )
+}
+
+generateErrorMessage <- function(code, user_message) {
+  return(paste0(code, ":|:", user_message))
+}
+
+extractErrorList <- function(error_message) {
+
+  error_string <- unlist(strsplit(error_message, ":|:", fixed=TRUE))
+
+  is.expected <- !is.na(error_string[2])
+  error_code <- ifelse(is.expected, error_string[1], error_codes$UNHANDLED_ERROR)
+  user_message <- ifelse(is.expected, error_string[2], error_message)
+
+  return(
+    list(
+      error_code = error_code,
+      user_message = user_message
+    )
+  )
+}
+
+formatResponse <- function(data, error) {
+  return(
+    list(
+        data = data,
+        error = error
+    )
+  )
 }

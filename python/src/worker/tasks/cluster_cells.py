@@ -5,6 +5,7 @@ import backoff
 import pandas as pd
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 from natsort import natsorted
 
 from ..config import config
@@ -69,8 +70,8 @@ class ClusterCells(Task):
 
         info(r.status_code)
 
-    def _format_result(self, cell_set_object):
-        return Result(cell_set_object, cacheable=False)
+    def _format_result(self, result):
+        return Result(result, cacheable=False)
 
     def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
@@ -90,25 +91,27 @@ class ClusterCells(Task):
 
         request = self._format_request()
 
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getClusters",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json() will fail
-        r.raise_for_status()
-        resR = r.json()
+        response.raise_for_status()
+        result = response.json()
+        raise_if_error(result)
+
+        data = result.get("data")
 
         # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
         # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,
         # at most O(n of cells), which is well within our time complexity because the taxing part will be clustering.
-        resR = pd.DataFrame(resR)
-        resR.set_index("_row", inplace=True)
-        resR["cluster"] = pd.Categorical(resR.cluster)
+        df = pd.DataFrame(data)
+        df.set_index("_row", inplace=True)
+        df["cluster"] = pd.Categorical(df.cluster)
 
         # Convert it into a JSON format and patch the API directly
-        cell_set_object = self._convert_to_cell_set_object(resR)
+        cell_set_object = self._convert_to_cell_set_object(df)
         self._update_through_api(cell_set_object)
 
         return self._format_result(cell_set_object)

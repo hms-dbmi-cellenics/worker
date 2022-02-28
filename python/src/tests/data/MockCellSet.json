@@ -1,0 +1,94 @@
+[
+    {
+        "key": "louvain",
+        "name": "Louvain clusters",
+        "type": "cellSets",
+        "rootNode": true,
+        "children": [
+            {
+                "cellIds": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ],
+                "color": "#fec7f8",
+                "key": "louvain-1",
+                "name": "Cluster 11"
+            },
+            {
+                "cellIds": [
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ],
+                "color": "#0b7b3e",
+                "key": "louvain-2",
+                "name": "Cluster 2"
+            }
+        ]
+    },
+    {
+        "key": "condition",
+        "name": "Condition",
+        "type": "metadataCategorical",
+        "rootNode": true,
+        "children": [
+            {
+                "cellIds": [
+                    1,
+                    2,
+                    3
+                ],
+                "color": "#e377c2",
+                "key": "condition-control",
+                "name": "Control"
+            },
+            {
+                "cellIds": [
+                    4,
+                    5,
+                    6
+                ],
+                "color": "#8c564b",
+                "key": "condition-treated",
+                "name": "Treated"
+            }
+        ]
+    },
+    {
+        "key": "patient",
+        "name": "Patient",
+        "type": "metadataCategorical",
+        "rootNode": true,
+        "children": [
+            {
+                "cellIds": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ],
+                "color": "#e377c2",
+                "key": "patient-a",
+                "name": "Patient A"
+            },
+            {
+                "cellIds": [
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ],
+                "color": "#8c564b",
+                "key": "patient-b",
+                "name": "Patient B"
+            }
+        ]
+    }
+]

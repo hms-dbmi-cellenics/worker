@@ -45,3 +45,11 @@ test_that("Expression task works with one gene", {
   expect_equal(ncol(res$rawExpression), 1)
   expect_equal(nrow(res$rawExpression), ncol(data))
 })
+
+test_that("runExpression throws an error if request only non existing genes", {
+  data <- mock_scdata()
+  req <- mock_req()
+  req$body$genes <- list("blah")
+
+  expect_error(runExpression(req, data), "Gene\\(s\\): blah not found!")
+})
