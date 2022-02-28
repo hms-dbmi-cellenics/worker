@@ -118,7 +118,7 @@ test_that("Spatial case works properly", {
 
   data <- getClusters(type, resol, data)
 
-  data@assays$spatial <- list()
+  data@assays$Spatial <- CreateAssayObject(data@assays$RNA@counts)
 
   expected_res <- data.frame(
     cluster = data$seurat_clusters,
