@@ -1,4 +1,3 @@
-
 #
 # subset_ids subsets a seurat object with the cell ids
 #
@@ -181,4 +180,8 @@ formatResponse <- function(data, error) {
         error = error
     )
   )
+}
+
+formatExpression <- function(data){
+
 }
