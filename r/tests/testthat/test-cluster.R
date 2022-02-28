@@ -13,6 +13,17 @@ mock_req <- function(type = "louvain") {
 }
 
 mock_scdata <- function() {
+  utils::data("pbmc_small", package = "SeuratObject", envir = environment())
+  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
+  pbmc_small@misc$gene_annotations <- data.frame(
+    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
+    name = row.names(pbmc_small),
+    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
+  )
+  return(pbmc_small)
+}
+
+mock_scdata_spatial <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- data.frame(
@@ -97,4 +108,24 @@ test_that("runClusters uses active.reduction in misc slot", {
     req <- mock_req(type = algo)
     expect_error(runClusters(req, data), NA)
   }
+})
+
+test_that("Spatial case works properly", {
+  data <- mock_scdata()
+  req <- mock_req()
+  resol <- req$body$config$resolution
+  type <- req$body$type
+
+  data <- getClusters(type, resol, data)
+
+  data@assays$spatial <- list()
+
+  expected_res <- data.frame(
+    cluster = data$seurat_clusters,
+    cell_ids = data@meta.data$cells_id,
+    row.names = rownames(data@meta.data))
+
+  res <- runClusters(req, data)
+
+  expect_equal(res,expected_res)
 })
