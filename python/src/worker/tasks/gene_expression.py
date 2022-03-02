@@ -37,5 +37,6 @@ class GeneExpression(Task):
         response.raise_for_status()
         result = response.json()
         raise_if_error(result)
+        result = result.get("data")
 
         return self._format_result(result)

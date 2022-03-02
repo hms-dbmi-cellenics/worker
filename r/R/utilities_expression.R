@@ -49,13 +49,13 @@ formatExpression <- function(data) {
 formatExpressionAux <- function(raw, trunc) {
   return(list(
     rawExpression = list(
-      mean = mean(raw),
-      stdev = sd(raw),
+      mean = mean(raw,na.rm=TRUE),
+      stdev = sd(raw,na.rm=TRUE),
       expression = raw
     ),
     truncatedExpression = list(
-      min = min(trunc),
-      max = max(trunc),
+      min = min(trunc,na.rm=TRUE),
+      max = max(trunc,na.rm=TRUE),
       expression = trunc
     )
   ))

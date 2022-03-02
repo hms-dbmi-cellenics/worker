@@ -58,5 +58,4 @@ class MarkerHeatmap(Task):
             "data": data,
             "order": list(data.keys()),
         }
-
         return self._format_result(result)
