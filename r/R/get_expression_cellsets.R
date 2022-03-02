@@ -21,11 +21,11 @@ getExpressionCellSet <- function(req, data) {
   cell_set_class_key <- "scratchpad"
   config <- req$body$config
 
-  if(length(new_cell_set$cellIds) == 0) {
+  if (length(new_cell_set$cellIds) == 0) {
     stop(
       generateErrorMessage(
         error_codes$EMPTY_CELL_SET,
-        'No cells match requested filters.'
+        "No cells match requested filters."
       )
     )
   }
@@ -92,4 +92,3 @@ getExpressionCellSetIDs <- function(filters, data) {
   new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], cell_set_name = cell_set_name)
   return(new_cell_set_data)
 }
-

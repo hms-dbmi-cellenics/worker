@@ -15,7 +15,6 @@ runDE <- function(req, data) {
   comparison_type <- req$body$comparisonType
   if (comparison_type == "within") {
     result <- runWilcoxAUC(data)
-
   } else if (comparison_type == "between") {
     pbulk <- makePseudobulkMatrix(data)
     result <- runPseudobulkDE(pbulk)
@@ -25,7 +24,7 @@ runDE <- function(req, data) {
   result$gene_names <- data@misc$gene_annotations[row.names(result), "name"]
   result$Gene <- rownames(result)
 
-  #replace NA gene symbols with ensembl ids
+  # replace NA gene symbols with ensembl ids
   na.genes <- is.na(result$gene_names)
   result$gene_names[na.genes] <- result$Gene[na.genes]
 
@@ -33,7 +32,6 @@ runDE <- function(req, data) {
   if (!("pagination" %in% names(req$body))) {
     result <- list(gene_results = purrr::transpose(result), full_count = nrow(result))
     message("Pagination not enabled, returning results: ", str(result))
-
   } else {
     result <- paginateDE(result, req)
   }

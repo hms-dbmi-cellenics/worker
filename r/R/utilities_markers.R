@@ -27,9 +27,9 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin 
   # may not return nFeatures markers per cluster if values are too stringent
   filtered_markers <- all_markers %>%
     dplyr::filter(logFC > 0 &
-                    auc >= aucMin &
-                    pct_in >= pctInMin &
-                    pct_out <= pctOutMax) %>%
+      auc >= aucMin &
+      pct_in >= pctInMin &
+      pct_out <= pctOutMax) %>%
     dplyr::group_by(feature) %>%
     dplyr::slice(which.min(pval))
 

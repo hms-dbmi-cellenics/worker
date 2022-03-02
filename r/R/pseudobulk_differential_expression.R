@@ -51,8 +51,8 @@ runPseudobulkDE <- function(pbulk) {
     res <- limma::topTable(eb_fit, coef = contrast, sort.by = "p", n = Inf)
 
     # rename columns to match up with wilcoxauc
-    res <- res[, c('P.Value', 'logFC', 'AveExpr', 'adj.P.Val')]
-    colnames(res) <- c('p_val', 'logFC', 'AveExpr', 'p_val_adj')
+    res <- res[, c("P.Value", "logFC", "AveExpr", "adj.P.Val")]
+    colnames(res) <- c("p_val", "logFC", "AveExpr", "p_val_adj")
   }
 
   res[disc, ] <- NA
