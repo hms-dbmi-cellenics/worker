@@ -15,7 +15,6 @@ runExpression <- function(req, data) {
     genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
 
     if (!nrow(genesSubset)) {
-
         stop(
             generateErrorMessage(
                 error_codes$GENE_NOT_FOUND,

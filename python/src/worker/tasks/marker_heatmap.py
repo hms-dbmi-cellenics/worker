@@ -53,11 +53,11 @@ class MarkerHeatmap(Task):
         response.raise_for_status()
         json_response = response.json()
         raise_if_error(json_response)
-
         data = json_response.get("data")
+        #print(data)
         result = {
-            "data": process_gene_expression(data),
-            "order": list(data["rawExpression"]),
+            "data": data,
+            "order": list(data.keys()),
         }
 
         return self._format_result(result)

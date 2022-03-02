@@ -66,7 +66,8 @@ getExpressionValues <- function(genes, data) {
   geneExpression <- geneExpression[order(geneExpression$cells_id), ]
   geneExpression <- geneExpression %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    dplyr::select(-cells_id)
+    dplyr::select(-cells_id) %>%
+    as.data.frame()
   # worried about duplicate gene row.names in @data
   symbol_idx <- match(colnames(geneExpression), genes$input)
   colnames(geneExpression) <- genes$name[symbol_idx]
@@ -158,8 +159,7 @@ generateErrorMessage <- function(code, user_message) {
 }
 
 extractErrorList <- function(error_message) {
-
-  error_string <- unlist(strsplit(error_message, ":|:", fixed=TRUE))
+  error_string <- unlist(strsplit(error_message, ":|:", fixed = TRUE))
 
   is.expected <- !is.na(error_string[2])
   error_code <- ifelse(is.expected, error_string[1], error_codes$UNHANDLED_ERROR)
@@ -176,12 +176,31 @@ extractErrorList <- function(error_message) {
 formatResponse <- function(data, error) {
   return(
     list(
-        data = data,
-        error = error
+      data = data,
+      error = error
     )
   )
 }
 
-formatExpression <- function(data){
-
+formatExpression <- function(data) {
+  raw_expression <- data$rawExpression
+  truncated_expression <- data$truncatedExpression
+  res <- list()
+  for (gene in colnames(raw_expression)) {
+    gene_raw_expression <- raw_expression[, gene]
+    gene_trunc_expression <- truncated_expression[, gene]
+    res[[gene]] <- list(
+      rawExpression = list(
+        mean = mean(gene_raw_expression),
+        stdev = sd(gene_raw_expression),
+        expression = gene_raw_expression
+      ),
+      truncatedExpression = list(
+        min = min(gene_trunc_expression),
+        max = max(gene_trunc_expression),
+        expression = gene_trunc_expression
+      )
+    )
+  }
+  return(res)
 }
