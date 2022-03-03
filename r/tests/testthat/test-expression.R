@@ -73,6 +73,17 @@ test_that("Expression task works with one gene", {
   expect_equal(length(res[[1]]$rawExpression$expression), ncol(data))
 })
 
+test_that("If the max truncated expression value is 0, iterates correctly to find a non zero value", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  data@assays$RNA@data["MS4A1",] <- 0
+  data@assays$RNA@data["MS4A1",1] <- 5
+
+  res <- runExpression(req, data)
+  expect_false(all(res$MS4A1$truncatedExpression$expression==0) )
+})
+
 test_that("runExpression throws an error if request only non existing genes", {
   data <- mock_scdata()
   req <- mock_req()
