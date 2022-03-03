@@ -21,3 +21,17 @@ mock_scdata <- function() {
   pbmc_small@misc$numPCs <- 5
   return(pbmc_small)
 }
+
+test_that("PCA embedding works", {
+  data <- suppressWarnings(mock_scdata())
+  req <- mock_req()
+  req$body$type <- "pca"
+
+  res <- runEmbedding(req, data)
+
+  expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
+
+  expected_res <- expected_res %>% as.data.frame %>% rowwise %>% mutate(PCS = list(c(PC_1,PC_2)))
+
+  expect_equal(res,expected_res$PCS)
+})
