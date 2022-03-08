@@ -71,7 +71,7 @@ runEmbedding <- function(req, data) {
   df_embedding <- df_embedding[order(df_embedding$cells_id), ]
   df_embedding <- df_embedding %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    select(-cells_id)
+    dplyr::select(-cells_id)
 
   map2_fun <- function(x, y) {
     if (is.na(x)) {
