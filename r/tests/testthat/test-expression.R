@@ -37,7 +37,7 @@ test_that("Expression task returns appropiate number of cells.", {
   expect_equal(length(raw_expression), ncol(data))
 })
 
-test_that("Expression result is properly formated.", {
+test_that("Expression result is properly formatted.", {
   data <- mock_scdata()
   req <- mock_req()
 
