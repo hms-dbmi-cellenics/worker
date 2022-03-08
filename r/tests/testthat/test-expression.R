@@ -13,7 +13,7 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
-test_that("Expression task returns appropiate number and names of genes.", {
+test_that("Expression task returns appropriate number and names of genes.", {
   data <- mock_scdata()
   req <- mock_req()
 
