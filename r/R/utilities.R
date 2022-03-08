@@ -1,7 +1,7 @@
 #
-# subset_ids subsets a seurat object with the cell ids
+# subsetIds subsets a seurat object with the cell ids
 #
-subset_ids <- function(scdata, cells_id) {
+subsetIds <- function(scdata, cells_id) {
   meta_data_subset <- scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
   current_cells <- rownames(meta_data_subset)
   scdata <- subset(scdata, cells = current_cells)

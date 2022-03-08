@@ -103,33 +103,33 @@ test_that("running applyFilters sequentially is equivalent to running together",
   expect_equal(results_seq, results_together)
 })
 
-# subset_ids
+# subsetIds
 
-test_that("subset_ids returns same class as input data", {
+test_that("subsetIds returns same class as input data", {
   data <- mock_scdata()
   cell_ids <- c(1, 2, 3, 5, 7, 11, 13, 17, 19)
 
-  data_subset <- subset_ids(data, cell_ids)
+  data_subset <- subsetIds(data, cell_ids)
 
   expect_true(class(data) == class(data_subset))
 })
 
-test_that("subset_ids returns seurat object correctly", {
+test_that("subsetIds returns seurat object correctly", {
   data <- mock_scdata()
   cell_ids <- c(1, 2, 3, 5, 7, 11, 13, 17, 19)
 
-  data_subset <- subset_ids(data, cell_ids)
+  data_subset <- subsetIds(data, cell_ids)
 
   expect_equal(length(cell_ids), ncol(data_subset))
   expect_equal(data_subset@meta.data$cells_id, cell_ids)
   expect_true(all(colnames(data_subset) %in% colnames(data)))
 })
 
-test_that("subset_ids errors when empty cell_ids", {
+test_that("subsetIds errors when empty cell_ids", {
   data <- mock_scdata()
   cell_ids <- c()
 
-  expect_error(subset_ids(data, cell_ids))
+  expect_error(subsetIds(data, cell_ids))
 })
 
 # getTopMarkerGenes
