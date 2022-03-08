@@ -19,7 +19,6 @@ getExpressionValues <- function(genes, data) {
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
     dplyr::select(-cells_id) %>%
     as.data.frame()
-  # worried about duplicate gene row.names in @data
   symbol_idx <- match(colnames(geneExpression), genes$input)
   colnames(geneExpression) <- genes$name[symbol_idx]
   adjGeneExpression <- as.data.frame(apply(geneExpression, 2, FUN = function(x) {
