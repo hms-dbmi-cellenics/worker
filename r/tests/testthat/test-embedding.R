@@ -31,7 +31,10 @@ test_that("PCA embedding works", {
 
   expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
 
-  expected_res <- expected_res %>% as.data.frame %>% rowwise %>% mutate(PCS = list(c(PC_1,PC_2)))
+  expected_res <- expected_res %>%
+    as.data.frame() %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(PCS = list(c(PC_1, PC_2)))
 
   expect_equal(res,expected_res$PCS)
 })
