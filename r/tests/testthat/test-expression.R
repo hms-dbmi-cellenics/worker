@@ -23,7 +23,7 @@ test_that("Expression task returns appropriate number and names of genes.", {
   expect_equal(as.list(names(res)), req$body$genes)
 })
 
-test_that("Expression task returns appropiate number of cells.", {
+test_that("Expression task returns appropriate number of cells.", {
   data <- mock_scdata()
   req <- mock_req()
 
