@@ -54,7 +54,7 @@ test_that("Expression result is properly formatted.", {
 
 
 
-test_that("Expression task continues if gene doesnt exist and returns appropiate number of results", {
+test_that("Expression task continues if gene doesn't exist and returns appropriate number of results", {
   data <- mock_scdata()
   req <- mock_req()
   req$body$genes <- append(req$body$genes, "aaa")
