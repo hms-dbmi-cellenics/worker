@@ -8,7 +8,7 @@ subsetIds <- function(scdata, cells_id) {
   return(scdata)
 }
 
-insertSetChildThroughApi <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT) {
+sendCellsetToApi <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT) {
   httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
   children <- list(list("$insert" = list(index = "-", value = new_cell_set)))
 

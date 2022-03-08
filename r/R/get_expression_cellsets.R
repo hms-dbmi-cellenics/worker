@@ -30,7 +30,7 @@ getExpressionCellSet <- function(req, data) {
     )
   }
 
-  insertSetChildThroughApi(
+  sendCellsetToApi(
     new_cell_set,
     config$apiUrl,
     config$experimentId,
