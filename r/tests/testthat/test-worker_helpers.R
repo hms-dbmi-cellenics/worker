@@ -103,33 +103,33 @@ test_that("running applyFilters sequentially is equivalent to running together",
   expect_equal(results_seq, results_together)
 })
 
-# subset_ids
+# subsetIds
 
-test_that("subset_ids returns same class as input data", {
+test_that("subsetIds returns same class as input data", {
   data <- mock_scdata()
   cell_ids <- c(1, 2, 3, 5, 7, 11, 13, 17, 19)
 
-  data_subset <- subset_ids(data, cell_ids)
+  data_subset <- subsetIds(data, cell_ids)
 
   expect_true(class(data) == class(data_subset))
 })
 
-test_that("subset_ids returns seurat object correctly", {
+test_that("subsetIds returns seurat object correctly", {
   data <- mock_scdata()
   cell_ids <- c(1, 2, 3, 5, 7, 11, 13, 17, 19)
 
-  data_subset <- subset_ids(data, cell_ids)
+  data_subset <- subsetIds(data, cell_ids)
 
   expect_equal(length(cell_ids), ncol(data_subset))
   expect_equal(data_subset@meta.data$cells_id, cell_ids)
   expect_true(all(colnames(data_subset) %in% colnames(data)))
 })
 
-test_that("subset_ids errors when empty cell_ids", {
+test_that("subsetIds errors when empty cell_ids", {
   data <- mock_scdata()
   cell_ids <- c()
 
-  expect_error(subset_ids(data, cell_ids))
+  expect_error(subsetIds(data, cell_ids))
 })
 
 # getTopMarkerGenes
@@ -387,22 +387,21 @@ test_that("getSNNigraph returns an igraph object with correct dimensions", {
 })
 
 test_that("generateErrorMessage concatenates error code and user message with :|:", {
-
-  code <- 'error_code'
-  msg <- 'user_message'
+  code <- "error_code"
+  msg <- "user_message"
   expect_equal(generateErrorMessage(code, msg), "error_code:|:user_message")
 })
 
 test_that("extractErrorList extracts error code and user message seperated by :|:", {
-
   error_list <- extractErrorList("error_code:|:user_message")
   expect_equal(error_list$user_message, "user_message")
   expect_equal(error_list$error_code, "error_code")
 })
 
 test_that("extractErrorList correctly formats unhandled error messages", {
-
-  unhandled_message <- tryCatch(stop("unhandled message!"), error = function(e) return(e$message))
+  unhandled_message <- tryCatch(stop("unhandled message!"), error = function(e) {
+    return(e$message)
+  })
 
   error_list <- extractErrorList(unhandled_message)
   expect_equal(error_list$user_message, unhandled_message)
@@ -410,8 +409,11 @@ test_that("extractErrorList correctly formats unhandled error messages", {
 })
 
 test_that("formatResponse creates a list with data and error objects", {
-
-  expect_equal(formatResponse(letters[1:5], 'error!'),
-               list(data = letters[1:5],
-                    error = 'error!'))
+  expect_equal(
+    formatResponse(letters[1:5], "error!"),
+    list(
+      data = letters[1:5],
+      error = "error!"
+    )
+  )
 })

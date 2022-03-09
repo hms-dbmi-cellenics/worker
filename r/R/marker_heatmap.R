@@ -15,6 +15,6 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getMarkerNames(data, top_markers)
 
   res <- getExpressionValues(top_markers, data)
-
+  res <- formatExpression(res)
   return(res)
 }
