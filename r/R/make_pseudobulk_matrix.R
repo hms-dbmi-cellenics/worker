@@ -13,12 +13,17 @@ makePseudobulkMatrix <- function(scdata) {
   # filter out cells not in base/background groups
   scdata <- scdata[, !is.na(scdata$custom)]
 
+  # remove samples with fewer than 10 cells
+  samples <- scdata$samples
+  ncells <- table(samples)
+  keep <- samples %in% names(ncells)[ncells >= 10]
+  scdata <- scdata[, keep]
+  samples <- samples[keep]
+
   counts <- scdata[["RNA"]]@counts
   gene_annotations <- scdata@misc$gene_annotations
 
-  groups <- factor(scdata$samples)
   # aggregate over samples
-  samples <- scdata$samples
   samples <- factor(samples, levels = unique(samples))
 
   agg <- presto::sumGroups(counts, samples, MARGIN = 1)

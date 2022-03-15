@@ -85,3 +85,27 @@ test_that("makePseudobulkMatrix correctly aggregates counts", {
     expect_equal(res_agg_counts, expected_agg_counts)
   }
 })
+
+test_that("makePseudobulkMatrix removes samples with fewer than 10 cells", {
+  scdata <- mock_scdata()
+
+  # doesn't filter samples with 10 or more cells
+  res <- makePseudobulkMatrix(scdata)
+
+  expected_cols <-
+    length(unique(scdata$samples[!is.na(scdata$custom)]))
+  expect_equal(ncol(res), expected_cols)
+
+
+  # make s1 have 9 cells
+  s1.cells <- colnames(scdata)[scdata$samples == 's1']
+  filt.cells <- setdiff(s1.cells, head(s1.cells, 9))
+
+  scdata_s1_9cells <- scdata[, !colnames(scdata) %in% filt.cells]
+  expected_cols_s1_9cells <- sum(table(scdata_s1_9cells$samples) >= 10)
+  expect_equal(expected_cols_s1_9cells, expected_cols-1)
+
+  # s1 filtered
+  res_s1_9cells <- makePseudobulkMatrix(scdata_s1_9cells)
+  expect_equal(expected_cols_s1_9cells, ncol(res_s1_9cells))
+})
