@@ -17,7 +17,7 @@ mock_scdata <- function() {
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- gene_annotations
-  pbmc_small@misc$color_pool <- list("#e377c2","#8c564b","#d62728","#2ca02c","#ff7f0e")
+  pbmc_small@misc$color_pool <- list("#e377c2", "#8c564b", "#d62728", "#2ca02c", "#ff7f0e")
   return(pbmc_small)
 }
 
@@ -90,6 +90,18 @@ test_that("getExpressionCellSetIDs fails if requested geneNames are not present 
   expect_error(getExpressionCellSetIDs(req, data), "gene name\\(s\\) that are not present[.]")
 })
 
+test_that("getExpressionCellSet fails if filters remove all cells", {
+  data <- mock_scdata()
+  genes_config <- list(
+    list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5),
+    list(geneName = "MS4A1", comparisonType = "lessThan", thresholdValue = 0.5)
+  )
+
+  req <- list(body = list(genesConfig = genes_config))
+  expect_error(getExpressionCellSet(req, data), "No cells match requested filters.")
+})
+
+
 test_that("CellSet naming is correct", {
   data <- mock_scdata()
   req <- list(
@@ -126,4 +138,3 @@ test_that("We attempt to patch the API.", {
     "Could not resolve host: host.docker.internal"
   )
 })
-

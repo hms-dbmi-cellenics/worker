@@ -1,5 +1,7 @@
 import pytest
-
+import responses
+from exceptions import RWorkerException
+from worker.config import config
 from worker.tasks.list_genes import ListGenes
 
 
@@ -76,3 +78,24 @@ class TestListGenes:
     def test_construct_request_preserves_begin_and_end_with(self):
         request = ListGenes(self.partial_clean_regex)._construct_request()
         assert request["geneNamesFilter"] == "^$LIN"
+
+    @responses.activate
+    def test_should_throw_exception_on_r_worker_error(self):
+
+        error_code = "MOCK_R_WORKER_ERROR"
+        user_message = "Some worker error"
+
+        payload = {"error": {"error_code": error_code, "user_message": user_message}}
+
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/listGenes",
+            json=payload,
+            status=200,
+        )
+
+        with pytest.raises(RWorkerException) as exception_info:
+            ListGenes(self.correct_desc).compute()
+
+        assert exception_info.value.args[0] == error_code
+        assert exception_info.value.args[1] == user_message

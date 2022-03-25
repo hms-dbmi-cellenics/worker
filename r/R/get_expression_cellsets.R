@@ -21,13 +21,23 @@ getExpressionCellSet <- function(req, data) {
   cell_set_class_key <- "scratchpad"
   config <- req$body$config
 
-  insertSetChildThroughApi(
+  if (length(new_cell_set$cellIds) == 0) {
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_CELL_SET,
+        "No cells match requested filters."
+      )
+    )
+  }
+
+  sendCellsetToApi(
     new_cell_set,
     config$apiUrl,
     config$experimentId,
     cell_set_class_key,
     config$authJwt
   )
+
   return(new_cell_set)
 }
 
@@ -39,7 +49,12 @@ getExpressionCellSetIDs <- function(filters, data) {
 
   # fail if any requested gene names are missing (can't return requested cellset)
   if (anyNA(name_match)) {
-    stop("Requested ExpressionCellset with gene name(s) that are not present.")
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_CELL_SET,
+        "Requested ExpressionCellSet with gene name(s) that are not present."
+      )
+    )
   }
 
   enids <- gene_annotations$input[name_match]
@@ -77,4 +92,3 @@ getExpressionCellSetIDs <- function(filters, data) {
   new_cell_set_data <- list(keep_ids = data$cells_id[keep.cells], cell_set_name = cell_set_name)
   return(new_cell_set_data)
 }
-

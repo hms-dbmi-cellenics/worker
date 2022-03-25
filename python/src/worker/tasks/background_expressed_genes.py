@@ -3,6 +3,7 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
+from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.get_diff_expr_cellsets import get_diff_expr_cellsets
@@ -50,15 +51,16 @@ class GetBackgroundExpressedGenes(Task):
         request = self._format_request()
 
         # send request to r worker
-        r = requests.post(
+        response = requests.post(
             f"{config.R_WORKER_URL}/v0/getBackgroundExpressedGenes",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
 
-        # raise an exception if an HTTPError if one occurred because otherwise r.json()
-        #  will fail
-        r.raise_for_status()
-        r = r.json()
+        response.raise_for_status()
+        result = response.json()
+        raise_if_error(result)
 
-        return self._format_result(r)
+        data = result.get("data")
+
+        return self._format_result(data)

@@ -39,6 +39,10 @@ class Response:
             "type": "WorkResponse",
         }
 
+        if self.error:
+            message["response"]["errorCode"] = self.result.data["error_code"]
+            message["response"]["userMessage"] = self.result.data["user_message"]
+
         return message
 
     @xray_recorder.capture("Response._upload")
@@ -75,7 +79,6 @@ class Response:
 
     def _send_notification(self):
         io = Emitter({"client": config.REDIS_CLIENT})
-
         if self.request.get("broadcast"):
             io.Emit(
                 f'ExperimentUpdates-{self.request["experimentId"]}',

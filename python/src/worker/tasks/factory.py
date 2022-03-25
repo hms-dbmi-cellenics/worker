@@ -1,25 +1,20 @@
-import json
-import traceback
-from logging import error
+from exceptions import ErrorCodes, WorkerException
 
-from aws_xray_sdk.core import xray_recorder
-from worker.tasks.marker_heatmap import MarkerHeatmap
-
-from ..config import config
 from ..helpers.count_matrix import CountMatrix
+from ..helpers.xray_log_exception import xray_log_exception
 from ..result import Result
 from ..tasks import Task
+from .background_expressed_genes import GetBackgroundExpressedGenes
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
 from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
+from .expression_cellsets import GetExpressionCellSets
 from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
-from .expression_cellsets import GetExpressionCellSets
-from .background_expressed_genes import GetBackgroundExpressedGenes
 
 
 class TaskFactory:
@@ -36,7 +31,7 @@ class TaskFactory:
             GetDoubletScore,
             GetMitochondrialContent,
             MarkerHeatmap,
-            GetExpressionCellSets
+            GetExpressionCellSets,
         )
     }
 
@@ -51,24 +46,26 @@ class TaskFactory:
         try:
             result = task.compute()
             return result
+
+        except WorkerException as e:
+            xray_log_exception(task, e)
+            return Result(
+                {
+                    "error_code": e.error_code,
+                    "user_message": e.user_message,
+                },
+                error=True,
+            )
+
         except Exception as e:
-            trace = f"Exception for task {task.__class__.__name__}:\n" \
-                    f"{traceback.format_exc()}"
-
-            error(trace)
-            xray_recorder.current_segment().add_exception(e, trace)
-
-            # Only send real traces in development.
-            if config.CLUSTER_ENV == "development":
-                result = Result(trace, error=True)
-            else:
-                result = [
-                    Result(
-                        "An unexpected error occurred while performing the work.",
-                        error=True,
-                    )
-                ]
-            return result
+            xray_log_exception(task, e)
+            return Result(
+                {
+                    "error_code": ErrorCodes.PYTHON_WORKER_ERROR,
+                    "user_message": "An unexpected error occurred while performing the work.",
+                },
+                error=True,
+            )
 
     def _factory(self, msg) -> Task:
         self.count_matrix.sync()
@@ -78,6 +75,4 @@ class TaskFactory:
         try:
             return self.tasks[task_name](msg)
         except KeyError as e:
-            raise ValueError(
-                f"Task class with name {task_name} was not found"
-            ) from e
+            raise KeyError(f"Task class with name {task_name} was not found: {e}")

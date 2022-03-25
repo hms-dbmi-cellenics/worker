@@ -13,6 +13,18 @@ runExpression <- function(req, data) {
   # Get the annotation matrix with the geneid to name translation, and the subset with the correct names.
   df <- data@misc$gene_annotations
   genesSubset <- subset(df, toupper(df$name) %in% toupper(req$body$genes))
+
+  if (!nrow(genesSubset)) {
+    stop(
+      generateErrorMessage(
+        error_codes$GENE_NOT_FOUND,
+        paste("Gene(s):", paste(req$body$genes, collapse = ", "), "not found!")
+      )
+    )
+  }
+
   genesSubset <- genesSubset[, c("input", "name")]
-  return(getExpressionValues(genesSubset, data))
+  res <- getExpressionValues(genesSubset, data)
+  res <- formatExpression(res)
+  return(res)
 }
