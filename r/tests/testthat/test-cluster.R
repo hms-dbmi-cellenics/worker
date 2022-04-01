@@ -98,3 +98,12 @@ test_that("runClusters uses active.reduction in misc slot", {
     expect_error(runClusters(req, data), NA)
   }
 })
+
+
+test_that("update_sets_through_api builds a correct request", {})
+
+with_fake_http(
+  test_that("updateSetsThroughApi sends patch request", {
+    expect_PATCH(updateSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth"))
+  })
+)
