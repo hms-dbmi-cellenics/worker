@@ -20,7 +20,7 @@ class ListGenes(Task):
         # Return a list of formatted results.
         return Result({"total": total, "rows": result})
 
-    def _construct_request(self):
+    def _format_request(self):
         request = self.task_def
         #
         # Remove potentialy hazardous characters from the names filter
@@ -43,7 +43,7 @@ class ListGenes(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = self._construct_request()
+        request = self._format_request()
 
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/listGenes",
