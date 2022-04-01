@@ -76,10 +76,17 @@ class ClusterCells(Task):
 
     def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
+        config = self.task_def.get("config", {"resolution": resolution})
+
+        patch_config = {
+            "experimentId": config.EXPERIMENT_ID,
+            "apiUrl": config.API_URL,
+            "authJwt": self.request["Authorization"],
+        }
 
         request = {
             "type": self.task_def["type"],
-            "config": self.task_def.get("config", {"resolution": resolution}),
+            "config": {**config, **patch_config}
         }
 
         return request
