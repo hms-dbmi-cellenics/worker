@@ -1,4 +1,5 @@
 from exceptions import ErrorCodes, WorkerException
+from worker.tasks.img_plot import GetImgPlot
 
 from ..helpers.count_matrix import CountMatrix
 from ..helpers.xray_log_exception import xray_log_exception
@@ -32,6 +33,7 @@ class TaskFactory:
             GetMitochondrialContent,
             MarkerHeatmap,
             GetExpressionCellSets,
+            GetImgPlot,
         )
     }
 
