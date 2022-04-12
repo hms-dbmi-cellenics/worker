@@ -15,6 +15,8 @@
 runClusters <- function(req, data) {
   resol <- req$body$config$resolution
   type <- req$body$type
+  apiUrl <- req$body$config$apiUrl
+  authJwt <- req$body$config$authJwt
 
   data <- getClusters(type, resol, data)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resol))
@@ -30,15 +32,15 @@ runClusters <- function(req, data) {
 
   message("formatting cellsets")
   formatted_cell_sets <-
-    format_cell_sets_object(data, type, data@misc$color_pool)
+    format_cell_sets_object(df, type, data@misc$color_pool)
 
   message("updating through api")
-  updateCellSetsThoughApi(
+  updateCellSetsThroughApi(
     formatted_cell_sets,
-    config$apiUrl,
+    apiUrl,
     data@misc$experimentId,
     type,
-    config$authJWT
+    authJwt
   )
 
   return(df)

@@ -44,7 +44,7 @@ sendCellsetToApi <-
 #' @return
 #' @export
 #'
-updateCellSetsThoughApi <-
+updateCellSetsThroughApi <-
   function(cell_sets_object,
            api_url,
            experiment_id,

@@ -5,7 +5,10 @@ mock_req <- function(type = "louvain") {
     body =
       list(
         config = list(
-          resolution = 2
+          resolution = 2,
+          apiUrl = "mock_api_url",
+          authJwt = "mock_auth"
+
         ),
         type = type
       )
@@ -20,7 +23,22 @@ mock_scdata <- function() {
     name = row.names(pbmc_small),
     row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
   )
+  pbmc_small@misc$color_pool <- paste0("color_", 1:00)
   return(pbmc_small)
+}
+
+
+stub_updateCellSetsThroughApi <- function(cell_sets_object,
+                                          api_url,
+                                          experiment_id,
+                                          cell_set_key,
+                                          auth_JWT) {
+
+}
+
+stubbed_runClusters <- function(req, data) {
+  mockery::stub(runClusters, "updateCellSetsThroughApi", stub_updateCellSetsThroughApi)
+  runClusters(req, data)
 }
 
 test_that("runClusters returns correct keys", {
@@ -30,7 +48,7 @@ test_that("runClusters returns correct keys", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    res <- runClusters(req, data)
+    res <- stubbed_runClusters(req, data)
     expect_equal(names(res), expected_keys)
   }
 })
@@ -42,7 +60,7 @@ test_that("runClusters returns one value per cell", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    res <- runClusters(req, data)
+    res <- stubbed_runClusters(req, data)
     n_cells <- nrow(res)
 
     expect_equal(n_cells, expected_n_cells)
@@ -56,7 +74,7 @@ test_that("runClusters orders barcodes correctly", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    res <- runClusters(req, data)
+    res <- stubbed_runClusters(req, data)
     barcodes <- rownames(res)
     expect_equal(barcodes, expected_barcodes)
   }
@@ -68,7 +86,7 @@ test_that("runClusters returns at least one cluster", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    res <- runClusters(req, data)
+    res <- stubbed_runClusters(req, data)
     n_clusters <- length(unique(res$cluster))
     expect_gte(n_clusters, 1)
   }
@@ -86,7 +104,7 @@ test_that("runClusters uses active.reduction in misc slot", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    expect_error(runClusters(req, data), "Cannot find 'pca'")
+    expect_error(stubbed_runClusters(req, data), "Cannot find 'pca'")
   }
 
   # will use active.reduction to get SNN graph
@@ -95,15 +113,15 @@ test_that("runClusters uses active.reduction in misc slot", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    expect_error(runClusters(req, data), NA)
+    expect_error(stubbed_runClusters(req, data), NA)
   }
 })
 
 
-test_that("update_sets_through_api builds a correct request", {})
+test_that("updateCellSetsThroughApi builds a correct request", {})
 
 with_fake_http(
-  test_that("updateSetsThroughApi sends patch request", {
-    expect_PATCH(updateSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth"))
+  test_that("updateCellSetsThroughApi sends patch request", {
+    expect_PATCH(updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth"))
   })
 )
