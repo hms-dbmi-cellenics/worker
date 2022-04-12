@@ -111,15 +111,4 @@ class ClusterCells(Task):
 
         data = result.get("data")
 
-        # This is a questionable bit of code, but basically it was a simple way of adjusting the results to the shape
-        # expected by the UI Doing this allowed me to use the format function as is. It shouldn't be too taxing,
-        # at most O(n of cells), which is well within our time complexity because the taxing part will be clustering.
-        # df = pd.DataFrame(data)
-        # df.set_index("_row", inplace=True)
-        # df["cluster"] = pd.Categorical(df.cluster)
-
-        # Convert it into a JSON format and patch the API directly
-        # cell_set_object = self._convert_to_cell_set_object(df)
-        # self._update_through_api(cell_set_object)
-
         return self._format_result(data)
