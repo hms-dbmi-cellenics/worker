@@ -1,18 +1,16 @@
 # IMPORTANT: these tests are duplicated in the pipeline. If you update, change both.
 
 mock_req <- function(type = "louvain") {
-  req <- list(
-    body =
-      list(
-        config = list(
-          resolution = 2,
-          apiUrl = "mock_api_url",
-          authJwt = "mock_auth"
+  req <- list(body =
+                list(
+                  config = list(
+                    resolution = 2,
+                    apiUrl = "mock_api_url",
+                    authJwt = "mock_auth"
 
-        ),
-        type = type
-      )
-  )
+                  ),
+                  type = type
+                ))
 }
 
 mock_scdata <- function() {
@@ -37,7 +35,9 @@ stub_updateCellSetsThroughApi <- function(cell_sets_object,
 }
 
 stubbed_runClusters <- function(req, data) {
-  mockery::stub(runClusters, "updateCellSetsThroughApi", stub_updateCellSetsThroughApi)
+  mockery::stub(runClusters,
+                "updateCellSetsThroughApi",
+                stub_updateCellSetsThroughApi)
   runClusters(req, data)
 }
 
@@ -92,7 +92,6 @@ test_that("runClusters returns at least one cluster", {
   }
 })
 
-
 test_that("runClusters uses active.reduction in misc slot", {
   algos <- c("louvain", "leiden")
   data <- mock_scdata()
@@ -117,11 +116,8 @@ test_that("runClusters uses active.reduction in misc slot", {
   }
 })
 
-
-test_that("updateCellSetsThroughApi builds a correct request", {})
-
-with_fake_http(
-  test_that("updateCellSetsThroughApi sends patch request", {
-    expect_PATCH(updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth"))
-  })
-)
+with_fake_http(test_that("updateCellSetsThroughApi sends patch request", {
+  expect_PATCH(
+    updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth")
+  )
+}))
