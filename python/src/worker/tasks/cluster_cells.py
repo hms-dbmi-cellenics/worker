@@ -22,19 +22,17 @@ class ClusterCells(Task):
 
     def _format_request(self):
         resolution = self.task_def["config"].get("resolution", 0.5)
-        config = self.task_def.get("config", {"resolution": resolution})
 
-        patch_config = {
-            "experimentId": config.EXPERIMENT_ID,
-            "apiUrl": config.API_URL,
-            "authJwt": self.request["Authorization"],
-        }
-
+    # add apiUrl and authJwt to req to be able to patch in R worker
         request = {
             "type": self.task_def["type"],
-            "config": {**config, **patch_config}
+            "config": {"resolution" : resolution},
+            "apiUrl" : config.API_URL,
+            "authJwt" : self.request["Authorization"]
         }
-
+        
+        print(request)
+        
         return request
 
     @xray_recorder.capture("ClusterCells.compute")

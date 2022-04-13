@@ -13,13 +13,13 @@
 #'
 #' @examples
 runClusters <- function(req, data) {
-  resol <- req$body$config$resolution
   type <- req$body$type
-  apiUrl <- req$body$config$apiUrl
-  authJwt <- req$body$config$authJwt
+  config <- req$body$config
+  resolution <- config$resolution
 
-  data <- getClusters(type, resol, data)
-  res_col <- paste0(data@active.assay, "_snn_res.", toString(resol))
+
+  data <- getClusters(type, resolution, data)
+  res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   # In the meta data slot the clustering is stored with the resolution
   # used to calculate it
   # RNA_snn_res.#resolution
@@ -37,10 +37,10 @@ runClusters <- function(req, data) {
   message("updating through api")
   updateCellSetsThroughApi(
     formatted_cell_sets,
-    apiUrl,
+    req$body$apiUrl,
     data@misc$experimentId,
     type,
-    authJwt
+    req$body$authJwt
   )
 
   return(df)
