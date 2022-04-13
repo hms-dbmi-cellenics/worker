@@ -32,6 +32,7 @@ stub_updateCellSetsThroughApi <- function(cell_sets_object,
                                           cell_set_key,
                                           auth_JWT) {
 
+  # empty function to simplify mocking. we test patching independently.
 }
 
 stubbed_runClusters <- function(req, data) {
