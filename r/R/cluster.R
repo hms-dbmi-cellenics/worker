@@ -133,7 +133,6 @@ format_cell_sets_object <-
   function(cell_sets, clustering_method, color_pool) {
     name <- paste0(clustering_method, " clusters")
 
-    # careful with capital l on type for the key.
     cell_sets_object <-
       list(
         key = clustering_method,
