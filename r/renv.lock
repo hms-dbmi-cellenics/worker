@@ -196,12 +196,12 @@
       "Repository": "CRAN",
       "Hash": "a41329d24d5a98eaed2bd0159adb1b5f"
     },
-    "Rcpp": {
+     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.6",
+      "Version": "1.0.8.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "dbb5e436998a7eba5a9d682060533338"
+      "Hash": "32e79b908fda56ee57fe518a8d37b864"
     },
     "RcppAnnoy": {
       "Package": "RcppAnnoy",
@@ -260,17 +260,17 @@
     },
     "Seurat": {
       "Package": "Seurat",
-      "Version": "4.0.2",
+      "Version": "4.0.6",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "3d0c6a33f32d1433ed728b49bd3f41c5"
+      "Hash": "572a56897fca5316e43e7a763b4e86b8"
     },
     "SeuratObject": {
       "Package": "SeuratObject",
-      "Version": "4.0.2",
+      "Version": "4.0.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "e5959242d66cfe4de9116fdcec327f80"
+      "Hash": "cf97a1d4d9991d4b58c92b27a8b9447b"
     },
     "SummarizedExperiment": {
       "Package": "SummarizedExperiment",
