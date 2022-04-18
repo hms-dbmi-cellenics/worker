@@ -21,8 +21,24 @@ mock_scdata <- function() {
     name = row.names(pbmc_small),
     row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
   )
-  pbmc_small@misc$color_pool <- paste0("color_", 1:00)
+  # we have ~500 colors in the color pool
+  pbmc_small@misc$color_pool <- mock_color_pool(500)
   return(pbmc_small)
+}
+
+mock_cellset_object <- function(n_cells, n_clusters) {
+
+  if (n_clusters == 0) {
+    return(data.frame(cluster = integer(), cell_ids = integer()))
+  }
+
+  # cell_ids with no replacement to avoid repeated cell_ids
+  data.frame(cluster = sample(1:n_clusters, size = n_cells, replace = T),
+             cell_ids = sample(1:(2*n_cells), size = n_cells))
+}
+
+mock_color_pool <- function(n) {
+  paste0("color_", 1:n)
 }
 
 
@@ -122,3 +138,91 @@ with_fake_http(test_that("updateCellSetsThroughApi sends patch request", {
     updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth")
   )
 }))
+
+
+test_that("format_cell_sets_object returns correct items", {
+  n_clusters <- 5
+  cell_sets <- mock_cellset_object(1000, n_clusters)
+  color_pool <- mock_color_pool(n_clusters)
+  algos <- c("louvain", "leiden")
+
+  types <- c(
+    "key" = "character",
+    "name" = "character",
+    "rootNode" = "logical",
+    "type" = "character",
+    "children" = "list"
+  )
+
+  for (algo in algos) {
+    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+
+    # expect all keys present
+    expect_setequal(names(res), names(types))
+
+    for (item in names(types)) {
+      expect_type(res[[item]], types[[item]])
+    }
+  }
+})
+
+
+test_that("format_cell_sets_object correctly formats a cellset object", {
+
+  n_clusters <- 5
+  cell_sets <- mock_cellset_object(1000, n_clusters)
+  color_pool <- mock_color_pool(n_clusters)
+  algos <- c("louvain", "leiden")
+
+  expected_items <- c("key", "name", "rootNode", "type", "color", "cellIds")
+
+  for (algo in algos) {
+    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+
+
+    # each children has the expected items
+    for (cluster in res$children) {
+      expect_setequal(names(cluster), expected_items)
+    }
+
+    # each cluster has correct content
+    for (cluster in res$children) {
+      expect_true(startsWith(cluster$key, algo))
+      expect_true(startsWith(cluster$name, "Cluster"))
+      expect_type(cluster$cellIds, "integer")
+      expect_gte(length(cluster$cellIds), 1)
+    }
+  }
+})
+
+
+test_that("format_cell_sets_object result has correct number of clusters",{
+  n_clusters <- c(0, 1, 4, 6)
+  algos <- c("louvain", "leiden")
+
+  for (algo in algos) {
+    for (n in n_clusters) {
+    cell_sets <- mock_cellset_object(100, n)
+    color_pool <- mock_color_pool(n)
+
+    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+
+    # number of clusters is the number of children elements
+    expect_equal(length(res$children), n)
+
+  }}
+})
+
+test_that("format_cell_sets_object returns empty children on empty cellset", {
+  n_clusters <- 5
+  cell_sets <- mock_cellset_object(0, n_clusters)
+
+  color_pool <- mock_color_pool(n_clusters)
+  algos <- c("louvain", "leiden")
+
+  for (algo in algos) {
+    res <- format_cell_sets_object(cell_sets, algo, color_pool)
+    expect_equal(length(res$children), 0)
+  }
+})
+
