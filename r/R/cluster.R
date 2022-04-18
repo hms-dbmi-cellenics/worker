@@ -39,6 +39,7 @@ runClusters <- function(req, data) {
 #'
 #' @examples
 getClusters <- function(type, resolution, data) {
+  set.seed(0)
   res_col <- paste0(data@active.assay, "_snn_res.", toString(resolution))
   algorithm <- list("louvain" = 1, "leiden" = 4)[[type]]
 
