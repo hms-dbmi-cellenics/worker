@@ -29,10 +29,7 @@ class ClusterCells(Task):
             "config": {"resolution" : resolution},
             "apiUrl" : config.API_URL,
             "authJwt" : self.request["Authorization"]
-        }
-        
-        print(request)
-        
+        }        
         return request
 
     @xray_recorder.capture("ClusterCells.compute")
