@@ -10,6 +10,9 @@ subsetIds <- function(scdata, cells_id) {
 
 sendCellsetToApi <- function(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT) {
   httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
+
+  new_cell_set$cellIds <- as.list(new_cell_set$cellIds)
+
   children <- list(list("$insert" = list(index = "-", value = new_cell_set)))
 
   httr::PATCH(
