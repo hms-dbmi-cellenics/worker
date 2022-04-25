@@ -1,6 +1,11 @@
-#
-# subsetIds subsets a seurat object with the cell ids
-#
+#' Subset a Seurat object with the cell ids
+#'
+#' @param scdata Seurat object
+#' @param cells_id Integer vector of cell IDs to keep
+#'
+#' @return Subsetted Seurat object
+#' @export
+#'
 subsetIds <- function(scdata, cells_id) {
   meta_data_subset <-
     scdata@meta.data[match(cells_id, scdata@meta.data$cells_id), ]
@@ -9,6 +14,18 @@ subsetIds <- function(scdata, cells_id) {
   return(scdata)
 }
 
+#' Send cell set to the API
+#'
+#' This sends a single, new cell set to the API for patching to the cell sets file.
+#'
+#' @param new_cell_set named list of cell sets
+#' @param api_url string URL of the API
+#' @param experiment_id string experiment ID
+#' @param cell_set_key string cell set UUID
+#' @param auth_JWT string authorization token
+#'
+#' @export
+#'
 sendCellsetToApi <-
   function(new_cell_set,
            api_url,
