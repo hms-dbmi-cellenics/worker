@@ -131,7 +131,8 @@ getSNNiGraph <- function(data, active.reduction) {
 
 #' Formats cell sets object for patching through the API
 #'
-#'
+#' This function is only used to format clustering cellsets. Converting from
+#' data.frame to list and adding slots necessary for the cellsets file.
 #'
 #' @param cell_sets data.frame with two columns: cluster and cell_ids
 #' @param clustering_method string Either louvain or leiden.
