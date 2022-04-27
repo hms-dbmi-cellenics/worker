@@ -7,6 +7,7 @@ COPY setup ./setup
 COPY requirements_debian.txt .
 RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 RUN apt-get update && apt-get install -y procps
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # need GITHUB_PAT to authenticate github installations
 ARG GITHUB_PAT
