@@ -27,6 +27,8 @@ mock_scdata <- function() {
 }
 
 mock_cellset_object <- function(n_cells, n_clusters) {
+  # cellset objects are data.frames. They are formatted to lists by
+  # format_cell_sets_object
 
   if (n_clusters == 0) {
     return(data.frame(cluster = integer(), cell_ids = integer()))

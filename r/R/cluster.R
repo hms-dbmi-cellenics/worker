@@ -129,10 +129,21 @@ getSNNiGraph <- function(data, active.reduction) {
   return(graph)
 }
 
+#' Formats cell sets object for patching through the API
+#'
+#'
+#'
+#' @param cell_sets data.frame with two columns: cluster and cell_ids
+#' @param clustering_method string Either louvain or leiden.
+#' @param color_pool character vector of colors in hex
+#'
+#' @return list
+#' @export
+#'
+#' @examples
 format_cell_sets_object <-
   function(cell_sets, clustering_method, color_pool) {
     name <- paste0(clustering_method, " clusters")
-
     cell_sets_object <-
       list(
         key = clustering_method,
