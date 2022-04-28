@@ -14,6 +14,7 @@ subsetIds <- function(scdata, cells_id) {
   return(scdata)
 }
 
+
 #' Send cell set to the API
 #'
 #' This sends a single, new cell set to the API for patching to the cell sets file.
@@ -33,6 +34,9 @@ sendCellsetToApi <-
            cell_set_key,
            auth_JWT) {
     httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
+    
+    new_cell_set$cellIds <- as.list(new_cell_set$cellIds)
+
     children <-
       list(list("$insert" = list(index = "-", value = new_cell_set)))
 
