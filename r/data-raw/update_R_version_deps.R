@@ -70,5 +70,9 @@ while (!done) {
   })
 }
 
+if (length(updated)) {
+  warning('The following packages were updated:\n', paste(updated, collapse = '\n'))
+}
+
 # should be up to date
 renv::status()
