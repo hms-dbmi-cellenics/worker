@@ -1,5 +1,5 @@
 # Create builder step
-FROM r-base:4.0.5 AS builder
+FROM r-base:4.2.0 AS builder
 WORKDIR /src
 
 # install required debian packages to make R packages work
@@ -13,26 +13,24 @@ ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
 RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
-# install required R packages for the worker.
+# install renv to install required R packages
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "remotes::install_github('rstudio/renv@0.13.2')"
+    R -e "remotes::install_github('rstudio/renv@0.15.5')" && \
+    R -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
 COPY renv.lock.init .
-RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
-
-# use renv::snapshot() while R dependency updates are quick to build
-COPY renv.lock .
-RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
+RUN R -e "renv::restore(lockfile='renv.lock.init')"
 
 # install miniconda and python umap-learn for RunUMAP
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
-RUN R -e "install.packages('covr')"
-RUN R -e "install.packages('xml2')"
 
+# use renv::snapshot() while R dependency updates are quick to build
+COPY renv.lock .
+RUN R -e "renv::restore(lockfile='renv.lock')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
