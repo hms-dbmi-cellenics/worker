@@ -226,14 +226,13 @@ jobs:
         name: Generate codecov report
         run: |-
           docker run \
-            --name worker-r \
             --entrypoint /bin/bash \
-            -v /home/runner/work/worker/worker/r:/app $R_IMAGE_NAME \
-            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
+            -v $(pwd)/r:/app $R_IMAGE_NAME \
+            -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
 
         env:
           R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-   
+
       - id: upload-coverage
         name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
@@ -246,7 +245,7 @@ jobs:
           docker run -v $(pwd):/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
         env:
           PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-          
+
       - id: push
         name: Push docker images to ECR
         run: |-

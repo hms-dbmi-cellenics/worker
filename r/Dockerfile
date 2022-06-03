@@ -32,14 +32,26 @@ RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), pac
 COPY renv.lock .
 RUN R -e "renv::restore(lockfile='renv.lock')"
 
-# ---------------------------------------------------
-# PRODUCTION BUILD
-# ---------------------------------------------------
-FROM builder AS prod
+# move renv library and add path to Rprofile.site
+# then delete renv and other build files
+RUN RENV_LIB=$(echo "cat(.libPaths()[1])"|Rscript -) && \
+    mv $RENV_LIB /library && \
+    echo ".libPaths(c('/library', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site && \
+    rm -rf renv setup .Rprofile renv.lock renv.lock.init requirements_debian.txt
+
+# add R package and test files to get code coverage
+COPY DESCRIPTION .
+COPY NAMESPACE .
+ADD tests ./tests
 
 # copy R source files and runner
 ADD R ./R
 COPY work.R .
+
+# ---------------------------------------------------
+# PRODUCTION BUILD
+# ---------------------------------------------------
+FROM builder AS prod
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
@@ -54,9 +66,5 @@ FROM builder AS dev
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
-
-# copy R source files and runner
-ADD R ./R
-COPY work.R .
 
 CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
