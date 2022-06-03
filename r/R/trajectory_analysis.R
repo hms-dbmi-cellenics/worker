@@ -15,7 +15,7 @@ runTrajectoryAnalysis <- function(req,data){
     return(unname(pseudotime))
 }
 
-runGenerateGraph <- function(req,data){
+runGenerateTrajectoryGraph <- function(req,data){
     cell_data <- generateGraphData(data)
     node_coords <- t(cds@principal_graph_aux[[reduction_method]]$dp_mst)
     umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cds)[["UMAP"]])
