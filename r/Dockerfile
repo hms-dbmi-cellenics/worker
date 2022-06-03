@@ -76,6 +76,4 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 ADD R ./R
 COPY work.R .
 
-CMD Rscript work.R
-
-#CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
+CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
