@@ -1,62 +1,89 @@
-#' runDE function
+#' Run Differential Expression Task
 #'
-#' Differential expression analysis can be requested. The request post include the cells ID that we need
-#' to compare in a cellSet named "base" and "background",
-#' For now, we are going to support Wilcoxon Rank Sum test, but we can add later other tests like "t", "MAST"
-#' or "DESeq2". We are going to return all the genes that have a absolute value avg_log2FC greater than 0.25 (this
-#' default value becomes from the Seurat default value of function FindMarkers)
-#' Out Gene, avg_log2FC,  p_val_adj,  pct_1, pct_2
-#' @description DE pipeline replicate
+#' Runs either a comparison within samples/groups (i.e. marker genes) or
+#' between samples/groups (differential expression analysis). The request post
+#' includes the cell IDs that we need to compare in a cell set named "base"
+#' and "background".
 #'
-#' @return Dataframe with columns:
-#'              Gene
-#'              avg_log2FC
-#'              p_val_adj
-#'              pct_1
-#'              pct_2
-#'              zscore          <-- Need to be returned until the UI is changed
-#'              log2fc          <-- Need to be returned until the UI is changed
-#'              pct             <-- Need to be returned until the UI is changed
-#'              abszscore       <-- Need to be returned until the UI is changed
-#'              qval            <-- Need to be returned until the UI is changed
 #' @export
 #'
-runDE <- function(req, data){
+runDE <- function(req, data) {
 
-    # add comparison group to 'custom' slot
-    data <- addComparisonGroup(req, data)
+  # add comparison group to 'custom' slot
+  data <- addComparisonGroup(req, data)
 
-    # Compute differential expression
-    result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA",group_by="custom")
-    result <- result[result$group=="base",]
-    rownames(result) <- result$feature
-    result <- result[,c("pval","logFC","pct_in","pct_out","padj","auc")]
-    colnames(result)<-list("p_val","logFC","pct_1","pct_2","p_val_adj","auc")
+  comparison_type <- req$body$comparisonType
+  if (comparison_type == "within") {
+    result <- runWilcoxAUC(data)
+  } else if (comparison_type == "between") {
+    pbulk <- makePseudobulkMatrix(data)
+    result <- runPseudobulkDE(pbulk)
+  }
 
-    message("checking FindMarkers results:  ", str(result))
-    # Replace name with Gene names
-    result$gene_names <- data@misc$gene_annotations[
-        match(rownames(result), data@misc$gene_annotations$input), "name"
-    ]
-    result$Gene <- rownames(result)
+  # replace name with gene names and add Ensembl IDs
+  result$gene_names <- data@misc$gene_annotations[row.names(result), "name"]
+  result$Gene <- rownames(result)
 
-    # As a first view, order by p_val_adj, to have the most significant at first.
-    result <- result[order(result$p_val_adj, decreasing = F), ]
-
-    # Change "." in pct.1 by _
-    colnames(result) <- gsub("[.]", "_", colnames(result))
-
-    # Check if the gene_symbol does not appear in annotation. In that case the NA value will be changed to ENSEMBL ID
-    result$gene_names[is.na(result$gene_names)] <- result$Gene[is.na(result$gene_names)]
+  # replace NA gene symbols with ensembl ids
+  na.genes <- is.na(result$gene_names)
+  result$gene_names[na.genes] <- result$Gene[na.genes]
 
 
-    ## Old DE results from pagoda2
-    #result$zscore <- result$pct_1
-    #result$pct <- result$pct_1
-    #result$abszscore <- result$pct_2
-    #result$log2fc <- result$avg_log2FC
-    #result$qval <- result$p_val_adj
-    message("checking FindMarkers results before returning:  ", str(result))
+  if (!("pagination" %in% names(req$body))) {
+    result <- list(gene_results = purrr::transpose(result), full_count = nrow(result))
+    message("Pagination not enabled, returning results: ", str(result))
+  } else {
+    result <- paginateDE(result, req)
+  }
 
+  return(result)
+}
+
+runWilcoxAUC <- function(data) {
+
+  # get marker genes
+  result <- presto::wilcoxauc(data, assay = "data", seurat_assay = "RNA", group_by = "custom")
+  result <- result[result$group == "base", ]
+  rownames(result) <- result$feature
+  result <- result[, c("pval", "logFC", "pct_in", "pct_out", "padj", "auc")]
+  colnames(result) <- c("p_val", "logFC", "pct_1", "pct_2", "p_val_adj", "auc")
+
+  return(result)
+}
+
+paginateDE <- function(result, req) {
+  message("Paginating results:  ", str(result))
+  pagination <- req$body$pagination
+  genes_only <- FALSE
+
+  order_by <- pagination$orderBy
+  order_decreasing <- pagination$orderDirection == "DESC"
+  offset <- pagination$offset
+  limit <- pagination$limit
+  filters <- pagination$filters
+
+  result <- applyFilters(result, filters)
+
+  if ("genesOnly" %in% names(req$body)) {
+    genes_only <- req$body$genesOnly
+  }
+
+  if (genes_only) {
+    n_genes <- min(limit, nrow(result))
+
+    result <- result[order(result[, order_by], decreasing = order_decreasing), ]
+
+    gene_results <- list(
+      gene_names = result$gene_names[1:n_genes],
+      gene_id = result$Gene[1:n_genes]
+    )
+
+    result <- list(gene_results = gene_results, full_count = n_genes)
     return(result)
+  }
+
+  result <- handlePagination(result, offset, limit, order_by, order_decreasing)
+  result$gene_results <- purrr::transpose(result$gene_results)
+
+  return(result)
 }

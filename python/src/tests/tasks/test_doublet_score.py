@@ -1,8 +1,6 @@
-import json
-import os
-
 import pytest
 import responses
+from exceptions import RWorkerException
 from worker.config import config
 from worker.tasks.doublet_score import GetDoubletScore
 
@@ -18,29 +16,34 @@ class TestGetDoubletScore:
             },
         }
 
-    @pytest.fixture(autouse=True)
-    def set_responses(self):
-        with open(os.path.join("tests", "DoubletScore_result.json")) as f:
-            data = json.load(f)
-            responses.add(
-                responses.POST,
-                f"{config.R_WORKER_URL}/v0/getDoubletScore",
-                json=data,
-                status=200,
-            )
-
     def test_works_with_request(self):
         GetDoubletScore(self.correct_request)
 
-    @responses.activate
-    def test_returns_json(self):
-        res = GetDoubletScore(self.correct_request).compute()
-        res = res[0].result
-        json.loads(res)
+    def test_generates_correct_request_keys(self):
+        request = GetDoubletScore(self.correct_request)._format_request()
+        assert isinstance(request, dict)
+
+        # all expected keys are in the request
+        expected_keys = []
+        assert all(key in request for key in expected_keys)
 
     @responses.activate
-    def test_returns_a_json_object(self):
-        res = GetDoubletScore(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        assert isinstance(res, list)
+    def test_should_throw_exception_on_r_worker_error(self):
+
+        error_code = "MOCK_R_WORKER_ERROR"
+        user_message = "Some worker error"
+
+        payload = {"error": {"error_code": error_code, "user_message": user_message}}
+
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/getDoubletScore",
+            json=payload,
+            status=200,
+        )
+
+        with pytest.raises(RWorkerException) as exception_info:
+            GetDoubletScore(self.correct_request).compute()
+
+        assert exception_info.value.args[0] == error_code
+        assert exception_info.value.args[1] == user_message

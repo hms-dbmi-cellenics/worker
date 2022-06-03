@@ -29,10 +29,7 @@ def _read_sqs_message():
     try:
         queue = sqs.get_queue_by_name(QueueName=config.QUEUE_NAME)
     except ClientError as e:
-        if (
-            e.response["Error"]["Code"]
-            == "AWS.SimpleQueueService.NonExistentQueue"
-        ):
+        if e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue":
             return None
         else:
             raise e
@@ -69,9 +66,7 @@ def _read_sqs_message():
         body = json.loads(message.body)
         info("Consumed a message from SQS.")
     except Exception as e:
-        xray_recorder.current_segment().add_exception(
-            e, traceback.format_exc()
-        )
+        xray_recorder.current_segment().add_exception(e, traceback.format_exc())
 
         info("Exception when loading message", message.body)
         info("Exception:", e)
@@ -82,6 +77,21 @@ def _read_sqs_message():
     return body
 
 
+@xray_recorder.capture("consume_message._response_exists")
+def _response_exists(mssg_body):
+    client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
+    ETag = mssg_body["ETag"]
+
+    response = client.list_objects_v2(
+        Bucket=config.RESULTS_BUCKET,
+        Prefix=ETag,
+    )
+
+    for obj in response.get("Contents", []):
+        if obj["Key"] == ETag:
+            return obj["Size"]
+
+
 def consume():
     mssg_body = _read_sqs_message()
 
@@ -89,18 +99,21 @@ def consume():
         return None
 
     timeout = mssg_body["timeout"]
-    timeout = (
-        dateutil.parser.parse(timeout)
-        .astimezone(pytz.utc)
-        .replace(tzinfo=None)
-    )
+    timeout = dateutil.parser.parse(timeout).astimezone(pytz.utc).replace(tzinfo=None)
 
     if timeout <= datetime.datetime.utcnow():
         info(
-            f"Skipping processing task with uuid {mssg_body['uuid']}"
-            f"{mssg_body['uuid']} as its timeout of {timeout} has expired..."
+            f"Skipping processing task with ETag {mssg_body['ETag']} "
+            f"as its timeout of {timeout} has expired..."
         )
 
+        return None
+
+    if _response_exists(mssg_body):
+        info(
+            f"Skipping processing task with ETag {mssg_body['ETag']} "
+            f"as a response with this hash is already in S3."
+        )
         return None
 
     info(json.dumps(mssg_body, indent=2, sort_keys=True))

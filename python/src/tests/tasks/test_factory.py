@@ -1,6 +1,6 @@
+from unittest.mock import Mock, patch
+
 import pytest
-from mock import Mock, patch
-from worker.result import Result
 from worker.tasks.factory import TaskFactory
 
 
@@ -20,40 +20,16 @@ class TestTaskFactory:
     def test_throws_exception_on_empty_task_definition(self):
         with pytest.raises(Exception) as e:
             self.task_factory.submit({})
-        assert e.value.args[0] == "Task class with name None was not found"
+        assert e.value.args[0] == "Task class with name None was not found: None"
 
     def test_throws_exception_on_non_existent_task(self):
         with pytest.raises(Exception) as e:
-            self.task_factory.submit(
-                {"body": {"name": "ClearlyAnInvalidTaskName"}}
-            )
+            self.task_factory.submit({"body": {"name": "ClearlyAnInvalidTaskName"}})
         assert (
             e.value.args[0]
-            == "Task class with name ClearlyAnInvalidTaskName was not found"
+            == "Task class with name ClearlyAnInvalidTaskName was not found: 'ClearlyAnInvalidTaskName'"
         )
 
     def test_creates_class_on_existent_task(self):
         r = self.task_factory._factory({"body": {"name": "GetEmbedding"}})
         assert isinstance(r, object)
-
-    @pytest.mark.parametrize(
-        "valid_task_name",
-        [
-            "GetEmbedding",
-            "ListGenes",
-            "DifferentialExpression",
-            "GeneExpression",
-            "ClusterCells",
-        ],
-    )
-    def test_returns_result_list_with_properly_defined_task(
-        self, valid_task_name
-    ):
-        results = self.task_factory.submit({"body": {"name": valid_task_name}})
-        assert isinstance(results, list)
-
-    def test_each_element_in_result_list_is_a_result_object(self):
-        results = self.task_factory.submit(
-            {"body": {"name": "GetEmbedding", "type": "pca"}}
-        )
-        assert all(isinstance(result, Result) for result in results)

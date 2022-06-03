@@ -13,6 +13,7 @@ from .tasks.factory import TaskFactory
 # configure logging
 basicConfig(format="%(asctime)s %(message)s", level=INFO)
 
+
 def main():
     if config.IGNORE_TIMEOUT:
         info("Worker configured to ignore timeout, will run forever...")
@@ -20,14 +21,16 @@ def main():
     while not config.EXPERIMENT_ID:
         info("Experiment not yet assigned, waiting...")
         time.sleep(5)
-    
+
     # Disable X-Ray for initial setup so we don't end up
     # with segment warnings before any message is sent
     xray.global_sdk_config.set_sdk_enabled(False)
 
     last_activity = datetime.datetime.utcnow()
     task_factory = TaskFactory()
-    info(f"Now listening for experiment {config.EXPERIMENT_ID}, waiting for work to do...")
+    info(
+        f"Now listening for experiment {config.EXPERIMENT_ID}, waiting for work to do..."
+    )
 
     while (
         datetime.datetime.utcnow() - last_activity
@@ -36,10 +39,11 @@ def main():
         # Disable X-Ray before message is identified and processed
         xray.global_sdk_config.set_sdk_enabled(False)
 
-        msg = consume()
-        if msg:
-            results = task_factory.submit(msg)
-            response = Response(request=msg, results=results)
+        request = consume()
+        if request:
+            result = task_factory.submit(request)
+
+            response = Response(request, result)
             response.publish()
 
             last_activity = datetime.datetime.utcnow()

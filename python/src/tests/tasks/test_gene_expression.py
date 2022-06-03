@@ -3,6 +3,9 @@ import os
 
 import numpy as np
 import pytest
+import responses
+from exceptions import RWorkerException
+from worker.config import config
 from worker.tasks.gene_expression import GeneExpression
 
 
@@ -25,7 +28,6 @@ class TestGeneExpression:
                 "genes": ["Tpt1", "Zzz3"],
             },
         }
-        self.correct_response = json.load(open(os.path.join("tests", "GE_result.json")))
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
@@ -34,80 +36,23 @@ class TestGeneExpression:
     def test_works_with_request(self):
         GeneExpression(self.correct_request)
 
-    def test_returns_json(self):
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        json.loads(res)
+    @responses.activate
+    def test_should_throw_exception_on_r_worker_error(self):
 
-    def test_returns_a_json_object(self):
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        assert isinstance(res, dict)
+        error_code = "MOCK_R_WORKER_ERROR"
+        user_message = "Some worker error"
 
-    def test_object_returns_appropriate_number_of_genes(self):
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
+        payload = {"error": {"error_code": error_code, "user_message": user_message}}
 
-        assert len(res) == len(self.correct_request["body"]["genes"])
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/runExpression",
+            json=payload,
+            status=200,
+        )
 
-    def test_object_returns_one_gene(self):
-        res = GeneExpression(self.correct_one_gene).compute()
-        res = res[0].result
-        res = json.loads(res)
+        with pytest.raises(RWorkerException) as exception_info:
+            GeneExpression(self.correct_request).compute()
 
-        assert len(res) == len(self.correct_one_gene["body"]["genes"])
-
-    def test_each_expression_data_has_correct_number_of_cells(self):
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-        res = res["Zzz3"]["rawExpression"]
-        assert len(res["expression"]) == 1500
-
-    def test_expression_was_properly_truncated(self):
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-
-        for v in res.values():
-            truncatedExpression = np.array(v["truncatedExpression"]["expression"], dtype=np.float)
-            expression = np.array(v["rawExpression"]["expression"], dtype=np.float)
-            max_truncated = np.nanmax(truncatedExpression)
-
-            #Because it's dynamic, we don't know what the actual max will be unless we calculate it manually in python.
-            lim = np.nanquantile(expression,0.95)
-            i = 0.01
-            while(lim==0 and i+0.95<=1):
-                lim = np.nanquantile(expression,0.95+i)
-                i = i+0.01
-
-            assert max_truncated == pytest.approx(lim, 0.01) 
-
-    def test__expression_data_gets_displayed_appropriately(self):
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-
-        for v in res.values():
-            expression = np.array(v["rawExpression"]["expression"], dtype=np.float)
-            mean = v["rawExpression"]["mean"]
-            stdev = v["rawExpression"]["stdev"]
-            assert mean == pytest.approx(np.nanmean(expression), 0.01)
-            assert stdev == pytest.approx(np.nanstd(expression), 0.01)
-
-    # This test is commented because currently the worker doesn't handle
-    # nonexistent genes
-    # A ticket has been created to fix this in expression.r
-    """
-    def test_task_handles_nonexistent_genes(self):
-
-        self.correct_request["body"]["genes"] = ["PPBP", "non-existent-gene"]
-
-        res = GeneExpression(self.correct_request).compute()
-        res = res[0].result
-        res = json.loads(res)
-
-        assert len(res) == 1
-    """
+        assert exception_info.value.args[0] == error_code
+        assert exception_info.value.args[1] == user_message

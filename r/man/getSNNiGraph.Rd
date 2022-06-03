@@ -4,7 +4,7 @@
 \alias{getSNNiGraph}
 \title{Get and Convert SNN Graph object into igraph object}
 \usage{
-getSNNiGraph(data)
+getSNNiGraph(data, active.reduction)
 }
 \arguments{
 \item{data}{\code{Seurat} object}

@@ -36,6 +36,9 @@ RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
 RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
+RUN R -e "install.packages('covr')"
+RUN R -e "install.packages('xml2')"
+
 
 RUN apt-get install -y libudunits2-dev
 RUN apt-get install -y libgdal-dev

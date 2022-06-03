@@ -1,58 +1,54 @@
+import gzip
+import io
 import json
-import uuid
-from functools import reduce
 from logging import info
 
 import aws_xray_sdk as xray
 import boto3
 from aws_xray_sdk.core import xray_recorder
+from socket_io_emitter import Emitter
 
 from .config import config
 
 
 class Response:
-    def __init__(self, request, results):
+    def __init__(self, request, result):
         self.request = request
-        self.results = results
+        self.result = result
 
-        self.error = False
-        for result in self.results:
-            self.error = self.error or result.error
-
-        if self.error:
-            self.cacheable = False
-        else:
-            self.cacheable = True
-            for result in self.results:
-                self.cacheable = self.cacheable and result.cacheable
+        self.error = result.error
+        self.cacheable = (not result.error) and result.cacheable
 
         self.s3_bucket = config.RESULTS_BUCKET
 
-    def _get_response_msg(self, s3_keys=None):
-        if s3_keys:
-            result_objs = []
+    def _construct_data_for_upload(self):
+        info("Starting compression before upload to s3")
+        gzipped_body = io.BytesIO()
+        with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
+            json.dump(self.result.data, zipfile)
 
-            for (res, s3_key) in zip(self.results, s3_keys):
-                s3_path = "/".join([self.s3_bucket, s3_key])
+        gzipped_body.seek(0)
 
-                obj = res.get_result_object(resp_format=True, s3_path=s3_path)
-                result_objs.append(obj)
-        else:
-            result_objs = [
-                res.get_result_object(resp_format=True) for res in self.results
-            ]
+        info("Compression finished")
+        return gzipped_body
 
-        return {
+    def _construct_response_msg(self):
+        message = {
             "request": self.request,
-            "results": list(result_objs),
             "response": {"cacheable": self.cacheable, "error": self.error},
+            "type": "WorkResponse",
         }
 
+        if self.error:
+            message["response"]["errorCode"] = self.result.data["error_code"]
+            message["response"]["userMessage"] = self.result.data["user_message"]
+
+        return message
+
     @xray_recorder.capture("Response._upload")
-    def _upload(self, result):
+    def _upload(self, response_data):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
-        key = "{}/{}".format(self.request["uuid"], str(uuid.uuid4()))
-        body = result.get_result_object()["body"]
+        ETag = self.request["ETag"]
 
         # Disabled X-Ray to fix a botocore bug where the context
         # does not propagate to S3 requests. see:
@@ -61,58 +57,51 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.put_object(Key=key, Bucket=self.s3_bucket, Body=body)
+        client.upload_fileobj(response_data, self.s3_bucket, ETag)
+
+        client.put_object_tagging(
+            Key=ETag,
+            Bucket=self.s3_bucket,
+            Tagging={
+                "TagSet": [
+                    {"Key": "experimentId", "Value": self.request["experimentId"]},
+                    {"Key": "requestType", "Value": self.request["body"]["name"]},
+                ]
+            },
+        )
+
+        info(f"Response was uploaded in bucket {self.s3_bucket} at key {ETag}.")
 
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(True)
 
-        return key
+        return ETag
 
-    def _send_notification(self, mssg):
-        sns = boto3.client("sns", **config.BOTO_RESOURCE_KWARGS)
+    def _send_notification(self):
+        io = Emitter({"client": config.REDIS_CLIENT})
+        if self.request.get("broadcast"):
+            io.Emit(
+                f'ExperimentUpdates-{self.request["experimentId"]}',
+                self._construct_response_msg(),
+            )
 
-        msg_to_send = json.dumps({"default": json.dumps(mssg)})
+            info(
+                f"Broadcast results to users viewing experiment {self.request['experimentId']}."
+            )
 
-        r = sns.publish(
-            TargetArn="arn:aws:sns:{}:{}:{}".format(
-                config.AWS_REGION, config.AWS_ACCOUNT_ID, config.SNS_TOPIC
-            ),
-            Message=msg_to_send,
-            MessageAttributes={
-                "type": {"DataType": "String", "StringValue": "WorkResponse"}
-            },
-            MessageStructure="json",
-        )
+        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
 
-        info(f"Request with UUID {self.request['uuid']} successfully sent to SNS, message ID: {r['MessageId']}.")
-
-        return msg_to_send
+        info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
     @xray_recorder.capture("Response.publish")
     def publish(self):
-        # Get total length of all result objects:
-        message_length = (
-            reduce(
-                lambda acc, curr: acc + curr.get_result_length(),
-                self.results,
-                0,
-            )
-            + len(json.dumps(self.request))
-        )
+        info(f"Request {self.request['ETag']} processed, response:")
 
-        # If we are over 80% of the limit (256 KB, 262144 bytes), upload to S3.
-        # Otherwise, we can send the entire payload through the SNS topic.
-        MAX_SNS_MESSAGE_LEN = 262144
-        upload_to_s3 = message_length >= 0.8 * MAX_SNS_MESSAGE_LEN
+        if not self.error and self.cacheable:
+            response_data = self._construct_data_for_upload()
 
-        if upload_to_s3:
-            s3_keys = [self._upload(res) for res in self.results]
-            response_msg = self._get_response_msg(s3_keys=s3_keys)
-        else:
-            response_msg = self._get_response_msg()
+            info("Uploading response to S3")
+            self._upload(response_data)
 
-
-        info(f"Request {self.request['uuid']} processed, response:")
-        info(json.dumps(response_msg, indent=2, sort_keys=True))
-
-        return self._send_notification(response_msg)
+        info("Sending socket.io message to clients subscribed to work response")
+        return self._send_notification()
