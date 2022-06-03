@@ -9,7 +9,7 @@ from ..result import Result
 from ..tasks import Task
 
 
-class TrajectoryAnalysis(Task):
+class getPseudoTime(Task):
     def _format_result(self, raw):
         # JSONify result.
         raw_result = json.dumps(raw)
@@ -17,7 +17,7 @@ class TrajectoryAnalysis(Task):
         # Return a list of formatted results.
         return [Result(raw_result), Result(raw_result)]
 
-    @xray_recorder.capture("TrajectoryAnalysis.compute")
+    @xray_recorder.capture("getPseudoTime.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
