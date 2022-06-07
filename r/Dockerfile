@@ -80,7 +80,7 @@ FROM common AS prod
 # add R package and runner
 ADD R ./R
 ADD tests ./tests
-COPY DESCRIPTION NAMESPACE work.R .
+COPY DESCRIPTION NAMESPACE work.R ./
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
@@ -99,6 +99,6 @@ RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 # add R package and runner
 ADD R ./R
 ADD tests ./tests
-COPY DESCRIPTION NAMESPACE work.R .
+COPY DESCRIPTION NAMESPACE work.R ./
 
 CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
