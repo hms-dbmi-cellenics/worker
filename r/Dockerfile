@@ -55,39 +55,9 @@ COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
 
 # ---------------------------------------------------
-# PRODUCTION BUILD
+# COMMON MINIMAL BUILD
 # ---------------------------------------------------
-FROM rocker/r-ver:4.2.0 AS prod
-WORKDIR /src/worker
-ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
-
-# get source code and R packages
-COPY --from=builder /src /src
-
-# add renv library to .libPaths
-ENV RENV_LIB=/src/lib
-RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
-
-# install runtime system deps
-RUN cat sysdeps_run.txt | xargs ./install_debian_packages.sh
-
-# add R package and test files
-ADD R ./R
-COPY DESCRIPTION .
-COPY NAMESPACE .
-ADD tests ./tests
-
-# copy runner
-COPY work.R .
-
-# start app
-ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
-CMD ["Rscript", "work.R"]
-
-# ---------------------------------------------------
-# DEVELOPMENT BUILD
-# ---------------------------------------------------
-FROM rocker/r-ver:4.2.0 AS dev
+FROM rocker/r-ver:4.2.0 AS common
 WORKDIR /src/worker
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
@@ -102,18 +72,33 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 RUN echo "python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh
 
+# ---------------------------------------------------
+# PRODUCTION BUILD
+# ---------------------------------------------------
+FROM common AS prod
+
+# add R package and runner
+ADD R ./R
+ADD tests ./tests
+COPY DESCRIPTION NAMESPACE work.R .
+
+# start app
+ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
+CMD ["Rscript", "work.R"]
+
+# ---------------------------------------------------
+# DEVELOPMENT BUILD
+# ---------------------------------------------------
+FROM common AS dev
+
 # install Radian for interactive R shell
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
-# add R package and test files
+# add R package and runner
 ADD R ./R
-COPY DESCRIPTION .
-COPY NAMESPACE .
 ADD tests ./tests
-
-# copy runner
-COPY work.R .
+COPY DESCRIPTION NAMESPACE work.R .
 
 CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
