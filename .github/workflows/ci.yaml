@@ -237,7 +237,7 @@ jobs:
         name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          files: ./covr/coverage.xml
+          files: ./r/covr/coverage.xml
 
       - id: test
         name: Run unit tests
