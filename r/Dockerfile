@@ -37,7 +37,7 @@ RUN R -e "renv::deactivate()"
 # clean conda
 ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 RUN R -e "reticulate::install_miniconda()" && \
-    R -e "reticulate::conda_install(packages = 'umap-learn')" && \
+    R -e "reticulate::conda_install(packages = 'umap-learn=0.5.3', python_version='3.10')" && \
     CONDA_PATH=$(echo "cat(reticulate::conda_binary())" | Rscript -) && \
     $CONDA_PATH clean --force-pkgs-dirs -y
 
