@@ -66,8 +66,10 @@ ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
 # install runtime system deps
+# cleanup setup files
 RUN echo "python3-pip" >> sysdeps_run.txt && \
-    cat sysdeps_run.txt | xargs ./install_debian_packages.sh
+    cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
+    rm -rf *
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
