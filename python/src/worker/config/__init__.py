@@ -21,6 +21,12 @@ ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 aws_account_id = os.getenv("AWS_ACCOUNT_ID")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
 
+if not aws_account_id:
+    raise Exception("AWS_ACCOUNT_ID is not set")
+
+if not aws_region:
+    raise Exception("AWS_DEFAULT_REGION is not set")
+
 # set up cluster env based on github env if one was not specified
 # this is only run if `kube_env` is specified, i.e. when the system
 # is run in staging/production or in testing
