@@ -10,6 +10,8 @@
         env:
         - name: AWS_ACCOUNT_ID
           value: "{{ .Values.myAccount.accountId }}"
+        - name: AWS_DEFAULT_REGION
+          value: "{{ .Values.myAccount.region }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -30,7 +32,7 @@
         env:
         - name: AWS_ACCOUNT_ID
           value: "{{ .Values.myAccount.accountId }}"
-        - name: AWS_REGION
+        - name: AWS_DEFAULT_REGION
           value: "{{ .Values.myAccount.region }}"
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
