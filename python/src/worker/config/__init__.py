@@ -113,7 +113,6 @@ config = Config(
     IGNORE_TIMEOUT=ignore_timeout,
     AWS_ACCOUNT_ID=aws_account_id,
     AWS_DEFAULT_REGION=aws_region,
-    AWS_REGION=aws_region,
     BOTO_RESOURCE_KWARGS={"region_name": aws_region},
     CELL_SETS_BUCKET=f"cell-sets-{cluster_env}",
     SOURCE_BUCKET=f"processed-matrix-{cluster_env}",
@@ -132,7 +131,6 @@ config.API_URL = (
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
     config.AWS_DEFAULT_REGION = "eu-west-1"
-    config.AWS_REGION = "eu-west-1"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
     config.BOTO_RESOURCE_KWARGS["region_name"] = "eu-west-1"
@@ -147,5 +145,8 @@ if cluster_env == "development":
 if cluster_env != "test":
     core.patch_all()
 
-if not config.AWS_ACCOUNT_ID or not config.AWS_DEFAULT_REGION   :
-    raise Exception("env.AWS_ACCOUNT_ID or env.AWS_DEFAULT_REGION is not set")
+if not config.AWS_ACCOUNT_ID:
+    raise Exception("env.AWS_ACCOUNT_ID is not set")
+
+if not config.AWS_DEFAULT_REGION   :
+    raise Exception("env.AWS_DEFAULT_REGION")
