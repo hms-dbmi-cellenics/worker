@@ -18,9 +18,8 @@ timeout = int(
 )
 
 ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
-
-aws_account_id = os.getenv("AWS_ACCOUNT_ID", default="242905224710")
-aws_region = os.getenv("AWS_DEFAULT_REGION", default="eu-west-1")
+aws_account_id = os.getenv("AWS_ACCOUNT_ID")
+aws_region = os.getenv("AWS_DEFAULT_REGION")
 
 # set up cluster env based on github env if one was not specified
 # this is only run if `kube_env` is specified, i.e. when the system
@@ -113,7 +112,7 @@ config = Config(
     TIMEOUT=timeout,
     IGNORE_TIMEOUT=ignore_timeout,
     AWS_ACCOUNT_ID=aws_account_id,
-    AWS_REGION=aws_region,
+    AWS_DEFAULT_REGION=aws_region,
     BOTO_RESOURCE_KWARGS={"region_name": aws_region},
     CELL_SETS_BUCKET=f"cell-sets-{cluster_env}",
     SOURCE_BUCKET=f"processed-matrix-{cluster_env}",
@@ -131,8 +130,10 @@ config.API_URL = (
 
 if cluster_env == "development" or cluster_env == "test":
     config.AWS_ACCOUNT_ID = "000000000000"
+    config.AWS_DEFAULT_REGION = "eu-west-1"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
+    config.BOTO_RESOURCE_KWARGS["region_name"] = "eu-west-1"
     config.API_URL = "http://host.docker.internal:3000"
 
     global_sdk_config.set_sdk_enabled(False)
@@ -143,3 +144,9 @@ if cluster_env == "development":
 
 if cluster_env != "test":
     core.patch_all()
+
+if not config.AWS_ACCOUNT_ID:
+    raise Exception("env.AWS_ACCOUNT_ID is not set")
+
+if not config.AWS_DEFAULT_REGION:
+    raise Exception("env.AWS_DEFAULT_REGION is not set")
