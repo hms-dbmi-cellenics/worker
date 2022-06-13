@@ -148,5 +148,5 @@ if cluster_env != "test":
 if not config.AWS_ACCOUNT_ID:
     raise Exception("env.AWS_ACCOUNT_ID is not set")
 
-if not config.AWS_DEFAULT_REGION   :
-    raise Exception("env.AWS_DEFAULT_REGION")
+if not config.AWS_DEFAULT_REGION:
+    raise Exception("env.AWS_DEFAULT_REGION is not set")
