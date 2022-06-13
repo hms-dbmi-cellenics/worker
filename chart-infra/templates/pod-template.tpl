@@ -7,7 +7,6 @@
       containers:
       - name: "{{ .Release.Name }}-r"
         image: "{{ .Values.r.image }}"
-        env:
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
