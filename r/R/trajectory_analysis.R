@@ -17,8 +17,8 @@ runTrajectoryAnalysis <- function(req,data){
 
 runGenerateTrajectoryGraph <- function(req,data){
     cell_data <- generateGraphData(data)
-    node_coords <- t(cds@principal_graph_aux[[reduction_method]]$dp_mst)
-    umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cds)[["UMAP"]])
+    node_coords <- t(cell_data@principal_graph_aux[[reduction_method]]$dp_mst)
+    umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cell_data)[["UMAP"]])
 
     #TO DO
     #return the node and umap coords according to the design doc
@@ -36,12 +36,46 @@ runGenerateTrajectoryGraph <- function(req,data){
     #    Umap: [{x, y}, {x, y, {x, y}],
     #    }
     #
+
+  # node coordinates
+    # get connected nodes
+    connected_nodes <- list()
+    for (node in rownames(node_coords)){
+      connected_nodes[[node]] <- as.list(names(cell_data@principal_graph[[reduction_method]][[which(rownames(node_coords) == node)]][[1]]))
+    }
+
+    # create list
+    colnames(node_coords) <- c("x","y")
+    node_coords_list <- lapply(asplit(node_coords, 1),as.list)
+    for (i in 1:length(node_coords_list)){
+      node_coords_list[[i]]["node_id"] <- names(node_coords_list)[i]
+      node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
+    }
+
+  # umap data
+    # fill in the NULL values for filtered cells
+    umap_coords$cells_id <- data@meta.data$cells_id
+    umap_coords <- umap_coords[order(umap_coords$cells_id), ]
+    umap_coords <- umap_coords %>%
+      tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
+      select(-cells_id)
+    # create list
+    colnames(umap_coords) <- c("x","y")
+    umap_coords_list <- lapply(asplit(umap_coords, 1),as.list)
+
+    # node + umap data
+    node_umap_coords <- list(nodes = node_coords_list, umap = umap_coords_list)
+    return(node_umap_coords)
 }
+
 
 generateGraphData <- function(data){
     cell_data <- SeuratWrappers::as.cell_data_set(data)
 
     set.seed(42)
+
+    # shouldn't we do also dimensionality reduction, before cluster_cells?
+    # cell_data <- monocle3::reduce_dimension(cell_data, reduction_method = "UMAP")
 
     cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
     cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
