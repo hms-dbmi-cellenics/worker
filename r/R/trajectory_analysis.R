@@ -41,13 +41,14 @@ runGenerateTrajectoryGraph <- function(req,data){
     umap_coords <- umap_coords[order(umap_coords$cells_id), ]
     umap_coords <- umap_coords %>%
       tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-      select(-cells_id)
+      dplyr::select(-cells_id)
     # create list
     colnames(umap_coords) <- c("x","y")
     umap_coords_list <- lapply(asplit(umap_coords, 1),as.list)
 
-    # node + umap data
+  # node + umap data
     node_umap_coords <- list(nodes = node_coords_list, umap = umap_coords_list)
+
     # convert list to json
     node_umap_coords <- RJSONIO::toJSON(node_umap_coords)
     return(node_umap_coords)
@@ -59,13 +60,10 @@ generateGraphData <- function(data){
 
     set.seed(42)
 
-    # shouldn't we do also dimensionality reduction, before cluster_cells?
-    # cell_data <- monocle3::reduce_dimension(cell_data, reduction_method = "UMAP")
-
+    cell_data <- monocle3::reduce_dimension(cell_data, reduction_method = "UMAP")
     cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
     cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
 
     return(cell_data)
 }
-
 
