@@ -106,6 +106,8 @@ class Config(types.SimpleNamespace):
             ssl_cert_reqs=None,
         )
 
+if cluster_env == "development" or cluster_env == "test":
+    aws_account_id = "000000000000"
 
 config = Config(
     CLUSTER_ENV=cluster_env,
@@ -114,9 +116,9 @@ config = Config(
     AWS_ACCOUNT_ID=aws_account_id,
     AWS_DEFAULT_REGION=aws_region,
     BOTO_RESOURCE_KWARGS={"region_name": aws_region},
-    CELL_SETS_BUCKET=f"cell-sets-{cluster_env}",
-    SOURCE_BUCKET=f"processed-matrix-{cluster_env}",
-    RESULTS_BUCKET=f"worker-results-{cluster_env}",
+    CELL_SETS_BUCKET=f"cell-sets-{cluster_env}-{aws_account_id}",
+    SOURCE_BUCKET=f"processed-matrix-{cluster_env}-{aws_account_id}",
+    RESULTS_BUCKET=f"worker-results-{cluster_env}-{aws_account_id}",
     R_WORKER_URL="http://localhost:4000",
     # this works because in CI, `data/` is deployed under `worker/`
     # whereas in a container, it is mounted to `/data`. Either way, this ensures
@@ -129,7 +131,6 @@ config.API_URL = (
 )
 
 if cluster_env == "development" or cluster_env == "test":
-    config.AWS_ACCOUNT_ID = "000000000000"
     config.AWS_DEFAULT_REGION = "eu-west-1"
     config.BOTO_RESOURCE_KWARGS["aws_access_key_id"] = "my-key"
     config.BOTO_RESOURCE_KWARGS["aws_secret_access_key"] = "my-secret-key"
