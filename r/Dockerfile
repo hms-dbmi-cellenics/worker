@@ -30,7 +30,7 @@ RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixS
 
 RUN R -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
 
-RUN apt-get install -y cmake 
+RUN apt-get install -y cmake --fix-missing
 
 RUN R -e "install.packages('nloptr')"
 RUN R -e "install.packages('lme4')"
