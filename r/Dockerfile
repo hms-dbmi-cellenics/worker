@@ -26,18 +26,18 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 COPY renv.lock .
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
-RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor','Matrix.utils'))"
+# RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor','Matrix.utils'))"
 
-RUN R -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
+# RUN R -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
 
-RUN apt-get install -y cmake --fix-missing
+# RUN apt-get install -y cmake --fix-missing
 
-RUN R -e "install.packages('nloptr')"
-RUN R -e "install.packages('lme4')"
-RUN R -e "install.packages('spdep')"
-RUN R -e "install.packages('terra')"
-RUN R -e "devtools::install_github('cole-trapnell-lab/leidenbase')"
-RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
+# RUN R -e "install.packages('nloptr')"
+# RUN R -e "install.packages('lme4')"
+# RUN R -e "install.packages('spdep')"
+# RUN R -e "install.packages('terra')"
+# RUN R -e "devtools::install_github('cole-trapnell-lab/leidenbase')"
+# RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
 
 # install miniconda and python umap-learn for RunUMAP
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
@@ -47,13 +47,13 @@ RUN R -e "install.packages('covr')"
 RUN R -e "install.packages('xml2')"
 
 
-RUN apt-get install -y libudunits2-dev
-RUN apt-get install -y libgdal-dev
+# RUN apt-get install -y libudunits2-dev
+# RUN apt-get install -y libgdal-dev
 
-RUN R -e "install.packages('sf')"
+# RUN R -e "install.packages('sf')"
 # RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
-RUN R -e "install.packages('R.utils')"
-RUN R -e "remotes::install_github('satijalab/seurat-wrappers')"
+# RUN R -e "install.packages('R.utils')"
+# RUN R -e "remotes::install_github('satijalab/seurat-wrappers')"
 
 
 # ---------------------------------------------------
