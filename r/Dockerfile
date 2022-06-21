@@ -29,6 +29,9 @@ RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor','Matrix.utils'))"
 
 RUN R -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
+RUN R -e "install.packages('lme4')"
+RUN R -e "install.packages('spdep')"
+RUN R -e "install.packages('terra')"
 RUN R -e "devtools::install_github('cole-trapnell-lab/leidenbase')"
 RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
 
