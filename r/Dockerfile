@@ -30,7 +30,7 @@ RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixS
 
 RUN R -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
 
-RUN apt-get install cmake 
+RUN apt-get install -y cmake 
 
 RUN R -e "install.packages('nloptr')"
 RUN R -e "install.packages('lme4')"
@@ -51,7 +51,7 @@ RUN apt-get install -y libudunits2-dev
 RUN apt-get install -y libgdal-dev
 
 RUN R -e "install.packages('sf')"
-RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
+# RUN R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
 RUN R -e "install.packages('R.utils')"
 RUN R -e "remotes::install_github('satijalab/seurat-wrappers')"
 
