@@ -26,6 +26,7 @@ RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(l
 COPY renv.lock .
 RUN apt-get install -y libudunits2-dev
 RUN apt-get install -y libgdal-dev
+RUN apt-get -y install cmake
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
 RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor','Matrix.utils'))"
