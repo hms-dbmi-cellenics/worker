@@ -155,7 +155,7 @@ jobs:
             --tag $IMAGE_NAME-builder .
 
           docker build --target prod \
-            --no-cache
+            --no-cache \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-ci .
         env:
