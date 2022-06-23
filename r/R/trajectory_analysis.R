@@ -4,8 +4,6 @@ runTrajectoryAnalysis <- function(req, data) {
   cell_data <- generateGraphData(data)
   cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
 
-  # monocle3::plot_cells(cell_data,color_cells_by = "pseudotime",label_cell_groups=FALSE,label_leaves=FALSE,label_branch_points=FALSE,graph_label_size=1.5)
-
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
   pseudotime$cells_id <- data@meta.data$cells_id
   pseudotime <- pseudotime[order(pseudotime$cells_id), ]
@@ -24,7 +22,9 @@ runGenerateTrajectoryGraph <- function(req, data) {
   # get connected nodes
   connected_nodes <- list()
   for (node in rownames(node_coords)) {
-    connected_nodes[[node]] <- as.list(names(cell_data@principal_graph[["UMAP"]][[which(rownames(node_coords) == node)]][[1]]))
+    node_id <- which(rownames(node_coords) == node)
+    connected_nodes_obj <- cell_data@principal_graph[["UMAP"]][[node_id]][[1]]
+    connected_nodes[[node]] <- as.list(names(connected_nodes_obj))
   }
 
   # create list
@@ -60,7 +60,6 @@ generateGraphData <- function(data) {
 
   set.seed(42)
 
-  cell_data <- monocle3::reduce_dimension(cell_data, reduction_method = "UMAP")
   cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
   cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
 
