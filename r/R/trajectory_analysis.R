@@ -58,7 +58,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 generateGraphData <- function(data) {
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
-  set.seed(42)
+  set.seed(ULTIMATE_SEED)
 
   cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
   cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
