@@ -2,15 +2,50 @@ mock_scdata <- function(filt_cell_id = "") {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   if (all(filt_cell_id != "")) {
-    pbmc_small <- subset(pbmc_small, cells = names(pbmc_small$cells_id[which(!pbmc_small$cells_id %in% filt_cell_id)]))
+    keep_cells_id <- which(!pbmc_small$cells_id %in% filt_cell_id)
+    keep_cells <- names(pbmc_small$cells_id[keep_cells_id])
+    pbmc_small <- subset(pbmc_small, cells = keep_cells)
   }
   pbmc_small@misc$gene_annotations <- data.frame(
     input = row.names(pbmc_small),
     name = row.names(pbmc_small),
     row.names = row.names(pbmc_small)
   )
+
+  # scale and PCA
+  pbmc_small <- Seurat::NormalizeData(pbmc_small, normalization.method = "LogNormalize", verbose = FALSE)
+  pbmc_small <- Seurat::FindVariableFeatures(pbmc_small, verbose = FALSE)
+  pbmc_small <- Seurat::ScaleData(pbmc_small, verbose = FALSE)
+  pbmc_small <- Seurat::RunPCA(pbmc_small, verbose = FALSE, npcs = 10)
+  pbmc_small@misc[["active.reduction"]] <- "pca"
+
+  # run UMAP
+  npcs <- get_npcs(pbmc_small)
+  pbmc_small <- Seurat::RunUMAP(pbmc_small, dims = 1:npcs, verbose = FALSE)
+
   return(pbmc_small)
 }
+
+get_explained_variance <- function(scdata) {
+  # Compute explained variance for plotting and numPCs estimation.
+  # It can be computed from pca or other reductions such as mnn
+  if (scdata@misc[["active.reduction"]] == "mnn") {
+    var_explained <- scdata@tools$`SeuratWrappers::RunFastMNN`$pca.info$var.explained
+  } else {
+    eig_values <- (scdata@reductions$pca@stdev)^2
+    var_explained <- eig_values / sum(eig_values)
+  }
+  return(var_explained)
+}
+
+get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
+  # estimates the number of PCs to use in data integration and embeddings,
+  # using accumulated explained variance
+  var_explained <- get_explained_variance(scdata)
+  npcs <- min(which(cumsum(var_explained) >= var_threshold))
+  return(min(npcs, max_npcs, na.rm = TRUE))
+}
+
 
 mock_req <- function() {
   req <- list(
