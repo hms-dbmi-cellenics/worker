@@ -9,7 +9,7 @@ from ..result import Result
 from ..tasks import Task
 
 
-class getPseudoTime(Task):
+class GetPseudoTime(Task):
     def _format_result(self, raw):
         # JSONify result.
         raw_result = json.dumps(raw)
@@ -17,7 +17,7 @@ class getPseudoTime(Task):
         # Return a list of formatted results.
         return [Result(raw_result), Result(raw_result)]
 
-    @xray_recorder.capture("getPseudoTime.compute")
+    @xray_recorder.capture("GetPseudoTime.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -39,7 +39,7 @@ class getPseudoTime(Task):
         return self._format_result(result)
 
 
-class getTrajectoryGraph(Task):
+class GetTrajectoryGraph(Task):
     def _format_result(self, raw):
         # JSONify result.
         raw_result = json.dumps(raw)
@@ -47,7 +47,7 @@ class getTrajectoryGraph(Task):
         # Return a list of formatted results.
         return [Result(raw_result), Result(raw_result)]
 
-    @xray_recorder.capture("getTrajectoryGraph.compute")
+    @xray_recorder.capture("GetTrajectoryGraph.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
