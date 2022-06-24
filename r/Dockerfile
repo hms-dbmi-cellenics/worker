@@ -30,9 +30,6 @@ RUN apt-get install -y libgdal-dev
 RUN apt-get -y install cmake
 RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
 
-RUN R -e "BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats','limma', 'S4Vectors', 'SingleCellExperiment','SummarizedExperiment', 'batchelor','Matrix.utils'))"
-
-
 # install miniconda and python umap-learn for RunUMAP
 ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
 RUN R -e "reticulate::install_miniconda()"
