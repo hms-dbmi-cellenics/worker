@@ -41,7 +41,7 @@ sendCellsetToApi <-
       list(list("$insert" = list(index = "-", value = new_cell_set)))
 
     httr::PATCH(
-      paste0(api_url, "/v1/experiments/", experiment_id, "/cellSets"),
+      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
       body = list(list(
         "$match" = list(query = httr_query,
                         value = list("children" = children))
@@ -74,7 +74,7 @@ updateCellSetsThroughApi <-
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     httr::PATCH(
-      paste0(api_url, "/v1/experiments/", experiment_id, "/cellSets"),
+      paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
       body = list(list(
         "$match" = list(query = httr_query, value = list("$remove" = TRUE))
       ),
