@@ -5,7 +5,6 @@ WORKDIR /src
 # install required debian packages to make R packages work
 COPY setup ./setup
 COPY requirements_debian.txt .
-RUN R -e "print('')"
 RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
 RUN apt-get update && apt-get install -y procps
 
