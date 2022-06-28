@@ -29,14 +29,15 @@ mock_req_genes_only <- function() {
 
 mock_scdata <- function() {
   pbmc_raw <- read.table(
-    file = system.file('extdata', 'pbmc_raw.txt', package = 'Seurat'),
+    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
     as.is = TRUE
   )
   enids <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
   gene_annotations <- data.frame(
     input = enids,
     name = row.names(pbmc_raw),
-    row.names = enids)
+    row.names = enids
+  )
 
   row.names(pbmc_raw) <- enids
   pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
@@ -59,7 +60,7 @@ test_that("runDE generates the expected return format for comparisons within sam
   expect_equal(length(res$gene_results), req$body$pagination$limit)
 
   # ordering is correct
-  logfc <- sapply(res$gene_results, `[[`, 'logFC')
+  logfc <- sapply(res$gene_results, `[[`, "logFC")
   expect_equal(logfc, sort(logfc, decreasing = TRUE))
 
   # have the correct column names
@@ -94,17 +95,19 @@ test_that("runDE generates the expected return format for comparisons between sa
   expect_equal(length(res$gene_results), req$body$pagination$limit)
 
   # ordering is correct
-  logfc <- sapply(res$gene_results, `[[`, 'logFC')
+  logfc <- sapply(res$gene_results, `[[`, "logFC")
   expect_equal(logfc, sort(logfc, decreasing = TRUE))
 
   # have the correct column names
   expect_columns <-
-    c("p_val",
+    c(
+      "p_val",
       "logFC",
       "AveExpr",
       "p_val_adj",
       "gene_names",
-      "Gene")
+      "Gene"
+    )
   expect_equal(unique(names(unlist(res$gene_results))), expect_columns)
 })
 
@@ -125,15 +128,17 @@ test_that("runDE generates the expected return format for comparisons between sa
   expect_equal(length(res$gene_results), req$body$pagination$limit)
 
   # ordering is correct
-  logfc <- sapply(res$gene_results, `[[`, 'logFC')
+  logfc <- sapply(res$gene_results, `[[`, "logFC")
   expect_equal(logfc, sort(logfc, decreasing = TRUE))
 
   # have the correct column names
   expect_columns <-
-    c("logFC",
+    c(
+      "logFC",
       "AveExpr",
       "gene_names",
-      "Gene")
+      "Gene"
+    )
   expect_equal(unique(names(unlist(res$gene_results))), expect_columns)
 })
 

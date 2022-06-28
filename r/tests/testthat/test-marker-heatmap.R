@@ -26,14 +26,14 @@ test_that("Marker Heatmap returns appropiate format", {
 
   res <- runMarkerHeatmap(req, data)
 
-  expect_equal(names(res), c("rawExpression", "truncatedExpression"))
+  expect_equal(names(res[[1]]), c("rawExpression", "truncatedExpression"))
 
   # number of rows is number of cells
-  expect_equal(ncol(data), nrow(res$rawExpression))
+  expect_equal(ncol(data), length(res[[1]]$rawExpression$expression))
 
   # returning only at most limit number of genes
   expect_lte(
-    ncol(res$rawExpression),
+    length(res),
     req$body$nGenes * length(req$body$cellSets$children)
   )
 })
@@ -45,13 +45,11 @@ test_that("Marker Heatmap nFeatures works appropiately", {
 
   res <- runMarkerHeatmap(req, data)
 
-  expect_equal(names(res), c("rawExpression", "truncatedExpression"))
-
   # number of rows is number of cells
-  expect_equal(ncol(data), nrow(res$rawExpression))
+  expect_equal(ncol(data), length(res[[1]]$rawExpression$expression))
 
   # returning only at most limit number of genes
-  expect_lte(ncol(res$rawExpression), req$body$nGenes * length(req$body$cellSets$children))
+  expect_lte(length(res), req$body$nGenes * length(req$body$cellSets$children))
 })
 
 test_that("Only one group throws error", {

@@ -27,14 +27,14 @@ runDotPlot <- function(req, data) {
 
   # subset object to requested cells
   if (apply_filter) {
-    subset_ids <- filter_by$cellIds
+    subsetIds <- filter_by$cellIds
 
-    if (!length(subset_ids)) {
+    if (!length(subsetIds)) {
       message("The ids to subset the object are empty. Returning empty results.")
       return(list())
     }
 
-    data <- subset_ids(data, subset_ids)
+    data <- subsetIds(data, subsetIds)
   }
 
   # remaining cells

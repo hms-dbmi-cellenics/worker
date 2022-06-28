@@ -8,7 +8,7 @@ services:
       args:
         - GITHUB_PAT=${GITHUB_API_TOKEN}
     volumes:
-      - ./r/R:/src/R:cached # for watcher
+      - ./r/R:/src/worker/R:cached # for watcher
       - ./data:/data:cached
       - ./data/debug:/debug
     expose:

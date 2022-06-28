@@ -17,7 +17,7 @@ mock_scdata <- function() {
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- gene_annotations
-  pbmc_small@misc$color_pool <- list("#e377c2","#8c564b","#d62728","#2ca02c","#ff7f0e")
+  pbmc_small@misc$color_pool <- list("#e377c2", "#8c564b", "#d62728", "#2ca02c", "#ff7f0e")
   return(pbmc_small)
 }
 
@@ -98,7 +98,7 @@ test_that("getExpressionCellSet fails if filters remove all cells", {
   )
 
   req <- list(body = list(genesConfig = genes_config))
-  expect_error(getExpressionCellSet(req, data), 'No cells match requested filters.')
+  expect_error(getExpressionCellSet(req, data), "No cells match requested filters.")
 })
 
 
@@ -139,3 +139,24 @@ test_that("We attempt to patch the API.", {
   )
 })
 
+
+with_fake_http(test_that("getExpressionCellSet sends patch request", {
+  data <- mock_scdata()
+  req <- list(
+    body = list(
+      genesConfig = list(
+        list(
+          geneName = "MS4A1",
+          comparisonType = "greaterThan",
+          thresholdValue = 0.5
+        )
+      ),
+      config = list(
+        apiUrl = "http://host.docker.internal:3000",
+        experimentId = "12345",
+        authJwt = "1234"
+      )
+    )
+  )
+  expect_PATCH(getExpressionCellSet(req, data))
+}))
