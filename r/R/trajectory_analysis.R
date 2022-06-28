@@ -10,6 +10,7 @@ runTrajectoryAnalysis <- function(req, data) {
   pseudotime <- pseudotime %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
     dplyr::select(-cells_id)
+
   return(unname(pseudotime))
 }
 
