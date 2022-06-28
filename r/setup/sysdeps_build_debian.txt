@@ -13,3 +13,5 @@ libfreetype6-dev
 libpng-dev
 libtiff5-dev
 libjpeg-dev
+libgeos-dev
+procps
