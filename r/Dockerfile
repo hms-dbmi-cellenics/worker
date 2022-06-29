@@ -71,8 +71,6 @@ RUN echo "python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-
-
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
