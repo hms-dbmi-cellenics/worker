@@ -1,20 +1,4 @@
-runTrajectoryAnalysis <- function(req, data) {
-  root_nodes <- req$body$rootNodes
-
-  cell_data <- generateGraphData(data)
-  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
-
-  pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
-  pseudotime$cells_id <- data@meta.data$cells_id
-  pseudotime <- pseudotime[order(pseudotime$cells_id), ]
-  pseudotime <- pseudotime %>%
-    tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    dplyr::select(-cells_id)
-
-  return(unname(pseudotime))
-}
-
-runGenerateTrajectoryGraph <- function(req, data) {
+runGenerateTrajectoryGraph <- function(data) {
   cell_data <- generateGraphData(data)
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
   umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cell_data)[["UMAP"]])
@@ -38,11 +22,8 @@ runGenerateTrajectoryGraph <- function(req, data) {
 
   # umap data
   # fill in the NULL values for filtered cells
-  umap_coords$cells_id <- data@meta.data$cells_id
-  umap_coords <- umap_coords[order(umap_coords$cells_id), ]
-  umap_coords <- umap_coords %>%
-    tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    dplyr::select(-cells_id)
+  umap_coords <- fill_null_for_filtered_cells(umap_coords, data)
+
   # create list
   colnames(umap_coords) <- c("x", "y")
   umap_coords_list <- lapply(asplit(umap_coords, 1), as.list)
@@ -56,6 +37,22 @@ runGenerateTrajectoryGraph <- function(req, data) {
 }
 
 
+runTrajectoryAnalysis <- function(req, data) {
+  root_nodes <- req$body$rootNodes
+
+  cell_data <- generateGraphData(data)
+  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
+
+  pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
+
+  # fill in the NULL values for filtered cells
+  pseudotime <- fill_null_for_filtered_cells(pseudotime, data)
+
+  return(unname(pseudotime))
+}
+
+
+
 generateGraphData <- function(data) {
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
@@ -65,4 +62,21 @@ generateGraphData <- function(data) {
   cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
 
   return(cell_data)
+}
+
+
+
+fill_null_for_filtered_cells <- function(df, data) {
+  # add cells_id column
+  df$cells_id <- data@meta.data$cells_id
+  # get max value for cells_id
+  max_value <- max(data@meta.data$cells_id)
+  # order by cells_id
+  df <- df[order(df$cells_id), ]
+  # add NULL values for filtered cells and remove cells_id column
+  df <- df %>%
+    tidyr::complete(cells_id = seq(0, max_value)) %>%
+    dplyr::select(-cells_id)
+
+  return(df)
 }
