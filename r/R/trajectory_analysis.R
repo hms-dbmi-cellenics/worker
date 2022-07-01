@@ -63,7 +63,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' These values will be used to plot the cells along a continuous path
 #' that represents the evolution of the process.
 #' This plot represents the final plot of the trajectory analysis, which shows
-#' a map of how cells “differentiate” through time, starting from cells in the
+#' a map of how cells expression changes, starting from cells with smaller
 #' earlier pseudotime growing into cells in later pseudotime, following the trajectory.
 #'
 #' @param req {body: {
