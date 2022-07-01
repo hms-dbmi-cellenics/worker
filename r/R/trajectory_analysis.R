@@ -113,13 +113,10 @@ generateGraphData <- function(data) {
 #' @return a tibble filled with NULL values for missing cell ids
 #' @export
 fillNullForFilteredCells <- function(df, data) {
-  # add cells_id column
   df$cells_id <- data@meta.data$cells_id
-  # get max value for cells_id
   max_value <- max(data@meta.data$cells_id)
-  # order by cells_id
   df <- df[order(df$cells_id), ]
-  # add NULL values for filtered cells and remove cells_id column
+  
   df <- df %>%
     tidyr::complete(cells_id = seq(0, max_value)) %>%
     dplyr::select(-cells_id)
