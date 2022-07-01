@@ -1,10 +1,14 @@
 #' Generate UMAP and node coordinates for the initial trajectory analysis plot
 #'
-#' Returns a json object with UMAP and node coordinates, 
+#' Returns a json object with UMAP and node coordinates,
 #' to be used by the UI for the initial plot (embedding + trajectory nodes)
 #'
-#' This represents the first step of the trajectory analysis. It allows the creation of the initial trajectory analysis plot, which is composed of an embedding and starting nodes (vertices in the lines).
-#' This plot is used to select the root nodes among the starting nodes. The root nodes will be then used in the following step of the trajectory analysis for pseudotime calculation.
+#' This represents the first step of the trajectory analysis.
+#' It allows the creation of the initial trajectory analysis plot,
+#' which is composed of an embedding and starting nodes (vertices in the lines).
+#' This plot is used to select the root nodes among the starting nodes.
+#' The root nodes will be then used in the following step of the trajectory
+#' analysis for pseudotime calculation.
 #'
 #' @param data SeuratObject
 #'
@@ -51,11 +55,16 @@ runGenerateTrajectoryGraph <- function(req, data) {
 
 #' Calculate pseudotime
 #'
-#' Order the cells and generate an array of pseudotime values, based on the node ids of the root nodes.
+#' Order the cells and generate an array of pseudotime values, based on
+#' the node ids of the root nodes.
 #'
-#' Pseudotime is a cell value that shows the relative progression of the cell in time for a given biological process.
-#' These values will be used to plot the cells along a continuous path that represents the evolution of the process.
-#' This plot represents the final plot of the trajectory analysis, which shows a map of how cells “differentiate” through time, starting from cells in the earlier pseudotime growing into cells in later pseudotime, following the trajectory.
+#' Pseudotime is a cell value that shows the relative progression
+#' of the cell in time for a given biological process.
+#' These values will be used to plot the cells along a continuous path
+#' that represents the evolution of the process.
+#' This plot represents the final plot of the trajectory analysis, which shows
+#' a map of how cells “differentiate” through time, starting from cells in the
+#' earlier pseudotime growing into cells in later pseudotime, following the trajectory.
 #'
 #' @param req {body: {
 #'               rootNodes: root nodes ids. Determines the root nodes of the trajectory
@@ -82,7 +91,8 @@ runTrajectoryAnalysis <- function(req, data) {
 
 #' Convert Seurat object to Monocle3 cell_data_set object, cluster cells and learn graph
 #'
-#' In order to perform the trajectory analysis with Monocle3, the Seurat object needs to be converted to a Monocle3 cell_data_set object.
+#' In order to perform the trajectory analysis with Monocle3,
+#' the Seurat object needs to be converted to a Monocle3 cell_data_set object.
 #' This function calculates also embeddings and learn the graph.
 #'
 #' @param data Seurat object
@@ -103,9 +113,11 @@ generateGraphData <- function(data) {
 
 #' Fill in the NULL values for filtered cells
 #'
-#' When a dataframe with cell barcodes and some associated information is generated from a filtered Seurat object, it will not contain the cell barcodes that were filtered out.
+#' When a dataframe with cell barcodes and some associated information is generated
+#' from a filtered Seurat object, it will not contain the cell barcodes that were filtered out.
 #' However, the UI needs the whole array of ordered and unfiltered cell ids.
-#' For this reason, there is a need to add to the dataframe the corresponding cell ids for cell barcodes that were filtered out and fill the values with NULL.
+#' For this reason, there is a need to add to the dataframe the corresponding cell ids
+#' for cell barcodes that were filtered out and fill the values with NULL.
 #'
 #' @param df data.frame with barcodes as rownames
 #' @param data Seurat object with cells_id
@@ -116,7 +128,7 @@ fillNullForFilteredCells <- function(df, data) {
   df$cells_id <- data@meta.data$cells_id
   max_value <- max(data@meta.data$cells_id)
   df <- df[order(df$cells_id), ]
-  
+
   df <- df %>%
     tidyr::complete(cells_id = seq(0, max_value)) %>%
     dplyr::select(-cells_id)
