@@ -58,8 +58,8 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' Order the cells and generate an array of pseudotime values, based on
 #' the node ids of the root nodes.
 #'
-#' Pseudotime is a cell value that shows the relative progression
-#' of the cell in time for a given biological process.
+#' Pseudotime is a value that shows the relative progression
+#' of a cell through a path in gene expression space.
 #' These values will be used to plot the cells along a continuous path
 #' that represents the evolution of the process.
 #' This plot represents the final plot of the trajectory analysis, which shows
