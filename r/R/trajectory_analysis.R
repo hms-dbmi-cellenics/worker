@@ -64,7 +64,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' that represents the evolution of the process.
 #' This plot represents the final plot of the trajectory analysis, which shows
 #' a map of how cells expression changes, starting from cells with smaller
-#' earlier pseudotime growing into cells in later pseudotime, following the trajectory.
+#' pseudotime values to cells with larger pseudotimes, along a trajectory.
 #'
 #' @param req {body: {
 #'               rootNodes: root nodes ids. Determines the root nodes of the trajectory
