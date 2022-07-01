@@ -107,7 +107,7 @@ generateGraphData <- function(data) {
 #' However, the UI needs the whole array of ordered and unfiltered cell ids.
 #' For this reason, there is a need to add to the dataframe the corresponding cell ids for cell barcodes that were filtered out and fill the values with NULL.
 #'
-#' @param df a dataframe with barcodes as rownames
+#' @param df data.frame with barcodes as rownames
 #' @param data Seurat object with cells id stored in: data@@meta.data$cells_id
 #'
 #' @return a tibble filled with NULL values for missing cell ids
