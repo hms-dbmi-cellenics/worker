@@ -93,7 +93,7 @@ runTrajectoryAnalysis <- function(req, data) {
 #'
 #' In order to perform the trajectory analysis with Monocle3,
 #' the Seurat object needs to be converted to a Monocle3 cell_data_set object.
-#' This function calculates also embeddings and learn the graph.
+#' After conversion, this function also learns the trajectory graph.
 #'
 #' @param data Seurat object
 #'
