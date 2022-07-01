@@ -1,6 +1,7 @@
 #' Generate UMAP and node coordinates for the initial trajectory analysis plot
 #'
-#' Returns a json object with UMAP and nodes coordinates, to be used for the initial plot (embedding + trajectory nodes)
+#' Returns a json object with UMAP and node coordinates, 
+#' to be used by the UI for the initial plot (embedding + trajectory nodes)
 #'
 #' This represents the first step of the trajectory analysis. It allows the creation of the initial trajectory analysis plot, which is composed of an embedding and starting nodes (vertices in the lines).
 #' This plot is used to select the root nodes among the starting nodes. The root nodes will be then used in the following step of the trajectory analysis for pseudotime calculation.
