@@ -9,7 +9,7 @@
 #'
 #' @return a json with nodes and umap coordinates
 #' @export
-runGenerateTrajectoryGraph <- function(data) {
+runGenerateTrajectoryGraph <- function(req, data) {
   cell_data <- generateGraphData(data)
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
   umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cell_data)[["UMAP"]])
