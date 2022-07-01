@@ -10,6 +10,7 @@
 #' The root nodes will be then used in the following step of the trajectory
 #' analysis for pseudotime calculation.
 #'
+#' @param req list of configuration parameters. Not used here.
 #' @param data SeuratObject
 #'
 #' @return a json with nodes and umap coordinates
