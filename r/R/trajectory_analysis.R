@@ -9,8 +9,6 @@
 #'
 #' @return a json with nodes and umap coordinates
 #' @export
-#'
-#' @examples
 runGenerateTrajectoryGraph <- function(data) {
   cell_data <- generateGraphData(data)
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
@@ -35,7 +33,7 @@ runGenerateTrajectoryGraph <- function(data) {
 
   # umap data
   # fill in the NULL values for filtered cells
-  umap_coords <- fill_null_for_filtered_cells(umap_coords, data)
+  umap_coords <- fillNullForFilteredCells(umap_coords, data)
 
   # create list
   colnames(umap_coords) <- c("x", "y")
@@ -56,7 +54,7 @@ runGenerateTrajectoryGraph <- function(data) {
 #'
 #' Pseudotime is a cell value that shows the relative progression of the cell in time for a given biological process.
 #' These values will be used to plot the cells along a continuous path that represents the evolution of the process.
-#' This plot represent the final plot of the trajectory analysis, which shows a map of how cells “differentiate” through time, starting from cells in the earlier pseudotime growing into cells in later pseudotime, following the trajectory.
+#' This plot represents the final plot of the trajectory analysis, which shows a map of how cells “differentiate” through time, starting from cells in the earlier pseudotime growing into cells in later pseudotime, following the trajectory.
 #'
 #' @param req {body: {
 #'               rootNodes: root nodes ids. Determines the root nodes of the trajectory
@@ -66,8 +64,6 @@ runGenerateTrajectoryGraph <- function(data) {
 #'
 #' @return a tibble with pseudotime values
 #' @export
-#'
-#' @examples
 runTrajectoryAnalysis <- function(req, data) {
   root_nodes <- req$body$rootNodes
 
@@ -77,7 +73,7 @@ runTrajectoryAnalysis <- function(req, data) {
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
   # fill in the NULL values for filtered cells
-  pseudotime <- fill_null_for_filtered_cells(pseudotime, data)
+  pseudotime <- fillNullForFilteredCells(pseudotime, data)
 
   return(unname(pseudotime))
 }
@@ -92,8 +88,6 @@ runTrajectoryAnalysis <- function(req, data) {
 #'
 #' @return a cell_data_set object with cluster and graph information stored internally
 #' @export
-#'
-#' @examples
 generateGraphData <- function(data) {
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
@@ -117,9 +111,7 @@ generateGraphData <- function(data) {
 #'
 #' @return a tibble filled with NULL values for missing cell ids
 #' @export
-#'
-#' @examples
-fill_null_for_filtered_cells <- function(df, data) {
+fillNullForFilteredCells <- function(df, data) {
   # add cells_id column
   df$cells_id <- data@meta.data$cells_id
   # get max value for cells_id
