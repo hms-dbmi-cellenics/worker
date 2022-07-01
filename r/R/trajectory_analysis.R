@@ -1,4 +1,4 @@
-#' Generate UMAP and nodes coordinates for the initial trajectory analysis plot
+#' Generate UMAP and node coordinates for the initial trajectory analysis plot
 #'
 #' Returns a json object with UMAP and nodes coordinates, to be used for the initial plot (embedding + trajectory nodes)
 #'
