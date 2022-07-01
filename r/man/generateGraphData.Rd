@@ -13,6 +13,7 @@ generateGraphData(data)
 a cell_data_set object with cluster and graph information stored internally
 }
 \description{
-In order to perform the trajectory analysis with Monocle3, the Seurat object needs to be converted to a Monocle3 cell_data_set object.
-This function calculates also embeddings and learn the graph.
+In order to perform the trajectory analysis with Monocle3,
+the Seurat object needs to be converted to a Monocle3 cell_data_set object.
+After conversion, this function also learns the trajectory graph.
 }

@@ -18,10 +18,15 @@ rootNodes: root nodes ids. Determines the root nodes of the trajectory
 a tibble with pseudotime values
 }
 \description{
-Order the cells and generate an array of pseudotime values, based on the node ids of the root nodes.
+Order the cells and generate an array of pseudotime values, based on
+the node ids of the root nodes.
 }
 \details{
-Pseudotime is a cell value that shows the relative progression of the cell in time for a given biological process.
-These values will be used to plot the cells along a continuous path that represents the evolution of the process.
-This plot represents the final plot of the trajectory analysis, which shows a map of how cells “differentiate” through time, starting from cells in the earlier pseudotime growing into cells in later pseudotime, following the trajectory.
+Pseudotime is a value that shows the relative progression
+of a cell through a path in gene expression space.
+These values will be used to plot the cells along a continuous path
+that represents the evolution of the process.
+This plot represents the final plot of the trajectory analysis, which shows
+a map of how cells expression changes, starting from cells with smaller
+pseudotime values to cells with larger pseudotimes, along a trajectory.
 }

@@ -7,15 +7,17 @@
 fillNullForFilteredCells(df, data)
 }
 \arguments{
-\item{df}{a dataframe with barcodes as rownames}
+\item{df}{data.frame with barcodes as rownames}
 
-\item{data}{Seurat object with cells id stored in: data@meta.data$cells_id}
+\item{data}{Seurat object with cells_id}
 }
 \value{
 a tibble filled with NULL values for missing cell ids
 }
 \description{
-When a dataframe with cell barcodes and some associated information is generated from a filtered Seurat object, it will not contain the cell barcodes that were filtered out.
+When a dataframe with cell barcodes and some associated information is generated
+from a filtered Seurat object, it will not contain the cell barcodes that were filtered out.
 However, the UI needs the whole array of ordered and unfiltered cell ids.
-For this reason, there is a need to add to the dataframe the corresponding cell ids for cell barcodes that were filtered out and fill the values with NULL.
+For this reason, there is a need to add to the dataframe the corresponding cell ids
+for cell barcodes that were filtered out and fill the values with NULL.
 }
