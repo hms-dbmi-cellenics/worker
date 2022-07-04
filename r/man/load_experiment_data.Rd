@@ -9,9 +9,6 @@ load_experiment_data(exp_id = "test")
 \arguments{
 \item{exp_id}{}
 }
-\value{
-
-}
 \description{
 Loads Experiment data
 }

@@ -9,9 +9,6 @@ getClusters(type, resolution, data)
 \arguments{
 \item{data}{}
 }
-\value{
-
-}
 \description{
 Compute clusters and return object with clusters
 }

@@ -15,3 +15,6 @@ libtiff5-dev
 libjpeg-dev
 libgeos-dev
 procps
+libudunits2-dev
+libgdal-dev
+cmake

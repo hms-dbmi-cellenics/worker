@@ -13,9 +13,6 @@ getExpressionValues(genes, data)
 
 \item{data}{}
 }
-\value{
-
-}
 \description{
 Returns expression values for selected genes
 }

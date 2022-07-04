@@ -11,9 +11,6 @@ generateErrorMessage(code, user_message)
 
 \item{user_message}{message to display to a user.}
 }
-\value{
-
-}
 \description{
 generateErrorMessage
 }
