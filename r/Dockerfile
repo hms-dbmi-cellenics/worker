@@ -67,7 +67,6 @@ COPY --from=builder /src /src
 # add renv library to .libPaths
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
->>>>>>> master
 
 # install runtime system deps
 # cleanup setup files
