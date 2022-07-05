@@ -1,4 +1,4 @@
-{{/* Generate a template that can be used for both assigned and unassigned xperiments */}}
+{{/* Generate a template that can be used for both assigned and unassigned experiments */}}
 {{- define "worker.pod-template" -}}
     metadata:
       labels:
@@ -25,6 +25,8 @@
       - name: "{{ .Release.Name }}"
         image: "{{ .Values.python.image }}"
         env:
+        - name: AWS_ACCOUNT_ID
+          value: "{{ .Values.myAccount.accountId }}"
         - name: AWS_XRAY_DAEMON_ADDRESS
           value: xray-service.default:2000
         - name: 'K8S_ENV'

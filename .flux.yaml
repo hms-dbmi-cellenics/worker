@@ -19,6 +19,11 @@ metadata:
 spec:
   releaseName: FILLED_IN_BY_CI
   chart:
-    git: git@github.com:hms-dbmi-cellenics/worker
+    git: https://github.com/hms-dbmi-cellenics/worker
     path: chart-infra/
     ref: FILLED_IN_BY_CI
+  valuesFrom:
+  - configMapKeyRef:
+      name: account-config
+      namespace: flux
+      key: account-config.yaml

@@ -6,4 +6,6 @@ error_codes <- list(
   UNHANDLED_ERROR = "R_WORKER_UNHANDLED_ERROR"
 )
 
-usethis::use_data(error_codes, internal = TRUE, overwrite = TRUE)
+ULTIMATE_SEED <- 42
+
+usethis::use_data(error_codes, ULTIMATE_SEED, internal = TRUE, overwrite = TRUE)

@@ -18,9 +18,6 @@ filterBy: Cellsets to subset the experiment with.
 
 \item{data}{SeuratObject}
 }
-\value{
-
-}
 \description{
 Run request for DotPlot
 }
