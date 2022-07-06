@@ -327,7 +327,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="1"
-            IMAGE_GLOB="${IMAGE_TAG/$COMMIT_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/COMMIT_SHA/*}"
             MEMORY_REQUEST="28Gi"
           fi
 
@@ -336,7 +336,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
-            IMAGE_GLOB="${IMAGE_TAG/$COMMIT_SHA/*}"
+            IMAGE_GLOB="${IMAGE_TAG/COMMIT_SHA/*}"
             MEMORY_REQUEST="4Gi"
           fi
 
