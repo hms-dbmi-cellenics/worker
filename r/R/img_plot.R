@@ -18,7 +18,7 @@ runRidgePlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::RidgePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development","./plot.png",req$etag,data)
+  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return()
 }
 
@@ -42,7 +42,7 @@ runVlnPlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::VlnPlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development","./plot.png",req$etag,data)
+  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return()
 }
 
@@ -76,7 +76,7 @@ runDotPlot <- function(req,data,config){
 
   Seurat::DotPlot(data,features=top_markers$feature,)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development","./plot.png",req$etag,data)
+  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return()
 }
 
@@ -110,7 +110,7 @@ runMarkerHeat <- function(req,data,config){
 
   Seurat::DoHeatmap(subset(data, downsample = 100), features = top_markers$feature, size = 3)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development","./plot.png",req$etag,data)
+  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return()
 }
 
@@ -132,7 +132,7 @@ runFeaturePlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::FeaturePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development","./plot.png",req$etag,data)
+  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return()
 }
 
