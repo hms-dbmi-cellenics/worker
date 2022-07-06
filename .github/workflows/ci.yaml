@@ -85,7 +85,7 @@ jobs:
           if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
             echo "::set-output name=tag::$REF_ID"
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "::set-output name=commit-sha::${{ github.event.pull_request.head.sha }}
+            echo "::set-output name=commit-sha::${{ github.event.pull_request.head.sha }}"
             echo "::set-output name=tag::$REF_ID-${{ github.event.pull_request.head.sha }}"
           else
             echo "::set-output name=commit-sha::$GITHUB_SHA"
