@@ -18,8 +18,11 @@ runRidgePlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::RidgePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
+  raw_img <- hexView::readRaw("./plot.png")
+
   put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
-  return()
+  print(RJSONIO::toJSON(list(data2=raw_img)))
+  return(RJSONIO::toJSON(list(data2=raw_img)))
 }
 
 runVlnPlot <- function(req,data,config){
@@ -151,7 +154,7 @@ createImgPlot <- function(req, data) {
   imgPlotTypes <- list("ridgePlot"=runRidgePlot,"featurePlot"=runFeaturePlot,"dotPlot"=runDotPlot,"vlnPlot"=runVlnPlot,"markerHeatmap"=runMarkerHeat)
 
   res<-imgPlotTypes[[req$plotSubType]](req,data,config)
-  return(list())
+  return(res)
 }
 
 put_object_in_s3 <- function(config, bucket, object, key,data) {

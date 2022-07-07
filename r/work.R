@@ -235,9 +235,11 @@ create_app <- function(last_modified, data, fpath) {
     path = "/v0/getImgPlot",
     FUN = function(req, res) {
       result <- run_post(req, createImgPlot, data)
+      print(result)
       res$set_body(result)
     }
   )
+
   return(app)
 }
 

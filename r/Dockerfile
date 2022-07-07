@@ -44,6 +44,7 @@ RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), pac
 RUN R -e "install.packages('covr')"
 RUN R -e "install.packages('xml2')"
 RUN R -e "install.packages('paws')"
+RUN R -e "install.packages('hexView')"
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .

@@ -39,6 +39,7 @@ class GetImgPlot(Task):
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
+
         print(response.content)
         response.raise_for_status()
         result = response.json()
