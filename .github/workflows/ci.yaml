@@ -56,7 +56,6 @@ jobs:
         project: ["python", "r"]
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
-      image-tag: ${{ steps.ref.outputs.image-tag }}
       ref-id: ${{ steps.ref.outputs.ref-id }}
       commit-sha: ${{ steps.ref.outputs.commit-sha }}
     defaults:
@@ -325,8 +324,8 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="production"
             REPLICA_COUNT="2"
-            SHORT_TAG_REF=${REF_ID/refs-tags-/}
-            IMAGE_GLOB="${REF_ID/$SHORT_TAG_REF/*}"
+            VERSION_NUMBER=${REF_ID/refs-tags-/}
+            IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
             MEMORY_REQUEST="28Gi"
           fi
 
