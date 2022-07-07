@@ -25,11 +25,19 @@ Some packages on MacOS X requires the Fortran compiler to compile. According to 
 
 The R worker is provided as a RStudio project, complete with a `renv`
 definition. It might be useful to run things interactively in certain
-development scenarios; to do so, you should have the correct R version installed (check `renv.lock.init` file for it). Open the `.Rproj` file with Rstudio and run in the R terminal:
+development scenarios; to do so, you should have the correct R version installed (check `renv.lock` file for it). Open the `.Rproj` file with Rstudio and run in the R terminal:
 
     renv::restore()
 
-Most of the development is done using RStudio. To
+In addition, dependencies for interactive development are specified in the DESCRIPTION file, under
+the `Suggests` section. They, and their dependencies are ignored by renv (specified in the
+[renv settings file](renv/settings.dcf) file).
+
+They can be installed automatically by running the next block in an R console.
+
+```{r}
+    renv::install() # (without arguments)
+```
 
 ### Development with Visual Studio Code
 
