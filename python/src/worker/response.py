@@ -100,6 +100,10 @@ class Response:
     def publish(self):
         info(f"Request {self.request['ETag']} processed, response:")
 
+        print(self.error)
+        print(self.cacheable)
+        print(self.upload)
+
         if not self.error and self.cacheable and self.upload:
             # response_data = self.result.data
             # print(response_data.encode())

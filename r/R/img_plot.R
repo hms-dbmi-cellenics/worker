@@ -18,11 +18,15 @@ runRidgePlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::RidgePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
-  raw_img <- hexView::readRaw("./plot.png")
 
-  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
-  print(RJSONIO::toJSON(list(data2=raw_img)))
-  return(RJSONIO::toJSON(list(data2=raw_img)))
+  library(loder)
+
+  #raw_img <- readPng("./plot.png")
+
+  raw_img <- c(c(1, 2, 3, 4, 5), c(6, 7, 8, 9, 10))
+
+  #put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
+  return(RJSONIO::toJSON(list(data=raw_img)))
 }
 
 runVlnPlot <- function(req,data,config){

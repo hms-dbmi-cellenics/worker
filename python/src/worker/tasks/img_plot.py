@@ -40,9 +40,12 @@ class GetImgPlot(Task):
             data=json.dumps(request),
         )
 
-        print(response.content)
+        # print(response.content[0:20])
         response.raise_for_status()
         result = response.json()
         raise_if_error(result)
         data = result.get("data")
+        obj = json.loads(data)
+        print(sum(obj['data']))
+        print("---------------------")
         return self._format_result(data)
