@@ -15,8 +15,8 @@ from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
-from .trajectory_graph import GetTrajectoryGraph
 from .pseudotime import GetPseudoTime
+from .trajectory_graph import GetTrajectoryGraph
 
 
 class TaskFactory:
@@ -75,6 +75,9 @@ class TaskFactory:
         self.count_matrix.sync()
         task_def = msg.get("body", {})
         task_name = task_def.get("name")
+
+        print("*** task_def", task_def)
+        print("*** task_name", task_name)
 
         try:
             return self.tasks[task_name](msg)

@@ -18,7 +18,6 @@
 runGenerateTrajectoryGraph <- function(req, data) {
   cell_data <- generateGraphData(data)
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
-  umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cell_data)[["UMAP"]])
 
   # node coordinates
   # get connected nodes
@@ -37,20 +36,9 @@ runGenerateTrajectoryGraph <- function(req, data) {
     node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
   }
 
-  # umap data
-  # fill in the NULL values for filtered cells
-  umap_coords <- fillNullForFilteredCells(umap_coords, data)
-
-  # create list
-  colnames(umap_coords) <- c("x", "y")
-  umap_coords_list <- lapply(asplit(umap_coords, 1), as.list)
-
   # node + umap data
-  node_umap_coords <- list(nodes = node_coords_list, umap = umap_coords_list)
-
-  # convert list to json
-  node_umap_coords <- RJSONIO::toJSON(node_umap_coords)
-  return(node_umap_coords)
+  root_nodes <- list(nodes = node_coords_list)
+  return(root_nodes)
 }
 
 
