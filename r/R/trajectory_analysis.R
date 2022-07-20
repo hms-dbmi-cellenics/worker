@@ -16,6 +16,9 @@
 #' @return a json with nodes and umap coordinates
 #' @export
 runGenerateTrajectoryGraph <- function(req, data) {
+
+  embedding_data <- req$body$embedding
+
   cell_data <- generateGraphData(data)
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
 
