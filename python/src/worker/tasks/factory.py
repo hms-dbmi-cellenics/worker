@@ -76,9 +76,6 @@ class TaskFactory:
         task_def = msg.get("body", {})
         task_name = task_def.get("name")
 
-        print("*** task_def", task_def)
-        print("*** task_name", task_name)
-
         try:
             return self.tasks[task_name](msg)
         except KeyError as e:

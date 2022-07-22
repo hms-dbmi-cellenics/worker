@@ -64,7 +64,7 @@ runEmbedding <- function(req, data) {
 
 
 # getEmbedding
-# Get embedding
+# Return embedding calculated for the seurat object.
 # data is the seurat object.
 # config is the embedding work request config.
 # type is the embedding type.
@@ -104,6 +104,24 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
       umap.method = "umap-learn"
     )
   }
+
+  return(data)
+}
+
+
+# assignEmbedding
+# Assigns embeddding from embedding json to the Seurat object.
+# embedding_data is the embeding coordinates.
+# data is the seurat object.
+#
+#' @export
+assignEmbedding <- function(embedding_data, data) {
+  # Filter for nulls
+  embedding <- embedding_data[!vapply(embedding_data, is.null, logical(1))]
+  embedding <- do.call(rbind, embedding)
+  rownames(embedding) <- colnames(data)
+
+  data[["umap"]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = "UMAP_")
 
   return(data)
 }

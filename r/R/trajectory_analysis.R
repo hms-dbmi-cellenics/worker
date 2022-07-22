@@ -18,10 +18,12 @@
 runGenerateTrajectoryGraph <- function(req, data) {
 
   cell_data <- generateGraphData(
+    req$body$embedding,
     req$body$embedding_settings,
     req$body$clustering_settings,
     data
   )
+
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
 
   # node coordinates
@@ -93,55 +95,37 @@ runTrajectoryAnalysis <- function(req, data) {
 #'
 #' @return a cell_data_set object with cluster and graph information stored internally
 #' @export
-generateGraphData <- function(embedding_settings, clustering_settings, data) {
+generateGraphData <- function(embedding_data, embedding_settings, clustering_settings, data) {
   set.seed(ULTIMATE_SEED)
 
   Seurat::DefaultAssay(data) <- "RNA"
 
-  # Assign embedding to the Seurat object
-  message("Recreating embedding...")
-
   clustering_method <- clustering_settings$method
-  clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
-  
-  data <- getClusters(clustering_method, clustering_resolution, data)
-
-  # To run embedding, we need to set the reduction.
-  if ("active.reduction" %in% names(data@misc)) {
-    reduction_type <- data@misc[["active.reduction"]]
-  } else {
-    reduction_type <- "pca"
-  }
-
-  # The slot numPCs is set in dataIntegration with the selected PCA by the user.
-  if ("numPCs" %in% names(data@misc)) {
-    num_pcs <- data@misc[["numPCs"]]
-  }
-
   embedding_method <- embedding_settings$method
-  embedding_config <- embedding_settings$methodSettings[[embedding_method]]
 
-  data <- getEmbedding(
-    embedding_config,
-    embedding_method,
-    reduction_type,
-    num_pcs,
-  data)
+  # Clustering resolution can only be used by monocle if the clustering method is leiden
+  clustering_resolution <- NULL
+  if(clustering_method == "leiden") {
+    clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
+  }
 
-  red_method_map = list(
+  data <- assignEmbedding(embedding_data, data)
+
+  surat_to_monocle_method_map <- list(
     umap = "UMAP",
     tsne = "tSNE"
   )
 
-  # Assign clusters to the Seurat object
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
+  message("Calculating trajectory graph...")
   cell_data <- monocle3::cluster_cells(
     cds = cell_data,
-    reduction_method = red_method_map[[embedding_method]],
-    cluster_method = clustering_method
+    cluster_method = clustering_method,
+    reduction_method = surat_to_monocle_method_map[[embedding_method]],
+    resolution = clustering_resolution
   )
-  cell_data <- monocle3::learn_graph(cell_data, use_partition = FALSE)
+  cell_data <- monocle3::learn_graph(cell_data)
 
   return(cell_data)
 }
