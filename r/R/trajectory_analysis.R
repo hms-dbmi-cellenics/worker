@@ -17,9 +17,11 @@
 #' @export
 runGenerateTrajectoryGraph <- function(req, data) {
 
-  embedding_data <- req$body$embedding
-
-  cell_data <- generateGraphData(data)
+  cell_data <- generateGraphData(
+    req$body$embedding_settings,
+    req$body$clustering_settings,
+    data
+  )
   node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
 
   # node coordinates
@@ -91,13 +93,55 @@ runTrajectoryAnalysis <- function(req, data) {
 #'
 #' @return a cell_data_set object with cluster and graph information stored internally
 #' @export
-generateGraphData <- function(data) {
-  cell_data <- SeuratWrappers::as.cell_data_set(data)
-
+generateGraphData <- function(embedding_settings, clustering_settings, data) {
   set.seed(ULTIMATE_SEED)
 
-  cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
-  cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
+  Seurat::DefaultAssay(data) <- "RNA"
+
+  # Assign embedding to the Seurat object
+  message("Recreating embedding...")
+
+  clustering_method <- clustering_settings$method
+  clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
+  
+  data <- getClusters(clustering_method, clustering_resolution, data)
+
+  # To run embedding, we need to set the reduction.
+  if ("active.reduction" %in% names(data@misc)) {
+    reduction_type <- data@misc[["active.reduction"]]
+  } else {
+    reduction_type <- "pca"
+  }
+
+  # The slot numPCs is set in dataIntegration with the selected PCA by the user.
+  if ("numPCs" %in% names(data@misc)) {
+    num_pcs <- data@misc[["numPCs"]]
+  }
+
+  embedding_method <- embedding_settings$method
+  embedding_config <- embedding_settings$methodSettings[[embedding_method]]
+
+  data <- getEmbedding(
+    embedding_config,
+    embedding_method,
+    reduction_type,
+    num_pcs,
+  data)
+
+  red_method_map = list(
+    umap = "UMAP",
+    tsne = "tSNE"
+  )
+
+  # Assign clusters to the Seurat object
+  cell_data <- SeuratWrappers::as.cell_data_set(data)
+
+  cell_data <- monocle3::cluster_cells(
+    cds = cell_data,
+    reduction_method = red_method_map[[embedding_method]],
+    cluster_method = clustering_method
+  )
+  cell_data <- monocle3::learn_graph(cell_data, use_partition = FALSE)
 
   return(cell_data)
 }
