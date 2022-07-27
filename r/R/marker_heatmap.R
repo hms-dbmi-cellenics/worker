@@ -14,13 +14,21 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getTopMarkerGenes(nFeatures, data, cellSets)
   top_markers <- getMarkerNames(data, top_markers)
 
-  res <- getExpressionValues(top_markers, data)
-  res$rawExpression[is.na(res$rawExpression)] <- 0
-  res$truncatedExpression[is.na(res$truncatedExpression)] <- 0
-  mtx_res <- list()
-  mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(res$rawExpression),sparse=TRUE)
-  mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(res$truncatedExpression),sparse=TRUE)
+  expression <- getExpressionValues(top_markers, data)
+  stats <- formatExpressionMtx(expression)
 
-  res <- formatExpression(res)
+  expression$rawExpression[is.na(expression$rawExpression)] <- 0
+  expression$truncatedExpression[is.na(expression$truncatedExpression)] <- 0
+
+  mtx_res <- list()
+  mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(t(expression$rawExpression)),sparse=TRUE)
+  mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(t(expression$truncatedExpression)),sparse=TRUE)
+
+  res <- list()
+  res$order <- names(stats)
+  res$stats <- stats
+  res$rawExpression <- mtx_res$rawExpression
+  res$truncatedExpression <- mtx_res$truncatedExpression
+
   return(res)
 }
