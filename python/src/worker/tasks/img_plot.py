@@ -44,5 +44,5 @@ class GetImgPlot(Task):
         result = response.json()
         raise_if_error(result)
         data = result.get("data")
-        obj = json.loads(data)
+        # obj = json.loads(data)
         return self._format_result(data)
