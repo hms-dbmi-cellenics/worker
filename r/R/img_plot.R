@@ -21,11 +21,11 @@ runRidgePlot <- function(req,data,config){
 
   library(loder)
 
-  #raw_img <- readPng("./plot.png")
+  raw_img <- readPng("./plot.png")
 
-  raw_img <- c(c(1, 2, 3, 4, 5), c(6, 7, 8, 9, 10))
+  # raw_img <- c(c(1, 2, 3, 4, 5), c(6, 7, 8, 9, 10))
 
-  #put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
+  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return(RJSONIO::toJSON(list(data=raw_img)))
 }
 
