@@ -1,5 +1,4 @@
 renv/*
-tests/*
 .Rproj.user/*
 .Rhistory
 rworker.Rproj

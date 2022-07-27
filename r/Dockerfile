@@ -1,48 +1,86 @@
 # Create builder step
-FROM r-base:4.0.5 AS builder
-WORKDIR /src
+FROM rocker/r-ver:4.2.0 AS builder
+WORKDIR /src/worker
 
-# install required debian packages to make R packages work
-COPY setup ./setup
-COPY requirements_debian.txt .
-RUN cat requirements_debian.txt | xargs ./setup/install_debian_packages.sh
-RUN apt-get update && apt-get install -y procps
+# install required debian packages to install R packages
+COPY setup/install_debian_packages.sh .
+COPY setup/sysdeps_build_debian.txt .
+RUN cat sysdeps_build_debian.txt | xargs ./install_debian_packages.sh
 
 # need GITHUB_PAT to authenticate github installations
 ARG GITHUB_PAT
 ENV GITHUB_PAT $GITHUB_PAT
 RUN R -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
-# install required R packages for the worker.
+# add renv library to .libPaths
+ENV RENV_LIB=/src/lib
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+
+# install renv to install required R packages
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
-    R -e "remotes::install_github('rstudio/renv@0.13.2')"
+    R -e "remotes::install_github('rstudio/renv@0.15.5')" && \
+    R -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
-COPY renv.lock.init .
-RUN R -e "renv::init(bare = TRUE); options(renv.consent = TRUE); renv::restore(lockfile='renv.lock.init')"
+# delete renv cache
+# strip debug from shared libraries
+# see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
+COPY ./renv.lock.init .
+RUN R -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
+    R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+    strip --strip-debug $RENV_LIB/*/libs/*.so
 
-# use renv::snapshot() while R dependency updates are quick to build
-COPY renv.lock .
-RUN R -e "options(renv.consent = TRUE); renv::restore(lockfile='renv.lock')"
+RUN R -e "renv::deactivate()"
 
 # install miniconda and python umap-learn for RunUMAP
-ENV RETICULATE_MINICONDA_PATH "/src/renv/python/r-reticulate"
-RUN R -e "reticulate::install_miniconda()"
-RUN R -e "reticulate::conda_install(Sys.getenv('RETICULATE_MINICONDA_PATH'), packages='umap-learn')"
-RUN R -e "install.packages('covr')"
-RUN R -e "install.packages('xml2')"
-RUN R -e "install.packages('paws')"
+# clean conda
+ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
+RUN R -e "reticulate::install_miniconda()" && \
+    R -e "reticulate::conda_install(packages = 'umap-learn=0.5.3', python_version='3.10')" && \
+    CONDA_PATH=$(echo "cat(reticulate::conda_binary())" | Rscript -) && \
+    $CONDA_PATH clean --force-pkgs-dirs -y
 
+# use renv::snapshot() while R dependency updates are quick to build
+COPY ./renv.lock .
+RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
+    R -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
+    strip --strip-debug $RENV_LIB/*/libs/*.so
+
+# determine system run-time deps
+COPY setup/get_sysdeps_run.R .
+RUN Rscript get_sysdeps_run.R
+
+# ---------------------------------------------------
+# COMMON MINIMAL BUILD
+# ---------------------------------------------------
+FROM rocker/r-ver:4.2.0 AS common
+WORKDIR /src/worker
+ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
+
+# get source code and R packages
+COPY --from=builder /src /src
+
+# add renv library to .libPaths
+ENV RENV_LIB=/src/lib
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+
+
+# install runtime system deps
+# cleanup setup files
+RUN echo "python3-pip" >> sysdeps_run.txt && \
+    cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
+    rm -rf *
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
-FROM builder AS prod
+FROM common AS prod
 
-# copy R source files and runner
+# add R package and runner
 ADD R ./R
-COPY work.R .
+ADD tests ./tests
+COPY DESCRIPTION NAMESPACE work.R ./
 
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
@@ -51,15 +89,16 @@ CMD ["Rscript", "work.R"]
 # ---------------------------------------------------
 # DEVELOPMENT BUILD
 # ---------------------------------------------------
-FROM builder AS dev
+FROM common AS dev
 
 # install Radian for interactive R shell
 # also install watchdog to automatically restart
 # when source files change
 RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
-# copy R source files and runner
+# add R package and runner
 ADD R ./R
-COPY work.R .
+ADD tests ./tests
+COPY DESCRIPTION NAMESPACE work.R ./
 
 CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R

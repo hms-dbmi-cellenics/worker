@@ -11,6 +11,7 @@ class TestClusterCells:
         self.correct_request = {
             "experimentId": "e52b39624588791a7889e39c617f669e",
             "timeout": "2099-12-31 00:00:00",
+            "Authorization" : "mock_authJwt",
             "body": {
                 "name": "ClusterCells",
                 "cellSetName": "Louvain clusters",
@@ -19,20 +20,11 @@ class TestClusterCells:
                 "config": {"resolution": 0.5},
             },
         }
-        self.alternative_request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
-            "timeout": "2099-12-31 00:00:00",
-            "body": {
-                "name": "ClusterCells",
-                "cellSetName": "Leiden clusters",
-                "type": "leiden",
-                "cellSetKey": "leiden",
-                "config": {"resolution": 0.5},
-            },
-        }
         self.parsed_request = {
             "type": self.correct_request["body"]["type"],
             "config": self.correct_request["body"]["config"],
+            "apiUrl": config.API_URL,
+            "authJwt": "mock_authJwt"
         }
 
     def test_throws_on_missing_parameters(self):

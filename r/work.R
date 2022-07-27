@@ -211,6 +211,20 @@ create_app <- function(last_modified, data, fpath) {
     }
   )
   app$add_post(
+    path = "/v0/runTrajectoryAnalysis",
+    FUN = function(req, res) {
+      result <- run_post(req, runTrajectoryAnalysis, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
+    path = "/v0/runGenerateTrajectoryGraph",
+    FUN = function(req, res) {
+      result <- run_post(req, runGenerateTrajectoryGraph, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
     path = "/v0/runDotPlot",
     FUN = function(req, res) {
       result <- run_post(req, runDotPlot, data)

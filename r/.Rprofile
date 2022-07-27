@@ -1,3 +1,2 @@
 source("renv/activate.R")
-for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
-require(dplyr)
+pkgload::load_all(attach_testthat = TRUE)

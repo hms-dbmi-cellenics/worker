@@ -56,7 +56,8 @@ jobs:
         project: ["python", "r"]
     outputs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
-      tag: ${{ steps.ref.outputs.tag }}
+      image-tag: ${{ steps.ref.outputs.image-tag }}
+      ref-id: ${{ steps.ref.outputs.ref-id }}
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -71,17 +72,32 @@ jobs:
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+          echo "::set-output name=ref-id::$REF_ID"
 
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
           # this is what we push to ECR
           # we will also take semver'd tags like `1.0.0` and use them for releases
 
+          # In push & PR events we want the tag to contain the latest commit on the branch:
+          # in push events, the latest commit of the master branch is GITHUB_SHA
+          # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
+
           if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
-            echo "::set-output name=tag::$REF_ID"
+            COMMIT_SHA=""
+            IMAGE_TAG=$REF_ID
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+            IMAGE_TAG="$REF_ID-$COMMIT_SHA"
           else
-            echo "::set-output name=tag::$REF_ID-$GITHUB_SHA"
+            COMMIT_SHA=$GITHUB_SHA
+            IMAGE_TAG="$REF_ID-$COMMIT_SHA"
           fi
+
+          # IMAGE_TAG is used in the Build Docker Image step.
+          # We can easily build the image-tag from REF_ID and COMMIT_SHA for non-production releases.
+          # But we can not easily create the image tag for production releases, so we're bulding it here
+          echo "::set-output name=image-tag::$IMAGE_TAG"
 
           # This will take a GitHub repo name like `hms-dbmi-cellenics/iac`
           # and turns it into `iac`. This will be the name of the
@@ -161,7 +177,7 @@ jobs:
             --tag $IMAGE_NAME-ci .
         env:
           PREVIOUS_IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
           GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
 
       - id: push
@@ -173,7 +189,7 @@ jobs:
           echo Pushing image $IMAGE_NAME-builder-ci to ECR.
           docker push $IMAGE_NAME-ci
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.tag, matrix.project) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
 
       - id: send-to-slack
         name: Send failure notification to Slack
@@ -195,9 +211,6 @@ jobs:
     needs: build-docker
     env:
       CI: "true"
-    defaults:
-      run:
-        working-directory: python
     steps:
       - id: checkout
         name: Check out source code
@@ -220,33 +233,31 @@ jobs:
           docker pull $IMAGE_NAME-python-ci
           docker pull $IMAGE_NAME-r-ci
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
 
       - id: codecov
         name: Generate codecov report
         run: |-
           docker run \
-            --name worker-r \
             --entrypoint /bin/bash \
-            -v /home/runner/work/worker/worker/r:/app $R_IMAGE_NAME \
-            -c "R -e 'cov <- covr::package_coverage(\"/app\"); covr::to_cobertura(cov, \"/app/coverage.xml\")'"
-
+            -v $(pwd)/r/covr:/covr $R_IMAGE_NAME \
+            -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
         env:
-          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-   
+          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+
       - id: upload-coverage
         name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          files: ./r/coverage.xml
+          files: ./r/covr/coverage.xml
 
       - id: test
         name: Run unit tests
         run: |-
-          docker run -v $(pwd):/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
+          docker run -v $(pwd)/python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env $PYTHON_IMAGE_NAME python3 -m pytest .
         env:
-          PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-          
+          PYTHON_IMAGE_NAME: ${{ format('{0}/{1}:{2}-python-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+
       - id: push
         name: Push docker images to ECR
         run: |-
@@ -257,7 +268,7 @@ jobs:
           docker push $IMAGE_NAME-python
           docker push $IMAGE_NAME-r
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
 
       - id: send-to-slack
         name: Send failure notification to Slack
@@ -303,18 +314,16 @@ jobs:
       - id: fill-metadata
         name: Fill out a new HelmRelease resource
         run: |-
-          REF_DASHED=$(echo $GITHUB_REF | sed 's/\//-/g')
           DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
           echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
-          echo "::set-output name=ref-dashed::$REF_DASHED"
 
           if [ "${{ matrix.environment }}" = "production" ]; then
             SANDBOX_ID="default"
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="production"
             REPLICA_COUNT="2"
-            SHORT_TAG_REF=${REF_DASHED/refs-tags-/}
-            IMAGE_GLOB="${IMAGE_TAG/$SHORT_TAG_REF/*}"
+            VERSION_NUMBER=${REF_ID/refs-tags-/}
+            IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
             MEMORY_REQUEST="28Gi"
           fi
 
@@ -323,7 +332,7 @@ jobs:
             CHART_REF="$GITHUB_SHA"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="1"
-            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="$REF_ID-*"
             MEMORY_REQUEST="28Gi"
           fi
 
@@ -332,7 +341,7 @@ jobs:
             CHART_REF="STAGING_CHART_REF"
             KUBERNETES_ENV="staging"
             REPLICA_COUNT="0"
-            IMAGE_GLOB="${IMAGE_TAG/$GITHUB_SHA/*}"
+            IMAGE_GLOB="$REF_ID-*"
             MEMORY_REQUEST="4Gi"
           fi
 
@@ -347,7 +356,7 @@ jobs:
           | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
           | yq w -d1 - spec.chart.ref "$CHART_REF" \
           | yq w -d1 - spec.values.kubernetes.env "$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.serviceAccount.iamRole "arn:aws:iam::${{ steps.setup-aws.outputs.aws-account-id }}:role/worker-role-$KUBERNETES_ENV" \
+          | yq w -d1 - spec.values.serviceAccount.iamRole "worker-role-$KUBERNETES_ENV" \
           | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
           | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
           | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
@@ -359,20 +368,10 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.tag) }}
-          IMAGE_TAG: ${{ needs.build-docker.outputs.tag }}
+          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+          REF_ID: ${{ needs.build-docker.outputs.ref-id }}
 
-      - id: disable-admin-enforcement
-        name: Temporarily disable admin enforcement
-        uses: benjefferies/branch-protection-bot@1.0.7
-        with:
-          access_token: ${{ secrets.API_TOKEN_GITHUB }}
-          owner: ${{ github.repository_owner }}
-          repo: iac
-          enforce_admins: false
-          retries: 8
-
-      - name: Push production/develop release to iac for deployment
+      - name: Push production/develop template to releases
         if:
           (matrix.environment == 'production' && github.event_name == 'release' && github.event.action == 'released') || (matrix.environment == 'develop' && github.event_name == 'push')
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
@@ -380,8 +379,8 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source_file: '${{ steps.fill-metadata.outputs.deployment-name }}.yaml'
-          destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'releases/${{ steps.fill-metadata.outputs.kubernetes-env }}'
+          destination_repo: '${{ github.repository_owner }}/releases'
+          destination_folder: '${{ steps.fill-metadata.outputs.kubernetes-env }}'
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
 
@@ -390,33 +389,22 @@ jobs:
           (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
-          REF_DASHED: ${{ steps.fill-metadata.outputs.ref-dashed }}
+          REF_ID: ${{ needs.build-docker.outputs.ref-id }}
         run: |-
-          mv $DEPLOYMENT_NAME.yaml $REF_DASHED.yaml
+          mv $DEPLOYMENT_NAME.yaml $REF_ID.yaml
 
-      - name: Push staging deployment template to iac
+      - name: Push staging deployment template to releases
         if:
           (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source_file: '${{ steps.fill-metadata.outputs.ref-dashed }}.yaml'
-          destination_repo: '${{ github.repository_owner }}/iac'
-          destination_folder: 'releases/staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
+          source_file: ${{ needs.build-docker.outputs.ref-id }}.yaml
+          destination_repo: '${{ github.repository_owner }}/releases'
+          destination_folder: 'staging-candidates/${{ steps.fill-metadata.outputs.deployment-name }}'
           user_email: 'ci@biomage.net'
           user_name: 'Biomage CI/CD'
-
-      - id: enable-admin-enforcement
-        name: Re-enable admin enforcement
-        uses: benjefferies/branch-protection-bot@1.0.7
-        if: always()
-        with:
-          access_token: ${{ secrets.API_TOKEN_GITHUB }}
-          owner: ${{ github.repository_owner }}
-          repo: iac
-          enforce_admins: true
-          retries: 8
 
       - id: send-to-slack
         name: Send failure notification to Slack
