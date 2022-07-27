@@ -15,6 +15,12 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getMarkerNames(data, top_markers)
 
   res <- getExpressionValues(top_markers, data)
+  res$rawExpression[is.na(res$rawExpression)] <- 0
+  res$truncatedExpression[is.na(res$truncatedExpression)] <- 0
+  mtx_res <- list()
+  mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(res$rawExpression),sparse=TRUE)
+  mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(res$truncatedExpression),sparse=TRUE)
+
   res <- formatExpression(res)
   return(res)
 }
