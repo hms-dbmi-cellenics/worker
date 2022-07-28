@@ -24,11 +24,27 @@ runMarkerHeatmap <- function(req, data) {
   mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(t(expression$rawExpression)),sparse=TRUE)
   mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(t(expression$truncatedExpression)),sparse=TRUE)
 
+  JSON_raw <- list()
+  JSON_truncated <- list()
+
+  JSON_raw$values <- mtx_res$rawExpression@x
+  JSON_truncated$values <- mtx_res$truncatedExpression@x
+
+  JSON_raw$index <- mtx_res$rawExpression@i
+  JSON_truncated$index <- mtx_res$truncatedExpression@i
+
+  JSON_raw$ptr <- mtx_res$rawExpression@p
+  JSON_truncated$ptr <- mtx_res$truncatedExpression@p
+
+  JSON_raw$size <- mtx_res$rawExpression@Dim
+  JSON_truncated$size <- mtx_res$truncatedExpression@Dim
+
+
   res <- list()
   res$order <- names(stats)
   res$stats <- stats
-  res$rawExpression <- mtx_res$rawExpression
-  res$truncatedExpression <- mtx_res$truncatedExpression
+  res$rawExpression <- JSON_raw
+  res$truncatedExpression <- JSON_truncated
 
   return(res)
 }
