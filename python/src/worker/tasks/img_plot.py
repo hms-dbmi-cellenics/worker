@@ -8,6 +8,7 @@ from exceptions import raise_if_error
 from ..config import config
 from ..result import Result
 from ..tasks import Task
+from worker.config import config
 
 import PIL
 from PIL import Image
@@ -20,6 +21,8 @@ class GetImgPlot(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.task_etag = msg["ETag"]
+        self.experiment_id=msg["experimentId"]
+        self.name = 'GetImgPlot'
 
     def _format_result(self, result):
         # Return a list of formatted results.
@@ -43,12 +46,22 @@ class GetImgPlot(Task):
 
         ready = np.array(formatted_pixels, dtype=np.uint8)
         img = Image.fromarray(ready, 'RGBA')
-
         img.save('img.png')
         s3.upload_file(
             Filename = './img.png',
-            Bucket = 'worker-results-development-000000000000',
-            Key = 'img.png'
+            Bucket = config.RESULTS_BUCKET,
+            Key = self.task_etag
+        )
+        print('EXP ID ', self.experiment_id, 'ETAG ', self.task_etag, 'name ', self.name)
+        s3.put_object_tagging(
+            Key=self.task_etag,
+            Bucket=config.RESULTS_BUCKET,
+            Tagging={
+                "TagSet": [
+                    {"Key": "experimentId", "Value": self.experiment_id},
+                    {"Key": "requestType", "Value": self.name},
+                ]
+            },
         )
 
     @xray_recorder.capture("GetImgPlot.compute")
@@ -72,15 +85,5 @@ class GetImgPlot(Task):
         data = obj['data']
         
         self._generate_img(data)
-
-
-        # with open('raw-pixels.txt', 'w') as f:
-        #     f.write(data)
-
-        # s3.upload_file(
-        #     Filename = './raw-pixels.txt',
-        #     Bucket = 'worker-results-development-000000000000',
-        #     Key = 'raw-pixels.txt'
-        # )
-
-        return self._format_result(data)
+        
+        return self._format_result({})
