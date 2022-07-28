@@ -66,10 +66,10 @@ formatExpressionMtx <- function(data) {
 
 formatExpressionMtxAux <- function(raw, trunc) {
   return(list(
-      raw_mean = mean(raw, na.rm = TRUE),
-      raw_stdev = sd(raw, na.rm = TRUE),
-      truncated_min = min(trunc, na.rm = TRUE),
-      truncated_max = max(trunc, na.rm = TRUE)
+      rawMean = mean(raw, na.rm = TRUE),
+      rawStdev = sd(raw, na.rm = TRUE),
+      truncatedMin = min(trunc, na.rm = TRUE),
+      truncatedMax = max(trunc, na.rm = TRUE)
   ))
 }
 
