@@ -9,6 +9,12 @@ from ..config import config
 from ..result import Result
 from ..tasks import Task
 
+import PIL
+from PIL import Image
+import numpy as np
+
+import boto3
+s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
 
 class GetImgPlot(Task):
     def __init__(self, msg):
@@ -28,6 +34,23 @@ class GetImgPlot(Task):
         }
         return request
 
+    def _generate_img(self, pixels):
+        rmat, gmat, bmat, amat = pixels
+        formatted_pixels = []
+        for rrow, grow, brow, arow in zip(rmat, gmat, bmat, amat):
+            formatted_row = [(r, g, b, a) for r, g, b, a in zip(rrow, grow, brow, arow)]
+            formatted_pixels.append(formatted_row)
+
+        ready = np.array(formatted_pixels, dtype=np.uint8)
+        img = Image.fromarray(ready, 'RGBA')
+
+        img.save('img.png')
+        s3.upload_file(
+            Filename = './img.png',
+            Bucket = 'worker-results-development-000000000000',
+            Key = 'img.png'
+        )
+
     @xray_recorder.capture("GetImgPlot.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
@@ -43,6 +66,21 @@ class GetImgPlot(Task):
         response.raise_for_status()
         result = response.json()
         raise_if_error(result)
-        data = result.get("data")
-        # obj = json.loads(data)
+        raw_data = result.get("data")
+        obj = json.loads(raw_data)
+        
+        data = obj['data']
+        
+        self._generate_img(data)
+
+
+        # with open('raw-pixels.txt', 'w') as f:
+        #     f.write(data)
+
+        # s3.upload_file(
+        #     Filename = './raw-pixels.txt',
+        #     Bucket = 'worker-results-development-000000000000',
+        #     Key = 'raw-pixels.txt'
+        # )
+
         return self._format_result(data)
