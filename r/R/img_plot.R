@@ -1,5 +1,3 @@
-library(loder)
-
 runRidgePlot <- function(req,data,config){
   data <- Seurat::FindNeighbors(data, annoy.metric = "cosine", verbose = FALSE, reduction = "pca")
   data <- Seurat::FindClusters(data, resolution = 0.8, verbose = FALSE, algorithm = "louvain")
@@ -21,7 +19,7 @@ runRidgePlot <- function(req,data,config){
   Seurat::RidgePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
 
-  raw_img <- readPng("./plot.png")
+  raw_img <- loder::readPng("./plot.png")
 
   return(RJSONIO::toJSON(list(data=raw_img)))
 }
@@ -47,7 +45,7 @@ runVlnPlot <- function(req,data,config){
   Seurat::VlnPlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
 
-  raw_img <- readPng("./plot.png")
+  raw_img <- loder::readPng("./plot.png")
 
   return(RJSONIO::toJSON(list(data=raw_img)))
 }
@@ -83,7 +81,7 @@ runDotPlot <- function(req,data,config){
   Seurat::DotPlot(data,features=top_markers$feature,)
   ggplot2::ggsave("./plot.png")
 
-  raw_img <- readPng("./plot.png")
+  raw_img <- loder::readPng("./plot.png")
 
   return(RJSONIO::toJSON(list(data=raw_img)))
 }
@@ -119,7 +117,7 @@ runMarkerHeat <- function(req,data,config){
   Seurat::DoHeatmap(subset(data, downsample = 100), features = top_markers$feature, size = 3)
   ggplot2::ggsave("./plot.png")
 
-  raw_img <- readPng("./plot.png")
+  raw_img <- loder::readPng("./plot.png")
 
   return(RJSONIO::toJSON(list(data=raw_img)))
 }
@@ -127,7 +125,25 @@ runMarkerHeat <- function(req,data,config){
 
 runFeaturePlot <- function(req,data,config){
   df <- data@misc$gene_annotations
+  cell_sets <- req$cell_sets
 
+  for (cellset in cell_sets) {
+    if (cellset$key == "louvain") { 
+      clusters <- cellset$children
+    }
+  }
+  cell_ids <- c()
+  name <- c()
+
+  for(cluster in clusters) {
+    cell_ids <- c(cell_ids, cluster$cellIds)
+    name <- c(name, rep(cluster$name,length(cluster$cellIds)))
+  }
+
+
+  cluster_table <- data.frame(cell_ids, name)
+  print(str(data))
+  print(tail(cluster_table))
   genesSubset <- subset(df, toupper(df$name) %in% toupper(req$genes))
 
   if (!nrow(genesSubset)) {
@@ -144,7 +160,7 @@ runFeaturePlot <- function(req,data,config){
   ggplot2::ggsave("./plot.png")
 
 
-  raw_img <- readPng("./plot.png")
+  raw_img <- loder::readPng("./plot.png")
   return(RJSONIO::toJSON(list(data=raw_img)))
 
 }
@@ -167,21 +183,21 @@ createImgPlot <- function(req, data) {
   return(res)
 }
 
-put_object_in_s3 <- function(config, bucket, object, key,data) {
-  message(sprintf("Putting %s in %s", key, bucket))
-  message(config)
-  s3 <- paws::s3(config = config)
-  s3$put_object(
-    Bucket = bucket,
-    Key = key,
-    Body = object
-  )
-  tag <- list(TagSet=list(
-    list("Key"="experimentId","Value"=data@misc$experimentId),
-    list("Key"="requestType","Value"="ImgPlot"))
-  )
-  print(tag)
-  s3$put_object_tagging(bucket, key,Tagging=tag)
-}
+# put_object_in_s3 <- function(config, bucket, object, key,data) {
+#   message(sprintf("Putting %s in %s", key, bucket))
+#   message(config)
+#   s3 <- paws::s3(config = config)
+#   s3$put_object(
+#     Bucket = bucket,
+#     Key = key,
+#     Body = object
+#   )
+#   tag <- list(TagSet=list(
+#     list("Key"="experimentId","Value"=data@misc$experimentId),
+#     list("Key"="requestType","Value"="ImgPlot"))
+#   )
+#   print(tag)
+#   s3$put_object_tagging(bucket, key,Tagging=tag)
+# }
 
 

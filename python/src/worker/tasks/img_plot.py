@@ -75,7 +75,15 @@ class GetImgPlot(Task):
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
+        result = s3.get_object(
+            Bucket=config.CELL_SETS_BUCKET,
+            Key=self.experiment_id
+        )
+        cell_sets = json.loads(result['Body'].read().decode('utf-8'))
+        
         request = self._format_request()
+        request['cell_sets'] = cell_sets['cellSets']
+        
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/getImgPlot",
             headers={"content-type": "application/json"},
