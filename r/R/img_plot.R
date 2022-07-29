@@ -127,23 +127,10 @@ runFeaturePlot <- function(req,data,config){
   df <- data@misc$gene_annotations
   cell_sets <- req$cell_sets
 
-  for (cellset in cell_sets) {
-    if (cellset$key == "louvain") { 
-      clusters <- cellset$children
-    }
-  }
-  cell_ids <- c()
-  name <- c()
+  data <- addClusters(data, cell_sets)
 
-  for(cluster in clusters) {
-    cell_ids <- c(cell_ids, cluster$cellIds)
-    name <- c(name, rep(cluster$name,length(cluster$cellIds)))
-  }
+  DimPlot(data, reduction = "umap", group.by = "cluster")
 
-
-  cluster_table <- data.frame(cell_ids, name)
-  print(str(data))
-  print(tail(cluster_table))
   genesSubset <- subset(df, toupper(df$name) %in% toupper(req$genes))
 
   if (!nrow(genesSubset)) {
@@ -200,4 +187,44 @@ createImgPlot <- function(req, data) {
 #   s3$put_object_tagging(bucket, key,Tagging=tag)
 # }
 
+
+#' Add cluster assignment to seurat object
+#'
+#' We store the cluster information in S3 in the `cellsets.json` file. This
+#' function extracts the clusters from the cellsets object, parses it into R
+#' vectors and adds it to the Seurat meta.data table using the `Seurat::AddMetaData`
+#' function.
+#'
+#'
+#' @param scdata Seurat object
+#' @param cell_sets list of cellsets
+#'
+#' @return Seurat object with cell-cluster assignment
+#' @export
+#'
+addClusters <- function(scdata, cell_sets) {
+  for (cellset in cell_sets) {
+    if (cellset$key == "louvain") {
+      clusters <- cellset$children
+    }
+  }
+
+  cell_ids <- c()
+  cluster_name <- c()
+
+  for (cluster in clusters) {
+    cell_ids <- c(cell_ids, cluster$cellIds)
+    cluster_name <-
+      c(cluster_name, rep(cluster$name, length(cluster$cellIds)))
+  }
+
+  cluster_order <- base::match(data@meta.data$cells_id, cell_ids)
+
+  scdata <- Seurat::AddMetaData(scdata,
+                                metadata = cluster_name[cluster_order],
+                                col.name = "cluster")
+
+  return(scdata)
+
+}
 
