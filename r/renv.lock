@@ -399,35 +399,6 @@
         "matrixStats"
       ]
     },
-    "R.methodsS3": {
-      "Package": "R.methodsS3",
-      "Version": "1.8.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "278c286fd6e9e75d0c2e8f731ea445c8",
-      "Requirements": []
-    },
-    "R.oo": {
-      "Package": "R.oo",
-      "Version": "1.25.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "a0900a114f4f0194cf4aa8cd4a700681",
-      "Requirements": [
-        "R.methodsS3"
-      ]
-    },
-    "R.utils": {
-      "Package": "R.utils",
-      "Version": "2.12.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "d31333e10f14027e1cbbc6f266512806",
-      "Requirements": [
-        "R.methodsS3",
-        "R.oo"
-      ]
-    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.1",
@@ -564,16 +535,6 @@
       "Repository": "CRAN",
       "Hash": "1c0aa18b97e6aaa17f93b8b866c0ace5",
       "Requirements": []
-    },
-    "RcppTOML": {
-      "Package": "RcppTOML",
-      "Version": "0.1.7",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f8a578aa91321ecec1292f1e2ffadeda",
-      "Requirements": [
-        "Rcpp"
-      ]
     },
     "ResidualMatrix": {
       "Package": "ResidualMatrix",
@@ -1337,14 +1298,6 @@
         "survival"
       ]
     },
-    "foreign": {
-      "Package": "foreign",
-      "Version": "0.8-82",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "32b25c97ce306a760c4d9f787991b5d9",
-      "Requirements": []
-    },
     "formatR": {
       "Package": "formatR",
       "Version": "1.12",
@@ -1604,16 +1557,6 @@
       "Repository": "CRAN",
       "Hash": "2ace6c4a06297d0b364e0444384a2b82",
       "Requirements": []
-    },
-    "here": {
-      "Package": "here",
-      "Version": "1.0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "24b224366f9c2e7534d2344d10d59211",
-      "Requirements": [
-        "rprojroot"
-      ]
     },
     "htmltools": {
       "Package": "htmltools",
@@ -1876,6 +1819,14 @@
         "lattice"
       ]
     },
+    "loder": {
+      "Package": "loder",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c13a299d416286193de15a145f1a3fc6",
+      "Requirements": []
+    },
     "magrittr": {
       "Package": "magrittr",
       "Version": "2.0.3",
@@ -2062,14 +2013,6 @@
       "Requirements": [
         "testthat"
       ]
-    },
-    "nnet": {
-      "Package": "nnet",
-      "Version": "7.3-17",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "cb1d8d9f300a7e536b89c8a88c53f610",
-      "Requirements": []
     },
     "openssl": {
       "Package": "openssl",
@@ -2758,14 +2701,6 @@
         "Rcpp",
         "matrixStats"
       ]
-    },
-    "spatial": {
-      "Package": "spatial",
-      "Version": "7.3-15",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c23666fdb7789c8a45e65340bb334607",
-      "Requirements": []
     },
     "spatstat.core": {
       "Package": "spatstat.core",
