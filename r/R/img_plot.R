@@ -1,3 +1,5 @@
+library(loder)
+
 runRidgePlot <- function(req,data,config){
   data <- Seurat::FindNeighbors(data, annoy.metric = "cosine", verbose = FALSE, reduction = "pca")
   data <- Seurat::FindClusters(data, resolution = 0.8, verbose = FALSE, algorithm = "louvain")
@@ -19,13 +21,8 @@ runRidgePlot <- function(req,data,config){
   Seurat::RidgePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
 
-  library(loder)
-
   raw_img <- readPng("./plot.png")
 
-  # raw_img <- c(c(1, 2, 3, 4, 5), c(6, 7, 8, 9, 10))
-
-  # put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
   return(RJSONIO::toJSON(list(data=raw_img)))
 }
 
@@ -49,8 +46,10 @@ runVlnPlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::VlnPlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
-  return()
+
+  raw_img <- readPng("./plot.png")
+
+  return(RJSONIO::toJSON(list(data=raw_img)))
 }
 
 runDotPlot <- function(req,data,config){
@@ -83,8 +82,10 @@ runDotPlot <- function(req,data,config){
 
   Seurat::DotPlot(data,features=top_markers$feature,)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
-  return()
+
+  raw_img <- readPng("./plot.png")
+
+  return(RJSONIO::toJSON(list(data=raw_img)))
 }
 
 runMarkerHeat <- function(req,data,config){
@@ -117,8 +118,10 @@ runMarkerHeat <- function(req,data,config){
 
   Seurat::DoHeatmap(subset(data, downsample = 100), features = top_markers$feature, size = 3)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
-  return()
+
+  raw_img <- readPng("./plot.png")
+
+  return(RJSONIO::toJSON(list(data=raw_img)))
 }
 
 
@@ -139,8 +142,11 @@ runFeaturePlot <- function(req,data,config){
   genesSubset <- genesSubset[,"input"]
   Seurat::FeaturePlot(data,genesSubset)
   ggplot2::ggsave("./plot.png")
-  put_object_in_s3(config,"worker-results-development-000000000000","./plot.png",req$etag,data)
-  return()
+
+
+  raw_img <- readPng("./plot.png")
+  return(RJSONIO::toJSON(list(data=raw_img)))
+
 }
 
 createImgPlot <- function(req, data) {

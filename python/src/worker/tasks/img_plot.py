@@ -38,14 +38,20 @@ class GetImgPlot(Task):
         return request
 
     def _generate_img(self, pixels):
-        rmat, gmat, bmat, amat = pixels
+        rmat = pixels[0]
+        gmat = pixels[1]
+        bmat = pixels[2]
+        # if len(pixels) == 4:
+        #     amat = pixels[3]
+        # else:
+                
         formatted_pixels = []
-        for rrow, grow, brow, arow in zip(rmat, gmat, bmat, amat):
-            formatted_row = [(r, g, b, a) for r, g, b, a in zip(rrow, grow, brow, arow)]
+        for rrow, grow, brow in zip(rmat, gmat, bmat):
+            formatted_row = [(r, g, b) for r, g, b in zip(rrow, grow, brow)]
             formatted_pixels.append(formatted_row)
 
         ready = np.array(formatted_pixels, dtype=np.uint8)
-        img = Image.fromarray(ready, 'RGBA')
+        img = Image.fromarray(ready)
         img.save('img.png')
         s3.upload_file(
             Filename = './img.png',
