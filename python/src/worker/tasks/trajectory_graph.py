@@ -1,13 +1,12 @@
-import gzip
 import json
 
 import backoff
-import boto3
 import requests
 from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
+from ..helpers.s3 import get_embedding
 from ..result import Result
 from ..tasks import Task
 
@@ -22,23 +21,19 @@ class GetTrajectoryGraph(Task):
 
     def _format_request(self):
 
-        s3 = boto3.resource("s3", **config.BOTO_RESOURCE_KWARGS)
-
         embedding_etag = self.task_def["embedding"]["ETag"]
-
-        embedding = s3.Object(config.RESULTS_BUCKET, embedding_etag).get()
-        gzipped_embedding = embedding["Body"].read()
+        embedding = get_embedding(embedding_etag)
 
         request = {
-            "embedding": json.loads(gzip.decompress(gzipped_embedding)),
+            "embedding": embedding,
             "embedding_settings": {
-              "method": self.task_def["embedding"]["method"],
+                "method": self.task_def["embedding"]["method"],
             },
             "clustering_settings": {
                 "method": self.task_def["clustering"]["method"],
-                "resolution": self.task_def["clustering"]["resolution"]
-              }
-          }
+                "resolution": self.task_def["clustering"]["resolution"],
+            },
+        }
 
         return request
 
