@@ -1,3 +1,4 @@
+import gzip
 import io
 import json
 from unittest import TestCase
@@ -44,14 +45,15 @@ class TestTrajectoryGraph:
         stubber.add_response("head_object", response, expected_params)
 
         # Get object
-        content_bytes = json.dumps(mock_embedding).encode("utf-8")
+        content_string = json.dumps(mock_embedding).encode("utf-8")
+        content_bytes = gzip.compress(content_string)
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
 
         response = {
             "ContentLength": len(content_bytes),
-            "ContentType": "utf-8",
+            "ContentType": "application/gzip",
             "Body": data,
             "ResponseMetadata": {
                 "Bucket": config.RESULTS_BUCKET,
@@ -109,9 +111,6 @@ class TestTrajectoryGraph:
             )
 
             result = GetTrajectoryGraph(self.correct_request).compute()
-
-            print("*** result.data", result.data)
-            print("*** worker_payload", worker_payload["data"])
 
             TestCase().assertDictEqual(result.data, worker_payload["data"])
             stubber.assert_no_pending_responses()
