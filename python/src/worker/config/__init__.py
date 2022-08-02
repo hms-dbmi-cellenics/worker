@@ -116,9 +116,9 @@ config = Config(
     AWS_ACCOUNT_ID=aws_account_id,
     AWS_DEFAULT_REGION=aws_region,
     BOTO_RESOURCE_KWARGS={"region_name": aws_region},
-    CELL_SETS_BUCKET=f"cell-sets-{cluster_env}-{aws_account_id}",
-    SOURCE_BUCKET=f"processed-matrix-{cluster_env}-{aws_account_id}",
-    RESULTS_BUCKET=f"worker-results-{cluster_env}-{aws_account_id}",
+    CELL_SETS_BUCKET=f"cell-sets-test-{cluster_env}-{aws_account_id}",
+    SOURCE_BUCKET=f"processed-matrix-test-{cluster_env}-{aws_account_id}",
+    RESULTS_BUCKET=f"worker-results-test-{cluster_env}-{aws_account_id}",
     R_WORKER_URL="http://localhost:4000",
     # this works because in CI, `data/` is deployed under `worker/`
     # whereas in a container, it is mounted to `/data`. Either way, this ensures
