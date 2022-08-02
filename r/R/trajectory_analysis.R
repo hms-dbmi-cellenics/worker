@@ -16,7 +16,6 @@
 #' @return a json with nodes and umap coordinates
 #' @export
 runGenerateTrajectoryGraph <- function(req, data) {
-
   cell_data <- generateGraphData(
     req$body$embedding,
     req$body$embedding_settings,
@@ -71,9 +70,15 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' @return a tibble with pseudotime values
 #' @export
 runTrajectoryAnalysis <- function(req, data) {
+  cell_data <- generateGraphData(
+    req$body$embedding,
+    req$body$embedding_settings,
+    req$body$clustering_settings,
+    data
+  )
+
   root_nodes <- req$body$rootNodes
 
-  cell_data <- generateGraphData(data)
   cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
