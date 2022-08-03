@@ -65,37 +65,23 @@ runEmbedding <- function(req, data) {
 
 # getEmbedding
 # Return embedding calculated for the seurat object.
-# data is the seurat object.
 # config is the embedding work request config.
-# type is the embedding type.
+# data is the seurat object.
+# method is the embedding method, e.g. UMAP.
 # reduction_type is the type of reduction that is used, e.g. PCA.
 # num_pcs is the number of principal components.
 #
-# Req$body has:
-#
-# Config has=
-# UMAP:
-# minimumDistance = float
-# distanceMetric = string (euclidean, cosine, etc)
-#
-# tsne:
-# perplexity
-# lerarningRate
-#
 #' @export
 getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
-   if (method == "tsne") {
+  if (method == "tsne") {
     data <- Seurat::RunTSNE(data,
       reduction = reduction_type,
-      seed.use = 1,
       dims = 1:num_pcs,
       perplexity = config$perplexity,
       learning.rate = config$learningRate
     )
-    result <- Seurat::Embeddings(data, reduction = method)
   } else if (method == "umap") {
     data <- Seurat::RunUMAP(data,
-      seed.use = 42,
       reduction = reduction_type,
       dims = 1:num_pcs,
       verbose = FALSE,
@@ -110,8 +96,8 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 
 
 # assignEmbedding
-# Assigns embeddding from embedding json to the Seurat object.
-# embedding_data is the embeding coordinates.
+# Assigns embedding from embedding json to the Seurat object.
+# embedding_data is the embedding coordinates.
 # data is the seurat object.
 #
 #' @export

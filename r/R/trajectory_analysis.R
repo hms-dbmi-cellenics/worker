@@ -1,7 +1,6 @@
-#' Generate UMAP and node coordinates for the initial trajectory analysis plot
+#' Generate node coordinates for the initial trajectory analysis plot
 #'
-#' Returns a json object with UMAP and node coordinates,
-#' to be used by the UI for the initial plot (embedding + trajectory nodes)
+#' Returns a list containing node coordinates to the python worker
 #'
 #' This represents the first step of the trajectory analysis.
 #' It allows the creation of the initial trajectory analysis plot,
@@ -10,10 +9,10 @@
 #' The root nodes will be then used in the following step of the trajectory
 #' analysis for pseudotime calculation.
 #'
-#' @param req list of configuration parameters. Not used here.
+#' @param req list of configuration parameters
 #' @param data SeuratObject
 #'
-#' @return a json with nodes and umap coordinates
+#' @return a list containing nodes coordinates, connected nodes and the node_id
 #' @export
 runGenerateTrajectoryGraph <- function(req, data) {
   cell_data <- generateGraphData(
@@ -42,7 +41,6 @@ runGenerateTrajectoryGraph <- function(req, data) {
     node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
   }
 
-  # node + umap data
   root_nodes <- list(nodes = node_coords_list)
   return(root_nodes)
 }
@@ -110,13 +108,13 @@ generateGraphData <- function(embedding_data, embedding_settings, clustering_set
 
   # Clustering resolution can only be used by monocle if the clustering method is leiden
   clustering_resolution <- NULL
-  if(clustering_method == "leiden") {
+  if (clustering_method == "leiden") {
     clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
   }
 
   data <- assignEmbedding(embedding_data, data)
 
-  surat_to_monocle_method_map <- list(
+  seurat_to_monocle_method_map <- list(
     umap = "UMAP",
     tsne = "tSNE"
   )
@@ -127,7 +125,7 @@ generateGraphData <- function(embedding_data, embedding_settings, clustering_set
   cell_data <- monocle3::cluster_cells(
     cds = cell_data,
     cluster_method = clustering_method,
-    reduction_method = surat_to_monocle_method_map[[embedding_method]],
+    reduction_method = seurat_to_monocle_method_map[[embedding_method]],
     resolution = clustering_resolution
   )
   cell_data <- monocle3::learn_graph(cell_data)
