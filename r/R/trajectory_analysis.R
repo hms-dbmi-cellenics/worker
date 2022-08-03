@@ -42,7 +42,6 @@ runGenerateTrajectoryGraph <- function(req, data) {
     node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
   }
 
-  # node + umap data
   root_nodes <- list(nodes = node_coords_list)
   return(root_nodes)
 }
@@ -62,7 +61,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' pseudotime values to cells with larger pseudotimes, along a trajectory.
 #'
 #' @param req {body: {
-#'               rootNodes: root nodes ids. Determines the root nodes of the trajectory
+#'               root_nodes: root nodes ids. Determines the root nodes of the trajectory
 #'              }
 #'            }
 #' @param data SeuratObject
@@ -77,16 +76,18 @@ runTrajectoryAnalysis <- function(req, data) {
     data
   )
 
-  root_nodes <- req$body$rootNodes
+  message("*** root_nodes")
+  message(req$body$root_nodes)
 
-  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
+  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = req$body$root_nodes)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
   # fill in the NULL values for filtered cells
   pseudotime <- fillNullForFilteredCells(pseudotime, data)
 
-  return(unname(pseudotime))
+  result <- list(pseudotime = unname(pseudotime)[[1]])
+  return(result)
 }
 
 
@@ -110,7 +111,7 @@ generateGraphData <- function(embedding_data, embedding_settings, clustering_set
 
   # Clustering resolution can only be used by monocle if the clustering method is leiden
   clustering_resolution <- NULL
-  if(clustering_method == "leiden") {
+  if (clustering_method == "leiden") {
     clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
   }
 
