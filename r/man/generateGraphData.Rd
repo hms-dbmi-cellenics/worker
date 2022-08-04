@@ -4,7 +4,12 @@
 \alias{generateGraphData}
 \title{Convert Seurat object to Monocle3 cell_data_set object, cluster cells and learn graph}
 \usage{
-generateGraphData(data)
+generateGraphData(
+  embedding_data,
+  embedding_settings,
+  clustering_settings,
+  data
+)
 }
 \arguments{
 \item{data}{Seurat object}

@@ -2,21 +2,20 @@
 % Please edit documentation in R/trajectory_analysis.R
 \name{runGenerateTrajectoryGraph}
 \alias{runGenerateTrajectoryGraph}
-\title{Generate UMAP and node coordinates for the initial trajectory analysis plot}
+\title{Generate node coordinates for the initial trajectory analysis plot}
 \usage{
 runGenerateTrajectoryGraph(req, data)
 }
 \arguments{
-\item{req}{list of configuration parameters. Not used here.}
+\item{req}{list of configuration parameters}
 
 \item{data}{SeuratObject}
 }
 \value{
-a json with nodes and umap coordinates
+a list containing nodes coordinates, connected nodes and the node_id
 }
 \description{
-Returns a json object with UMAP and node coordinates,
-to be used by the UI for the initial plot (embedding + trajectory nodes)
+Returns a list containing node coordinates to the python worker
 }
 \details{
 This represents the first step of the trajectory analysis.
