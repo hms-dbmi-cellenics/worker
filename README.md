@@ -43,6 +43,8 @@ export GITHUB_API_TOKEN=<your-token>
 ```
 
 ### Running tests
+
+#### python worker
 Assuming the containers are running, you can execute the (pytest) unit tests using:
 
     make test
@@ -52,6 +54,10 @@ See [here](python/README.md#tests) for more information about the tests.
 To shut down the development containers, you can use:
 
     make kill
+
+#### R worker
+
+Refer to the [R-worker README](r/README.md#running-r-worker-tests).
 
 ### Remote - Containers
 Development is done inside a development container that is automatically built,
