@@ -81,6 +81,9 @@ ADD R ./R
 ADD tests ./tests
 COPY DESCRIPTION NAMESPACE work.R ./
 
+RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
+    ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+
 # start app
 ENTRYPOINT ["bash", "/var/lib/watchfile/entrypoint.sh"]
 CMD ["Rscript", "work.R"]
