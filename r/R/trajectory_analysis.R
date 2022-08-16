@@ -1,3 +1,8 @@
+  SEURAT_TO_MONOCLE_METHOD_MAP <- list(
+    umap = "UMAP",
+    tsne = "tSNE"
+  )
+
 #' Generate node coordinates for the initial trajectory analysis plot
 #'
 #' Returns a list containing node coordinates to the python worker
@@ -114,18 +119,13 @@ generateGraphData <- function(embedding_data, embedding_settings, clustering_set
 
   data <- assignEmbedding(embedding_data, data)
 
-  seurat_to_monocle_method_map <- list(
-    umap = "UMAP",
-    tsne = "tSNE"
-  )
-
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
   message("Calculating trajectory graph...")
   cell_data <- monocle3::cluster_cells(
     cds = cell_data,
     cluster_method = clustering_method,
-    reduction_method = seurat_to_monocle_method_map[[embedding_method]],
+    reduction_method = SEURAT_TO_MONOCLE_METHOD_MAP[[embedding_method]],
     resolution = clustering_resolution
   )
   cell_data <- monocle3::learn_graph(cell_data)
