@@ -22,7 +22,7 @@
 #' @return a list containing nodes coordinates, connected nodes and the node_id
 #' @export
 runGenerateTrajectoryGraph <- function(req, data) {
-  cell_data <- generateGraphData(
+  cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
     req$body$clustering_settings,
@@ -75,7 +75,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' @return a tibble with pseudotime values
 #' @export
 getPseudoTime <- function(req, data) {
-  cell_data <- generateGraphData(
+  cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
     req$body$clustering_settings,
@@ -105,7 +105,7 @@ getPseudoTime <- function(req, data) {
 #'
 #' @return a cell_data_set object with cluster and graph information stored internally
 #' @export
-generateGraphData <- function(embedding_data, embedding_settings, clustering_settings, data) {
+generateTrajectoryGraph <- function(embedding_data, embedding_settings, clustering_settings, data) {
   set.seed(ULTIMATE_SEED)
 
   Seurat::DefaultAssay(data) <- "RNA"
