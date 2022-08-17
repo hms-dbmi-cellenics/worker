@@ -14,7 +14,6 @@ from ..tasks import Task
 class GetTrajectoryGraph(Task):
     def __init__(self, msg):
         super().__init__(msg)
-        self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
         return Result(result["data"])
@@ -28,6 +27,7 @@ class GetTrajectoryGraph(Task):
             "embedding": embedding,
             "embedding_settings": {
                 "method": self.task_def["embedding"]["method"],
+                "methodSettings": self.task_def["embedding"]["methodSettings"]
             },
             "clustering_settings": {
                 "method": self.task_def["clustering"]["method"],

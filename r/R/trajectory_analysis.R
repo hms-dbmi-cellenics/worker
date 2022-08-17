@@ -2,7 +2,7 @@
   # that is why there is only 1 method in the mapping below. The embedding method
   # that is used for embedding and trajectory generation is hard coded in the UI.
   SEURAT_TO_MONOCLE_METHOD_MAP <- list(
-    umap = "UMAP",
+    umap = "UMAP"
   )
 
 #' Generate node coordinates for the initial trajectory analysis plot
@@ -119,6 +119,13 @@ generateGraphData <- function(embedding_data, embedding_settings, clustering_set
     clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
   }
 
+  clustering_controls <- list()
+  if(embedding_method == "umap") {
+    clustering_controls <- list(
+      metric = embedding_settings$method_settings$distanceMetric
+    )
+  }
+
   data <- assignEmbedding(embedding_data, data)
 
   cell_data <- SeuratWrappers::as.cell_data_set(data)
@@ -128,7 +135,8 @@ generateGraphData <- function(embedding_data, embedding_settings, clustering_set
     cds = cell_data,
     cluster_method = clustering_method,
     reduction_method = SEURAT_TO_MONOCLE_METHOD_MAP[[embedding_method]],
-    resolution = clustering_resolution
+    resolution = clustering_resolution,
+    nn_control = clustering_controls
   )
   cell_data <- monocle3::learn_graph(cell_data)
 
