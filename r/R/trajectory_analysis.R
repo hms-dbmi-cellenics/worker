@@ -1,6 +1,8 @@
+  # Currently Monocle3 only supports trajectory analysis for UMAP embeddings,
+  # that is why there is only 1 method in the mapping below. The embedding method
+  # that is used for embedding and trajectory generation is hard coded in the UI.
   SEURAT_TO_MONOCLE_METHOD_MAP <- list(
     umap = "UMAP",
-    tsne = "tSNE"
   )
 
 #' Generate node coordinates for the initial trajectory analysis plot
