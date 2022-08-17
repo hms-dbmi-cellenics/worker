@@ -27,7 +27,7 @@ class GetPseudoTime(Task):
         }
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysis",
+            f"{config.R_WORKER_URL}/v0/getPseudoTime",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )

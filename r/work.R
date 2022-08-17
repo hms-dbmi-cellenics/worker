@@ -211,9 +211,9 @@ create_app <- function(last_modified, data, fpath) {
     }
   )
   app$add_post(
-    path = "/v0/runTrajectoryAnalysis",
+    path = "/v0/getPseudoTime",
     FUN = function(req, res) {
-      result <- run_post(req, runTrajectoryAnalysis, data)
+      result <- run_post(req, GetPseudoTime, data)
       res$set_body(result)
     }
   )

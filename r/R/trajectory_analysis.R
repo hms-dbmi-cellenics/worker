@@ -74,7 +74,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #'
 #' @return a tibble with pseudotime values
 #' @export
-runTrajectoryAnalysis <- function(req, data) {
+getPseudoTime <- function(req, data) {
   cell_data <- generateGraphData(
     req$body$embedding,
     req$body$embedding_settings,
