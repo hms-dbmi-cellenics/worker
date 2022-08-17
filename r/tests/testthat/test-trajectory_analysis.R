@@ -74,7 +74,11 @@ get_mock_embedding_data <- function(mock_data) {
 get_mock_embedding_settings <- function() {
   result <- list (
     Etag = "mockEmbeddingETag",
-    method = "umap"
+    method = "umap",
+    methodSettings = list (
+      distanceMetric = "cosine",
+      minimumDistance = 0.3
+    )
   )
 }
 

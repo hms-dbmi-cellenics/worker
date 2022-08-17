@@ -22,7 +22,14 @@ class TestTrajectoryGraph:
         self.correct_request = {
             "body": {
                 "name": "GetTrajectoryGraph",
-                "embedding": {"ETag": mock_embedding_etag, "method": "umap"},
+                "embedding": {
+                  "ETag": mock_embedding_etag,
+                  "method": "umap",
+                  "methodSettings": {
+                    "distanceMetric": "cosine",
+                    "minimumDistance": 0.3
+                  }
+                },
                 "clustering": {"method": "louvain", "resolution": 0.8},
             }
         }
