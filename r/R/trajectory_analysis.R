@@ -21,7 +21,7 @@
 #'
 #' @return a list containing nodes coordinates, connected nodes and the node_id
 #' @export
-runGenerateTrajectoryGraph <- function(req, data) {
+runStartingNodesTask <- function(req, data) {
   cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
@@ -51,8 +51,8 @@ runGenerateTrajectoryGraph <- function(req, data) {
     node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
   }
 
-  root_nodes <- list(nodes = node_coords_list)
-  return(root_nodes)
+  starting_nodes <- list(nodes = node_coords_list)
+  return(starting_nodes)
 }
 
 
@@ -77,7 +77,7 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #'
 #' @return a tibble with pseudotime values
 #' @export
-getPseudoTime <- function(req, data) {
+runPseudoTimeTask <- function(req, data) {
   cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
