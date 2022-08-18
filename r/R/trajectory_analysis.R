@@ -29,14 +29,17 @@ runGenerateTrajectoryGraph <- function(req, data) {
     data
   )
 
-  node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
+  seurat_embedding_method <- req$body$embedding_settings$method
+  monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
+
+  node_coords <- t(cell_data@principal_graph_aux[[monocle_embedding_method]]$dp_mst)
 
   # node coordinates
   # get connected nodes
   connected_nodes <- list()
   for (node in rownames(node_coords)) {
     node_id <- which(rownames(node_coords) == node)
-    connected_nodes_obj <- cell_data@principal_graph[["UMAP"]][[node_id]][[1]]
+    connected_nodes_obj <- cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]]
     connected_nodes[[node]] <- as.list(names(connected_nodes_obj))
   }
 
