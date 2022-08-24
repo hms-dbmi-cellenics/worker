@@ -8,7 +8,7 @@ from exceptions import raise_if_error
 from ..config import config
 from ..helpers.s3 import get_embedding
 from ..result import Result
-from ..tasks import Task
+from . import Task
 
 
 class GetPseudoTime(Task):
@@ -46,7 +46,7 @@ class GetPseudoTime(Task):
         request = self._format_request()
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysis",
+            f"{config.R_WORKER_URL}/v0/runPseudoTimeTask",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )

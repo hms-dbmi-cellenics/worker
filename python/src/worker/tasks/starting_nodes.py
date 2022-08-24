@@ -8,13 +8,12 @@ from exceptions import raise_if_error
 from ..config import config
 from ..helpers.s3 import get_embedding
 from ..result import Result
-from ..tasks import Task
+from . import Task
 
 
-class GetTrajectoryGraph(Task):
+class GetStartingNodes(Task):
     def __init__(self, msg):
         super().__init__(msg)
-        self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
         return Result(result["data"])
@@ -28,6 +27,7 @@ class GetTrajectoryGraph(Task):
             "embedding": embedding,
             "embedding_settings": {
                 "method": self.task_def["embedding"]["method"],
+                "methodSettings": self.task_def["embedding"]["methodSettings"]
             },
             "clustering_settings": {
                 "method": self.task_def["clustering"]["method"],
@@ -37,7 +37,7 @@ class GetTrajectoryGraph(Task):
 
         return request
 
-    @xray_recorder.capture("GetTrajectoryGraph.compute")
+    @xray_recorder.capture("GetStartingNodes.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -45,7 +45,7 @@ class GetTrajectoryGraph(Task):
         request = self._format_request()
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runGenerateTrajectoryGraph",
+            f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )

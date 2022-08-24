@@ -11,18 +11,25 @@ from botocore.stub import Stubber
 from exceptions import RWorkerException
 from tests.data.embedding import mock_embedding
 from worker.config import config
-from worker.tasks.trajectory_graph import GetTrajectoryGraph
+from worker.tasks.starting_nodes import GetStartingNodes
 
 mock_embedding_etag = "mockEmbeddingETag"
 
 
-class TestTrajectoryGraph:
+class TestStartingNodes:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {
             "body": {
-                "name": "GetTrajectoryGraph",
-                "embedding": {"ETag": mock_embedding_etag, "method": "umap"},
+                "name": "GetStartingNodes",
+                "embedding": {
+                  "ETag": mock_embedding_etag,
+                  "method": "umap",
+                  "methodSettings": {
+                    "distanceMetric": "cosine",
+                    "minimumDistance": 0.3
+                  }
+                },
                 "clustering": {"method": "louvain", "resolution": 0.8},
             }
         }
@@ -64,11 +71,11 @@ class TestTrajectoryGraph:
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
-            GetTrajectoryGraph()
+            GetStartingNodes()
 
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
-            GetTrajectoryGraph(self).compute("invalid input")
+            GetStartingNodes(self).compute("invalid input")
 
     @responses.activate
     def test_works_with_correct_request(self):
@@ -105,12 +112,12 @@ class TestTrajectoryGraph:
 
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/runGenerateTrajectoryGraph",
+                f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
                 json=worker_payload,
                 status=200,
             )
 
-            result = GetTrajectoryGraph(self.correct_request).compute()
+            result = GetStartingNodes(self.correct_request).compute()
 
             TestCase().assertDictEqual(result.data, worker_payload["data"])
             stubber.assert_no_pending_responses()
@@ -131,13 +138,13 @@ class TestTrajectoryGraph:
 
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/runGenerateTrajectoryGraph",
+                f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
                 json=error_payload,
                 status=200,
             )
 
             with pytest.raises(RWorkerException) as exception_info:
-                GetTrajectoryGraph(self.correct_request).compute()
+                GetStartingNodes(self.correct_request).compute()
 
             assert exception_info.value.args[0] == error_code
             assert exception_info.value.args[1] == user_message
