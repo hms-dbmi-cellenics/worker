@@ -6,7 +6,7 @@ from aws_xray_sdk.core import xray_recorder
 
 from ..config import config
 from ..result import Result
-from ..tasks import Task
+from . import Task
 
 
 class GetPseudoTime(Task):
@@ -27,7 +27,7 @@ class GetPseudoTime(Task):
         }
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysis",
+            f"{config.R_WORKER_URL}/v0/runPseudoTimeTask",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )

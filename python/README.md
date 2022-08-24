@@ -61,8 +61,7 @@ Either:
 Then run these commands:
 
     export CLUSTER_ENV="development"
-    cd src/
-    python -m pytest --cov=.
+    python -m pytest --cov=. --cov-report=term-missing
 
 You can append specific test files (e.g. `tests/tasks/test_cluster_cells.py`) to the pytest command to only
 run those tests.

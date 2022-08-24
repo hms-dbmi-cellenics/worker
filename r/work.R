@@ -211,16 +211,16 @@ create_app <- function(last_modified, data, fpath) {
     }
   )
   app$add_post(
-    path = "/v0/runTrajectoryAnalysis",
+    path = "/v0/runPseudoTimeTask",
     FUN = function(req, res) {
-      result <- run_post(req, runTrajectoryAnalysis, data)
+      result <- run_post(req, runPseudoTimeTask, data)
       res$set_body(result)
     }
   )
   app$add_post(
-    path = "/v0/runGenerateTrajectoryGraph",
+    path = "/v0/runStartingNodesTask",
     FUN = function(req, res) {
-      result <- run_post(req, runGenerateTrajectoryGraph, data)
+      result <- run_post(req, runStartingNodesTask, data)
       res$set_body(result)
     }
   )

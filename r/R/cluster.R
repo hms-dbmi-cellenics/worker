@@ -88,13 +88,12 @@ getClusters <- function(type, resolution, data) {
           reduction = active.reduction
         )
     }
-    data <-
-      Seurat::FindClusters(
+    data <- Seurat::FindClusters(
         data,
         resolution = resolution,
         verbose = FALSE,
         algorithm = algorithm
-      )
+    )
   }
 
   return(data)
