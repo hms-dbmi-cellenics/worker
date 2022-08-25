@@ -85,7 +85,6 @@ runPseudoTimeTask <- function(req, data) {
     data
   )
 
-  message("*** root_nodes")
   message(req$body$root_nodes)
 
   cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = req$body$root_nodes)

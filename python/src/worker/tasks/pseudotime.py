@@ -28,6 +28,7 @@ class GetPseudoTime(Task):
             "embedding": embedding,
             "embedding_settings": {
                 "method": self.task_def["embedding"]["method"],
+                "methodSettings": self.task_def["embedding"]["methodSettings"]
             },
             "clustering_settings": {
                 "method": self.task_def["clustering"]["method"],
