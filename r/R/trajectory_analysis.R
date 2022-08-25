@@ -78,6 +78,15 @@ runStartingNodesTask <- function(req, data) {
 #' @return a tibble with pseudotime values
 #' @export
 runPseudoTimeTask <- function(req, data) {
+  if(length(req$body$root_nodes) == 0) {
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_ROOT_NODES,
+        "No root nodes were selected for the analysis."
+      )
+    )
+  }
+
   cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
@@ -85,9 +94,10 @@ runPseudoTimeTask <- function(req, data) {
     data
   )
 
-  message(req$body$root_nodes)
+  seurat_embedding_method <- req$body$embedding_settings$method
+  monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
 
-  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = req$body$root_nodes)
+  cell_data <- monocle3::order_cells(cell_data, reduction_method = monocle_embedding_method, root_pr_nodes = req$body$root_nodes)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
