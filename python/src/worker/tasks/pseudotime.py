@@ -14,7 +14,6 @@ from . import Task
 class GetPseudoTime(Task):
     def __init__(self, msg):
         super().__init__(msg)
-        self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
         return Result(result["data"])
