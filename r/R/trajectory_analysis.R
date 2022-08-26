@@ -16,7 +16,19 @@
 #' The root nodes will be then used in the following step of the trajectory
 #' analysis for pseudotime calculation.
 #'
-#' @param req list of configuration parameters
+#' @param req {
+#'            body: {
+#'               embedding: numeric vector containing a pair of embedding coordinates (e.g. num [1:2] -1, -2)
+#'               embedding_settings: {
+#'                  method: Embedding method (.e.g umap)
+#'                  methodSettings: An object containing settings specific for each embedding type
+#'               },
+#'               clustering_settings: {
+#'                  method: Clustering method (e.g. louvain),
+#'                  resolution: Clustering resolution
+#'               },
+#'              }
+#'            }
 #' @param data SeuratObject
 #'
 #' @return a list containing nodes coordinates, connected nodes and the node_id
@@ -69,7 +81,17 @@ runStartingNodesTask <- function(req, data) {
 #' a map of how cells expression changes, starting from cells with smaller
 #' pseudotime values to cells with larger pseudotimes, along a trajectory.
 #'
-#' @param req {body: {
+#' @param req {
+#'            body: {
+#'               embedding: numeric vector containing a pair of embedding coordinates (e.g. num [1:2] -1, -2)
+#'               embedding_settings: {
+#'                  method: Embedding method (.e.g umap)
+#'                  methodSettings: An object containing settings specific for each embedding type
+#'               },
+#'               clustering_settings: {
+#'                  method: Clustering method (e.g. louvain),
+#'                  resolution: Clustering resolution
+#'               },
 #'               root_nodes: root nodes ids. Determines the root nodes of the trajectory
 #'              }
 #'            }

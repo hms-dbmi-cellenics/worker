@@ -7,8 +7,18 @@
 runPseudoTimeTask(req, data)
 }
 \arguments{
-\item{req}{{body: {
-rootNodes: root nodes ids. Determines the root nodes of the trajectory
+\item{req}{{
+body: {
+embedding: numeric vector containing a pair of embedding coordinates (e.g. num \link{1:2} -1, -2)
+embedding_settings: {
+method: Embedding method (.e.g umap)
+methodSettings: An object containing settings specific for each embedding type
+},
+clustering_settings: {
+method: Clustering method (e.g. louvain),
+resolution: Clustering resolution
+},
+root_nodes: root nodes ids. Determines the root nodes of the trajectory
 }
 }}
 
