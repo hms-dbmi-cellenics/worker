@@ -1,6 +1,7 @@
 import gzip
 import io
 import json
+import pandas as pd
 from logging import info
 
 import aws_xray_sdk as xray
@@ -24,8 +25,14 @@ class Response:
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
         gzipped_body = io.BytesIO()
-        with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            json.dump(self.result.data, zipfile)
+        if isinstance(self.result.data, pd.DataFrame):
+            with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
+                self.result.data.to_csv(zipfile)
+        else:
+            with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
+                json.dump(self.result.data, zipfile)
+    
+            
 
         gzipped_body.seek(0)
 
