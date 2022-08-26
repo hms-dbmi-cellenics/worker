@@ -38,7 +38,7 @@ class GetPseudoTime(Task):
 
         return request
 
-    @xray_recorder.capture("GetTrajectoryGraph.compute")
+    @xray_recorder.capture("GetPseudoTime.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
