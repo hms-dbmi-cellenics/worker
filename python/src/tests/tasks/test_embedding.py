@@ -1,5 +1,3 @@
-from http.client import responses
-
 import pytest
 import responses
 from exceptions import RWorkerException
@@ -44,13 +42,6 @@ class TestEmbedding:
 
     def test_works_with_request(self):
         GetEmbedding(self.correct_request_pca)
-
-    def generate_request_works(self):
-        embedding_instance = GetEmbedding(self.correct_request_umap)
-        assert embedding_instance._format_request == {
-            "type": "umap",
-            "config": {"minimumDistance": 0.1, "distanceMetric": "cosine"},
-        }
 
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
