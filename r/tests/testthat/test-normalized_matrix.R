@@ -1,0 +1,53 @@
+mock_scdata <- function() {
+  data("pbmc_small", package = "SeuratObject", envir = environment())
+  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
+  return(pbmc_small)
+}
+
+mock_req <- function() {
+  req <- list(
+    body = list(
+      applyFilter = TRUE,
+      filterBy = list(
+        "cellIds" = list(
+          c(2:10),
+          c(30:35),
+          c(60:70)
+        )
+      )
+    )
+  )
+}
+
+
+test_that("GetNormalizedExpression generates the expected data frame format", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res <- GetNormalizedExpression(req, data)
+  expect_s3_class(res, "data.frame")
+})
+
+test_that("subsetting is applied and changes GetNormalizedExpression output", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res_filt <- GetNormalizedExpression(req, data)
+
+  req$body$applyFilter <- FALSE
+  res_unfilt <- GetNormalizedExpression(req, data)
+
+  expect_false(identical(res_unfilt, res_filt))
+})
+
+test_that("GetNormalizedExpression correctly subsets the data", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  subset_ids <- unlist(req$body$filterBy$cellIds)
+
+  res <- GetNormalizedExpression(req, data)
+
+  expect_false(ncol(data) == ncol(res))
+  expect_equal(length(subset_ids), ncol(res))
+})
