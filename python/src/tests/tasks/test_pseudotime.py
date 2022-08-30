@@ -16,7 +16,7 @@ from worker.tasks.pseudotime import GetPseudoTime
 mock_embedding_etag = "mockEmbeddingETag"
 
 
-class TestPseuodtime:
+class TestPseudoTime:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {

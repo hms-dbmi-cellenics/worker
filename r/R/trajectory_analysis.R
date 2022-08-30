@@ -126,7 +126,7 @@ runPseudoTimeTask <- function(req, data) {
   # fill in the NULL values for filtered cells
   pseudotime <- fillNullForFilteredCells(pseudotime, data)
 
-  result <- list(pseudotime = unname(pseudotime)[[1]])
+  result <- list(pseudotime = pseudotime[[1]])
   return(result)
 }
 
