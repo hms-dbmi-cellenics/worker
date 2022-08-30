@@ -2,7 +2,6 @@
 
 export(GetNormalizedExpression)
 export(assignEmbedding)
-export(GetNormalizedExpression)
 export(extractErrorList)
 export(fillNullForFilteredCells)
 export(formatExpression)
