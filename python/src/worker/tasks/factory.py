@@ -15,7 +15,7 @@ from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
-from .pseudotime import GetPseudoTime
+from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
 from .starting_nodes import GetStartingNodes
 
 
@@ -33,7 +33,7 @@ class TaskFactory:
             GetDoubletScore,
             GetMitochondrialContent,
             MarkerHeatmap,
-            GetPseudoTime,
+            GetTrajectoryAnalysisPseudoTime,
             GetStartingNodes,
             GetExpressionCellSets,
         )

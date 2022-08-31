@@ -11,17 +11,17 @@ from botocore.stub import Stubber
 from exceptions import RWorkerException
 from tests.data.embedding import mock_embedding
 from worker.config import config
-from worker.tasks.pseudotime import GetPseudoTime
+from worker.tasks.trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
 
 mock_embedding_etag = "mockEmbeddingETag"
 
 
-class TestPseudoTime:
+class TestTrajectoryAnalysisPseudoTime:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {
             "body": {
-                "name": "GetPseudoTime",
+                "name": "GetTrajectoryAnalysisPseudoTime",
                 "embedding": {
                   "ETag": mock_embedding_etag,
                   "method": "umap",
@@ -83,11 +83,11 @@ class TestPseudoTime:
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
-            GetPseudoTime()
+            GetTrajectoryAnalysisPseudoTime()
 
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
-            GetPseudoTime(self).compute("invalid input")
+            GetTrajectoryAnalysisPseudoTime(self).compute("invalid input")
 
     @responses.activate
     def test_works_with_correct_request(self):
@@ -114,12 +114,12 @@ class TestPseudoTime:
 
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/runPseudoTimeTask",
+                f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisPseudoTimeTask",
                 json=worker_payload,
                 status=200,
             )
 
-            result = GetPseudoTime(self.correct_request).compute()
+            result = GetTrajectoryAnalysisPseudoTime(self.correct_request).compute()
 
             TestCase().assertDictEqual(result.data, worker_payload["data"])
             stubber.assert_no_pending_responses()
@@ -140,13 +140,13 @@ class TestPseudoTime:
 
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/runPseudoTimeTask",
+                f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisPseudoTimeTask",
                 json=error_payload,
                 status=200,
             )
 
             with pytest.raises(RWorkerException) as exception_info:
-                GetPseudoTime(self.correct_request).compute()
+                GetTrajectoryAnalysisPseudoTime(self.correct_request).compute()
 
             assert exception_info.value.args[0] == error_code
             assert exception_info.value.args[1] == user_message

@@ -11,7 +11,7 @@ from ..result import Result
 from . import Task
 
 
-class GetPseudoTime(Task):
+class GetTrajectoryAnalysisPseudoTime(Task):
     def __init__(self, msg):
         super().__init__(msg)
 
@@ -38,7 +38,7 @@ class GetPseudoTime(Task):
 
         return request
 
-    @xray_recorder.capture("GetPseudoTime.compute")
+    @xray_recorder.capture("GetTrajectoryAnalysisPseudoTime.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -46,7 +46,7 @@ class GetPseudoTime(Task):
         request = self._format_request()
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runPseudoTimeTask",
+            f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisPseudoTimeTask",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )

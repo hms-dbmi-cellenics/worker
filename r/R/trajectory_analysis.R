@@ -68,7 +68,7 @@ runStartingNodesTask <- function(req, data) {
 }
 
 
-#' Calculate pseudotime
+#' Calculate trajectory analysis pseudotime
 #'
 #' Order the cells and generate an array of pseudotime values, based on
 #' the node ids of the root nodes.
@@ -99,7 +99,7 @@ runStartingNodesTask <- function(req, data) {
 #'
 #' @return a tibble with pseudotime values
 #' @export
-runPseudoTimeTask <- function(req, data) {
+runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
   if(length(req$body$root_nodes) == 0) {
     stop(
       generateErrorMessage(
