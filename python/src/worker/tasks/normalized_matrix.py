@@ -33,19 +33,19 @@ class GetNormalizedExpression(Task):
         applyFilter = all(group.lower() != "all" for group in filterBy["group"])
         if applyFilter:
             children = []
-            for j in range(0,len(cellSets)):
-                    if cellSets[j]["key"] in filterBy["group"]:
-                        children.append(cellSets[j])
+            for cellSet in cellSets:
+                    if cellSet["key"] in filterBy["group"]:
+                        children.append(cellSet)
 
             cellIds = []
-            for k in range(0,len(children)):
-                for p in range(0,len(children[k]["children"])):
-                    if children[k]["children"][p]["key"] in filterBy["key"]:
-                        cellIds.append(children[k]["children"][p]["cellIds"])
+            for child in children:
+                for grandchild in child["children"]:
+                    if grandchild["key"] in filterBy["key"]:
+                        cellIds.extend(grandchild["cellIds"])
                         filterByCellSet["cellIds"] = cellIds
 
         request = {
-            "filterBy": filterByCellSet,
+            "filterBy": list(set(filterByCellSet["cellIds"])),
             "applyFilter": applyFilter,
         }
 
