@@ -65,8 +65,7 @@ class TestGetNormalizedExpression:
         return (stubber, s3)
 
     def test_works_with_request(self):
-        with pytest.raises(TypeError):
-            GetNormalizedExpression()
+        GetNormalizedExpression(self.correct_request)
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
