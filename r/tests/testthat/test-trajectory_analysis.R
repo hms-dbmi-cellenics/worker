@@ -124,11 +124,11 @@ test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_
 })
 
 
-test_that("runStartingNodesTask output has the expected list format", {
+test_that("runTrajectoryAnalysisStartingNodesTask output has the expected list format", {
   data <- mock_scdata()
   req <- mock_starting_nodes_req(data)
 
-  root_nodes <- suppressWarnings(runStartingNodesTask(req, data))
+  root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
 
   expect_named(root_nodes, c("nodes"))
   expect_named(root_nodes$nodes[[1]], c("x", "y", "node_id", "connected_nodes"))
@@ -139,7 +139,7 @@ test_that("runStartingNodesTask output has the expected list format", {
 })
 
 
-test_that("runStartingNodesTask outputs the correct number of nodes", {
+test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of nodes", {
   data <- mock_scdata()
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
@@ -156,27 +156,27 @@ test_that("runStartingNodesTask outputs the correct number of nodes", {
     )
   )
 
-  root_nodes <- suppressWarnings(runStartingNodesTask(req, data))
+  root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
   expect_equal(nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)), length(root_nodes$nodes))
 })
 
 
-test_that("runPseudoTimeTask works", {
+test_that("runTrajectoryAnalysisPseudoTimeTask works", {
   data <- mock_scdata()
   req <- mock_pseudotime_req(data)
 
-  result <- suppressWarnings(runPseudoTimeTask(req, data))
+  result <- suppressWarnings(runTrajectoryAnalysisPseudoTimeTask(req, data))
 
   expect_equal(length(data$cells_id), length(result$pseudotime))
   expect_true(is.numeric(result$pseudotime))
 })
 
-test_that('runPseudoTimeTask fails if root_node is empty', {
+test_that('runTrajectoryAnalysisPseudoTimeTask fails if root_node is empty', {
   data <- mock_scdata()
   req <- mock_pseudotime_req(data)
 
   # Set root nodes to empty vector
   req$body$root_nodes <- c()
 
-  expect_error(runPseudoTimeTask(req, data), "No root nodes were selected for the analysis.")
+  expect_error(runTrajectoryAnalysisPseudoTimeTask(req, data), "No root nodes were selected for the analysis.")
 })

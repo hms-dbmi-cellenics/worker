@@ -218,9 +218,9 @@ create_app <- function(last_modified, data, fpath) {
     }
   )
   app$add_post(
-    path = "/v0/runStartingNodesTask",
+    path = "/v0/runTrajectoryAnalysisStartingNodesTask",
     FUN = function(req, res) {
-      result <- run_post(req, runStartingNodesTask, data)
+      result <- run_post(req, runTrajectoryAnalysisStartingNodesTask, data)
       res$set_body(result)
     }
   )

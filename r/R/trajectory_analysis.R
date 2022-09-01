@@ -33,7 +33,7 @@
 #'
 #' @return a list containing nodes coordinates, connected nodes and the node_id
 #' @export
-runStartingNodesTask <- function(req, data) {
+runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
   cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
