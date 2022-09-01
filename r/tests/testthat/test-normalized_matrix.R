@@ -8,15 +8,9 @@ mock_req <- function(apply_filter = TRUE) {
   req <- list(
     body = list(
       applyFilter = apply_filter,
-      filterBy = list(
-        "cellIds" = list(
-          c(2:10),
-          c(30:35),
-          c(60:70)
+      filterBy = c(2:10, 30:36, 60:70)
         )
       )
-    )
-  )
 }
 
 
@@ -44,7 +38,7 @@ test_that("GetNormalizedExpression correctly subsets the data", {
   data <- mock_scdata()
   req <- mock_req()
 
-  subset_ids <- unlist(req$body$filterBy$cellIds)
+  subset_ids <- req$body$filterBy
 
   res <- GetNormalizedExpression(req, data)
 
