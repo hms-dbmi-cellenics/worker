@@ -129,6 +129,8 @@ class TestGetNormalizedExpression:
         error_code = "MOCK_R_WORKER_ERROR"
         user_message = "Some worker error"
 
+        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
+
         payload = {"error": {"error_code": error_code, "user_message": user_message}}
 
         responses.add(
@@ -138,8 +140,10 @@ class TestGetNormalizedExpression:
             status=200,
         )
 
-        with pytest.raises(RWorkerException) as exception_info:
-            GetNormalizedExpression(self.correct_request).compute()
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+            with pytest.raises(RWorkerException) as exception_info:
+                GetNormalizedExpression(self.correct_request).compute()
 
-        assert exception_info.value.args[0] == error_code
-        assert exception_info.value.args[1] == user_message
+            assert exception_info.value.args[0] == error_code
+            assert exception_info.value.args[1] == user_message
