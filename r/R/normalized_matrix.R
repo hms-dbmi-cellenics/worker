@@ -29,15 +29,6 @@ GetNormalizedExpression <- function(req, data) {
     )
   }
 
-  if(all(dim(data@assays$RNA@data)==0)) {
-    stop(
-      generateErrorMessage(
-        error_codes$NO_NORMALIZED_MATRIX,
-        "No normalized matrix is present in the Seurat object."
-      )
-    )
-  }
-
   if (apply_filter == TRUE) {
     message("Number of cells before subsetting: ", ncol(data))
     data <- subsetIds(data, cells_id = subset_ids)
