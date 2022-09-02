@@ -55,3 +55,12 @@ test_that("GetNormalizedExpression doesn't subset the data when applyFilter is F
 
   expect_true(ncol(data) == ncol(res))
 })
+
+
+test_that("GetNormalizedExpression fails if subset_ids is empty", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  req$body$filterBy <- c()
+  expect_error(GetNormalizedExpression(req, data), "No cells match requested filters.")
+})

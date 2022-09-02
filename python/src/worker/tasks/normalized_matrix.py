@@ -4,6 +4,7 @@ import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
 import pandas as pd
+from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.s3 import get_cell_sets
@@ -28,7 +29,7 @@ class GetNormalizedExpression(Task):
         cellSets = get_cell_sets(self.experiment_id)
 
         filterBy = self.task_def["filterBy"]
-        filterByCellSet = {}
+        filterByCellSet = {"cellIds":[]}
 
         applyFilter = all(group.lower() != "all" for group in filterBy["group"])
         if applyFilter:
@@ -66,6 +67,7 @@ class GetNormalizedExpression(Task):
 
         response.raise_for_status()
         result = response.json()
+        raise_if_error(result)
 
         data = result.get("data")
 

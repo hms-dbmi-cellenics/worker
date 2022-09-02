@@ -20,10 +20,27 @@ GetNormalizedExpression <- function(req, data) {
   apply_filter <- req$body$applyFilter
   subset_ids <- req$body$filterBy
 
+  if(length(subset_ids)==0) {
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_CELL_SET,
+        "No cells match requested filters."
+      )
+    )
+  }
+
+  if(all(dim(data@assays$RNA@data)==0)) {
+    stop(
+      generateErrorMessage(
+        error_codes$NO_NORMALIZED_MATRIX,
+        "No normalized matrix is present in the Seurat object."
+      )
+    )
+  }
+
   if (apply_filter == TRUE) {
     message("Number of cells before subsetting: ", ncol(data))
     data <- subsetIds(data, cells_id = subset_ids)
-# TODO: ADD ERROR IF DATA IS EMPTY
     message("Extracting normalized expression matrix from subsetted data")
     norm_matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
     message("Number of cells after subsetting: ", ncol(norm_matrix))
