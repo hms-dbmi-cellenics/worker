@@ -96,7 +96,7 @@ class TestGetNormalizedExpression:
              # Get object
             cell_set = cell_set_types["hierarchichal_sets"]
 
-            assert len(request["filterBy"]["cellIds"][0]) == len(cell_set["cellSets"][1]["children"][1]["cellIds"])
+            assert len(request["filterBy"]) == len(cell_set["cellSets"][1]["children"][1]["cellIds"])
             stubber.assert_no_pending_responses()
 
     @responses.activate
