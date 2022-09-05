@@ -24,33 +24,33 @@ class GetNormalizedExpression(Task):
         return Result(result)
 
     def _format_request(self):
-
-        # Getting cell ids to subset the seurat object with a group of cells
-        cellSets = get_cell_sets(self.experiment_id)
-
         filterBy = self.task_def["filterBy"]
-        filterByCellSet = {"cellIds":[]}
-
         applyFilter = all(group.lower() != "all" for group in filterBy["group"])
-        if applyFilter:
-            children = []
-            for cellSet in cellSets:
-                    if cellSet["key"] in filterBy["group"]:
-                        children.append(cellSet)
 
-            cellIds = []
-            for child in children:
-                for grandchild in child["children"]:
-                    if grandchild["key"] in filterBy["key"]:
-                        cellIds.extend(grandchild["cellIds"])
-                        filterByCellSet["cellIds"] = cellIds
-
-        request = {
-            "filterBy": list(set(filterByCellSet["cellIds"])),
+        if not applyFilter:
+            return {
+            "filterBy": [],
             "applyFilter": applyFilter,
         }
 
-        return request
+        # Getting cell ids to subset the seurat object with a group of cells
+        cellSets = get_cell_sets(self.experiment_id) 
+        filterByCellSets = []
+        for cellSet in cellSets:
+                if cellSet["key"] in filterBy["group"]:
+                    filterByCellSets.append(cellSet)
+
+        filterByCellIds = []
+        for cellSet in filterByCellSets:
+            for child in cellSet["children"]:
+                if child["key"] in filterBy["key"]:
+                    filterByCellIds.extend(child["cellIds"])
+
+        return {
+            "filterBy": list(set(filterByCellIds)),
+            "applyFilter": applyFilter,
+        }
+
 
     @xray_recorder.capture("GetNormalizedExpression.compute")
     @backoff.on_exception(
