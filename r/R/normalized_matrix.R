@@ -20,7 +20,7 @@ GetNormalizedExpression <- function(req, data) {
   apply_filter <- req$body$applyFilter
   subset_ids <- req$body$filterBy
 
-  if(length(subset_ids)==0) {
+  if (length(subset_ids) == 0) {
     stop(
       generateErrorMessage(
         error_codes$EMPTY_CELL_SET,
@@ -29,16 +29,16 @@ GetNormalizedExpression <- function(req, data) {
     )
   }
 
+  message("Extracting normalized expression matrix")
+  message("Number of cells before subsetting: ", ncol(data))
+
   if (apply_filter == TRUE) {
-    message("Number of cells before subsetting: ", ncol(data))
     data <- subsetIds(data, cells_id = subset_ids)
-    message("Extracting normalized expression matrix from subsetted data")
-    norm_matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
-    message("Number of cells after subsetting: ", ncol(norm_matrix))
-  } else {
-    message("Extracting normalized expression matrix from whole data")
-    norm_matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
   }
+  norm_matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
+
+  message("Number of cells after subsetting: ", ncol(norm_matrix))
+  message("Extracting normalized expression matrix from whole data")
 
   return(norm_matrix)
 }
