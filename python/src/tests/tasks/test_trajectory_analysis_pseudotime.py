@@ -11,17 +11,17 @@ from botocore.stub import Stubber
 from exceptions import RWorkerException
 from tests.data.embedding import mock_embedding
 from worker.config import config
-from worker.tasks.starting_nodes import GetStartingNodes
+from worker.tasks.trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
 
 mock_embedding_etag = "mockEmbeddingETag"
 
 
-class TestStartingNodes:
+class TestTrajectoryAnalysisPseudoTime:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {
             "body": {
-                "name": "GetStartingNodes",
+                "name": "GetTrajectoryAnalysisPseudoTime",
                 "embedding": {
                   "ETag": mock_embedding_etag,
                   "method": "umap",
@@ -31,6 +31,18 @@ class TestStartingNodes:
                   }
                 },
                 "clustering": {"method": "louvain", "resolution": 0.8},
+                "rootNodes": [
+                  "Y_77",
+                  "Y_79",
+                  "Y_92",
+                  "Y_110",
+                  "Y_128",
+                  "Y_130",
+                  "Y_131",
+                  "Y_152",
+                  "Y_184",
+                  "Y_191"
+                ]
             }
         }
 
@@ -71,37 +83,27 @@ class TestStartingNodes:
 
     def test_throws_on_missing_parameters(self):
         with pytest.raises(TypeError):
-            GetStartingNodes()
+            GetTrajectoryAnalysisPseudoTime()
 
     def test_throws_on_invalid_task_def(self):
         with pytest.raises(Exception):
-            GetStartingNodes(self).compute("invalid input")
+            GetTrajectoryAnalysisPseudoTime(self).compute("invalid input")
 
     @responses.activate
     def test_works_with_correct_request(self):
 
         worker_payload = {
             "data": {
-                "nodes": {
-                    "Y_1": {
-                        "connected_nodes": ["Y_2"],
-                        "node_id": "Y_1",
-                        "x": 7.5735,
-                        "y": 6.3022,
-                    },
-                    "Y_2": {
-                        "connected_nodes": ["Y_3"],
-                        "node_id": "Y_2",
-                        "x": 11.5128,
-                        "y": 7.8589,
-                    },
-                    "Y_3": {
-                        "connected_nodes": [],
-                        "node_id": "Y_3",
-                        "x": 9.1538,
-                        "y": 6.6533,
-                    },
-                }
+                "pseudotime": [
+                  1.23,
+                  2.34,
+                  3.45,
+                  4.56,
+                  5.67,
+                  6.78,
+                  7.89,
+                  8.90
+                ]
             }
         }
 
@@ -112,12 +114,12 @@ class TestStartingNodes:
 
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
+                f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisPseudoTimeTask",
                 json=worker_payload,
                 status=200,
             )
 
-            result = GetStartingNodes(self.correct_request).compute()
+            result = GetTrajectoryAnalysisPseudoTime(self.correct_request).compute()
 
             TestCase().assertDictEqual(result.data, worker_payload["data"])
             stubber.assert_no_pending_responses()
@@ -138,13 +140,13 @@ class TestStartingNodes:
 
             responses.add(
                 responses.POST,
-                f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
+                f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisPseudoTimeTask",
                 json=error_payload,
                 status=200,
             )
 
             with pytest.raises(RWorkerException) as exception_info:
-                GetStartingNodes(self.correct_request).compute()
+                GetTrajectoryAnalysisPseudoTime(self.correct_request).compute()
 
             assert exception_info.value.args[0] == error_code
             assert exception_info.value.args[1] == user_message
