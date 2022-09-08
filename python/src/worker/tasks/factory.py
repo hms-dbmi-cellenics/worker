@@ -17,6 +17,7 @@ from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
 from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
 from .trajectory_analysis_starting_nodes import GetTrajectoryAnalysisStartingNodes
+from .normalized_matrix import GetNormalizedExpression
 
 
 class TaskFactory:
@@ -36,6 +37,7 @@ class TaskFactory:
             GetTrajectoryAnalysisStartingNodes,
             GetTrajectoryAnalysisPseudoTime,
             GetExpressionCellSets,
+            GetNormalizedExpression,
         )
     }
 
