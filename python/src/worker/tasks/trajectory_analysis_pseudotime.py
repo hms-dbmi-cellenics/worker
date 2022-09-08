@@ -11,7 +11,7 @@ from ..result import Result
 from . import Task
 
 
-class GetStartingNodes(Task):
+class GetTrajectoryAnalysisPseudoTime(Task):
     def __init__(self, msg):
         super().__init__(msg)
 
@@ -33,11 +33,12 @@ class GetStartingNodes(Task):
                 "method": self.task_def["clustering"]["method"],
                 "resolution": self.task_def["clustering"]["resolution"],
             },
+            "root_nodes": self.task_def["rootNodes"]
         }
 
         return request
 
-    @xray_recorder.capture("GetStartingNodes.compute")
+    @xray_recorder.capture("GetTrajectoryAnalysisPseudoTime.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -45,7 +46,7 @@ class GetStartingNodes(Task):
         request = self._format_request()
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
+            f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisPseudoTimeTask",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
