@@ -1,12 +1,3 @@
-mock_req <- function() {
-  req <- list(
-    body = list(
-      type = "umap",
-      config = list(minimumDistance = 0.1, distanceMetric = "cosine")
-    )
-  )
-}
-
 mock_scdata <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
@@ -22,10 +13,14 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
-test_that("PCA embedding works", {
+test_that("UMAP embedding works", {
   data <- suppressWarnings(mock_scdata())
-  req <- mock_req()
-  req$body$type <- "pca"
+  req <- list(
+    body = list(
+      type = "umap",
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine")
+    )
+  )
 
   res <- runEmbedding(req, data)
 
