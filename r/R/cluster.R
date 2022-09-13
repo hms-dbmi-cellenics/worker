@@ -92,7 +92,8 @@ getClusters <- function(type, resolution, data) {
         data,
         resolution = resolution,
         verbose = FALSE,
-        algorithm = algorithm
+        algorithm = algorithm,
+        random.seed = 3
     )
   }
 
