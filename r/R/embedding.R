@@ -103,9 +103,11 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 #
 #' @export
 assignEmbedding <- function(embedding_data, data) {
-  # Filter for nulls
-  embedding <- embedding_data[!vapply(embedding_data, is.null, logical(1))]
-  embedding <- do.call(rbind, embedding)
+  cells_id <- data@meta.data$cells_id
+  embedding <- do.call(rbind, embedding_data)
+
+  # cells_id is added by one because it is 0 indexed
+  embedding <- embedding[cells_id + 1, ]
   rownames(embedding) <- colnames(data)
 
   data[["umap"]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = "UMAP_")

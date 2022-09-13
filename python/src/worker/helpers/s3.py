@@ -75,4 +75,7 @@ def get_embedding(etag):
         embedding_string = gzip.decompress(f.read())
         embedding = json.loads(embedding_string)
 
+        # null values are not represented in R, so we have to convert it to something else
+        embedding = [ e if e is not None else ["NA", "NA"] for e in embedding ]
+
         return embedding
