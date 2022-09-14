@@ -19,7 +19,7 @@ class GetEmbedding(Task):
         request = {
             "type": self.task_def["type"],
             "config": self.task_def["config"],
-            "use_saved": self.task_def["useSaved"],
+            "use_saved": self.task_def.get("useSaved", False),
         }
         return request
 
