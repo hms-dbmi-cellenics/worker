@@ -18,6 +18,7 @@
 #' @export
 runEmbedding <- function(req, data) {
   type <- req$body$type
+  use_saved <- req$body$use_saved
   config <- req$body$config
   pca_nPCs <- 30
 
@@ -38,7 +39,9 @@ runEmbedding <- function(req, data) {
   message("Number of cells/sample:")
   table(data$samples)
 
-  if (type == "pca") {
+  if (use_saved) {
+    df_embedding <- Embeddings(data, reduction = type)[, 1:2]
+  } else if (type == "pca") {
     # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA
     # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
     df_embedding <- Embeddings(data, reduction = type)[, 1:2]
