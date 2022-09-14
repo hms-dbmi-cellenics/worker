@@ -23,6 +23,9 @@ class GetTrajectoryAnalysisStartingNodes(Task):
         embedding_etag = self.task_def["embedding"]["ETag"]
         embedding = get_embedding(embedding_etag)
 
+        # null values are not represented in R, so we have to convert it to something else
+        embedding = [ e if e is not None else ["NA", "NA"] for e in embedding ]
+
         request = {
             "embedding": embedding,
             "embedding_settings": {

@@ -77,6 +77,25 @@ class TestTrajectoryAnalysisStartingNodes:
         with pytest.raises(Exception):
             GetTrajectoryAnalysisStartingNodes(self).compute("invalid input")
 
+    def test_format_request_should_replace_nulls_in_embedding(self):
+      stubber, s3 = self.get_s3_stub()
+
+      na_positions = []
+      for idx, val in enumerate(mock_embedding):
+        if val is None:
+          na_positions.append(idx)
+
+      with mock.patch("boto3.client") as n, stubber:
+          n.return_value = s3
+
+          request = GetTrajectoryAnalysisStartingNodes(self.correct_request)._format_request()
+
+          for idx, val in enumerate(request["embedding"]):
+            if idx in na_positions:
+              assert val == ['NA', 'NA']
+            else:
+              assert val is not None
+
     @responses.activate
     def test_works_with_correct_request(self):
 
