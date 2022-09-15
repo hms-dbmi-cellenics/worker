@@ -115,6 +115,7 @@ assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
     embedding_key = "tSNE_"
   }
 
+  colnames(embedding) <- c(paste0(embedding_key, "1"), paste0(embedding_key, "2"))
   data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key)
 
   return(data)
