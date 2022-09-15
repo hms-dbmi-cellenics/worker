@@ -148,19 +148,19 @@ test_that("assignEmbedding assigns embedding correctly", {
 
   # and a Seurat object with shuffled cell_ids order
   mock_seurat_object <- mock_scdata()
-  old_embedding <- Seurat::Embeddings(mock_seurat_object, reduction = "umap")
+  old_embedding <- Seurat::Embeddings(mock_seurat_object)
 
   # cells_id 0 corresponds to embedding[[1]]
   mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
 
   # assigning embedding
   mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object)
+  new_embedding <- Seurat::Embeddings(mock_seurat_object, reduction = "umap")
 
   # check that assignEmbedding replaces the embedding
   expect_false(identical(old_embedding, new_embedding))
 
   # check that assignEmbedding correctly orders the embedding
-  new_embedding <- Seurat::Embeddings(mock_seurat_object, reduction = "umap")
   expect_equal(rownames(new_embedding), colnames(mock_seurat_object))
 
   # check that assignEmbedding replaces with the right value

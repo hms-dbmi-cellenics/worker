@@ -23,7 +23,7 @@ class GetTrajectoryAnalysisPseudoTime(Task):
         embedding_etag = self.task_def["embedding"]["ETag"]
         embedding = get_embedding(embedding_etag)
 
-        # null values are not represented in R, so we have to convert it to something else
+        # NULL values are deleted in R objects whereas NAs are an indicator of a missing value
         embedding = [ e if e is not None else ["NA", "NA"] for e in embedding ]
 
         request = {

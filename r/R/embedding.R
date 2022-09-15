@@ -102,15 +102,20 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 # data is the seurat object.
 #
 #' @export
-assignEmbedding <- function(embedding_data, data) {
+assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
   cells_id <- data@meta.data$cells_id
   embedding <- do.call(rbind, embedding_data)
 
-  # cells_id is added by one because it is 0 indexed
+  # Add 1 to cells_id because it's 0-index and embeddings is not.
   embedding <- embedding[cells_id + 1, ]
   rownames(embedding) <- colnames(data)
 
-  data[["umap"]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = "UMAP_")
+  embedding_key = "UMAP_"
+  if(reduction_method == "tsne") {
+    embedding_key = "tSNE_"
+  }
+
+  data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key)
 
   return(data)
 }
