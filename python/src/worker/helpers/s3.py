@@ -44,7 +44,7 @@ def get_cell_sets(experiment_id):
         return cell_sets["cellSets"]
 
 
-def get_embedding(etag):
+def get_embedding(etag, format_for_r):
     dir_path = os.path.join(config.LOCAL_DIR, f"{etag}")
 
     Path(dir_path).mkdir(parents=True, exist_ok=True)
@@ -74,5 +74,9 @@ def get_embedding(etag):
 
         embedding_string = gzip.decompress(f.read())
         embedding = json.loads(embedding_string)
+
+        if(format_for_r):
+          # NULL values are deleted in R objects whereas NAs are an indicator of a missing value
+          embedding = [ e if e is not None else ["NA", "NA"] for e in embedding ]
 
         return embedding
