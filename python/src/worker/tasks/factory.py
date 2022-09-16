@@ -1,5 +1,4 @@
 from exceptions import ErrorCodes, WorkerException
-from worker.tasks.img_plot import GetImgPlot
 
 from ..helpers.count_matrix import CountMatrix
 from ..helpers.xray_log_exception import xray_log_exception
@@ -16,8 +15,9 @@ from .gene_expression import GeneExpression
 from .list_genes import ListGenes
 from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
-from .pseudotime import GetPseudoTime
-from .starting_nodes import GetStartingNodes
+from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
+from .trajectory_analysis_starting_nodes import GetTrajectoryAnalysisStartingNodes
+from .normalized_matrix import GetNormalizedExpression
 
 
 class TaskFactory:
@@ -34,10 +34,10 @@ class TaskFactory:
             GetDoubletScore,
             GetMitochondrialContent,
             MarkerHeatmap,
-            GetPseudoTime,
-            GetStartingNodes,
+            GetTrajectoryAnalysisStartingNodes,
+            GetTrajectoryAnalysisPseudoTime,
             GetExpressionCellSets,
-            GetImgPlot,
+            GetNormalizedExpression,
         )
     }
 
