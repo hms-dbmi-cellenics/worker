@@ -21,8 +21,8 @@ runMarkerHeatmap <- function(req, data) {
   expression$truncatedExpression[is.na(expression$truncatedExpression)] <- 0
 
   mtx_res <- list()
-  mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(t(expression$rawExpression)),sparse=TRUE)
-  mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(t(expression$truncatedExpression)),sparse=TRUE)
+  mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(expression$rawExpression),sparse=TRUE)
+  mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(expression$truncatedExpression),sparse=TRUE)
 
   JSON_raw <- list()
   JSON_truncated <- list()
