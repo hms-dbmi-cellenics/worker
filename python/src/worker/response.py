@@ -1,12 +1,11 @@
 import gzip
 import io
 import json
+import pandas as pd
 from logging import info
-from urllib import response
 
 import aws_xray_sdk as xray
 import boto3
-import numpy as np
 from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
 
@@ -17,7 +16,6 @@ class Response:
     def __init__(self, request, result):
         self.request = request
         self.result = result
-        self.upload = result.upload
 
         self.error = result.error
         self.cacheable = (not result.error) and result.cacheable
@@ -28,7 +26,10 @@ class Response:
         info("Starting compression before upload to s3")
         gzipped_body = io.BytesIO()
         with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            json.dump(self.result.data, zipfile)
+            if isinstance(self.result.data, pd.DataFrame):
+                self.result.data.to_csv(zipfile)
+            else:
+                json.dump(self.result.data, zipfile)
 
         gzipped_body.seek(0)
 
@@ -100,14 +101,8 @@ class Response:
     def publish(self):
         info(f"Request {self.request['ETag']} processed, response:")
 
-        if not self.error and self.cacheable and self.upload:
-            # response_data = self.result.data
-            # print(response_data.encode())
-            # print(response_data)
-            # response_data = bytes(response_data)
-
-            if self.upload:
-                response_data = self._construct_data_for_upload()
+        if not self.error and self.cacheable:
+            response_data = self._construct_data_for_upload()
 
             info("Uploading response to S3")
             self._upload(response_data)
