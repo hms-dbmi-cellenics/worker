@@ -16,12 +16,24 @@
 #' The root nodes will be then used in the following step of the trajectory
 #' analysis for pseudotime calculation.
 #'
-#' @param req list of configuration parameters
+#' @param req {
+#'            body: {
+#'               embedding: numeric vector containing a pair of embedding coordinates (e.g. num [1:2] -1, -2)
+#'               embedding_settings: {
+#'                  method: Embedding method (.e.g umap)
+#'                  methodSettings: An object containing settings specific for each embedding type
+#'               },
+#'               clustering_settings: {
+#'                  method: Clustering method (e.g. louvain),
+#'                  resolution: Clustering resolution
+#'               },
+#'              }
+#'            }
 #' @param data SeuratObject
 #'
 #' @return a list containing nodes coordinates, connected nodes and the node_id
 #' @export
-runStartingNodesTask <- function(req, data) {
+runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
   cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
@@ -56,7 +68,7 @@ runStartingNodesTask <- function(req, data) {
 }
 
 
-#' Calculate pseudotime
+#' Calculate trajectory analysis pseudotime
 #'
 #' Order the cells and generate an array of pseudotime values, based on
 #' the node ids of the root nodes.
@@ -69,15 +81,34 @@ runStartingNodesTask <- function(req, data) {
 #' a map of how cells expression changes, starting from cells with smaller
 #' pseudotime values to cells with larger pseudotimes, along a trajectory.
 #'
-#' @param req {body: {
-#'               rootNodes: root nodes ids. Determines the root nodes of the trajectory
+#' @param req {
+#'            body: {
+#'               embedding: numeric vector containing a pair of embedding coordinates (e.g. num [1:2] -1, -2)
+#'               embedding_settings: {
+#'                  method: Embedding method (.e.g umap)
+#'                  methodSettings: An object containing settings specific for each embedding type
+#'               },
+#'               clustering_settings: {
+#'                  method: Clustering method (e.g. louvain),
+#'                  resolution: Clustering resolution
+#'               },
+#'               root_nodes: root nodes ids. Determines the root nodes of the trajectory
 #'              }
 #'            }
 #' @param data SeuratObject
 #'
 #' @return a tibble with pseudotime values
 #' @export
-runPseudoTimeTask <- function(req, data) {
+runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
+  if(length(req$body$root_nodes) == 0) {
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_ROOT_NODES,
+        "No root nodes were selected for the analysis."
+      )
+    )
+  }
+
   cell_data <- generateTrajectoryGraph(
     req$body$embedding,
     req$body$embedding_settings,
@@ -85,16 +116,18 @@ runPseudoTimeTask <- function(req, data) {
     data
   )
 
-  root_nodes <- req$body$rootNodes
+  seurat_embedding_method <- req$body$embedding_settings$method
+  monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
 
-  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
+  cell_data <- monocle3::order_cells(cell_data, reduction_method = monocle_embedding_method, root_pr_nodes = req$body$root_nodes)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
   # fill in the NULL values for filtered cells
   pseudotime <- fillNullForFilteredCells(pseudotime, data)
 
-  return(unname(pseudotime))
+  result <- list(pseudotime = pseudotime[[1]])
+  return(result)
 }
 
 

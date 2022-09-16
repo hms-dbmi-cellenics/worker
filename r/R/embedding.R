@@ -87,7 +87,8 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
       verbose = FALSE,
       min.dist = config$minimumDistance,
       metric = config$distanceMetric,
-      umap.method = "umap-learn"
+      umap.method = "umap-learn",
+      seed.use = ULTIMATE_SEED
     )
   }
 
@@ -101,13 +102,21 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 # data is the seurat object.
 #
 #' @export
-assignEmbedding <- function(embedding_data, data) {
-  # Filter for nulls
-  embedding <- embedding_data[!vapply(embedding_data, is.null, logical(1))]
-  embedding <- do.call(rbind, embedding)
+assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
+  cells_id <- data@meta.data$cells_id
+  embedding <- do.call(rbind, embedding_data)
+
+  # Add 1 to cells_id because it's 0-index and embeddings is not.
+  embedding <- embedding[cells_id + 1, ]
   rownames(embedding) <- colnames(data)
 
-  data[["umap"]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = "UMAP_")
+  embedding_key = "UMAP_"
+  if(reduction_method == "tsne") {
+    embedding_key = "tSNE_"
+  }
+
+  colnames(embedding) <- c(paste0(embedding_key, "1"), paste0(embedding_key, "2"))
+  data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key)
 
   return(data)
 }

@@ -11,7 +11,7 @@ from ..result import Result
 from . import Task
 
 
-class GetStartingNodes(Task):
+class GetTrajectoryAnalysisStartingNodes(Task):
     def __init__(self, msg):
         super().__init__(msg)
 
@@ -21,7 +21,7 @@ class GetStartingNodes(Task):
     def _format_request(self):
 
         embedding_etag = self.task_def["embedding"]["ETag"]
-        embedding = get_embedding(embedding_etag)
+        embedding = get_embedding(embedding_etag, format_for_r=True)
 
         request = {
             "embedding": embedding,
@@ -37,7 +37,7 @@ class GetStartingNodes(Task):
 
         return request
 
-    @xray_recorder.capture("GetStartingNodes.compute")
+    @xray_recorder.capture("GetTrajectoryAnalysisStartingNodes.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -45,7 +45,7 @@ class GetStartingNodes(Task):
         request = self._format_request()
 
         r = requests.post(
-            f"{config.R_WORKER_URL}/v0/runStartingNodesTask",
+            f"{config.R_WORKER_URL}/v0/runTrajectoryAnalysisStartingNodesTask",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
