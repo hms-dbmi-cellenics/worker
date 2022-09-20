@@ -17,12 +17,10 @@ runMarkerHeatmap <- function(req, data) {
   expression <- getExpressionValues(top_markers, data)
   stats <- formatExpressionMtx(expression)
 
-  expression$rawExpression[is.na(expression$rawExpression)] <- 0
-  expression$truncatedExpression[is.na(expression$truncatedExpression)] <- 0
-
-  mtx_res <- list()
-  mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(expression$rawExpression),sparse=TRUE)
-  mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(expression$truncatedExpression),sparse=TRUE)
+  mtx_res <- list(
+    rawExpression = sparsify(expression$rawExpression),
+    truncatedExpression = sparsify(expression$truncatedExpression)
+  )
 
   res <- list(
     order = names(stats),
@@ -34,6 +32,14 @@ runMarkerHeatmap <- function(req, data) {
   return(res)
 }
 
+
+sparsify <- function(expression) {
+  data.table::setnafill(expression, fill = 0)
+  sparse_matrix <- Matrix::Matrix(Matrix::as.matrix(expression), sparse = T)
+
+  return(sparse_matrix)
+
+}
 
 to_sparse_json <- function(matrix) {
   sparse_json <-
