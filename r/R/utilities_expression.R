@@ -11,10 +11,10 @@ getExpressionValues <- function(genes, data) {
   quantile_threshold <- 0.95
 
   # Get the expression values for those genes in the corresponding matrix.
-  geneExpression <- as.data.table(Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE]))
+  geneExpression <- data.table::as.data.table(Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE]))
 
   geneExpression[,cells_id := data@meta.data$cells_id]
-  setorder(geneExpression, cols = "cells_id")
+  data.table::setorder(geneExpression, cols = "cells_id")
 
   # add back all filtered cell_ids
   geneExpression <- geneExpression[
