@@ -34,15 +34,15 @@ getExpressionValues <- function(genes, data) {
 }
 
 
-truncateExpression <- function(geneExpression) {
+truncateExpression <- function(geneExpression, quantile_threshold) {
   adj_expresion <-
-    geneExpression[, lapply(.SD, q_transform), .SDcols = colnames(geneExpression)]
+    geneExpression[, lapply(.SD, q_transform, quantile_threshold = quantile_threshold), .SDcols = colnames(geneExpression)]
 
   return(adj_expresion)
 }
 
 
-q_transform <- function(x) {
+q_transform <- function(x, quantile_threshold) {
   lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
   i <- 0.01
   while (lim == 0 & i + quantile_threshold <= 1) {
