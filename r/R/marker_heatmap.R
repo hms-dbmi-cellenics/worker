@@ -24,27 +24,25 @@ runMarkerHeatmap <- function(req, data) {
   mtx_res$rawExpression <- Matrix::Matrix(Matrix::as.matrix(expression$rawExpression),sparse=TRUE)
   mtx_res$truncatedExpression <- Matrix::Matrix(Matrix::as.matrix(expression$truncatedExpression),sparse=TRUE)
 
-  JSON_raw <- list()
-  JSON_truncated <- list()
-
-  JSON_raw$values <- mtx_res$rawExpression@x
-  JSON_truncated$values <- mtx_res$truncatedExpression@x
-
-  JSON_raw$index <- mtx_res$rawExpression@i
-  JSON_truncated$index <- mtx_res$truncatedExpression@i
-
-  JSON_raw$ptr <- mtx_res$rawExpression@p
-  JSON_truncated$ptr <- mtx_res$truncatedExpression@p
-
-  JSON_raw$size <- mtx_res$rawExpression@Dim
-  JSON_truncated$size <- mtx_res$truncatedExpression@Dim
-
-
-  res <- list()
-  res$order <- names(stats)
-  res$stats <- stats
-  res$rawExpression <- JSON_raw
-  res$truncatedExpression <- JSON_truncated
+  res <- list(
+    order = names(stats),
+    stats = stats,
+    rawExpression = to_sparse_json(mtx$rawExpression),
+    truncatedExpression = to_sparse_json(mtx$truncatedExpression)
+  )
 
   return(res)
+}
+
+
+to_sparse_json <- function(matrix) {
+  sparse_json <-
+    list(
+      values = matrix@x,
+      index = matrix@i,
+      ptr = matrix@p,
+      size = matrix@Dim
+    )
+
+  return(sparse_json)
 }
