@@ -8,6 +8,7 @@
 #'
 #' @examples
 getExpressionValues <- function(genes, data) {
+  library(data.table)
   quantile_threshold <- 0.95
 
   # Get the expression values for those genes in the corresponding matrix.
@@ -18,7 +19,7 @@ getExpressionValues <- function(genes, data) {
 
   # add back all filtered cell_ids
   geneExpression <- geneExpression[
-    CJ(cells_id = seq(0, max(data@meta.data$cells_id)), unique=TRUE),
+    data.table::CJ(cells_id = seq(0, max(data@meta.data$cells_id)), unique=TRUE),
     on=.(cells_id)
   ]
 
