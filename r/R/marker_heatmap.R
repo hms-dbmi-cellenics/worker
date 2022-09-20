@@ -25,8 +25,8 @@ runMarkerHeatmap <- function(req, data) {
   res <- list(
     order = names(stats),
     stats = stats,
-    rawExpression = to_sparse_json(mtx$rawExpression),
-    truncatedExpression = to_sparse_json(mtx$truncatedExpression)
+    rawExpression = to_sparse_json(mtx_res$rawExpression),
+    truncatedExpression = to_sparse_json(mtx_res$truncatedExpression)
   )
 
   return(res)
