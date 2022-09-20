@@ -28,7 +28,7 @@ getExpressionValues <- function(genes, data) {
   symbol_idx <- match(colnames(geneExpression), genes$input)
   colnames(geneExpression) <- genes$name[symbol_idx]
 
-  adjGeneExpression <- truncateExpression(geneExpression)
+  adjGeneExpression <- truncateExpression(geneExpression, quantile_threshold)
 
   return(list(rawExpression = geneExpression, truncatedExpression = adjGeneExpression))
 }
