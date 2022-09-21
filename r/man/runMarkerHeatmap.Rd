@@ -9,6 +9,9 @@ runMarkerHeatmap(req, data)
 \arguments{
 \item{data}{}
 }
+\value{
+list
+}
 \description{
 Generates a marker heatmap
 }
