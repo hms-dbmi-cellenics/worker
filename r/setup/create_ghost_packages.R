@@ -44,6 +44,7 @@ install_ghost_package <- function(package) {
 
   change_package_version(package, version = packageVersion(package))
 
+  remove.packages(package, lib = library)
   renv::install(file.path('.', package), repos = NULL, type = 'source', library = library)
   unlink(package, recursive = TRUE)
 
