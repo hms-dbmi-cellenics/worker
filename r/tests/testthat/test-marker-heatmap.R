@@ -20,20 +20,34 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
+test_that("Marker heatmap returns same sized matrices", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res <- runMarkerHeatmap(req, data)
+
+  expect_equal(lapply(res$rawExpression, length),
+               lapply(res$truncatedExpression, length))
+
+})
+
+
 test_that("Marker Heatmap returns appropiate format", {
   data <- mock_scdata()
   req <- mock_req()
 
   res <- runMarkerHeatmap(req, data)
 
-  expect_equal(names(res[[1]]), c("rawExpression", "truncatedExpression"))
+  expect_equal(names(res), c("order", "stats", "rawExpression", "truncatedExpression"))
 
-  # number of rows is number of cells
-  expect_equal(ncol(data), length(res[[1]]$rawExpression$expression))
+  # number of rows in sparse matrix equals number of cells
+  expect_equal(res$rawExpression$size[1], ncol(data))
+  expect_equal(res$truncatedExpression$size[1], ncol(data))
+
 
   # returning only at most limit number of genes
   expect_lte(
-    length(res),
+    length(res$stats),
     req$body$nGenes * length(req$body$cellSets$children)
   )
 })
@@ -46,10 +60,10 @@ test_that("Marker Heatmap nFeatures works appropiately", {
   res <- runMarkerHeatmap(req, data)
 
   # number of rows is number of cells
-  expect_equal(ncol(data), length(res[[1]]$rawExpression$expression))
+  expect_equal(res$rawExpression$size[1], ncol(data))
 
   # returning only at most limit number of genes
-  expect_lte(length(res), req$body$nGenes * length(req$body$cellSets$children))
+  expect_lte(length(res$stats), req$body$nGenes * length(req$body$cellSets$children))
 })
 
 test_that("Only one group throws error", {
