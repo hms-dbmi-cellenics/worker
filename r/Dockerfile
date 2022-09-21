@@ -79,6 +79,7 @@ RUN echo "python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
+# link system libstdc++ to conda installed version
 RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
     ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
