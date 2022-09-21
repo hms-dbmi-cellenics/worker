@@ -2,7 +2,8 @@ mock_req <- function() {
   req <- list(
     body = list(
       type = "umap",
-      config = list(minimumDistance = 0.1, distanceMetric = "cosine")
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
     )
   )
 }
