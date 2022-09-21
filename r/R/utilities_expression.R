@@ -69,33 +69,6 @@ quantileTruncate <- function(x, quantile_threshold) {
 }
 
 
-#' formatExpression
-#'
-#' @param data
-#'
-#' @return Formats expression values for the UI.
-#' @export
-#'
-#' @examples
-formatExpression <- function(data) {
-  return(purrr::map2(data$rawExpression, data$truncatedExpression, formatExpressionAux))
-}
-
-formatExpressionAux <- function(raw, trunc) {
-  return(list(
-    rawExpression = list(
-      mean = mean(raw, na.rm = TRUE),
-      stdev = sd(raw, na.rm = TRUE),
-      expression = raw
-    ),
-    truncatedExpression = list(
-      min = min(trunc, na.rm = TRUE),
-      max = max(trunc, na.rm = TRUE),
-      expression = trunc
-    )
-  ))
-}
-
 summaryStats <- function(data) {
   return(purrr::map2(data$rawExpression, data$truncatedExpression, summaryStatsAux))
 }

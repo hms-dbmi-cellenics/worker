@@ -13,19 +13,25 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getTopMarkerGenes(nFeatures, data, cellSets)
   top_markers <- getMarkerNames(data, top_markers)
 
-  expression_values <- getExpressionValues(top_markers, data)
+  return(getGeneExpression(data, top_markers))
+}
+
+
+getGeneExpression <- function(data, genes) {
+
+  expression_values <- getExpressionValues(genes, data)
   stats <- summaryStats(expression_values)
 
   mtx_res <- list(
-    rawExpression = sparsify(expression$rawExpression),
-    truncatedExpression = sparsify(expression$truncatedExpression)
+    rawExpression = sparsify(expression_values$rawExpression),
+    truncatedExpression = sparsify(expression_values$truncatedExpression)
   )
 
   res <- list(
     order = names(stats),
     stats = stats,
-    rawExpression = to_sparse_json(mtx_res$rawExpression),
-    truncatedExpression = to_sparse_json(mtx_res$truncatedExpression)
+    rawExpression = toSparseJson(mtx_res$rawExpression),
+    truncatedExpression = toSparseJson(mtx_res$truncatedExpression)
   )
 
   return(res)

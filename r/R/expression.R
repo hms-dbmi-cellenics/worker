@@ -23,7 +23,8 @@ runExpression <- function(req, data) {
   }
 
   genesSubset <- genesSubset[, c("input", "name")]
-  res <- getExpressionValues(genesSubset, data)
-  res <- formatExpression(res)
+
+  res <- getGeneExpression(data, genesSubset)
+
   return(res)
 }
