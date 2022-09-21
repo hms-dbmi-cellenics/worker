@@ -10,7 +10,6 @@
 #' @return Returns top marker genes as calculated by presto
 #' @export
 #'
-#' @examples
 getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
 

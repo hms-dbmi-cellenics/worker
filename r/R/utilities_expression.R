@@ -8,7 +8,6 @@
 #'
 #' @examples
 getExpressionValues <- function(genes, data) {
-  library(data.table)
   message("\n\n*** CORES")
   message(data.table::getDTthreads())
   message("*** CORES\n\n")
@@ -16,37 +15,50 @@ getExpressionValues <- function(genes, data) {
   quantile_threshold <- 0.95
 
   # Get the expression values for those genes in the corresponding matrix.
-  geneExpression <- data.table::as.data.table(Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE]))
+  rawExpression <- data.table::as.data.table(Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE]))
 
-  geneExpression[,cells_id := data@meta.data$cells_id]
-  data.table::setorder(geneExpression, cols = "cells_id")
+  rawExpression[,cells_id := data@meta.data$cells_id]
+  data.table::setorder(rawExpression, cols = "cells_id")
 
-  # add back all filtered cell_ids
-  geneExpression <- geneExpression[
+  # add back all filtered cell_ids as empty columns
+  rawExpression <- rawExpression[
     data.table::CJ(cells_id = seq(0, max(data@meta.data$cells_id)), unique=TRUE),
     on=.(cells_id)
   ]
 
-  geneExpression[, cells_id := NULL]
+  rawExpression[, cells_id := NULL]
 
-  symbol_idx <- match(colnames(geneExpression), genes$input)
-  colnames(geneExpression) <- genes$name[symbol_idx]
+  symbol_idx <- match(colnames(rawExpression), genes$input)
+  colnames(rawExpression) <- genes$name[symbol_idx]
 
-  adjGeneExpression <- truncateExpression(geneExpression, quantile_threshold)
+  adjGeneExpression <- truncateExpression(rawExpression, quantile_threshold)
 
-  return(list(rawExpression = geneExpression, truncatedExpression = adjGeneExpression))
+  return(list(rawExpression = rawExpression, truncatedExpression = adjGeneExpression))
 }
 
 
-truncateExpression <- function(geneExpression, quantile_threshold) {
-  adj_expresion <-
-    geneExpression[, lapply(.SD, q_transform, quantile_threshold = quantile_threshold), .SDcols = colnames(geneExpression)]
+truncateExpression <- function(rawExpression, quantile_threshold) {
+  truncatedExpression <-
+    rawExpression[, lapply(.SD, quantileTruncate, quantile_threshold), .SDcols = colnames(rawExpression)]
 
-  return(adj_expresion)
+  return(truncatedExpression)
 }
 
 
-q_transform <- function(x, quantile_threshold) {
+#' Truncate expression values after quantile threshold
+#'
+#' basically returns x > a => a else x. But takes into account the special case
+#' when more than quantile_threshold percent of the data is 0. extending
+#' the threshold bit by bit until it differs from 0. Therefore preserving some
+#' dynamic range in the adjusted expression values.
+#'
+#' @param x numeric vector of raw expression values
+#' @param quantile_threshold
+#'
+#' @return numeric vector of truncated expression values
+#' @export
+#'
+quantileTruncate <- function(x, quantile_threshold) {
   lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
   i <- 0.01
   while (lim == 0 & i + quantile_threshold <= 1) {
