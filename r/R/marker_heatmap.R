@@ -3,10 +3,9 @@
 #' @param req
 #' @param data
 #'
-#' @return
+#' @return list
 #' @export
 #'
-#' @examples
 runMarkerHeatmap <- function(req, data) {
   nFeatures <- req$body$nGenes
   cellSets <- req$body$cellSets$children
@@ -14,8 +13,8 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getTopMarkerGenes(nFeatures, data, cellSets)
   top_markers <- getMarkerNames(data, top_markers)
 
-  expression <- getExpressionValues(top_markers, data)
-  stats <- formatExpressionMtx(expression)
+  expression_values <- getExpressionValues(top_markers, data)
+  stats <- formatExpressionMtx(expression_values)
 
   mtx_res <- list(
     rawExpression = sparsify(expression$rawExpression),
@@ -33,15 +32,30 @@ runMarkerHeatmap <- function(req, data) {
 }
 
 
+#' convert data.table to CSC sparse matrix
+#'
+#' NAs are replaced by zeroes by reference. Then coerced to sparse matrix.
+#'
+#' @param expression data.table
+#'
+#' @return dgCmatrix
+#' @export
+#'
 sparsify <- function(expression) {
   data.table::setnafill(expression, fill = 0)
   sparse_matrix <- Matrix::Matrix(Matrix::as.matrix(expression), sparse = T)
 
   return(sparse_matrix)
-
 }
 
-to_sparse_json <- function(matrix) {
+#' extract sparse matrix attributes to mathJS-like sparse matrix format
+#'
+#' @param matrix
+#'
+#' @return list with sparse matrix attributes
+#' @export
+#'
+toSparseJson <- function(matrix) {
   sparse_json <-
     list(
       values = matrix@x,

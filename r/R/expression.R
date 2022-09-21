@@ -1,4 +1,3 @@
-#
 # runExpression
 # returns the expression values for each gene in the input.
 #
