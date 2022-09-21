@@ -96,11 +96,11 @@ formatExpressionAux <- function(raw, trunc) {
   ))
 }
 
-formatExpressionMtx <- function(data) {
-  return(purrr::map2(data$rawExpression, data$truncatedExpression, formatExpressionMtxAux))
+summaryStats <- function(data) {
+  return(purrr::map2(data$rawExpression, data$truncatedExpression, summaryStatsAux))
 }
 
-formatExpressionMtxAux <- function(raw, trunc) {
+summaryStatsAux <- function(raw, trunc) {
   return(list(
       rawMean = mean(raw, na.rm = TRUE),
       rawStdev = sd(raw, na.rm = TRUE),

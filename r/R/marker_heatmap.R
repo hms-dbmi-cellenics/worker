@@ -14,7 +14,7 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getMarkerNames(data, top_markers)
 
   expression_values <- getExpressionValues(top_markers, data)
-  stats <- formatExpressionMtx(expression_values)
+  stats <- summaryStats(expression_values)
 
   mtx_res <- list(
     rawExpression = sparsify(expression$rawExpression),
