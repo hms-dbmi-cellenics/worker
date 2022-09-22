@@ -9,7 +9,7 @@ getExpressionValues(data, genes)
 \arguments{
 \item{data}{Seurat object}
 
-\item{genes}{character vector og genes to extract}
+\item{genes}{character vector of genes to extract}
 }
 \value{
 list of expression values

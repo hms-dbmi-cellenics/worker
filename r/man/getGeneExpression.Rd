@@ -9,10 +9,10 @@ getGeneExpression(data, genes)
 \arguments{
 \item{data}{Seurat object}
 
-\item{genes}{character vector og genes to extract}
+\item{genes}{character vector of genes to extract}
 }
 \value{
-list
+list to send to the UI
 }
 \description{
 Extract expression values from Seurat object, add stats and format for UI

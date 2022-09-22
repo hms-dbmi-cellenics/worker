@@ -9,12 +9,12 @@ getRawExpression(data, genes)
 \arguments{
 \item{data}{Seurat object}
 
-\item{genes}{character vector og genes to extract}
+\item{genes}{character vector of genes to extract}
 }
 \value{
 data.table of raw expression values
 }
 \description{
-The expression matrix is transposed to accommodate CSC sparse matrix format
-used in the UI. Filtered cells are added as empty rows.
+The expression matrix is transposed to accommodate the CSC sparse matrix
+format used in the UI.
 }

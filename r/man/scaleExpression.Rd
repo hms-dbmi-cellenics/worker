@@ -9,6 +9,9 @@ scaleExpression(rawExpression)
 \arguments{
 \item{rawExpression}{data.table}
 }
+\value{
+data.table of scaled expression values
+}
 \description{
 Centers values to the mean and scales to the standard deviation.
 }

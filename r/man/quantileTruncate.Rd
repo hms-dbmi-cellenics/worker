@@ -15,7 +15,7 @@ quantileTruncate(x, quantile_threshold)
 numeric vector of truncated expression values
 }
 \description{
-basically returns x > a => a else x. But takes into account the special case
+Basically returns x > a => a else x. But takes into account the special case
 when more than quantile_threshold percent of the data is 0. extending
 the threshold bit by bit until it differs from 0. Therefore preserving some
 dynamic range in the adjusted expression values.

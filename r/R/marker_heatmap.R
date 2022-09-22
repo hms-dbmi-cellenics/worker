@@ -1,7 +1,7 @@
 #' Generates a marker heatmap
 #'
-#' @param req
-#' @param data
+#' @param req list with number of genes and cellsets in which to search for markers
+#' @param data Seurat object
 #'
 #' @return list
 #' @export

@@ -1,16 +1,17 @@
 #' Extract expression values from Seurat object, add stats and format for UI
 #'
 #' @param data Seurat object
-#' @param genes character vector og genes to extract
+#' @param genes character vector of genes to extract
 #'
-#' @return list
+#' @return list to send to the UI
 #' @export
 #'
 getGeneExpression <- function(data, genes) {
   expression_values <- getExpressionValues(data, genes)
   stats <- summaryStats(expression_values)
 
-  expression_values <- lapply(expression_values, formatExpression, data@meta.data$cells_id)
+  expression_values <-
+    lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   res <- list(
     order = as.list(names(stats)),
@@ -46,8 +47,8 @@ getExpressionValues <- function(data, genes) {
 
 #' Extract raw expression values for a list of genes
 #'
-#' The expression matrix is transposed to accommodate CSC sparse matrix format
-#' used in the UI. Filtered cells are added as empty rows.
+#' The expression matrix is transposed to accommodate the CSC sparse matrix
+#' format used in the UI.
 #'
 #' @inheritParams getGeneExpression
 #'
@@ -69,20 +70,22 @@ getRawExpression <- function(data, genes) {
 #' Adds an empty row for every filtered cell
 #'
 #' The UI infers cell_id by the index of the cell in the matrix, which means that
-#' filtered cells have to be added back to the table, as empty rows. When converted
-#' to sparse format, they do not take up space.
+#' filtered cells have to be added back to the table as empty rows. When converted
+#' to sparse format, they do not take up space. We use the max of the cell_ids that
+#' were filtered, which means this table will not contain cells above that. But
+#' it does not change the index of the cells below, and the UI does not care.
 #'
-#' @param rawExpression data.table
+#' @param expression data.table
 #' @param cell_ids integer vector
 #'
-#' @return complete raw expression data.table
+#' @return row complete expression data.table
 #' @export
 #'
 completeExpression <- function(expression, cell_ids) {
   expression[, cell_ids := cell_ids]
   data.table::setorder(expression, cols = "cell_ids")
 
-  # add back all filtered cell_ids as empty columns
+  # add back all filtered cells as empty rows.
   expression <-
     expression[data.table::CJ(cell_ids = seq(0, max(cell_ids)),
                                  unique = TRUE),
@@ -103,7 +106,8 @@ completeExpression <- function(expression, cell_ids) {
 #'
 truncateExpression <- function(rawExpression) {
   truncatedExpression <-
-    rawExpression[, lapply(.SD, quantileTruncate, QUANTILE_THRESHOLD), .SDcols = colnames(rawExpression)]
+    rawExpression[, lapply(.SD, quantileTruncate, QUANTILE_THRESHOLD),
+                  .SDcols = colnames(rawExpression)]
 
   return(truncatedExpression)
 }
@@ -111,7 +115,7 @@ truncateExpression <- function(rawExpression) {
 
 #' Truncate expression values after quantile threshold
 #'
-#' basically returns x > a => a else x. But takes into account the special case
+#' Basically returns x > a => a else x. But takes into account the special case
 #' when more than quantile_threshold percent of the data is 0. extending
 #' the threshold bit by bit until it differs from 0. Therefore preserving some
 #' dynamic range in the adjusted expression values.
@@ -138,7 +142,7 @@ quantileTruncate <- function(x, quantile_threshold) {
 #'
 #' @param rawExpression data.table
 #'
-#' @return
+#' @return data.table of scaled expression values
 #' @export
 #'
 scaleExpression <- function(rawExpression) {
@@ -204,8 +208,15 @@ toSparseJson <- function(matrix) {
 }
 
 
+#' Format expression data.table as mathJS json
+#'
+#' @param expression data.table with expression values
+#' @param cell_ids int vector with filtered cell_ids
+#'
+#' @return list of formatted expression table
+#' @export
+#'
 formatExpression <- function(expression, cell_ids) {
-
   expression <- completeExpression(expression, cell_ids)
   expression <- sparsify(expression)
   expression <- toSparseJson(expression)

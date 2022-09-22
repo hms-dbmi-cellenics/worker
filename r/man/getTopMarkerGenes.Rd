@@ -14,11 +14,22 @@ getTopMarkerGenes(
 )
 }
 \arguments{
-\item{pctOutMax}{}
+\item{nFeatures}{int number of marker genes to get}
+
+\item{data}{SeuratObject}
+
+\item{cellSets}{list of cellsets to split for marker gene selection}
+
+\item{aucMin}{min area under the wilcoxon test's ROC for a gene to be considered a marker}
+
+\item{pctInMin}{min percentage of cells in cellset that have to express a gene for it to be considered a marker}
+
+\item{pctOutMax}{max percentage of cells outside cellset that can express a gene for it to be considered a marker}
 }
 \value{
-Returns top marker genes as calculated by presto
+data.frame of top marker genes
 }
 \description{
-getTopMarkerGenes
+Uses presto::wilcoxauc to find the marker genes that distinguish the cellsets.
+It then filters the list of genes up to nFeatures using reasonable defaults.
 }
