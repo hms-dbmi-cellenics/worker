@@ -9,7 +9,7 @@ quantileTruncate(x, quantile_threshold)
 \arguments{
 \item{x}{numeric vector of raw expression values}
 
-\item{quantile_threshold}{}
+\item{quantile_threshold}{numeric}
 }
 \value{
 numeric vector of truncated expression values
