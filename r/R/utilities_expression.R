@@ -1,3 +1,23 @@
+getGeneExpression <- function(data, genes) {
+
+  expression_values <- getExpressionValues(genes, data)
+  stats <- summaryStats(expression_values)
+
+  mtx_res <- lapply(expression_values, sparsify)
+  json_res <- lapply(mtx_res, toSparseJson)
+
+  res <- list(
+    order = names(stats),
+    stats = stats,
+    rawExpression = json_res$rawExpression,
+    truncatedExpression = json_res$truncatedExpression,
+    zScore = json_res$zScore
+  )
+
+  return(res)
+}
+
+
 #' Returns expression values for selected genes
 #'
 #' @param genes - Must have names and input(ensmbl ids)
@@ -31,9 +51,13 @@ getExpressionValues <- function(genes, data) {
   symbol_idx <- match(colnames(rawExpression), genes$input)
   colnames(rawExpression) <- genes$name[symbol_idx]
 
-  adjGeneExpression <- truncateExpression(rawExpression, quantile_threshold)
+  res <- list(
+    rawExpression = rawExpression,
+    truncatedExpression = truncateExpression(rawExpression, quantile_threshold),
+    zScore = scaleExpression(rawExpression)
+  )
 
-  return(list(rawExpression = rawExpression, truncatedExpression = adjGeneExpression))
+  return(res)
 }
 
 
@@ -83,3 +107,43 @@ summaryStatsAux <- function(raw, trunc) {
 }
 
 
+scaleExpression <- function(rawExpression) {
+  scaledExpression <- rawExpression[, lapply(.SD, scale), .SDcols = colnames(rawExpression)]
+  return(scaledExpression)
+}
+
+
+#' convert data.table to CSC sparse matrix
+#'
+#' NAs are replaced by zeroes by reference. Then coerced to sparse matrix.
+#'
+#' @param expression data.table
+#'
+#' @return dgCmatrix
+#' @export
+#'
+sparsify <- function(expression) {
+  data.table::setnafill(expression, fill = 0)
+  sparse_matrix <- Matrix::Matrix(Matrix::as.matrix(expression), sparse = T)
+
+  return(sparse_matrix)
+}
+
+#' extract sparse matrix attributes to mathJS-like sparse matrix format
+#'
+#' @param matrix
+#'
+#' @return list with sparse matrix attributes
+#' @export
+#'
+toSparseJson <- function(matrix) {
+  sparse_json <-
+    list(
+      values = matrix@x,
+      index = matrix@i,
+      ptr = matrix@p,
+      size = matrix@Dim
+    )
+
+  return(sparse_json)
+}

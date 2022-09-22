@@ -24,7 +24,5 @@ runExpression <- function(req, data) {
 
   genesSubset <- genesSubset[, c("input", "name")]
 
-  res <- getGeneExpression(data, genesSubset)
-
-  return(res)
+  return(getGeneExpression(data, genesSubset))
 }
