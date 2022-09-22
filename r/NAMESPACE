@@ -2,7 +2,7 @@
 
 export(GetNormalizedExpression)
 export(assignEmbedding)
-export(completeRawExpression)
+export(completeExpression)
 export(extractErrorList)
 export(fillNullForFilteredCells)
 export(formatResponse)

@@ -10,15 +10,14 @@ getGeneExpression <- function(data, genes) {
   expression_values <- getExpressionValues(data, genes)
   stats <- summaryStats(expression_values)
 
-  mtx_res <- lapply(expression_values, sparsify)
-  json_res <- lapply(mtx_res, toSparseJson)
+  expression_values <- lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   res <- list(
     order = as.list(names(stats)),
     stats = stats,
-    rawExpression = json_res$rawExpression,
-    truncatedExpression = json_res$truncatedExpression,
-    zScore = json_res$zScore
+    rawExpression = expression_values$rawExpression,
+    truncatedExpression = expression_values$truncatedExpression,
+    zScore = expression_values$zScore
   )
 
   return(res)
@@ -60,8 +59,6 @@ getRawExpression <- function(data, genes) {
     Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE])
   rawExpression <-   data.table::as.data.table(rawExpression)
 
-  rawExpression <- completeRawExpression(rawExpression, data@meta.data$cells_id)
-
   symbol_idx <- match(colnames(rawExpression), genes$input)
   colnames(rawExpression) <- genes$name[symbol_idx]
 
@@ -81,19 +78,19 @@ getRawExpression <- function(data, genes) {
 #' @return complete raw expression data.table
 #' @export
 #'
-completeRawExpression <- function(rawExpression, cell_ids) {
-  rawExpression[, cell_ids := cell_ids]
-  data.table::setorder(rawExpression, cols = "cell_ids")
+completeExpression <- function(expression, cell_ids) {
+  expression[, cell_ids := cell_ids]
+  data.table::setorder(expression, cols = "cell_ids")
 
   # add back all filtered cell_ids as empty columns
-  rawExpression <-
-    rawExpression[data.table::CJ(cell_ids = seq(0, max(cell_ids)),
+  expression <-
+    expression[data.table::CJ(cell_ids = seq(0, max(cell_ids)),
                                  unique = TRUE),
                   on = .(cell_ids)]
 
-  rawExpression[, cell_ids := NULL]
+  expression[, cell_ids := NULL]
 
-  return(rawExpression)
+  return(expression)
 }
 
 
@@ -204,4 +201,14 @@ toSparseJson <- function(matrix) {
     )
 
   return(sparse_json)
+}
+
+
+formatExpression <- function(expression, cell_ids) {
+
+  expression <- completeExpression(expression, cell_ids)
+  expression <- sparsify(expression)
+  expression <- toSparseJson(expression)
+
+  return(expression)
 }
