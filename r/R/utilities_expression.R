@@ -14,7 +14,7 @@ getGeneExpression <- function(data, genes) {
   json_res <- lapply(mtx_res, toSparseJson)
 
   res <- list(
-    order = names(stats),
+    order = as.list(names(stats)),
     stats = stats,
     rawExpression = json_res$rawExpression,
     truncatedExpression = json_res$truncatedExpression,
