@@ -38,7 +38,7 @@ test_that("Marker Heatmap returns appropiate format", {
 
   res <- runMarkerHeatmap(req, data)
 
-  expect_equal(names(res), c("order", "stats", "rawExpression", "truncatedExpression"))
+  expect_equal(names(res), c("order", "stats", "rawExpression", "truncatedExpression", "zScore"))
 
   # number of rows in sparse matrix equals number of cells
   expect_equal(res$rawExpression$size[1], ncol(data))
