@@ -28,10 +28,6 @@ getGeneExpression <- function(data, genes) {
 #'
 #' @examples
 getExpressionValues <- function(genes, data) {
-  message("\n\n*** CORES")
-  message(data.table::getDTthreads())
-  message("*** CORES\n\n")
-
   quantile_threshold <- 0.95
 
   # Get the expression values for those genes in the corresponding matrix.
