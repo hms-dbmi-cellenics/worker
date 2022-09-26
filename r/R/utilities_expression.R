@@ -1,7 +1,7 @@
 #' Extract expression values from Seurat object, add stats and format for UI
 #'
 #' @param data Seurat object
-#' @param genes character vector of genes to extract
+#' @param genes data.frame of genes of interest, with columns "input" and "name"
 #'
 #' @return list to send to the UI
 #' @export

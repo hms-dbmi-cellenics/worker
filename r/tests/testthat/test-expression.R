@@ -69,7 +69,12 @@ test_that("Expression task returns appropriate number of cells.", {
     z = res$zScore
   )
 
-  expect_equal(unique(unlist(lapply(exp, function(x) x$size[[1]]))), max(data$cells_id) + 1)
+  expected_cells <- max(data$cells_id) + 1
+
+  # assuming all matrices have to be the same size (they have to be)
+  result_size <- unique(unlist(lapply(exp, function(x) x$size[[1]])))
+
+  expect_equal(result_sizes, expected_cells)
 })
 
 test_that("summaryStats calculates correct summary stats.", {
@@ -130,7 +135,7 @@ test_that("summaryStats calculates correct summary stats.", {
 
 
 
-test_that("Expression task continues if gene doesn't exist and returns appropriate number of results", {
+test_that("Expression task continues works if gene doesn't exist", {
   data <- mock_scdata()
   req <- mock_req()
   req$body$genes <- append(req$body$genes, "aaa")
@@ -168,7 +173,7 @@ test_that("Expression task works with one gene", {
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 1)
 })
 
-test_that("If the max truncated expression value is 0, iterates correctly to find a non zero value", {
+test_that("If  max truncated expression value is 0, finds a non-zero value", {
   data <- mock_scdata()
   req <- mock_req()
 
@@ -185,4 +190,25 @@ test_that("runExpression throws an error if request only non existing genes", {
   req$body$genes <- list("blah")
 
   expect_error(runExpression(req, data), "Gene\\(s\\): blah not found!")
+})
+
+
+test_that("truncateExpression truncates correctly", {
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  res <- getExpressionValues(data, gene_subset)
+
+  # not pretty, but we would expect that the max raw expression value per gene
+  # to be gte than the adjusted max
+  max_raw <- apply(res$rawExpression, 2, max)
+  max_adj <- apply(res$truncatedExpression, 2, max)
+  expect_true(all(max_raw >= max_adj))
 })
