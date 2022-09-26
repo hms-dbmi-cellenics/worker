@@ -4,18 +4,18 @@
 # req$body has
 # genes: list of gene common names to search for in the annotation.
 #
-#
-# For now we return the values stored in data (normalized values). When the correct config parameter is set on the UI, we'll add the scaled values.
-#
 #' @export
 runExpression <- function(req, data) {
-  # Get the annotation matrix with the geneid to name translation, and the subset with the correct names.
   gene_annotations <- data@misc$gene_annotations
-  genesSubset <-
-    subset(gene_annotations,
-           toupper(gene_annotations$name) %in% toupper(req$body$genes))
 
-  if (!nrow(genesSubset)) {
+  # subset with gene NAMES passed from UI
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  if (!nrow(gene_subset)) {
     stop(generateErrorMessage(
       error_codes$GENE_NOT_FOUND,
       paste(
@@ -26,7 +26,7 @@ runExpression <- function(req, data) {
     ))
   }
 
-  genesSubset <- genesSubset[, c("input", "name")]
+  gene_subset <- gene_subset[, c("input", "name")]
 
-  return(getGeneExpression(data, genesSubset))
+  return(getGeneExpression(data, gene_subset))
 }
