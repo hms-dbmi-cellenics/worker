@@ -314,69 +314,69 @@ test_that("getMarkerNames returns input if there's no gene name", {
 
 # getExpressionValues
 
-test_that("getExpressionValues returns object with correct elements", {
-  data <- mock_scdata()
-  cellSets <- mock_cellSets()$children
-  nFeatures <- 42
-  all_markers <-
-    getTopMarkerGenes(
-      nFeatures,
-      data,
-      cellSets
-    )
+# test_that("getExpressionValues returns object with correct elements", {
+#   data <- mock_scdata()
+#   cellSets <- mock_cellSets()$children
+#   nFeatures <- 42
+#   all_markers <-
+#     getTopMarkerGenes(
+#       nFeatures,
+#       data,
+#       cellSets
+#     )
 
-  all_markers <- getMarkerNames(data, all_markers)
+#   all_markers <- getMarkerNames(data, all_markers)
 
-  res <- getExpressionValues(all_markers, data)
+#   res <- getExpressionValues(all_markers, data)
 
-  expected_elements <- c("rawExpression", "truncatedExpression")
+#   expected_elements <- c("rawExpression", "truncatedExpression")
 
-  expect_equal(names(res), expected_elements)
+#   expect_equal(names(res), expected_elements)
 
-  expect_s3_class(res$rawExpression, "data.frame")
-  expect_s3_class(res$truncatedExpression, "data.frame")
+#   expect_s3_class(res$rawExpression, "data.frame")
+#   expect_s3_class(res$truncatedExpression, "data.frame")
+# })
+
+# test_that("getExpressionValues returns same number of values as genes requested", {
+#   data <- mock_scdata()
+#   cellSets <- mock_cellSets()$children
+#   nFeatures <- 42
+#   all_markers <-
+#     getTopMarkerGenes(
+#       nFeatures,
+#       data,
+#       cellSets
+#     )
+
+#   all_markers <- getMarkerNames(data, all_markers)
+
+#   res <- getExpressionValues(all_markers, data)
+
+#   expect_equal(ncol(res$rawExpression), nrow(all_markers))
+#   expect_equal(ncol(res$truncatedExpression), nrow(all_markers))
 })
 
-test_that("getExpressionValues returns same number of values as genes requested", {
-  data <- mock_scdata()
-  cellSets <- mock_cellSets()$children
-  nFeatures <- 42
-  all_markers <-
-    getTopMarkerGenes(
-      nFeatures,
-      data,
-      cellSets
-    )
+# test_that("getExpressionValues adjusted values are correct", {
+#   data <- mock_scdata()
+#   cellSets <- mock_cellSets()$children
+#   nFeatures <- 42
+#   all_markers <-
+#     getTopMarkerGenes(
+#       nFeatures,
+#       data,
+#       cellSets
+#     )
 
-  all_markers <- getMarkerNames(data, all_markers)
+#   all_markers <- getMarkerNames(data, all_markers)
 
-  res <- getExpressionValues(all_markers, data)
+#   res <- getExpressionValues(all_markers, data)
 
-  expect_equal(ncol(res$rawExpression), nrow(all_markers))
-  expect_equal(ncol(res$truncatedExpression), nrow(all_markers))
-})
-
-test_that("getExpressionValues adjusted values are correct", {
-  data <- mock_scdata()
-  cellSets <- mock_cellSets()$children
-  nFeatures <- 42
-  all_markers <-
-    getTopMarkerGenes(
-      nFeatures,
-      data,
-      cellSets
-    )
-
-  all_markers <- getMarkerNames(data, all_markers)
-
-  res <- getExpressionValues(all_markers, data)
-
-  # not pretty, but we would expext that the max raw expression value per gene
-  # to be gte than the adjusted max
-  max_raw <- apply(res$rawExpression, 2, max)
-  max_adj <- apply(res$truncatedExpression, 2, max)
-  expect_true(all(max_raw >= max_adj))
-})
+#   # not pretty, but we would expext that the max raw expression value per gene
+#   # to be gte than the adjusted max
+#   max_raw <- apply(res$rawExpression, 2, max)
+#   max_adj <- apply(res$truncatedExpression, 2, max)
+#   expect_true(all(max_raw >= max_adj))
+# })
 
 # getSNNigraph
 

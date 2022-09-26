@@ -84,7 +84,7 @@ test_that("summaryStats calculates correct summary stats.", {
     )
 
 
-  expression_values <- getExpressionValues(data, genesSubset)
+  expression_values <- getExpressionValues(data, gene_subset)
   res <- summaryStats(expression_values)
 
   expect_equal(names(res), unlist(req$body$genes))
