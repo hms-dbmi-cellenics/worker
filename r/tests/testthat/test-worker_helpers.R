@@ -354,7 +354,7 @@ test_that("getMarkerNames returns input if there's no gene name", {
 
 #   expect_equal(ncol(res$rawExpression), nrow(all_markers))
 #   expect_equal(ncol(res$truncatedExpression), nrow(all_markers))
-})
+# })
 
 # test_that("getExpressionValues adjusted values are correct", {
 #   data <- mock_scdata()
