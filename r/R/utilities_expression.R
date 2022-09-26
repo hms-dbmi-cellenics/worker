@@ -132,7 +132,7 @@ truncateExpression <- function(rawExpression) {
 quantileTruncate <- function(x, quantile_threshold) {
   lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
   i <- 0.01
-  while (lim == 0 & i + quantile_threshold <= 1) {
+  while (lim == 0 && i + quantile_threshold <= 1) {
     lim <- as.numeric(quantile(x, quantile_threshold + i, na.rm = TRUE))
     i <- i + 0.01
   }
