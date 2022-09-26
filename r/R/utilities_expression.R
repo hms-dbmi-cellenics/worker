@@ -33,7 +33,6 @@ getGeneExpression <- function(data, genes) {
 #' @export
 #'
 getExpressionValues <- function(data, genes) {
-
   rawExpression <- getRawExpression(data, genes)
 
   res <- list(
@@ -58,22 +57,22 @@ getExpressionValues <- function(data, genes) {
 getRawExpression <- function(data, genes) {
   rawExpression <-
     Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE])
-  rawExpression <-   data.table::as.data.table(rawExpression)
+  rawExpression <- data.table::as.data.table(rawExpression)
 
   symbol_idx <- match(colnames(rawExpression), genes$input)
   colnames(rawExpression) <- genes$name[symbol_idx]
 
   return(rawExpression)
-
 }
 
 #' Adds an empty row for every filtered cell
 #'
-#' The UI infers cell_id by the index of the cell in the matrix, which means that
-#' filtered cells have to be added back to the table as empty rows. When converted
-#' to sparse format, they do not take up space. We use the max of the cell_ids that
-#' were filtered, which means this table will not contain cells above that. But
-#' it does not change the index of the cells below, and the UI does not care.
+#' The UI infers cell_id by the index of the cell in the matrix, which means
+#' that filtered cells have to be added back to the table as empty rows. When
+#' converted to sparse format, they do not take up space. We use the max of the
+#' cell_ids that were filtered, which means this table will not contain cells
+#' above that. But it does not change the index of the cells below, and the UI
+#' does not care.
 #'
 #' @param expression data.table
 #' @param cell_ids integer vector
@@ -87,9 +86,12 @@ completeExpression <- function(expression, cell_ids) {
 
   # add back all filtered cells as empty rows.
   expression <-
-    expression[data.table::CJ(cell_ids = seq(0, max(cell_ids)),
-                                 unique = TRUE),
-                  on = .(cell_ids)]
+    expression[data.table::CJ(
+      cell_ids = seq(0, max(cell_ids)),
+      unique = TRUE
+    ),
+    on = .(cell_ids)
+    ]
 
   expression[, cell_ids := NULL]
 
@@ -107,7 +109,8 @@ completeExpression <- function(expression, cell_ids) {
 truncateExpression <- function(rawExpression) {
   truncatedExpression <-
     rawExpression[, lapply(.SD, quantileTruncate, QUANTILE_THRESHOLD),
-                  .SDcols = colnames(rawExpression)]
+      .SDcols = colnames(rawExpression)
+    ]
 
   return(truncatedExpression)
 }

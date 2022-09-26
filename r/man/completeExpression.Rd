@@ -15,9 +15,10 @@ completeExpression(expression, cell_ids)
 row complete expression data.table
 }
 \description{
-The UI infers cell_id by the index of the cell in the matrix, which means that
-filtered cells have to be added back to the table as empty rows. When converted
-to sparse format, they do not take up space. We use the max of the cell_ids that
-were filtered, which means this table will not contain cells above that. But
-it does not change the index of the cells below, and the UI does not care.
+The UI infers cell_id by the index of the cell in the matrix, which means
+that filtered cells have to be added back to the table as empty rows. When
+converted to sparse format, they do not take up space. We use the max of the
+cell_ids that were filtered, which means this table will not contain cells
+above that. But it does not change the index of the cells below, and the UI
+does not care.
 }
