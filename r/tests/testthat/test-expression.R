@@ -74,7 +74,7 @@ test_that("Expression task returns appropriate number of cells.", {
   # assuming all matrices have to be the same size (they have to be)
   result_size <- unique(unlist(lapply(exp, function(x) x$size[[1]])))
 
-  expect_equal(result_sizes, expected_cells)
+  expect_equal(result_size, expected_cells)
 })
 
 test_that("summaryStats calculates correct summary stats.", {
