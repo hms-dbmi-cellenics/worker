@@ -61,7 +61,7 @@
         - name: DD_CLUSTER_NAME
           value: "biomage-{{ .Values.kubernetes.env }}"
         - name: DD_TAGS
-          values: "{{ .Values.datadogTags }}"
+          value: "{{ .Values.datadogTags }}"
         - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
           value: '{"*": "%%label%%"}'
         # Disable log collection by DD agent
