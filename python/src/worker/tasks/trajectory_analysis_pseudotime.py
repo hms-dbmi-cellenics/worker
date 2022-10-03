@@ -21,7 +21,7 @@ class GetTrajectoryAnalysisPseudoTime(Task):
     def _format_request(self):
 
         embedding_etag = self.task_def["embedding"]["ETag"]
-        embedding = get_embedding(embedding_etag)
+        embedding = get_embedding(embedding_etag, format_for_r=True)
 
         request = {
             "embedding": embedding,
