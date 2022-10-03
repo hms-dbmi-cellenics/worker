@@ -135,6 +135,7 @@ quantileTruncate <- function(x, quantile_threshold) {
   return(pmin(x, lim))
 }
 
+
 #' Calculate z-score of gene expression values
 #'
 #' Centers values to the mean and scales to the standard deviation.
@@ -145,9 +146,8 @@ quantileTruncate <- function(x, quantile_threshold) {
 #' @export
 #'
 scaleExpression <- function(rawExpression) {
-  # scale returns a matrix. need to convert to vector avoid changing colnames
   scaledExpression <-
-    rawExpression[, lapply(.SD, \(x) as.vector(scale(x))),
+    rawExpression[, lapply(.SD, \(x) (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)),
       .SDcols = colnames(rawExpression)
     ]
   return(scaledExpression)
