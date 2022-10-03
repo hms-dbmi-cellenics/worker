@@ -13,15 +13,13 @@ getGeneExpression <- function(data, genes) {
   expression_values <-
     lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
-  res <- list(
+  return(list(
     order = as.list(names(stats)),
     stats = stats,
     rawExpression = expression_values$rawExpression,
     truncatedExpression = expression_values$truncatedExpression,
     zScore = expression_values$zScore
-  )
-
-  return(res)
+  ))
 }
 
 
@@ -35,13 +33,11 @@ getGeneExpression <- function(data, genes) {
 getExpressionValues <- function(data, genes) {
   rawExpression <- getRawExpression(data, genes)
 
-  res <- list(
+  return(list(
     rawExpression = rawExpression,
     truncatedExpression = truncateExpression(rawExpression),
     zScore = scaleExpression(rawExpression)
-  )
-
-  return(res)
+  ))
 }
 
 #' Extract raw expression values for a list of genes
@@ -149,8 +145,11 @@ quantileTruncate <- function(x, quantile_threshold) {
 #' @export
 #'
 scaleExpression <- function(rawExpression) {
+  # scale returns a matrix. need to convert to vector avoid changing colnames
   scaledExpression <-
-    rawExpression[, lapply(.SD, scale), .SDcols = colnames(rawExpression)]
+    rawExpression[, lapply(.SD, \(x) as.vector(scale(x))),
+      .SDcols = colnames(rawExpression)
+    ]
   return(scaledExpression)
 }
 
@@ -199,15 +198,12 @@ sparsify <- function(expression) {
 #' @export
 #'
 toSparseJson <- function(matrix) {
-  sparse_json <-
-    list(
-      values = matrix@x,
-      index = matrix@i,
-      ptr = matrix@p,
-      size = matrix@Dim
-    )
-
-  return(sparse_json)
+  return(list(
+    values = matrix@x,
+    index = matrix@i,
+    ptr = matrix@p,
+    size = matrix@Dim
+  ))
 }
 
 
