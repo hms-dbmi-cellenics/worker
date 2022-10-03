@@ -134,8 +134,7 @@ test_that("summaryStats calculates correct summary stats.", {
 })
 
 
-
-test_that("Expression task continues works if gene doesn't exist", {
+test_that("Expression task does not return gene that does not exist", {
   data <- mock_scdata()
   req <- mock_req()
   req$body$genes <- append(req$body$genes, "aaa")
@@ -147,6 +146,10 @@ test_that("Expression task continues works if gene doesn't exist", {
     trunc = res$truncatedExpression,
     z = res$zScore
   )
+
+  # non-existent gene is not present in the result
+  expect_true(!("aaa" %in% unlist(res$order)))
+  expect_true(!("aaa" %in% names(res$stats)))
 
   expect_equal(length(res$order), 2)
   expect_equal(length(res$stats), 2)
@@ -166,14 +169,14 @@ test_that("Expression task works with one gene", {
     trunc = res$truncatedExpression,
     z = res$zScore
   )
-
+  expect_equal(res$order, req$body$genes)
   expect_equal(length(res$order), 1)
   expect_equal(length(res$stats), 1)
 
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 1)
 })
 
-test_that("If  max truncated expression value is 0, finds a non-zero value", {
+test_that("If max truncated expression value is 0, finds a non-zero value", {
   data <- mock_scdata()
   req <- mock_req()
 
@@ -211,4 +214,108 @@ test_that("truncateExpression truncates correctly", {
   max_raw <- apply(res$rawExpression, 2, max)
   max_adj <- apply(res$truncatedExpression, 2, max)
   expect_true(all(max_raw >= max_adj))
+
+  # check that the raw and truncated matrices are different
+  expect_false(isTRUE(all.equal(res$rawExpression, res$truncatedExpression)))
+
+  # truncation effectively makes values equal. So there are less unique values
+  # in the truncated table
+  expect_gt(
+    length(unique(unlist(res$rawExpression))),
+    length(unique(unlist(res$truncatedExpression)))
+  )
+})
+
+
+test_that("scaleExpression correctly calculates zScore", {
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  res <- getExpressionValues(data, gene_subset)
+  cols <- colnames(res$rawExpression)
+  zScore <- data.table::copy(res$rawExpression)
+
+  # calculate zScore in an alternative way
+  calculate_zscore <- function(x) {
+    as.vector(scale(x))
+  }
+
+  zScore[, (cols) := lapply(.SD, calculate_zscore), .SDcols = cols]
+
+  expect_equal(res$zScore, zScore)
+})
+
+
+test_that("raw expression values are the same as in the original data", {
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  # manually extract original data, and convert to data.table
+  original_data <- Matrix::t(data@assays$RNA@data[unlist(req$body$genes), , drop = FALSE])
+  original_data <- as.data.table(original_data)
+
+  res <- getExpressionValues(data, gene_subset)
+
+  expect_equal(
+    res$rawExpression,
+    original_data
+  )
+})
+
+
+test_that("order of cells in the completed matrix is correct", {
+  data <- mock_scdata()
+
+  cell_ids <- c(0, 5, 10, 30, 79)
+  data <- subsetIds(data, cell_ids)
+
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  original_data <- Matrix::t(data@assays$RNA@data[unlist(req$body$genes), ,
+    drop = FALSE
+  ])
+  original_data <- as.data.table(original_data)
+
+  expression_values <- getExpressionValues(data, gene_subset)
+
+  # check that the subsetted data is in the same order as the original data
+  # by checking the values directly
+  expect_equal(
+    colnames(expression_values$rawExpression),
+    colnames(original_data)
+  )
+
+  expect_equal(expression_values$rawExpression, original_data)
+
+  filled_expression <- completeExpression(
+    expression_values$rawExpression,
+    data@meta.data$cells_id
+  )
+
+  # check that the expression values for each cell ID are located at that cell
+  # index (+1 because cell ids are 0-indexed)
+  expect_equal(filled_expression[cell_ids + 1, ], original_data)
+  # check that all other values are NA
+  expect_true(all(is.na(filled_expression[-(cell_ids + 1), ])))
 })
