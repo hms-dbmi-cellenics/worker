@@ -52,11 +52,20 @@ test_that("Marker Heatmap returns appropiate format", {
 
   res <- runMarkerHeatmap(req, data)
 
-  expect_equal(names(res), c("order", "stats", "rawExpression", "truncatedExpression", "zScore"))
+  expect_equal(
+    names(res),
+    c("order", "stats", "rawExpression", "truncatedExpression", "zScore")
+  )
 
   # number of rows in sparse matrix equals number of cells
-  expect_equal(unlist(res$rawExpression$size)[1], max(unlist(req$body$cellSets$children)) + 1)
-  expect_equal(unlist(res$truncatedExpression$size)[1], max(unlist(req$body$cellSets$children)) + 1)
+  expect_equal(
+    unlist(res$rawExpression$size)[1],
+    max(unlist(req$body$cellSets$children)) + 1
+  )
+  expect_equal(
+    unlist(res$truncatedExpression$size)[1],
+    max(unlist(req$body$cellSets$children)) + 1
+  )
 
 
   # returning only at most limit number of genes
@@ -74,10 +83,16 @@ test_that("Marker Heatmap nFeatures works appropiately", {
   res <- runMarkerHeatmap(req, data)
 
   # number of rows is number of cells
-  expect_equal(unlist(res$rawExpression$size[1]), max(unlist(req$body$cellSets$children)) + 1)
+  expect_equal(
+    unlist(res$rawExpression$size[1]),
+    max(unlist(req$body$cellSets$children)) + 1
+  )
 
   # returning only at most limit number of genes
-  expect_lte(length(res$stats), req$body$nGenes * length(req$body$cellSets$children))
+  expect_lte(
+    length(res$stats),
+    req$body$nGenes * length(req$body$cellSets$children)
+  )
 })
 
 test_that("Only one group throws error", {
