@@ -68,7 +68,8 @@ getClusters <- function(type, resolution, data) {
   }
 
   if (type == "leiden") {
-    # emulate FindClusters, which overwrites seurat_clusters slot and meta.data column
+    # emulate FindClusters, which overwrites seurat_clusters slot and meta.data
+    # column
     snn_graph <- getSNNiGraph(data, active.reduction)
     clus_res <-
       igraph::cluster_leiden(snn_graph, "modularity", resolution_parameter = resolution)
@@ -89,11 +90,11 @@ getClusters <- function(type, resolution, data) {
         )
     }
     data <- Seurat::FindClusters(
-        data,
-        resolution = resolution,
-        verbose = FALSE,
-        algorithm = algorithm,
-        random.seed = 3
+      data,
+      resolution = resolution,
+      verbose = FALSE,
+      algorithm = algorithm,
+      random.seed = ULTIMATE_SEED
     )
   }
 
@@ -169,4 +170,3 @@ format_cell_sets_object <-
     }
     return(cell_sets_object)
   }
-
