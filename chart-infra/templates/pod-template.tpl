@@ -49,7 +49,7 @@
         resources:
           requests:
             memory: "1Gi"
-{{- if .Values.myAccount.datadogEnabled "true" -}}
+{{- if eq .Values.myAccount.datadogEnabled "true" -}}
       - name: datadog-agent
         image: datadog/agent
         env:
