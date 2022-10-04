@@ -131,3 +131,86 @@ test_that("RunUMAP uses umap-learn with seed.use", {
    seed.use = ULTIMATE_SEED))
 
 })
+
+test_that("assignEmbedding assigns embedding correctly for UMAP", {
+
+  # given an embedding, which is ordered by cell id
+  num_cells = 80
+  mock_embedding <- list()
+
+  for(i in 1:(num_cells * 2)) {
+    if(i %% 2 != 0) {
+      mock_embedding[[i]] <- c(i + 2, i + 2)
+    } else {
+      mock_embedding[[i]] <- c(NA, NA)
+    }
+  }
+
+  # and a Seurat object with shuffled cell_ids order
+  mock_seurat_object <- mock_scdata()
+  old_embedding <- Seurat::Embeddings(mock_seurat_object)
+
+  # cells_id 0 corresponds to embedding[[1]]
+  mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
+
+  # assigning embedding
+  mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object)
+  new_embedding <- Seurat::Embeddings(mock_seurat_object, reduction = "umap")
+
+  # check that assignEmbedding replaces the embedding
+  expect_false(identical(old_embedding, new_embedding))
+
+  # check that assignEmbedding correctly orders the embedding
+  expect_equal(rownames(new_embedding), colnames(mock_seurat_object))
+
+  # check that assignEmbedding replaces with the right value
+  test_cell_id <- 52
+
+  barcode <- rownames(mock_seurat_object@meta.data[which(mock_seurat_object@meta.data$cells_id == test_cell_id), ])
+  resulting_embedding <- new_embedding[barcode, ]
+
+  # Add 1 to test_cell_id because cell_id 0 corresponds to embedding [[1]]
+  expect_equal(unname(resulting_embedding), mock_embedding[[test_cell_id + 1]])
+})
+
+
+test_that("assignEmbedding assigns embedding correctly for tSNE", {
+
+  # given an embedding, which is ordered by cell id
+  num_cells = 80
+  mock_embedding <- list()
+
+  for(i in 1:(num_cells * 2)) {
+    if(i %% 2 != 0) {
+      mock_embedding[[i]] <- c(i + 2, i + 2)
+    } else {
+      mock_embedding[[i]] <- c(NA, NA)
+    }
+  }
+
+  # and a Seurat object with shuffled cell_ids order
+  mock_seurat_object <- mock_scdata()
+  old_embedding <- Seurat::Embeddings(mock_seurat_object)
+
+  # cells_id 0 corresponds to embedding[[1]]
+  mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
+
+  # assigning embedding
+  mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object, reduction_method = "tsne")
+  new_embedding <- Seurat::Embeddings(mock_seurat_object, reduction = "tsne")
+
+  # check that assignEmbedding replaces the embedding
+  expect_false(identical(old_embedding, new_embedding))
+
+  # check that assignEmbedding correctly orders the embedding
+  expect_equal(rownames(new_embedding), colnames(mock_seurat_object))
+
+  # check that assignEmbedding replaces with the right value
+  test_cell_id <- 52
+
+  barcode <- rownames(mock_seurat_object@meta.data[which(mock_seurat_object@meta.data$cells_id == test_cell_id), ])
+  resulting_embedding <- new_embedding[barcode, ]
+
+  # Add 1 to test_cell_id because cell_id 0 corresponds to embedding [[1]]
+  expect_equal(unname(resulting_embedding), mock_embedding[[test_cell_id + 1]])
+})
