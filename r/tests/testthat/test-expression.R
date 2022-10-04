@@ -335,11 +335,9 @@ test_that("toSparseJson returns values as lists", {
   res_long_sparse <- lapply(res_long, sparsify)
   res_long_json <- lapply(res_long_sparse, toSparseJson)
 
+  # test that every element in the res_long_json is composed of lists
   lapply(res_long_json, \(x) {
-    expect_type(x$values, "list")
-    expect_type(x$index, "list")
-    expect_type(x$ptr, "list")
-    expect_type(x$size, "list")
+    lapply(x, expect_type, "list")
   })
 })
 
@@ -367,10 +365,8 @@ test_that("toSparseJson returns single value arrays as lists", {
   res_short_sparse <- lapply(res_short, sparsify)
   res_short_json <- lapply(res_short_sparse, toSparseJson)
 
+  # test that every element in the res_long_json is composed of lists
   lapply(res_short_json, \(x) {
-    expect_type(x$values, "list")
-    expect_type(x$index, "list")
-    expect_type(x$ptr, "list")
-    expect_type(x$size, "list")
+    lapply(x, expect_type, "list")
   })
 })
