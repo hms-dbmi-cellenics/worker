@@ -8,7 +8,7 @@ roleRef:
   kind: ClusterRole
   name: datadog-sidecar-rbac
 subjects:
-  - kind: ServiceAccount
-    name: deployment-runner
-    namespace: "{{.Release.Namespace}}"
+- kind: ServiceAccount
+  name: deployment-runner
+  namespace: "{{.Release.Namespace}}"
 {{- end -}}

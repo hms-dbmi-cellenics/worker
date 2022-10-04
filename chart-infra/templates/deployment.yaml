@@ -11,6 +11,6 @@ spec:
     matchLabels:
       sandboxId: "{{ .Values.sandboxId }}"
     matchExpressions:
-      - {key: experimentId, operator: DoesNotExist}
+    - {key: experimentId, operator: DoesNotExist}
   template:
     {{ template "worker.pod-template" . }}
