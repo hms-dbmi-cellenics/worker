@@ -295,7 +295,7 @@ test_that("order of cells in the completed matrix is correct", {
   original_data <- Matrix::t(data@assays$RNA@data[unlist(req$body$genes), ,
     drop = FALSE
   ])
-  original_data <- as.data.table(original_data)
+  original_data <- data.table::as.data.table(original_data)
 
   expression_values <- getExpressionValues(data, gene_subset)
 
@@ -318,4 +318,59 @@ test_that("order of cells in the completed matrix is correct", {
   expect_equal(filled_expression[cell_ids + 1, ], original_data)
   # check that all other values are NA
   expect_true(all(is.na(filled_expression[-(cell_ids + 1), ])))
+})
+
+test_that("toSparseJson returns values as lists", {
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  res_long <- getExpressionValues(data, gene_subset)
+  res_long_sparse <- lapply(res_long, sparsify)
+  res_long_json <- lapply(res_long_sparse, toSparseJson)
+
+  lapply(res_long_json, \(x) {
+    expect_type(x$values, "list")
+    expect_type(x$index, "list")
+    expect_type(x$ptr, "list")
+    expect_type(x$size, "list")
+  })
+})
+
+
+test_that("toSparseJson returns single value arrays as lists", {
+
+  # RJSONIO::toJSON converts single values to JS scalars. Which breaks when the
+  # UI expects single value arrays. Converting all vectors to list using as.list
+  # fixes this issue.
+
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  data_short <- subsetIds(data, 0)
+  gene_subset <- gene_subset[1, ]
+
+  res_short <- getExpressionValues(data_short, gene_subset)
+  res_short_sparse <- lapply(res_short, sparsify)
+  res_short_json <- lapply(res_short_sparse, toSparseJson)
+
+  lapply(res_short_json, \(x) {
+    expect_type(x$values, "list")
+    expect_type(x$index, "list")
+    expect_type(x$ptr, "list")
+    expect_type(x$size, "list")
+  })
 })
