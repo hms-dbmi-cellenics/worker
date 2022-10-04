@@ -199,10 +199,10 @@ sparsify <- function(expression) {
 #'
 toSparseJson <- function(matrix) {
   return(list(
-    values = matrix@x,
-    index = matrix@i,
-    ptr = matrix@p,
-    size = matrix@Dim
+    values = as.list(matrix@x),
+    index = as.list(matrix@i),
+    ptr = as.list(matrix@p),
+    size = as.list(matrix@Dim)
   ))
 }
 
