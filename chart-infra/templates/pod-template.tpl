@@ -79,23 +79,23 @@
                   apiVersion: v1
                   fieldPath: spec.nodeName
 {{- end }}
-        volumes:
-          - name: 'data'
-          - name: watch-script
-            configMap:
-              name: "watch-script"
-              items:
-                - key: watcher.sh
-                  path: watcher.sh
-                - key: entrypoint.sh
-                  path: entrypoint.sh
-          - name: shutdown-file
-          - name: podinfo
-            downwardAPI:
-              items:
-                - path: "labels"
-                  fieldRef:
-                    fieldPath: metadata.labels
-        restartPolicy: Always
-        serviceAccountName: 'deployment-runner'
+      volumes:
+        - name: 'data'
+        - name: watch-script
+          configMap:
+            name: "watch-script"
+            items:
+              - key: watcher.sh
+                path: watcher.sh
+              - key: entrypoint.sh
+                path: entrypoint.sh
+        - name: shutdown-file
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
+      restartPolicy: Always
+      serviceAccountName: 'deployment-runner'
 {{- end -}}
