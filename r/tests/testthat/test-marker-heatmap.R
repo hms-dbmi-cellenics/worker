@@ -54,7 +54,7 @@ test_that("Marker Heatmap returns appropiate format", {
 
   expect_equal(
     names(res),
-    c("order", "stats", "rawExpression", "truncatedExpression", "zScore")
+    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
   )
 
   # number of rows in sparse matrix equals number of cells

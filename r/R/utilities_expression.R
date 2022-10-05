@@ -14,7 +14,7 @@ getGeneExpression <- function(data, genes) {
     lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   return(list(
-    order = as.list(names(stats)),
+    orderedGeneNames = as.list(names(stats)),
     stats = stats,
     rawExpression = expression_values$rawExpression,
     truncatedExpression = expression_values$truncatedExpression,

@@ -22,11 +22,11 @@ test_that("Expression task returns appropriate number and names of genes.", {
 
   expect_equal(
     names(res),
-    c("order", "stats", "rawExpression", "truncatedExpression", "zScore")
+    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
   )
-  expect_equal(length(res$order), 2)
+  expect_equal(length(res$orderedGeneNames), 2)
   expect_equal(length(res$stats), 2)
-  expect_equal(res$order, req$body$genes)
+  expect_equal(res$orderedGeneNames, req$body$genes)
   expect_equal(names(res$stats), unlist(req$body$genes))
 })
 
@@ -148,10 +148,10 @@ test_that("Expression task does not return gene that does not exist", {
   )
 
   # non-existent gene is not present in the result
-  expect_true(!("aaa" %in% unlist(res$order)))
+  expect_true(!("aaa" %in% unlist(res$orderedGeneNames)))
   expect_true(!("aaa" %in% names(res$stats)))
 
-  expect_equal(length(res$order), 2)
+  expect_equal(length(res$orderedGeneNames), 2)
   expect_equal(length(res$stats), 2)
 
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 2)
@@ -169,8 +169,8 @@ test_that("Expression task works with one gene", {
     trunc = res$truncatedExpression,
     z = res$zScore
   )
-  expect_equal(res$order, req$body$genes)
-  expect_equal(length(res$order), 1)
+  expect_equal(res$orderedGeneNames, req$body$genes)
+  expect_equal(length(res$orderedGeneNames), 1)
   expect_equal(length(res$stats), 1)
 
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 1)
