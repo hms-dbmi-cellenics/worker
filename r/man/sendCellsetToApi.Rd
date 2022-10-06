@@ -18,5 +18,6 @@ sendCellsetToApi(new_cell_set, api_url, experiment_id, cell_set_key, auth_JWT)
 \item{auth_JWT}{string authorization token}
 }
 \description{
-This sends a single, new cell set to the API for patching to the cell sets file.
+This sends a single, new cell set to the API for patching to the cell sets
+file.
 }
