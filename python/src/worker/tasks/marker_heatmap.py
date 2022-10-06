@@ -53,5 +53,9 @@ class MarkerHeatmap(Task):
         response.raise_for_status()
         json_response = response.json()
         raise_if_error(json_response)
-        result = json_response.get("data")
+        data = json_response.get("data")
+        result = {
+            "data": data,
+            "order": list(data.keys()),
+        }
         return self._format_result(result)

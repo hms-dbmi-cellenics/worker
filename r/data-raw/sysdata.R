@@ -9,6 +9,4 @@ error_codes <- list(
 
 ULTIMATE_SEED <- 42
 
-QUANTILE_THRESHOLD <- 0.95
-
-usethis::use_data(error_codes, ULTIMATE_SEED, QUANTILE_THRESHOLD, internal = TRUE, overwrite = TRUE)
+usethis::use_data(error_codes, ULTIMATE_SEED, internal = TRUE, overwrite = TRUE)
