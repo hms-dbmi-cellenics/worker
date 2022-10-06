@@ -320,7 +320,7 @@ test_that("order of cells in the completed matrix is correct", {
   expect_true(all(is.na(filled_expression[-(cell_ids + 1), ])))
 })
 
-test_that("toSparseJson returns values as lists", {
+test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
   data <- mock_scdata()
   req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
@@ -337,7 +337,9 @@ test_that("toSparseJson returns values as lists", {
 
   # test that every element in the res_long_json is composed of lists
   lapply(res_long_json, \(x) {
-    lapply(x, expect_type, "list")
+    lapply(x, \(x){
+      expect_true(is.numeric(x))
+    })
   })
 })
 
@@ -365,8 +367,10 @@ test_that("toSparseJson returns single value arrays as lists", {
   res_short_sparse <- lapply(res_short, sparsify)
   res_short_json <- lapply(res_short_sparse, toSparseJson)
 
-  # test that every element in the res_long_json is composed of lists
+  # test that elements of lenghth = 1 are lists
   lapply(res_short_json, \(x) {
-    lapply(x, expect_type, "list")
+    lapply(x, \(x) {
+      ifelse(length(x) <= 1, expect_type(x, "list"), expect_type(x, "integer"))
+    })
   })
 })
