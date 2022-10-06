@@ -2,18 +2,17 @@
 % Please edit documentation in R/utilities_expression.R
 \name{getExpressionValues}
 \alias{getExpressionValues}
-\title{Get raw, truncated and scaled gene expression values}
+\title{Returns expression values for selected genes}
 \usage{
-getExpressionValues(data, genes)
+getExpressionValues(genes, data)
 }
 \arguments{
-\item{data}{Seurat object}
+\item{genes}{\itemize{
+\item Must have names and input(ensmbl ids)
+}}
 
-\item{genes}{data.frame of genes of interest, with columns "input" and "name"}
-}
-\value{
-list of expression values
+\item{data}{}
 }
 \description{
-Get raw, truncated and scaled gene expression values
+Returns expression values for selected genes
 }

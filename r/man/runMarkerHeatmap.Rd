@@ -7,12 +7,7 @@
 runMarkerHeatmap(req, data)
 }
 \arguments{
-\item{req}{list with number of genes and cellsets in which to search for markers}
-
-\item{data}{Seurat object}
-}
-\value{
-list
+\item{data}{}
 }
 \description{
 Generates a marker heatmap
