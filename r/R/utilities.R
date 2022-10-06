@@ -96,18 +96,15 @@ updateCellSetsThroughApi <-
 
 #' Ensure is list in json
 #'
-#' When sending responses as json, 
-#' Vectors of length 0 or 1 are converted to null and scalar (respectively)
-#' Using as.list fixes this, however, long R lists 
-#' take a VERY long time to be converted to JSON
-#' 
-#' This function deals with the problematic cases, 
-#' leaving vector as a vector when it isnt a problem
+#' When sending responses as json, Vectors of length 0 or 1 are converted to
+#' null and scalar (respectively) Using as.list fixes this, however, long R
+#' lists take a VERY long time to be converted to JSON.
+#' This function deals with the problematic cases, leaving vector as a vector
+#' when it isnt a problem.
 #'
+#' @param vector
 #'
-#' @param vector 
-#'
-#' @export 
+#' @export
 #'
 ensure_is_list_in_json <- function(vector) {
   if (length(vector) <= 1) {
