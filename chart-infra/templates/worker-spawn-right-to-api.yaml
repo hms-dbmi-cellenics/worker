@@ -6,9 +6,9 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -22,6 +22,6 @@ roleRef:
   kind: Role
   name: can-create-jobs
 subjects:
-  - kind: ServiceAccount
-    name: deployment-runner
-    namespace: {{ regexReplaceAll "^worker-" .Release.Namespace "api-" }}
+- kind: ServiceAccount
+  name: deployment-runner
+  namespace: {{ regexReplaceAll "^worker-" .Release.Namespace "api-" }}
