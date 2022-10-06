@@ -1,16 +1,22 @@
 #' getTopMarkerGenes
 #'
-#' @param nFeatures
-#' @param data
-#' @param cellSets
-#' @param aucMin
-#' @param pctInMin
-#' @param pctOutMax
+#' Uses presto::wilcoxauc to find the marker genes that distinguish the
+#' cellsets. It then filters the list of genes up to nFeatures using reasonable
+#' defaults.
 #'
-#' @return Returns top marker genes as calculated by presto
+#' @param nFeatures int number of marker genes to get
+#' @param data SeuratObject
+#' @param cellSets list of cellsets to split for marker gene selection
+#' @param aucMin min area under the wilcoxon test's ROC for a gene to be
+#'  considered a marker
+#' @param pctInMin min percentage of cells in cellset that have to express a
+#'  gene for it to be considered a marker
+#' @param pctOutMax max percentage of cells outside cellset that can express a
+#'  gene for it to be considered a marker
+#'
+#' @return data.frame of top marker genes
 #' @export
 #'
-#' @examples
 getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
 
@@ -21,7 +27,11 @@ getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin 
     data$marker_groups[object_ids %in% filtered_cells] <- i
   }
 
-  all_markers <- presto::wilcoxauc(data, group_by = "marker_groups", assay = "data", seurat_assay = "RNA")
+  all_markers <- presto::wilcoxauc(data,
+    group_by = "marker_groups",
+    assay = "data",
+    seurat_assay = "RNA"
+  )
   all_markers$group <- as.numeric(all_markers$group)
 
   # may not return nFeatures markers per cluster if values are too stringent
