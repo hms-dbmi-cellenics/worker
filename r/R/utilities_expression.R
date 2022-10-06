@@ -198,12 +198,16 @@ sparsify <- function(expression) {
 #' @export
 #'
 toSparseJson <- function(matrix) {
-  return(list(
-    values = as.list(matrix@x),
-    index = as.list(matrix@i),
-    ptr = as.list(matrix@p),
-    size = as.list(matrix@Dim)
-  ))
+  response_unsafe <- list(
+    values = matrix@x,
+    index = matrix@i,
+    ptr = matrix@p,
+    size = matrix@Dim
+  )
+
+  response <- lapply(response_unsafe, ensure_is_list_in_json)
+
+  return(response)
 }
 
 
