@@ -362,6 +362,7 @@ jobs:
           | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
           | yq w -d1 - spec.values.r.memoryRequest "$MEMORY_REQUEST" \
           | yq w -d1 - spec.values.python.image "$IMAGE_NAME-python" \
+          | yq w -d1 - spec.values.datadogTags "kube_namespace:$DEPLOYMENT_NAME-$SANDBOX_ID" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:$IMAGE_GLOB-r" \
           | yq w -d1 - "metadata.annotations[filter.fluxcd.io/python]" "glob:$IMAGE_GLOB-python" \
           > $DEPLOYMENT_NAME.yaml
