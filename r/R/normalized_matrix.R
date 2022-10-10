@@ -17,8 +17,7 @@
 #' @export
 #'
 GetNormalizedExpression <- function(req, data) {
-  apply_filter <- req$body$applyFilter
-  subset_ids <- req$body$filterBy
+  subset_ids <- req$body$subsetBy
 
   if (length(subset_ids) == 0) {
     stop(
@@ -32,9 +31,8 @@ GetNormalizedExpression <- function(req, data) {
   message("Extracting normalized expression matrix")
   message("Number of cells before subsetting: ", ncol(data))
 
-  if (apply_filter == TRUE) {
-    data <- subsetIds(data, cells_id = subset_ids)
-  }
+  data <- subsetIds(data, cells_id = subset_ids)
+  
   norm_matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
 
   message("Number of cells after subsetting: ", ncol(norm_matrix))
