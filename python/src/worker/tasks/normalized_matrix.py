@@ -51,19 +51,21 @@ class GetNormalizedExpression(Task):
 
         cell_ids_to_intersect = []
 
+        # There's no subsetting to be done just send a None
         if (all(len(subset_by[category]) == 0 for category in categories)):
             return { "subsetBy": None }
 
         cell_sets_dict = get_cell_sets_dict(cell_sets)
 
+        # Get the sets of cell ids to subset by for each category
         for category in categories:
             if (len(subset_by[category]) == 0):
                 continue
-
+            
             cell_ids = get_cell_ids(subset_by[category], cell_sets_dict)
-
             cell_ids_to_intersect.append(cell_ids)
 
+        # Intersect all sets of cell ids from different categories
         cell_ids = cell_ids_to_intersect[0].intersection(*cell_ids_to_intersect[1:])
 
         return { "subsetBy": list(cell_ids) }
