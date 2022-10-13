@@ -11,7 +11,7 @@ from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
 
-
+# Move all cell_sets data into a dict with { cellSetKey: cellSetIds } for faster access
 def get_cell_sets_dict(cell_sets):
     cell_sets_dict = {}
 
@@ -21,8 +21,8 @@ def get_cell_sets_dict(cell_sets):
 
     return cell_sets_dict
 
+# Get all cell sets that match the subset_keys
 def get_cell_ids(subset_keys, cell_sets_dict):
-    # Get all cell sets in the category
     cell_ids = set()
 
     for subset_key in subset_keys:
