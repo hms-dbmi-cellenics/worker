@@ -6,7 +6,7 @@
 #' Data can be subsetted in the python worker according to one of clusters, samples,
 #' and metadata groups, or a combination of them.
 #'
-#' @param req { body: { filterBy: cell ids to subset the matrix with } }
+#' @param req { body: { subsetBy: cell ids to subset the matrix with } }
 #' @param data SeuratObject
 #'
 #' @return
