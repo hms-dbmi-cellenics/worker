@@ -47,7 +47,8 @@ class GetNormalizedExpression(Task):
 
         cell_sets = get_cell_sets(self.experiment_id)
 
-        categories = ["sample", "louvain", "metadata", "scratchpad"]
+        # categories should be ["sample", "louvain", "metadata", "scratchpad"] (in no particular order)
+        categories = list(subset_by.keys())
 
         cell_ids_to_intersect = []
 
