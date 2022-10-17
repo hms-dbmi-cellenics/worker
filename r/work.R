@@ -4,6 +4,7 @@ library(dplyr)
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
+
 load_data <- function(fpath) {
   loaded <- FALSE
   data <- NULL
@@ -128,11 +129,20 @@ create_app <- function(last_modified, data, fpath) {
     id = "last_modified_mw"
   )
 
-  app <- RestRserve::Application$new(
-    content_type = "application/json"
+  encode_decode_middleware = RestRserve::EncodeDecodeMiddleware$new()
+
+  encode_decode_middleware$ContentHandlers$set_encode(
+    "application/json",
+    function(x, unbox = TRUE)  {
+      res = jsonlite::toJSON(x, dataframe = 'columns', auto_unbox = unbox, null = 'null', na = 'null', digits=NA)
+      unclass(res)
+    }
   )
 
-  app$append_middleware(last_modified_mw)
+  app <- RestRserve::Application$new(
+    content_type = "application/json",
+    middleware = list(encode_decode_middleware, last_modified_mw)
+  )
 
   app$add_get(
     path = "/health",
