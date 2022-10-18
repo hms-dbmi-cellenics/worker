@@ -4,11 +4,13 @@ mock_scdata <- function() {
   return(pbmc_small)
 }
 
-mock_req <- function(apply_filter = TRUE) {
+mock_req <- function(apply_subset = TRUE) {
+  subset_by <- c(2:10, 30:36, 60:70)
+
   req <- list(
     body = list(
-      applyFilter = apply_filter,
-      filterBy = c(2:10, 30:36, 60:70)
+      subsetBy = subset_by,
+      applySubset = apply_subset
         )
       )
 }
@@ -28,7 +30,7 @@ test_that("subsetting is applied and changes GetNormalizedExpression output", {
 
   res_filt <- GetNormalizedExpression(req, data)
 
-  req <- mock_req(apply_filter = FALSE)
+  req <- mock_req(apply_subset = FALSE)
   res_unfilt <- GetNormalizedExpression(req, data)
 
   expect_false(identical(res_unfilt, res_filt))
@@ -38,7 +40,7 @@ test_that("GetNormalizedExpression correctly subsets the data", {
   data <- mock_scdata()
   req <- mock_req()
 
-  subset_ids <- req$body$filterBy
+  subset_ids <- req$body$subsetBy
 
   res <- GetNormalizedExpression(req, data)
 
@@ -47,9 +49,9 @@ test_that("GetNormalizedExpression correctly subsets the data", {
 })
 
 
-test_that("GetNormalizedExpression doesn't subset the data when applyFilter is FALSE", {
+test_that("GetNormalizedExpression doesn't subset the data when applySubset is FALSE", {
   data <- mock_scdata()
-  req <- mock_req(apply_filter = FALSE)
+  req <- mock_req(apply_subset = FALSE)
 
   res <- GetNormalizedExpression(req, data)
 
@@ -57,10 +59,11 @@ test_that("GetNormalizedExpression doesn't subset the data when applyFilter is F
 })
 
 
-test_that("GetNormalizedExpression fails if subset_ids is empty", {
+test_that("GetNormalizedExpression fails if subsetBy is empty", {
   data <- mock_scdata()
   req <- mock_req()
 
-  req$body$filterBy <- c()
+  req$body$subsetBy <- c()
+
   expect_error(GetNormalizedExpression(req, data), "No cells match requested filters.")
 })

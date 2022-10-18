@@ -54,7 +54,7 @@ class GetNormalizedExpression(Task):
 
         # There's no subsetting to be done just send a None
         if (all(len(subset_by[category]) == 0 for category in categories)):
-            return { "subsetBy": None }
+            return { "subsetBy": None, "applySubset": False }
 
         cell_sets_dict = get_cell_sets_dict(cell_sets)
 
@@ -69,7 +69,7 @@ class GetNormalizedExpression(Task):
         # Intersect all sets of cell ids from different categories
         cell_ids = cell_ids_to_intersect[0].intersection(*cell_ids_to_intersect[1:])
 
-        return { "subsetBy": list(cell_ids) }
+        return { "subsetBy": list(cell_ids), "applySubset": True }
 
     @xray_recorder.capture("GetNormalizedExpression.compute")
     @backoff.on_exception(

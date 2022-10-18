@@ -14,8 +14,9 @@
 #'
 GetNormalizedExpression <- function(req, data) {
   subset_ids <- req$body$subsetBy
+  apply_subset <- req$body$applySubset
 
-  if (!is.null(subset_ids) && length(subset_ids) == 0) {
+  if (apply_subset && length(subset_ids) == 0) {
     stop(
       generateErrorMessage(
         error_codes$EMPTY_CELL_SET,
@@ -26,7 +27,7 @@ GetNormalizedExpression <- function(req, data) {
 
   message("Extracting normalized expression matrix")
 
-  if (!is.null(subset_ids)) {
+  if (apply_subset) {
     message("Number of cells before subsetting: ", ncol(data))
     data <- subsetIds(data, cells_id = subset_ids)
   } else {
