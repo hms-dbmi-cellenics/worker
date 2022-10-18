@@ -3,16 +3,15 @@ import json
 
 import boto3
 import mock
+import pandas as pd
 import pytest
 import responses
-import pandas as pd
 from botocore.stub import Stubber
-
 from exceptions import RWorkerException
 from tests.data.cell_set_types import cell_set_types
 from worker.config import config
-from worker.tasks.normalized_matrix import GetNormalizedExpression
 from worker.tasks.dotplot import DotPlot
+from worker.tasks.normalized_matrix import GetNormalizedExpression
 
 
 class TestGetNormalizedExpression:
@@ -21,9 +20,11 @@ class TestGetNormalizedExpression:
         self.correct_request = {
             "body": {
                 "name": "GetNormalizedExpression",
-                "filterBy":{
-                    "group":["set_hierarchy_2"],
-                    "key":["cluster4"]
+                "subsetBy": {
+                    'louvain': ['cluster4'],
+                    'sample': [],
+                    'metadata': [],
+                    'scratchpad': [],
                 }
             }
         }
@@ -82,8 +83,8 @@ class TestGetNormalizedExpression:
 
             # all expected keys are in the request
             expected_keys = [
-                "filterBy",
-                "applyFilter",
+                "subsetBy",
+                "applySubset",
                 ]
             assert all(key in request for key in expected_keys)
             stubber.assert_no_pending_responses()
@@ -96,8 +97,8 @@ class TestGetNormalizedExpression:
             request = GetNormalizedExpression(self.correct_request)._format_request()
              # Get object
             cell_set = cell_set_types["hierarchichal_sets"]
-
-            assert len(request["filterBy"]) == len(cell_set["cellSets"][1]["children"][1]["cellIds"])
+            
+            assert len(request["subsetBy"]) == len(cell_set["cellSets"][1]["children"][1]["cellIds"])
             stubber.assert_no_pending_responses()
 
     @responses.activate
