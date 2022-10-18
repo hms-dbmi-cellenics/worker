@@ -13,7 +13,15 @@ updateCellSetsThroughApi(
 )
 }
 \arguments{
-\item{auth_JWT}{}
+\item{cell_sets_object}{list of cellsets to patch}
+
+\item{api_url}{character - api endpoint url}
+
+\item{experiment_id}{character}
+
+\item{cell_set_key}{character}
+
+\item{auth_JWT}{character}
 }
 \description{
 Used when re-clustering, cell sets are replaced.
