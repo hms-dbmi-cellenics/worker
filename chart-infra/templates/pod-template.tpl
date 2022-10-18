@@ -2,6 +2,7 @@
 {{- define "worker.pod-template" -}}
     metadata:
       labels:
+        type: 'worker'
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
