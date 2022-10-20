@@ -42,7 +42,7 @@ class GetNormalizedExpression(Task):
         # convert result to dataframe
         print("Reading csv into pandas dataframe")
         csvStringIO = StringIO(result)
-        result = pd.read_csv(csvStringIO, sep=",", header=None, low_memory=False)
+        result = pd.read_csv(csvStringIO, sep=",", header=0, index_col=0, low_memory=False)
 
         print("Finished creating pandas dataframe")
         return Result(result)
