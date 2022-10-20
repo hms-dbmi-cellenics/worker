@@ -34,10 +34,10 @@ GetNormalizedExpression <- function(req, data) {
     message("No subsetting specified, sending the whole matrix")
   }
 
-  norm_matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
+  matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
 
-  message("Number of cells after subsetting: ", ncol(norm_matrix))
+  message("Number of cells after subsetting: ", ncol(matrix))
   message("Extracting normalized expression matrix from whole data")
 
-  return(norm_matrix)
+  return(vroom::vroom_format(matrix, delim=","))
 }
