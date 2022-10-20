@@ -45,7 +45,6 @@ class GetNormalizedExpression(Task):
         result = pd.read_csv(csvStringIO, sep=",", header=None, low_memory=False)
 
         print("Finished creating pandas dataframe")
-        # result = pd.DataFrame(result, index=result["_row"], columns = result.keys() - {'_row'})
         return Result(result)
 
     def _format_request(self):

@@ -39,5 +39,7 @@ GetNormalizedExpression <- function(req, data) {
   message("Number of cells after subsetting: ", ncol(matrix))
   message("Extracting normalized expression matrix from whole data")
 
+  matrix <- tibble::rownames_to_column(matrix, var = " ")
+
   return(vroom::vroom_format(matrix, delim=","))
 }
