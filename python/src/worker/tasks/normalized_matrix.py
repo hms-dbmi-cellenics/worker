@@ -6,7 +6,7 @@ from aws_xray_sdk.core import xray_recorder
 import pandas as pd
 from exceptions import raise_if_error
 from io import StringIO
-from collections import defaultdict
+from logging import info
 
 from ..config import config
 from ..helpers.s3 import get_cell_sets
@@ -40,11 +40,11 @@ class GetNormalizedExpression(Task):
 
     def _format_result(self, result):
         # convert result to dataframe
-        print("Reading csv into pandas dataframe")
+        info("Reading csv into pandas dataframe")
         csvStringIO = StringIO(result)
         result = pd.read_csv(csvStringIO, sep=",", header=0, index_col=0, low_memory=False)
 
-        print("Finished creating pandas dataframe")
+        info("Finished creating pandas dataframe")
         return Result(result)
 
     def _format_request(self):
