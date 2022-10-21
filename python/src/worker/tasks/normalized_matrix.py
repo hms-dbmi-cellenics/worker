@@ -3,10 +3,7 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
-import pandas as pd
 from exceptions import raise_if_error
-from io import StringIO
-from logging import info
 
 from ..config import config
 from ..helpers.s3 import get_cell_sets
