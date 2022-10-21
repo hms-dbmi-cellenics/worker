@@ -1,6 +1,6 @@
 import gzip
 import io
-import json
+import ujson
 import pandas as pd
 from logging import info
 
@@ -29,7 +29,7 @@ class Response:
             if isinstance(self.result.data, pd.DataFrame):
                 self.result.data.to_csv(zipfile)
             else:
-                json.dump(self.result.data, zipfile)
+                ujson.dump(self.result.data, zipfile)
 
         gzipped_body.seek(0)
 
