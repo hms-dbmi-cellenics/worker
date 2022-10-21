@@ -102,11 +102,11 @@ class TestGetNormalizedExpression:
             stubber.assert_no_pending_responses()
 
     @responses.activate
-    def test_generates_correct_result_type(self):
-        payload = {'data': {'CACGGGTTCTGTTGGA-1': [0,0], 'CACGGGTTCTGTTGGT-1': [0,0],
+    def test_r_result_isnt_changed(self):
+        payload = {'data': """{'CACGGGTTCTGTTGGA-1': [0,0], 'CACGGGTTCTGTTGGT-1': [0,0],
         'CACGGGTTCTGTTGTA-1': [0,0], 'CACGGGTTCTGTTTGA-1': [0,0],
         'CACGGGTTCTGTTGGC-1': [0,0], 'CACGGGTTCTGTTGCC-1': [0,0],
-        '_row':['ENSG0', 'ENSG1']}}
+        '_row':['ENSG0', 'ENSG1']}"""}
 
         stubber, s3 = self.get_s3_stub("hierarchichal_sets")
 
@@ -121,7 +121,7 @@ class TestGetNormalizedExpression:
             )
 
             result = GetNormalizedExpression(self.correct_request).compute()
-            assert isinstance(result.data, pd.DataFrame)
+            assert result.data == payload["data"]
             stubber.assert_no_pending_responses()
 
     @responses.activate
