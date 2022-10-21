@@ -26,9 +26,11 @@ class Response:
         info("Starting compression before upload to s3")
         gzipped_body = io.BytesIO()
         with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            if isinstance(self.result.data, pd.DataFrame):
-                self.result.data.to_csv(zipfile)
+            if (isinstance(self.result.data, str)):
+                info('Compressing string work result')
+                zipfile.write(self.result.data)
             else:
+                info('Encoding and compressing json work result')
                 json.dump(self.result.data, zipfile)
 
         gzipped_body.seek(0)

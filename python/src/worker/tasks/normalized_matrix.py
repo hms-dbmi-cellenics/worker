@@ -39,12 +39,6 @@ class GetNormalizedExpression(Task):
         self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
-        # convert result to dataframe
-        info("Reading csv into pandas dataframe")
-        csvStringIO = StringIO(result)
-        result = pd.read_csv(csvStringIO, sep=",", header=0, index_col=0, low_memory=False)
-
-        info("Finished creating pandas dataframe")
         return Result(result)
 
     def _format_request(self):
