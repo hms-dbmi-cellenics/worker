@@ -1,7 +1,6 @@
 import gzip
 import io
 import json
-import pandas as pd
 from logging import info
 
 import aws_xray_sdk as xray
