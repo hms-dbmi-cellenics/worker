@@ -15,13 +15,22 @@ mock_req <- function(apply_subset = TRUE) {
       )
 }
 
+string_to_df <- function(text_df) {
+  df <- read.table(text = text_df, sep =",", header=TRUE)
 
-test_that("GetNormalizedExpression generates the expected data frame format", {
+  # This part to rollback: rownames_to_column
+  rownames(df) <- df[,1]
+  df[,1] <- NULL
+
+  return(df)
+}
+
+test_that("GetNormalizedExpression generates the expected string format", {
   data <- mock_scdata()
   req <- mock_req()
 
   res <- GetNormalizedExpression(req, data)
-  expect_s3_class(res, "data.frame")
+  expect_type(res, "character")
 })
 
 test_that("subsetting is applied and changes GetNormalizedExpression output", {
@@ -44,8 +53,10 @@ test_that("GetNormalizedExpression correctly subsets the data", {
 
   res <- GetNormalizedExpression(req, data)
 
-  expect_false(ncol(data) == ncol(res))
-  expect_equal(length(subset_ids), ncol(res))
+  df <- string_to_df(res)
+
+  expect_false(ncol(data) == ncol(df))
+  expect_equal(ncol(df), length(subset_ids))
 })
 
 
@@ -55,7 +66,9 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
 
   res <- GetNormalizedExpression(req, data)
 
-  expect_true(ncol(data) == ncol(res))
+  df <- string_to_df(res)
+
+  expect_true(ncol(data) == ncol(df))
 })
 
 
