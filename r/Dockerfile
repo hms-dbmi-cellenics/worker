@@ -51,6 +51,14 @@ RUN R -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRU
 COPY setup/get_sysdeps_run.R .
 RUN Rscript get_sysdeps_run.R
 
+# remove identified packages with potentially conflicting licenses
+COPY setup/create_ghost_packages.R .
+RUN Rscript create_ghost_packages.R
+
+# check for any potentially problematic licenses
+COPY setup/check_package_licenses.R .
+RUN Rscript check_package_licenses.R
+
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
@@ -71,6 +79,7 @@ RUN echo "python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
+# link system libstdc++ to conda installed version
 RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
     ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
