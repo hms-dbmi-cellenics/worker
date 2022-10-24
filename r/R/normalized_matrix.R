@@ -36,8 +36,7 @@ GetNormalizedExpression <- function(req, data) {
 
   matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
 
-  message("Number of cells after subsetting: ", ncol(matrix))
-  message("Extracting normalized expression matrix from whole data")
+  message("Number of cells in matrix to return: ", ncol(matrix))
 
   matrix <- tibble::rownames_to_column(matrix, var = " ")
 
