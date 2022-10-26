@@ -1,7 +1,6 @@
 import json
 
 import backoff
-import pandas as pd
 import requests
 from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
