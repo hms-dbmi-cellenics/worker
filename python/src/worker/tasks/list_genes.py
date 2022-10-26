@@ -11,12 +11,8 @@ from ..helpers.remove_regex import remove_regex
 from ..result import Result
 from ..tasks import Task
 
-
 class ListGenes(Task):
     def _format_result(self, result, total):
-        # convert result to list of row dicts
-        result = result.to_dict(orient="records")
-
         # Return a list of formatted results.
         return Result({"total": total, "rows": result})
 
@@ -58,6 +54,6 @@ class ListGenes(Task):
         data = result.get("data")
 
         total = data["full_count"]
-        result = pd.DataFrame.from_dict(data["gene_results"])
+        result = data["gene_results"]
 
         return self._format_result(result, total)
