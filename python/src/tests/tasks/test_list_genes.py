@@ -97,8 +97,7 @@ class TestListGenes:
             json=payload,
             status=200,
         )
-        a = ListGenes(self.correct_desc).compute().data
-
+        
         pyWorkerResponse = {'total': 3, 'gene_names': ['gene1', 'gene2', 'gene2'], 'dispersions': [4, 420, 1]}
         assert (
             ListGenes(self.correct_desc).compute().data == pyWorkerResponse
