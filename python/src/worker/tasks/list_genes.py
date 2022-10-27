@@ -13,7 +13,7 @@ from ..tasks import Task
 class ListGenes(Task):
     def _format_result(self, result, total):
         # Return a list of formatted results.
-        return Result({"total": total, "rows": result})
+        return Result({"total": total,  **result})
 
     def _format_request(self):
         request = self.task_def
