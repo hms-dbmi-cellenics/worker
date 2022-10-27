@@ -78,6 +78,31 @@ class TestListGenes:
     def test_format_request_preserves_begin_and_end_with(self):
         request = ListGenes(self.partial_clean_regex)._format_request()
         assert request["geneNamesFilter"] == "^$LIN"
+    
+    @responses.activate
+    def test_formats_result_appropriately(self):
+        payload = {
+            'data':{
+                'gene_results':{
+                    'gene_names': ['gene1', 'gene2', 'gene2'],
+                    'dispersions': [4, 420, 1],
+                },
+                'full_count': 3
+            }
+        }
+
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/listGenes",
+            json=payload,
+            status=200,
+        )
+        a = ListGenes(self.correct_desc).compute().data
+
+        pyWorkerResponse = {'total': 3, 'gene_names': ['gene1', 'gene2', 'gene2'], 'dispersions': [4, 420, 1]}
+        assert (
+            ListGenes(self.correct_desc).compute().data == pyWorkerResponse
+        )
 
     @responses.activate
     def test_should_throw_exception_on_r_worker_error(self):
