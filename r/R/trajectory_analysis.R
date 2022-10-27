@@ -51,20 +51,24 @@ runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
   connected_nodes <- list()
   for (node in rownames(node_coords)) {
     node_id <- which(rownames(node_coords) == node)
-    connected_nodes_obj <- cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]]
-    connected_nodes[[node]] <- as.list(names(connected_nodes_obj))
+    
+    # Get connected node index vector
+    current_connected_nodes <- as.integer(cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]])
+
+    # Shift by 1 to use 0-based indexes
+    current_connected_nodes <- lapply(current_connected_nodes, function(connected_node_id) { connected_node_id - 1 })
+
+    connected_nodes[[node_id]] <- ensure_is_list_in_json(current_connected_nodes)
   }
 
-  # create list
-  colnames(node_coords) <- c("x", "y")
-  node_coords_list <- lapply(asplit(node_coords, 1), as.list)
-  for (i in 1:length(node_coords_list)) {
-    node_coords_list[[i]]["node_id"] <- names(node_coords_list)[i]
-    node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
-  }
-
-  starting_nodes <- list(nodes = node_coords_list)
-  return(starting_nodes)
+  return(
+    list(
+      nodes = rownames(node_coords),
+      connected_nodes = connected_nodes,
+      x = unname(node_coords[, 1]),
+      y = unname(node_coords[, 2])
+    )
+  )
 }
 
 
