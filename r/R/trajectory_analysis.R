@@ -53,7 +53,10 @@ runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
     node_id <- which(rownames(node_coords) == node)
     
     # Get connected node index vector
-    current_connected_nodes <- as.integer(cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]])
+    current_connected_nodes <- cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]]
+    
+    # Keep only those that are higher than current node
+    current_connected_nodes <- as.integer(subset(current_connected_nodes, current_connected_nodes > node_id))
 
     # Shift by 1 to use 0-based indexes
     current_connected_nodes <- lapply(current_connected_nodes, function(connected_node_id) { connected_node_id - 1 })
