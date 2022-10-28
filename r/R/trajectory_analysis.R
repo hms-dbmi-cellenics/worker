@@ -66,7 +66,6 @@ runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
 
   return(
     list(
-      names = rownames(node_coords),
       connectedNodes = connected_nodes,
       x = unname(node_coords[, 1]),
       y = unname(node_coords[, 2])
