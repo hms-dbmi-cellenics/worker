@@ -71,7 +71,7 @@ mock_pseudotime_req <- function(data) {
       embedding = mock_embedding_data,
       embedding_settings = mock_embedding_settings,
       clustering_settings = mock_clustering_settings,
-      root_nodes = c("Y_1", "Y_2", "Y_3")
+      root_nodes = c(0, 1, 2)
     )
   )
 
@@ -130,12 +130,10 @@ test_that("runTrajectoryAnalysisStartingNodesTask output has the expected list f
 
   root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
 
-  expect_named(root_nodes, c("nodes"))
-  expect_named(root_nodes$nodes[[1]], c("x", "y", "node_id", "connected_nodes"))
-  expect_type(root_nodes$nodes[[1]]$x, "double")
-  expect_type(root_nodes$nodes[[1]]$y, "double")
-  expect_type(root_nodes$nodes[[1]]$node_id, "character")
-  expect_type(root_nodes$nodes[[1]]$connected_nodes, "list")
+  expect_named(root_nodes, c("connectedNodes", "x", "y"))
+  expect_type(root_nodes$x[[1]], "double")
+  expect_type(root_nodes$y[[1]], "double")
+  expect_type(root_nodes$connectedNodes[[1]], "list")
 })
 
 
