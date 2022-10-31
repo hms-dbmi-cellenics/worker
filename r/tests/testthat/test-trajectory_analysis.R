@@ -155,7 +155,11 @@ test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of 
   )
 
   root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
-  expect_equal(nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)), length(root_nodes$nodes))
+  expected_length <- nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst))
+
+  expect_equal(expected_length, length(root_nodes$connectedNodes))
+  expect_equal(expected_length, length(root_nodes$x))
+  expect_equal(expected_length, length(root_nodes$y))
 })
 
 
