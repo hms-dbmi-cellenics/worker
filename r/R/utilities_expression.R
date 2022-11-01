@@ -155,22 +155,15 @@ scaleExpression <- function(rawExpression) {
 
 
 summaryStats <- function(data) {
-  return(purrr::map2(
-    data$rawExpression,
-    data$truncatedExpression,
-    summaryStatsAux
-  ))
-}
+  stats <- data.frame(
+    rawMean = colMeans(data$rawExpression, na.rm = TRUE), 
+    rawStdev = apply(data$rawExpression, 2, function(df) sd(df, na.rm = TRUE)),
+    truncatedMin = apply(data$truncatedExpression, 2, function(df) min(df, na.rm = TRUE)),
+    truncatedMax = apply(data$truncatedExpression, 2, function(df) max(df, na.rm = TRUE))
+  )
 
-summaryStatsAux <- function(raw, trunc) {
-  return(list(
-    rawMean = mean(raw, na.rm = TRUE),
-    rawStdev = sd(raw, na.rm = TRUE),
-    truncatedMin = min(trunc, na.rm = TRUE),
-    truncatedMax = max(trunc, na.rm = TRUE)
-  ))
+  return(stats)
 }
-
 
 #' Convert data.table to CSC sparse matrix
 #'
