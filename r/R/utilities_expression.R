@@ -8,13 +8,13 @@
 #'
 getGeneExpression <- function(data, genes) {
   expression_values <- getExpressionValues(data, genes)
-  stats <- summaryStats(expression_values)
+  stats <- getStats(expression_values)
 
   expression_values <-
     lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   return(list(
-    orderedGeneNames = as.list(names(stats)),
+    orderedGeneNames = as.list(genes$name),
     stats = stats,
     rawExpression = expression_values$rawExpression,
     truncatedExpression = expression_values$truncatedExpression,
@@ -154,7 +154,7 @@ scaleExpression <- function(rawExpression) {
 }
 
 
-summaryStats <- function(data) {
+getStats <- function(data) {
   stats <- list(
     rawMean = colMeans(data$rawExpression, na.rm = TRUE), 
     rawStdev = apply(data$rawExpression, 2,  sd, na.rm = TRUE),
