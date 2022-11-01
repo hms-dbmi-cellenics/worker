@@ -155,11 +155,11 @@ scaleExpression <- function(rawExpression) {
 
 
 summaryStats <- function(data) {
-  stats <- data.frame(
+  stats <- list(
     rawMean = colMeans(data$rawExpression, na.rm = TRUE), 
-    rawStdev = apply(data$rawExpression, 2, function(df) sd(df, na.rm = TRUE)),
-    truncatedMin = apply(data$truncatedExpression, 2, function(df) min(df, na.rm = TRUE)),
-    truncatedMax = apply(data$truncatedExpression, 2, function(df) max(df, na.rm = TRUE))
+    rawStdev = apply(data$rawExpression, 2,  sd, na.rm = TRUE),
+    truncatedMin = apply(data$truncatedExpression, 2,  min, na.rm = TRUE),
+    truncatedMax = apply(data$truncatedExpression, 2,  max, na.rm = TRUE)
   )
 
   return(stats)
