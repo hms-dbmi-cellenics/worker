@@ -155,12 +155,14 @@ scaleExpression <- function(rawExpression) {
 
 
 getStats <- function(data) {
-  stats <- list(
+  stats_unsafe <- list(
     rawMean = colMeans(data$rawExpression, na.rm = TRUE), 
     rawStdev = apply(data$rawExpression, 2,  sd, na.rm = TRUE),
     truncatedMin = apply(data$truncatedExpression, 2,  min, na.rm = TRUE),
     truncatedMax = apply(data$truncatedExpression, 2,  max, na.rm = TRUE)
   )
+
+  stats <- lapply(stats_unsafe, ensure_is_list_in_json)
 
   return(stats)
 }
