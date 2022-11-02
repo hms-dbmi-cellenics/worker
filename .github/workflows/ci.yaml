@@ -165,6 +165,9 @@ jobs:
       - id: build
         name: Build Docker images
         run: |-
+          echo "Image name"
+          echo $IMAGE_NAME
+          echo $PREVIOUS_IMAGE_NAME
           docker build --target builder \
             --cache-from=$PREVIOUS_IMAGE_NAME-builder \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
