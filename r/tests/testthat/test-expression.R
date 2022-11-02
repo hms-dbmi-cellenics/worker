@@ -25,9 +25,11 @@ test_that("Expression task returns appropriate number and names of genes.", {
     c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
   )
   expect_equal(length(res$orderedGeneNames), 2)
-  expect_equal(length(res$stats), 2)
+  expect_equal(length(res$stats$rawMean), 2)
+  expect_equal(length(res$stats$rawStdev), 2)
+  expect_equal(length(res$stats$truncatedMin), 2)
+  expect_equal(length(res$stats$truncatedMax), 2)
   expect_equal(res$orderedGeneNames, req$body$genes)
-  expect_equal(names(res$stats), unlist(req$body$genes))
 })
 
 test_that("Expression matrices are correctly formatted for mathJS", {
@@ -77,7 +79,7 @@ test_that("Expression task returns appropriate number of cells.", {
   expect_equal(result_size, expected_cells)
 })
 
-test_that("summaryStats calculates correct summary stats.", {
+test_that("getStats works well", {
   data <- mock_scdata()
   req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
@@ -90,45 +92,44 @@ test_that("summaryStats calculates correct summary stats.", {
 
 
   expression_values <- getExpressionValues(data, gene_subset)
-  res <- summaryStats(expression_values)
+  res <- getStats(expression_values)
 
-  expect_equal(names(res), unlist(req$body$genes))
   expect_equal(
-    unique(unlist(lapply(res, names))),
+    names(res),
     c("rawMean", "rawStdev", "truncatedMin", "truncatedMax")
   )
 
   expect_equal(
-    res$MS4A1$rawMean,
+    res$rawMean[1],
     mean(expression_values$rawExpression$MS4A1, na.rm = TRUE)
   )
   expect_equal(
-    res$MS4A1$rawStdev,
+    res$rawStdev[1],
     sd(expression_values$rawExpression$MS4A1, na.rm = TRUE)
   )
   expect_equal(
-    res$MS4A1$truncatedMin,
+    res$truncatedMin[1],
     min(expression_values$truncatedExpression$MS4A1)
   )
   expect_equal(
-    res$MS4A1$truncatedMax,
+    res$truncatedMax[1],
     max(expression_values$truncatedExpression$MS4A1)
   )
 
   expect_equal(
-    res$CD79B$rawMean,
+    res$rawMean[2],
     mean(expression_values$rawExpression$CD79B, na.rm = TRUE)
   )
   expect_equal(
-    res$CD79B$rawStdev,
+    res$rawStdev[2],
     sd(expression_values$rawExpression$CD79B, na.rm = TRUE)
   )
   expect_equal(
-    res$CD79B$truncatedMin,
+    res$truncatedMin[2],
     min(expression_values$truncatedExpression$CD79B)
   )
   expect_equal(
-    res$CD79B$truncatedMax,
+    res$truncatedMax[2],
     max(expression_values$truncatedExpression$CD79B)
   )
 })
@@ -152,7 +153,10 @@ test_that("Expression task does not return gene that does not exist", {
   expect_true(!("aaa" %in% names(res$stats)))
 
   expect_equal(length(res$orderedGeneNames), 2)
-  expect_equal(length(res$stats), 2)
+  expect_equal(length(res$stats$rawMean), 2)
+  expect_equal(length(res$stats$rawStdev), 2)
+  expect_equal(length(res$stats$truncatedMin), 2)
+  expect_equal(length(res$stats$truncatedMax), 2)
 
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 2)
 })
@@ -171,7 +175,11 @@ test_that("Expression task works with one gene", {
   )
   expect_equal(res$orderedGeneNames, req$body$genes)
   expect_equal(length(res$orderedGeneNames), 1)
-  expect_equal(length(res$stats), 1)
+  expect_equal(length(res$stats$rawMean), 1)
+  expect_equal(length(res$stats$rawStdev), 1)
+  expect_equal(length(res$stats$truncatedMin), 1)
+  expect_equal(length(res$stats$truncatedMax), 1)
+
 
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 1)
 })
@@ -374,3 +382,4 @@ test_that("toSparseJson returns single value arrays as lists", {
     })
   })
 })
+
