@@ -172,8 +172,10 @@ generateTrajectoryGraph <- function(embedding_data, embedding_settings, clusteri
     cluster_method = clustering_method,
     reduction_method = SEURAT_TO_MONOCLE_METHOD_MAP[[embedding_method]],
     resolution = clustering_resolution,
-    nn_control = clustering_controls
+    nn_control = clustering_controls,
+    k = 25
   )
+
   cell_data <- monocle3::learn_graph(cell_data)
 
   return(cell_data)
