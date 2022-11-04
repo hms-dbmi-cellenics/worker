@@ -1,4 +1,4 @@
-{{- if ne .Values.sandboxId "default" }}
+{{- if (eq .Values.kubernetes.env "staging") }}
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
