@@ -39,3 +39,21 @@ test_that("PCA embedding works", {
 
   expect_equal(res,expected_res$PCS)
 })
+
+test_that("can request saved embedding result", {
+  data <- suppressWarnings(mock_scdata())
+  req <- mock_req()
+  req$body$type <- "pca"
+  req$body$use_saved <- TRUE
+
+  res <- runEmbedding(req, data)
+
+  expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
+
+  expected_res <- expected_res %>%
+    as.data.frame() %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(PCS = list(c(PC_1, PC_2)))
+
+  expect_equal(res,expected_res$PCS)
+})
