@@ -124,7 +124,7 @@ test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_
 })
 
 
-test_that("runTrajectoryAnalysisStartingNodesTask output has the expected list format", {
+test_that("runTrajectoryAnalysisStartingNodesTask output has the expected format", {
   data <- mock_scdata()
   req <- mock_starting_nodes_req(data)
 
@@ -133,7 +133,8 @@ test_that("runTrajectoryAnalysisStartingNodesTask output has the expected list f
   expect_named(root_nodes, c("connectedNodes", "x", "y"))
   expect_type(root_nodes$x[[1]], "double")
   expect_type(root_nodes$y[[1]], "double")
-  expect_type(root_nodes$connectedNodes[[1]], "list")
+  expect_type(root_nodes$connectedNodes[[1]], "double")
+  expect_type(root_nodes$connectedNodes[[2]], "list")
 })
 
 
