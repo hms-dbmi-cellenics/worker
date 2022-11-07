@@ -40,12 +40,13 @@ test_that("dotplot generates the expected list format", {
   req <- mock_req()
 
   res <- runDotPlot(req, data)
-  item <- res[[1]]
-  expect_named(item, c("cellSets", "geneName", "avgExpression", "cellsPercentage"))
-  expect_type(item$cellSets, "character")
-  expect_type(item$geneName, "character")
-  expect_type(item$avgExpression, "double")
-  expect_type(item$cellsPercentage, "double")
+  expect_named(res, c("cellSetsIdx", "geneNameIdx", "avgExpression", "cellsPercentage", "cellSetsNames", "geneNames"))
+  expect_type(res$cellSetsNames, "character")
+  expect_type(res$geneNames, "character")
+  expect_type(res$cellSetsIdx, "double")
+  expect_type(res$geneNameIdx, "double")
+  expect_type(res$avgExpression, "double")
+  expect_type(res$cellsPercentage, "double")
 })
 
 test_that("useMarkerGenes works", {
@@ -62,7 +63,7 @@ test_that("customGenesList is used if useMarkerGenes is FALSE", {
   req$body$useMarkerGenes <- FALSE
 
   res <- runDotPlot(req, data)
-  genes_used <- unique(sapply(res, `[[`, "geneName"))
+  genes_used <- res$geneNames
 
   expect_true(all(genes_used %in% req$body$customGenesList))
 })
@@ -96,7 +97,6 @@ test_that("Dotplot returns the correct values", {
 
   scaled_res <- scale(correct_res)
   scaled_res <- Seurat::MinMax(scaled_res, min = -2.5, max = 2.5)
-  scaled_res <- as.list(x = t(x = scaled_res))
-  dotPlot_res <- unname(purrr::transpose(dotPlot_res)$avgExpression)
-  expect_equal(dotPlot_res, scaled_res)
+  scaled_res <- unlist(as.list(x = t(x = scaled_res)))
+  expect_equal(dotPlot_res$avgExpression, scaled_res)
 })
