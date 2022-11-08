@@ -32,6 +32,24 @@ test_that("Expression task returns appropriate number and names of genes.", {
   expect_equal(as.list(res$orderedGeneNames), req$body$genes)
 })
 
+test_that("Expression task keeps order regardless of the request received.", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  # Change order so that we can make sure this doesnt affect order
+  req$body$genes <- rev(req$body$genes)
+
+  res <- runExpression(req, data)
+
+  expect_equal(
+    names(res),
+    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
+  )
+
+  expect_equal(res$orderedGeneNames, c("MS4A1", "CD79B"))
+  expect_equal(res$stats$rawMean, c(0.7890259, 1.3545382))
+})
+
 test_that("Expression matrices are correctly formatted for mathJS", {
   data <- mock_scdata()
   req <- mock_req()
