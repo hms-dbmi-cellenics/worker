@@ -10,7 +10,7 @@ getGeneExpression <- function(data, genes) {
   expression_values <- getExpressionValues(data, genes)
   stats <- getStats(expression_values)
 
-  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values))
+  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
 
   expression_values <-
     lapply(expression_values, formatExpression, data@meta.data$cells_id)
