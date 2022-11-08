@@ -29,7 +29,7 @@ test_that("Expression task returns appropriate number and names of genes.", {
   expect_equal(length(res$stats$rawStdev), 2)
   expect_equal(length(res$stats$truncatedMin), 2)
   expect_equal(length(res$stats$truncatedMax), 2)
-  expect_equal(res$orderedGeneNames, req$body$genes)
+  expect_equal(as.list(res$orderedGeneNames), req$body$genes)
 })
 
 test_that("Expression matrices are correctly formatted for mathJS", {
