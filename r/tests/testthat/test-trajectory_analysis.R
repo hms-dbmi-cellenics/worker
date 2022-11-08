@@ -71,7 +71,7 @@ mock_pseudotime_req <- function(data) {
       embedding = mock_embedding_data,
       embedding_settings = mock_embedding_settings,
       clustering_settings = mock_clustering_settings,
-      root_nodes = c("Y_1", "Y_2", "Y_3")
+      root_nodes = c(0, 1, 2)
     )
   )
 
@@ -124,18 +124,19 @@ test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_
 })
 
 
-test_that("runTrajectoryAnalysisStartingNodesTask output has the expected list format", {
+test_that("runTrajectoryAnalysisStartingNodesTask output has the expected format", {
   data <- mock_scdata()
   req <- mock_starting_nodes_req(data)
 
   root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
 
-  expect_named(root_nodes, c("nodes"))
-  expect_named(root_nodes$nodes[[1]], c("x", "y", "node_id", "connected_nodes"))
-  expect_type(root_nodes$nodes[[1]]$x, "double")
-  expect_type(root_nodes$nodes[[1]]$y, "double")
-  expect_type(root_nodes$nodes[[1]]$node_id, "character")
-  expect_type(root_nodes$nodes[[1]]$connected_nodes, "list")
+  expect_named(root_nodes, c("connectedNodes", "x", "y"))
+  expect_type(root_nodes$x[[1]], "double")
+  expect_type(root_nodes$y[[1]], "double")
+  expect_type(root_nodes$connectedNodes[[1]], "double")
+  # Second element is a list because it has length 1, so this way we ensure that
+  # it is encoded in json as a list too
+  expect_type(root_nodes$connectedNodes[[3]], "list")
 })
 
 
@@ -157,7 +158,11 @@ test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of 
   )
 
   root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
-  expect_equal(nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)), length(root_nodes$nodes))
+  expected_length <- nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst))
+
+  expect_equal(expected_length, length(root_nodes$connectedNodes))
+  expect_equal(expected_length, length(root_nodes$x))
+  expect_equal(expected_length, length(root_nodes$y))
 })
 
 
@@ -180,3 +185,4 @@ test_that('runTrajectoryAnalysisPseudoTimeTask fails if root_node is empty', {
 
   expect_error(runTrajectoryAnalysisPseudoTimeTask(req, data), "No root nodes were selected for the analysis.")
 })
+

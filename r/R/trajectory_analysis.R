@@ -49,22 +49,28 @@ runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
   # node coordinates
   # get connected nodes
   connected_nodes <- list()
-  for (node in rownames(node_coords)) {
-    node_id <- which(rownames(node_coords) == node)
-    connected_nodes_obj <- cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]]
-    connected_nodes[[node]] <- as.list(names(connected_nodes_obj))
+
+  for (node_id in seq_along(rownames(node_coords))) {
+
+    # Get connected node index vector
+    current_connected_nodes <- cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]]
+
+    # Keep only those that are higher than current node
+    current_connected_nodes <- as.integer(current_connected_nodes[current_connected_nodes > node_id])
+
+    # Shift by 1 to use 0-based indexes
+    current_connected_nodes <- current_connected_nodes - 1
+
+    connected_nodes[[node_id]] <- ensure_is_list_in_json(current_connected_nodes)
   }
 
-  # create list
-  colnames(node_coords) <- c("x", "y")
-  node_coords_list <- lapply(asplit(node_coords, 1), as.list)
-  for (i in 1:length(node_coords_list)) {
-    node_coords_list[[i]]["node_id"] <- names(node_coords_list)[i]
-    node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
-  }
-
-  starting_nodes <- list(nodes = node_coords_list)
-  return(starting_nodes)
+  return(
+    list(
+      connectedNodes = connected_nodes,
+      x = unname(node_coords[, 1]),
+      y = unname(node_coords[, 2])
+    )
+  )
 }
 
 
@@ -119,7 +125,16 @@ runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
   seurat_embedding_method <- req$body$embedding_settings$method
   monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
 
-  cell_data <- monocle3::order_cells(cell_data, reduction_method = monocle_embedding_method, root_pr_nodes = req$body$root_nodes)
+
+  node_ids <- colnames(cell_data@principal_graph_aux[[monocle_embedding_method]]$dp_mst)
+
+  # Add 1 to indexes so they are 1-based
+  root_indexes <- req$body$root_nodes + 1
+  
+  # Translate the indexes to their ids
+  root_ids <- node_ids[root_indexes]
+  
+  cell_data <- monocle3::order_cells(cell_data, reduction_method = monocle_embedding_method, root_pr_nodes = root_ids)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
