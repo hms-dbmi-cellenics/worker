@@ -8,13 +8,15 @@
 #'
 getGeneExpression <- function(data, genes) {
   expression_values <- getExpressionValues(data, genes)
-  stats <- summaryStats(expression_values)
+  stats <- getStats(expression_values)
+
+  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
 
   expression_values <-
     lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   return(list(
-    orderedGeneNames = as.list(names(stats)),
+    orderedGeneNames = ordered_gene_names,
     stats = stats,
     rawExpression = expression_values$rawExpression,
     truncatedExpression = expression_values$truncatedExpression,
@@ -154,23 +156,18 @@ scaleExpression <- function(rawExpression) {
 }
 
 
-summaryStats <- function(data) {
-  return(purrr::map2(
-    data$rawExpression,
-    data$truncatedExpression,
-    summaryStatsAux
-  ))
-}
+getStats <- function(data) {
+  stats_unsafe <- list(
+    rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)), 
+    rawStdev = unname(apply(data$rawExpression, 2,  sd, na.rm = TRUE)),
+    truncatedMin = unname(apply(data$truncatedExpression, 2,  min, na.rm = TRUE)),
+    truncatedMax = unname(apply(data$truncatedExpression, 2,  max, na.rm = TRUE))
+  )
 
-summaryStatsAux <- function(raw, trunc) {
-  return(list(
-    rawMean = mean(raw, na.rm = TRUE),
-    rawStdev = sd(raw, na.rm = TRUE),
-    truncatedMin = min(trunc, na.rm = TRUE),
-    truncatedMax = max(trunc, na.rm = TRUE)
-  ))
-}
+  stats <- lapply(stats_unsafe, ensure_is_list_in_json)
 
+  return(stats)
+}
 
 #' Convert data.table to CSC sparse matrix
 #'
