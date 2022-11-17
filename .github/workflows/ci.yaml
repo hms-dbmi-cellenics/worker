@@ -303,22 +303,22 @@ jobs:
 
           # Deployment config for `staging-default`
           if [ "${{ matrix.environment }}" = "develop" ]; then
-            SANDBOX_ID="default"
-            CHART_REF="$GITHUB_SHA"
-            KUBERNETES_ENV="staging"
-            REPLICA_COUNT="0"
-            IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="28Gi"
+            export SANDBOX_ID="default"
+            export CHART_REF="$GITHUB_SHA"
+            export KUBERNETES_ENV="staging"
+            export REPLICA_COUNT="0"
+            export IMAGE_GLOB="$REF_ID-*"
+            export MEMORY_REQUEST="28Gi"
           fi
 
           # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
-            SANDBOX_ID="STAGING_SANDBOX_ID"
-            CHART_REF="STAGING_CHART_REF"
-            KUBERNETES_ENV="staging"
-            REPLICA_COUNT="0"
-            IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="4Gi"
+            export SANDBOX_ID="STAGING_SANDBOX_ID"
+            export CHART_REF="STAGING_CHART_REF"
+            export KUBERNETES_ENV="staging"
+            export REPLICA_COUNT="0"
+            export IMAGE_GLOB="$REF_ID-*"
+            export MEMORY_REQUEST="4Gi"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
