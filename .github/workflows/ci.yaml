@@ -344,7 +344,7 @@ jobs:
             .spec.values.r.image = strenv(IMAGE_NAME) + "-r" |
             .spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
             .spec.values.python.image = strenv(IMAGE_NAME) + "-python" |
-            .spec.values.datadogTags = "kube_namespace:" + strenv(DEPLOYMENT_NAME) + "-" strenv(SANDBOX_ID) |
+            .spec.values.datadogTags = "kube_namespace:" + strenv(DEPLOYMENT_NAME) + "-" + strenv(SANDBOX_ID) |
             .metadata.annotations["filter.fluxcd.io/r"] = "glob:" + strenv(IMAGE_GLOB) + "-r" |
             .metadata.annotations["filter.fluxcd.io/python"] = "glob:" + strenv(IMAGE_GLOB) + "-python"
           ' $DEPLOYMENT_NAME.yaml
