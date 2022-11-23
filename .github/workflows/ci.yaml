@@ -375,10 +375,10 @@ jobs:
             select(di == 6).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 6).spec.values.replicaCount = env(REPLICA_COUNT) |
             select(di == 6).spec.values.r.image = strenv(IMAGE_NAME) + "-r" |
-            select(di == 6).spec.values.r.image = line_comment = strenv(R_IMAGE_POLICY_TAG) |
+            select(di == 6).spec.values.r.image line_comment = strenv(R_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
             select(di == 6).spec.values.python.image = strenv(IMAGE_NAME) + "-python" |
-            select(di == 6).spec.values.r.image = line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
+            select(di == 6).spec.values.python.image line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
