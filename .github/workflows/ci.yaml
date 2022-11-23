@@ -251,10 +251,10 @@ jobs:
         name: Push docker images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
-          docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-python
-          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-r
-
           TIMESTAMP=$(date +%s)
+
+          docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-$TIMESTAMP-python
+          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-$TIMESTAMP-r
 
           docker push $IMAGE_NAME-$TIMESTAMP-python
           docker push $IMAGE_NAME-$TIMESTAMP-r
