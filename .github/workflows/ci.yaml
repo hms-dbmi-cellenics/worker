@@ -58,6 +58,7 @@ jobs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       image-tag: ${{ steps.ref.outputs.image-tag }}
       ref-id: ${{ steps.ref.outputs.ref-id }}
+      timestamp: ${{ steps.ref.outputs.timestamp }}
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -83,21 +84,30 @@ jobs:
           # in push events, the latest commit of the master branch is GITHUB_SHA
           # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
 
+          TIMESTAMP=$(date +%s)
+
           if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
             COMMIT_SHA=""
             IMAGE_TAG=$REF_ID
+            TIMESTAMP=""
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
+            TIMESTAMP=$TIMESTAMP
           else
             COMMIT_SHA=$GITHUB_SHA
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
+            TIMESTAMP=$TIMESTAMP
           fi
 
           # IMAGE_TAG is used in the Build Docker Image step.
           # We can easily build the image-tag from REF_ID and COMMIT_SHA for non-production releases.
           # But we can not easily create the image tag for production releases, so we're bulding it here
           echo "::set-output name=image-tag::$IMAGE_TAG"
+
+          # TIMESTAMP is used to postfix images in the "push docker images to ECR" step.
+          # We want to add timestamp tags for PR and staging images.
+          echo "::set-output name=timestamp::$TIMESTAMP"
 
           # This will take a GitHub repo name like `biomage-org/iac`
           # and turns it into `iac`. This will be the name of the
@@ -186,7 +196,7 @@ jobs:
           echo Pushing image $IMAGE_NAME-builder to ECR.
           docker push $IMAGE_NAME-builder
 
-          echo Pushing image $IMAGE_NAME-builder-ci to ECR.
+          echo Pushing image $IMAGE_NAME-ci to ECR.
           docker push $IMAGE_NAME-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
@@ -251,15 +261,25 @@ jobs:
         name: Push docker images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
-          TIMESTAMP=$(date +%s)
 
-          docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-$TIMESTAMP-python
-          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-$TIMESTAMP-r
+          docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-python
+          docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-r
 
-          docker push $IMAGE_NAME-$TIMESTAMP-python
-          docker push $IMAGE_NAME-$TIMESTAMP-r
+          docker push $IMAGE_NAME-python
+          docker push $IMAGE_NAME-r
+
+          if[ ! -z "$TIMESTAMP" ]; then
+            echo Pushing timestamped $IMAGE_NAME-[python/r] to ECR
+
+            docker tag $IMAGE_NAME-python $IMAGE_NAME-$TIMESTAMP-python
+            docker tag $IMAGE_NAME-r $IMAGE_NAME-$TIMESTAMP-r
+
+            docker push $IMAGE_NAME-$TIMESTAMP-python
+            docker push $IMAGE_NAME-$TIMESTAMP-r
+          fi
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+          TIMESTAMP: ${{ steps.ref.output.timestamp }}
 
   deploy:
     name: Deploy to Kubernetes
@@ -297,6 +317,7 @@ jobs:
             export SANDBOX_ID="default"
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="production"
+            export IMAGE_TAG="$IMAGE_NAME"
             export REPLICA_COUNT="2"
             export IMAGE_PATTERN="^refs-tags-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"
             export IMAGE_EXTRACT='$version'
@@ -311,6 +332,7 @@ jobs:
             export SANDBOX_ID="default"
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="staging"
+            export IMAGE_TAG="$IMAGE_NAME-$TIMESTAMP"
             export REPLICA_COUNT="0"
             export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
@@ -325,6 +347,7 @@ jobs:
             export SANDBOX_ID="STAGING_SANDBOX_ID"
             export CHART_REF="FILLED_IN_BY_BIOMAGE_STAGE"
             export KUBERNETES_ENV="staging"
+            export IMAGE_TAG="$IMAGE_NAME-$TIMESTAMP"
             export REPLICA_COUNT="0"
             export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
@@ -374,10 +397,10 @@ jobs:
             select(di == 6).spec.values.serviceAccount.iamRole = "worker-role-" + strenv(KUBERNETES_ENV) |
             select(di == 6).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 6).spec.values.replicaCount = env(REPLICA_COUNT) |
-            select(di == 6).spec.values.r.image = strenv(IMAGE_NAME) + "-r" |
+            select(di == 6).spec.values.r.image = strenv(IMAGE_TAG) + "-r" |
             select(di == 6).spec.values.r.image line_comment = strenv(R_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
-            select(di == 6).spec.values.python.image = strenv(IMAGE_NAME) + "-python" |
+            select(di == 6).spec.values.python.image = strenv(IMAGE_TAG) + "-python" |
             select(di == 6).spec.values.python.image line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
@@ -387,6 +410,7 @@ jobs:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          TIMESTAMP: ${{ needs.build-docker.outputs.timestamp }}
 
       - name: Push production/develop template to releases
         if:
