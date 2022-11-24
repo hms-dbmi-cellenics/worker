@@ -405,7 +405,7 @@ jobs:
             select(di == 6).spec.values.python.image.registry = strenv(REGISTRY) |
             select(di == 6).spec.values.python.image.repository = strenv(GITHUB_REPOSITORY) |
             select(di == 6).spec.values.python.image.tag = strenv(IMAGE_TAG) + "-python" |
-            select(di == 6).spec.values.python.image line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
+            select(di == 6).spec.values.python.image.tag line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
