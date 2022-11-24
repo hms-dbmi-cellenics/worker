@@ -4,7 +4,7 @@ library(dplyr)
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
-# TEST IMAGE CHANGE
+# TEST FLUX IMAGE UPDATE - REMOVE TAG BEFORE MERGING
 
 load_data <- function(fpath) {
   loaded <- FALSE
