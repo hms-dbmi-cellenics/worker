@@ -317,7 +317,7 @@ jobs:
             export SANDBOX_ID="default"
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="production"
-            export IMAGE_TAG="$IMAGE_NAME"
+            export IMAGE_NAME="$IMAGE_TAG"
             export REPLICA_COUNT="2"
             export IMAGE_PATTERN="^refs-tags-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"
             export IMAGE_EXTRACT='$version'
@@ -332,7 +332,7 @@ jobs:
             export SANDBOX_ID="default"
             export CHART_REF="$GITHUB_SHA"
             export KUBERNETES_ENV="staging"
-            export IMAGE_TAG="$IMAGE_NAME-$TIMESTAMP"
+            export IMAGE_NAME="$IMAGE_TAG-$TIMESTAMP"
             export REPLICA_COUNT="0"
             export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
@@ -347,7 +347,7 @@ jobs:
             export SANDBOX_ID="STAGING_SANDBOX_ID"
             export CHART_REF="FILLED_IN_BY_BIOMAGE_STAGE"
             export KUBERNETES_ENV="staging"
-            export IMAGE_TAG="$IMAGE_NAME-$TIMESTAMP"
+            export IMAGE_NAME="$IMAGE_TAG-$TIMESTAMP"
             export REPLICA_COUNT="0"
             export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
             export IMAGE_EXTRACT='$timestamp'
@@ -398,22 +398,23 @@ jobs:
             select(di == 6).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 6).spec.values.replicaCount = env(REPLICA_COUNT) |
             select(di == 6).spec.values.r.image.registry = strenv(REGISTRY) |
-            select(di == 6).spec.values.r.image.repository = strenv(GITHUB_REPOSITORY) |
-            select(di == 6).spec.values.r.image.tag = strenv(IMAGE_TAG) + "-r" |
+            select(di == 6).spec.values.r.image.repository = strenv(REPOSITORY) |
+            select(di == 6).spec.values.r.image.tag = strenv(IMAGE_NAME) + "-r" |
             select(di == 6).spec.values.r.image.tag line_comment = strenv(R_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
             select(di == 6).spec.values.python.image.registry = strenv(REGISTRY) |
-            select(di == 6).spec.values.python.image.repository = strenv(GITHUB_REPOSITORY) |
-            select(di == 6).spec.values.python.image.tag = strenv(IMAGE_TAG) + "-python" |
+            select(di == 6).spec.values.python.image.repository = strenv(REPOSITORY) |
+            select(di == 6).spec.values.python.image.tag = strenv(IMAGE_NAME) + "-python" |
             select(di == 6).spec.values.python.image.tag line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+          IMAGE_TAG: ${{ needs.build-docker.outputs.image-tag) }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ needs.build-docker.outputs.repo-name }}
           TIMESTAMP: ${{ needs.build-docker.outputs.timestamp }}
 
       - name: Push production/develop template to releases
