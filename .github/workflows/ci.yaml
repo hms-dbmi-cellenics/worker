@@ -399,7 +399,7 @@ jobs:
             select(di == 6).spec.values.replicaCount = env(REPLICA_COUNT) |
             select(di == 6).spec.values.r.image.registry = strenv(REGISTRY) |
             select(di == 6).spec.values.r.image.repository = strenv(GITHUB_REPOSITORY) |
-            select(di == 6).spec.values.r.image,tag = strenv(IMAGE_TAG) + "-r" |
+            select(di == 6).spec.values.r.image.tag = strenv(IMAGE_TAG) + "-r" |
             select(di == 6).spec.values.r.image.tag line_comment = strenv(R_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
             select(di == 6).spec.values.python.image.registry = strenv(REGISTRY) |
