@@ -83,6 +83,20 @@ spec:
         kind: GitRepository
         name: FILLED_IN_BY_CI
         namespace: FILLED_IN_BY_CI
+  values:
+    sandboxId: FILLED_IN_BY_CI
+    replicaCount: FILLED_IN_BY_CI
+    r:
+      image:
+        registry: FILLED_IN_BY_CI
+        repository: FILLED_IN_BY_CI
+        tag: FILLED_IN_BY_CI
+      memoryRequest: FILLED_IN_BY_CI
+    python:
+      image:
+        registry: FILLED_IN_BY_CI
+        repository: FILLED_IN_BY_CI
+        tag: FILLED_IN_BY_CI
   valuesFrom:
     - kind: ConfigMap
       valuesKey: account-config.yaml

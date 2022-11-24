@@ -397,10 +397,14 @@ jobs:
             select(di == 6).spec.values.serviceAccount.iamRole = "worker-role-" + strenv(KUBERNETES_ENV) |
             select(di == 6).spec.values.sandboxId = strenv(SANDBOX_ID) |
             select(di == 6).spec.values.replicaCount = env(REPLICA_COUNT) |
-            select(di == 6).spec.values.r.image = strenv(IMAGE_TAG) + "-r" |
-            select(di == 6).spec.values.r.image line_comment = strenv(R_IMAGE_POLICY_TAG) |
+            select(di == 6).spec.values.r.image.registry = strenv(REGISTRY) |
+            select(di == 6).spec.values.r.image.repository = strenv(GITHUB_REPOSITORY) |
+            select(di == 6).spec.values.r.image,tag = strenv(IMAGE_TAG) + "-r" |
+            select(di == 6).spec.values.r.image.tag line_comment = strenv(R_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
-            select(di == 6).spec.values.python.image = strenv(IMAGE_TAG) + "-python" |
+            select(di == 6).spec.values.python.image.registry = strenv(REGISTRY) |
+            select(di == 6).spec.values.python.image.repository = strenv(GITHUB_REPOSITORY) |
+            select(di == 6).spec.values.python.image.tag = strenv(IMAGE_TAG) + "-python" |
             select(di == 6).spec.values.python.image line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
             select(di == 6).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
           ' .flux.yaml > $DEPLOYMENT_NAME.yaml
