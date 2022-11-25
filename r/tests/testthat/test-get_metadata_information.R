@@ -4,7 +4,9 @@ mock_req <- function() {
 
 mock_scdata <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
+  # create randomized cell ids (as done in the pipeline)
+  set.seed(1)
+  pbmc_small$cells_id <- sample(0:(ncol(pbmc_small) - 1))
   pbmc_small@misc$gene_annotations <- data.frame(
     input = paste0("ENSG", seq_len(nrow(pbmc_small))),
     name = row.names(pbmc_small),
@@ -38,7 +40,7 @@ test_that("GetMitochondrialContent generates the expected return format", {
   expect_type(unlist(res), "double")
 
   # result derived from percent.mt column
-  expect_equal(unlist(res), unname(data$percent.mt))
+  expect_equal(unlist(res), unname(data$percent.mt[order(data$cells_id)]))
 })
 
 test_that("getDoubletScore generates the expected return format", {
@@ -55,7 +57,7 @@ test_that("getDoubletScore generates the expected return format", {
   expect_type(unlist(res), "double")
 
   # result derived from percent.mt column
-  expect_equal(unlist(res), unname(data$doublet_scores))
+  expect_equal(unlist(res), unname(data$doublet_scores[order(data$cells_id)]))
 })
 
 test_that("formatMetadataResult throws an error if metadata column is missing", {
@@ -74,7 +76,9 @@ test_that("formatMetadataResult adds placeholders for filtered cells", {
 
   # remove 2 cells
   ncells.init <- ncol(data)
-  data <- data[, -c(5, 6)]
+  exclude_idx <- c(5, 6)
+  exclude_cell_ids <- data$cells_id[exclude_idx]
+  data <- data[, -exclude_idx]
   expect_equal(ncol(data) + 2, ncells.init)
 
   res <- formatMetadataResult(data, column = "percent.mt")
@@ -83,8 +87,9 @@ test_that("formatMetadataResult adds placeholders for filtered cells", {
   expect_length(res, ncells.init)
 
   # filled values are NULL
-  expect_null(res[[5]])
-  expect_null(res[[6]])
+  for (cell_id in exclude_cell_ids){
+    expect_null(res[[cell_id + 1]])
+  }
 
   # rest are fine (not NULL)
   expect_type(unlist(res), "double")
@@ -97,7 +102,7 @@ test_that("formatMetadataResult returns results in order of increasing cells_id"
 
   # swap order of two cells
   ord <- new.ord <- seq_len(ncol(data))
-  new.ord[c(2, 3)] <- ord[c(3, 2)]
+  new.ord[c(3, 4)] <- ord[c(4, 3)]
   data@meta.data <- data@meta.data[new.ord, ]
 
   res <- formatMetadataResult(data, column = "percent.mt")
@@ -106,6 +111,25 @@ test_that("formatMetadataResult returns results in order of increasing cells_id"
   expect_false(identical(unlist(res), unname(data$percent.mt)))
 
   # if swap again will be the same
-  data@meta.data <- data@meta.data[new.ord, ]
+  data@meta.data <- data@meta.data[order(data$cells_id), ]
   expect_true(identical(unlist(res), unname(data$percent.mt)))
+})
+
+
+test_that("GetMitochondrialContent returns the same snapshot", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res <- getMitochondrialContent(req, data)
+  expect_snapshot(res)
+
+})
+
+
+test_that("getDoubletScore returns the same snapshot", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res <- getDoubletScore(req, data)
+  expect_snapshot(res)
 })
