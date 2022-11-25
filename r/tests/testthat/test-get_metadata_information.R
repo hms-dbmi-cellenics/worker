@@ -133,3 +133,21 @@ test_that("getDoubletScore returns the same snapshot", {
   res <- getDoubletScore(req, data)
   expect_snapshot(res)
 })
+
+
+test_that("getNGenes returns the same snapshot", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res <- getNGenes(req, data)
+  expect_snapshot(res)
+})
+
+
+test_that("getNUmi returns the same snapshot", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  res <- getNUmi(req, data)
+  expect_snapshot(res)
+})
