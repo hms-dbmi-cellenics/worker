@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_metadata_information.R
 \name{getMitochondrialContent}
 \alias{getMitochondrialContent}
-\title{Retrieve all the mt-content score for the current experiment}
+\title{Retrieve all the mt-content score for every cell}
 \usage{
 getMitochondrialContent(req, data)
 }
