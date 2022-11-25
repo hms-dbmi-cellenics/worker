@@ -9,7 +9,8 @@ getDoubletScore <- function(req, data) {
   return(result)
 }
 
-#' Retrieve all the mt-content score for the current experiment
+
+#' Retrieve all the mt-content score for every cell
 #'
 #' The MT-content was calculated in GEM2S.
 #'
@@ -21,6 +22,31 @@ getMitochondrialContent <- function(req, data) {
   result <- formatMetadataResult(data, "percent.mt")
   return(result)
 }
+
+
+#' Retrieve the number of features for every cell
+#'
+#' @param req list
+#' @param data Seurat object
+#'
+#' @export
+getNGenes <- function(req, data) {
+  result <- formatMetadataResult(data, "nFeature_RNA")
+  return(result)
+}
+
+
+#' Retrieve the number of UMIs for every cell
+#'
+#' @param req list
+#' @param data Seurat object
+#'
+#' @export
+getNUmi <- function(req, data) {
+  result <- formatMetadataResult(data, "nCount_RNA")
+  return(result)
+}
+
 
 formatMetadataResult <- function(data, column) {
 
