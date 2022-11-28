@@ -363,7 +363,7 @@ jobs:
 
           export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
           export R_IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME-r:tag\"}"
-          export CHART_CRD_NAME="$DEPLOYENT_NAME-chart"
+          export CHART_CRD_NAME="$DEPLOYMENT_NAME-chart"
           export PYTHON_IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME-python:tag\"}"
 
           yq '
