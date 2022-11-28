@@ -24,7 +24,7 @@ class GetDoubletScore(Task):
 
     def compute(self):
 
-        # Retrieve the MitochondrialContent of all the cells
+        # Retrieve the Doublet Score of all the cells
         request = self._format_request()
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/getDoubletScore",
