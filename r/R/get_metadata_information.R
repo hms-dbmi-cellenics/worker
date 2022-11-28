@@ -42,7 +42,7 @@ getNGenes <- function(req, data) {
 #' @param data Seurat object
 #'
 #' @export
-getNUmi <- function(req, data) {
+getNUmis <- function(req, data) {
   result <- formatMetadataResult(data, "nCount_RNA")
   return(result)
 }
@@ -80,4 +80,3 @@ formatMetadataResult <- function(data, column) {
 
   return(result)
 }
-

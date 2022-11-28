@@ -144,10 +144,10 @@ test_that("getNGenes returns the same snapshot", {
 })
 
 
-test_that("getNUmi returns the same snapshot", {
+test_that("getNUmis returns the same snapshot", {
   data <- mock_scdata()
   req <- mock_req()
 
-  res <- getNUmi(req, data)
+  res <- getNUmis(req, data)
   expect_snapshot(res)
 })

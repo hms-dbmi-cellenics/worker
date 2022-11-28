@@ -180,6 +180,20 @@ create_app <- function(last_modified, data, fpath) {
       res$set_body(result)
     }
   )
+    app$add_post(
+    path = "/v0/getNGenes",
+    FUN = function(req, res) {
+      result <- run_post(req, getDoubletScore, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
+    path = "/v0/getNUmis",
+    FUN = function(req, res) {
+      result <- run_post(req, getMitochondrialContent, data)
+      res$set_body(result)
+    }
+  )
   app$add_post(
     path = "/v0/runExpression",
     FUN = function(req, res) {
