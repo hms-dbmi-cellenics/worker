@@ -1,4 +1,4 @@
-#' extract doublet scores
+#' Extract doublet scores
 #'
 #' @param req list request
 #' @param data seurat object
