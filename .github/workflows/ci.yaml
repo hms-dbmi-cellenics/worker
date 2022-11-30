@@ -270,8 +270,7 @@ jobs:
           docker push $IMAGE_NAME-r
 
           if [ ! -z "$TIMESTAMP" ]; then
-            echo Pushing timestamped $IMAGE_NAME-[python/r] to ECR
-
+            echo Pushing timestamped $IMAGE_NAME-$TIMESTAMP-[python/r] to ECR
             docker tag $IMAGE_NAME-python $IMAGE_NAME-$TIMESTAMP-python
             docker tag $IMAGE_NAME-r $IMAGE_NAME-$TIMESTAMP-r
 
