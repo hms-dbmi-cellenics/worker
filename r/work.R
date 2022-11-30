@@ -4,6 +4,7 @@ library(dplyr)
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
+
 load_data <- function(fpath) {
   loaded <- FALSE
   data <- NULL
@@ -18,7 +19,7 @@ load_data <- function(fpath) {
         f <- readRDS(fpath)
         loaded <- TRUE
         length <- dim(f)
-
+        
         message(
           "Data successfully loaded, dimensions",
           length[1], "x", length[2]
