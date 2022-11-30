@@ -1,5 +1,3 @@
-# TESTING IMAGE UPDATE - REMOVE BEFORE MERGING
-
 library(Seurat)
 library(dplyr)
 
