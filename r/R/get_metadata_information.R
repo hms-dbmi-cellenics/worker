@@ -61,7 +61,7 @@ formatMetadataResult <- function(data, column) {
   }
 
   # create correct size vector with NAs, add values ordered by cell_id
-  complete_values <- rep(NA, max(data@meta.data$cells_id) + 1)
+  complete_values <- rep(NA_real_, max(data@meta.data$cells_id) + 1)
   complete_values[data$cells_id + 1] <- data@meta.data[, column]
 
   # convert to list, replacing NAs with NULLs
