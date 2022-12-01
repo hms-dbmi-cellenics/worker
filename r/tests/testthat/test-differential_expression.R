@@ -57,7 +57,7 @@ test_that("runDE generates the expected return format for comparisons within sam
   expect_equal(res$full_count, nrow(data))
 
   # returning only at most limit number of genes
-  expect_equal(length(res$gene_results), req$body$pagination$limit)
+  expect_equal(length(res$gene_results$Gene), req$body$pagination$limit)
 
   # ordering is correct
   logfc <- sapply(res$gene_results, `[[`, "logFC")
@@ -167,7 +167,7 @@ test_that("runDE was able to convert from ensemblIDs to gene symbols", {
   expect_gte(length(res_df$gene_names), 1)
 
   expect_true(all(res_df$gene_names %in% data@misc$gene_annotations$name))
-  expect_equal(length(unique(res_df$gene_names)), length(res$gene_results))
+  expect_equal(length(unique(res_df$gene_names)), length(res$gene_results$Gene))
 })
 
 test_that("runDE works with gene name filter", {
@@ -178,7 +178,7 @@ test_that("runDE works with gene name filter", {
 
 
   res <- runDE(req, data)
-  expect_equal(res$gene_results[[1]]$gene_names, "CST3")
+  expect_equal(res$gene_results$gene_names[[1]], "CST3")
 })
 
 test_that("runDE works with numeric filters", {
@@ -204,7 +204,7 @@ test_that("runDE works when no genes match filters", {
     list(list(columnName = "gene_names", expression = "mythical_gene"))
 
   res <- runDE(req, data)
-  expect_equal(length(res$gene_results), 0)
+  expect_equal(length(res$gene_results$Gene), 0)
 
   req$body$pagination$filters <-
     list(list(
@@ -214,7 +214,7 @@ test_that("runDE works when no genes match filters", {
     ))
 
   res <- runDE(req, data)
-  expect_equal(length(res$gene_results), 0)
+  expect_equal(length(res$gene_results$Gene), 0)
 })
 
 test_that("DE with genes_only returns list of ENSEMBLIDS and gene symbols ", {
