@@ -736,7 +736,7 @@
       [1] 68
       
 
-# getNUmi returns the same snapshot
+# getNUmis returns the same snapshot
 
     Code
       res
