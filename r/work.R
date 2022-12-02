@@ -19,7 +19,7 @@ load_data <- function(fpath) {
         f <- readRDS(fpath)
         loaded <- TRUE
         length <- dim(f)
-        
+
         message(
           "Data successfully loaded, dimensions",
           length[1], "x", length[2]
@@ -183,14 +183,14 @@ create_app <- function(last_modified, data, fpath) {
     app$add_post(
     path = "/v0/getNGenes",
     FUN = function(req, res) {
-      result <- run_post(req, getDoubletScore, data)
+      result <- run_post(req, getNGenes, data)
       res$set_body(result)
     }
   )
   app$add_post(
     path = "/v0/getNUmis",
     FUN = function(req, res) {
-      result <- run_post(req, getMitochondrialContent, data)
+      result <- run_post(req, getNUmis, data)
       res$set_body(result)
     }
   )
