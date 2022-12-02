@@ -7,7 +7,7 @@ from exceptions import raise_if_error
 
 from ..config import config
 from ..result import Result
-from ..tasks import Task
+from . import Task
 
 
 class GetNGenes(Task):
