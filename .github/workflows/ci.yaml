@@ -324,7 +324,7 @@ jobs:
             REPLICA_COUNT="2"
             VERSION_NUMBER=${REF_ID/refs-tags-/}
             IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
-            MEMORY_REQUEST="28Gi"
+            MEMORY_REQUEST="4Gi"
           fi
 
           if [ "${{ matrix.environment }}" = "develop" ]; then
