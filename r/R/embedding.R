@@ -18,6 +18,7 @@
 #' @export
 runEmbedding <- function(req, data) {
   type <- req$body$type
+  use_saved <- req$body$use_saved
   config <- req$body$config
   pca_nPCs <- 30
 
@@ -38,10 +39,9 @@ runEmbedding <- function(req, data) {
   message("Number of cells/sample:")
   table(data$samples)
 
-  if (type == "pca") {
-    # Leaving this here to add parameters in the future. Won't leave uncommented to avoid recalculating PCA
-    # RunPCA(data, npcs = 50, features = VariableFeatures(object=data), verbose=FALSE)
+  if (use_saved | type == "pca") {
     df_embedding <- Embeddings(data, reduction = type)[, 1:2]
+
   } else if (type == "tsne") {
     data <- RunTSNE(data,
       reduction = active.reduction,
@@ -51,6 +51,7 @@ runEmbedding <- function(req, data) {
       learning.rate = config$learningRate
     )
     df_embedding <- Embeddings(data, reduction = type)
+
   } else if (type == "umap") {
     data <- RunUMAP(data,
       seed.use = 42,
