@@ -326,6 +326,7 @@ jobs:
             export IMAGE_POLICY_KEY="range"
             export IMAGE_POLICY_VALUE=">=0.0.0"
             export MEMORY_REQUEST="28Gi"
+            export MANIFEST_PATH="./production"
           fi
 
           # Deployment config for `staging-default`
@@ -342,6 +343,7 @@ jobs:
             export IMAGE_POLICY_KEY="order"
             export IMAGE_POLICY_VALUE="asc"
             export MEMORY_REQUEST="28Gi"
+            export MANIFEST_PATH="./staging"
           fi
 
           # Deployment config for other staging env i.e. non `default`
@@ -367,6 +369,7 @@ jobs:
             export IMAGE_POLICY_KEY="order"
             export IMAGE_POLICY_VALUE="asc"
             export MEMORY_REQUEST="4Gi"
+            export MANIFEST_PATH="./staging"
           fi
 
           echo "::set-output name=sandbox-id::$SANDBOX_ID"
@@ -401,6 +404,7 @@ jobs:
             select(di == 4).spec.policy.[strenv(IMAGE_POLICY_TYPE)].[strenv(IMAGE_POLICY_KEY)] = strenv(IMAGE_POLICY_VALUE) |
             select(di == 5).metadata.name = strenv(DEPLOYMENT_NAME) + "-image-update" |
             select(di == 5).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 5).spec.update.path = strenv(MANIFEST_PATH) |
             select(di == 6).metadata.name = strenv(DEPLOYMENT_NAME) |
             select(di == 6).metadata.namespace = strenv(NAMESPACE) |
             select(di == 6).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
