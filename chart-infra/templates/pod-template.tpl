@@ -2,11 +2,12 @@
 {{- define "worker.pod-template" -}}
     metadata:
       labels:
+        type: 'worker'
         sandboxId: "{{ .Values.sandboxId }}"
     spec:
       containers:
       - name: "{{ .Release.Name }}-r"
-        image: "{{ .Values.r.image }}"
+        image: "{{ .Values.r.image.registry }}/{{ .Values.r.image.repository }}:{{ .Values.r.image.tag }}"
         volumeMounts:
         - name: 'data'
           mountPath: '/data'
@@ -23,7 +24,7 @@
           requests:
             memory: "{{ .Values.r.memoryRequest }}"
       - name: "{{ .Release.Name }}"
-        image: "{{ .Values.python.image }}"
+        image: "{{ .Values.python.image.registry }}/{{ .Values.python.image.repository }}:{{ .Values.python.image.tag }}"
         env:
         - name: AWS_ACCOUNT_ID
           value: "{{ .Values.myAccount.accountId }}"
@@ -49,6 +50,36 @@
         resources:
           requests:
             memory: "1Gi"
+{{- if eq .Values.myAccount.datadogEnabled "true" }}
+      - name: datadog-agent
+        image: datadog/agent
+        env:
+        - name: DD_API_KEY
+          value: "{{ .Values.myAccount.datadogApiKey }}"
+        - name: DD_SITE
+          value: "datadoghq.eu"
+        - name: DD_EKS_FARGATE
+          value: "true"
+        - name: DD_CLUSTER_NAME
+          value: "biomage-{{ .Values.kubernetes.env }}"
+        - name: DD_TAGS
+          value: "{{ .Values.datadogTags }}"
+        - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
+          value: '{"*": "%%label%%"}'
+        # Disable log collection by DD agent
+        # because we push logs to Cloudwatch
+        - name: DD_LOGS_ENABLED
+          value: "false"
+        - name: DD_CONTAINER_EXCLUDE
+          value: "name:.*"
+        - name: DD_CONTAINER_INCLUDE_METRICS
+          value: "name:worker name:worker-r"
+        - name: DD_KUBERNETES_KUBELET_NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+{{- end }}
       volumes:
       - name: 'data'
       - name: watch-script

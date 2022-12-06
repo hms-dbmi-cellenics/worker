@@ -2,16 +2,18 @@
 % Please edit documentation in R/utilities_expression.R
 \name{formatExpression}
 \alias{formatExpression}
-\title{formatExpression}
+\title{Format expression data.table as mathJS json}
 \usage{
-formatExpression(data)
+formatExpression(expression, cell_ids)
 }
 \arguments{
-\item{data}{}
+\item{expression}{data.table with expression values}
+
+\item{cell_ids}{int vector with filtered cell_ids}
 }
 \value{
-Formats expression values for the UI.
+list of formatted expression table
 }
 \description{
-formatExpression
+Format expression data.table as mathJS json
 }

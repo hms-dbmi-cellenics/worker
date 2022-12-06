@@ -1,7 +1,13 @@
-#' Generate UMAP and node coordinates for the initial trajectory analysis plot
+  # Currently Monocle3 only supports trajectory analysis for UMAP embeddings,
+  # that is why there is only 1 method in the mapping below. The embedding method
+  # that is used for embedding and trajectory generation is hard coded in the UI.
+  SEURAT_TO_MONOCLE_METHOD_MAP <- list(
+    umap = "UMAP"
+  )
+
+#' Generate node coordinates for the initial trajectory analysis plot
 #'
-#' Returns a json object with UMAP and node coordinates,
-#' to be used by the UI for the initial plot (embedding + trajectory nodes)
+#' Returns a list containing node coordinates to the python worker
 #'
 #' This represents the first step of the trajectory analysis.
 #' It allows the creation of the initial trajectory analysis plot,
@@ -10,51 +16,65 @@
 #' The root nodes will be then used in the following step of the trajectory
 #' analysis for pseudotime calculation.
 #'
-#' @param req list of configuration parameters. Not used here.
+#' @param req {
+#'            body: {
+#'               embedding: numeric vector containing a pair of embedding coordinates (e.g. num [1:2] -1, -2)
+#'               embedding_settings: {
+#'                  method: Embedding method (.e.g umap)
+#'                  methodSettings: An object containing settings specific for each embedding type
+#'               },
+#'               clustering_settings: {
+#'                  method: Clustering method (e.g. louvain),
+#'                  resolution: Clustering resolution
+#'               },
+#'              }
+#'            }
 #' @param data SeuratObject
 #'
-#' @return a json with nodes and umap coordinates
+#' @return a list containing nodes coordinates, connected nodes and the node_id
 #' @export
-runGenerateTrajectoryGraph <- function(req, data) {
-  cell_data <- generateGraphData(data)
-  node_coords <- t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)
-  umap_coords <- as.data.frame(SingleCellExperiment::reducedDims(cell_data)[["UMAP"]])
+runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
+  cell_data <- generateTrajectoryGraph(
+    req$body$embedding,
+    req$body$embedding_settings,
+    req$body$clustering_settings,
+    data
+  )
+
+  seurat_embedding_method <- req$body$embedding_settings$method
+  monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
+
+  node_coords <- t(cell_data@principal_graph_aux[[monocle_embedding_method]]$dp_mst)
 
   # node coordinates
   # get connected nodes
   connected_nodes <- list()
-  for (node in rownames(node_coords)) {
-    node_id <- which(rownames(node_coords) == node)
-    connected_nodes_obj <- cell_data@principal_graph[["UMAP"]][[node_id]][[1]]
-    connected_nodes[[node]] <- as.list(names(connected_nodes_obj))
+
+  for (node_id in seq_along(rownames(node_coords))) {
+
+    # Get connected node index vector
+    current_connected_nodes <- cell_data@principal_graph[[monocle_embedding_method]][[node_id]][[1]]
+
+    # Keep only those that are higher than current node
+    current_connected_nodes <- as.integer(current_connected_nodes[current_connected_nodes > node_id])
+
+    # Shift by 1 to use 0-based indexes
+    current_connected_nodes <- current_connected_nodes - 1
+
+    connected_nodes[[node_id]] <- ensure_is_list_in_json(current_connected_nodes)
   }
 
-  # create list
-  colnames(node_coords) <- c("x", "y")
-  node_coords_list <- lapply(asplit(node_coords, 1), as.list)
-  for (i in 1:length(node_coords_list)) {
-    node_coords_list[[i]]["node_id"] <- names(node_coords_list)[i]
-    node_coords_list[[i]]["connected_nodes"] <- list(connected_nodes[[i]])
-  }
-
-  # umap data
-  # fill in the NULL values for filtered cells
-  umap_coords <- fillNullForFilteredCells(umap_coords, data)
-
-  # create list
-  colnames(umap_coords) <- c("x", "y")
-  umap_coords_list <- lapply(asplit(umap_coords, 1), as.list)
-
-  # node + umap data
-  node_umap_coords <- list(nodes = node_coords_list, umap = umap_coords_list)
-
-  # convert list to json
-  node_umap_coords <- RJSONIO::toJSON(node_umap_coords)
-  return(node_umap_coords)
+  return(
+    list(
+      connectedNodes = connected_nodes,
+      x = unname(node_coords[, 1]),
+      y = unname(node_coords[, 2])
+    )
+  )
 }
 
 
-#' Calculate pseudotime
+#' Calculate trajectory analysis pseudotime
 #'
 #' Order the cells and generate an array of pseudotime values, based on
 #' the node ids of the root nodes.
@@ -67,26 +87,62 @@ runGenerateTrajectoryGraph <- function(req, data) {
 #' a map of how cells expression changes, starting from cells with smaller
 #' pseudotime values to cells with larger pseudotimes, along a trajectory.
 #'
-#' @param req {body: {
-#'               rootNodes: root nodes ids. Determines the root nodes of the trajectory
+#' @param req {
+#'            body: {
+#'               embedding: numeric vector containing a pair of embedding coordinates (e.g. num [1:2] -1, -2)
+#'               embedding_settings: {
+#'                  method: Embedding method (.e.g umap)
+#'                  methodSettings: An object containing settings specific for each embedding type
+#'               },
+#'               clustering_settings: {
+#'                  method: Clustering method (e.g. louvain),
+#'                  resolution: Clustering resolution
+#'               },
+#'               root_nodes: root nodes ids. Determines the root nodes of the trajectory
 #'              }
 #'            }
 #' @param data SeuratObject
 #'
 #' @return a tibble with pseudotime values
 #' @export
-runTrajectoryAnalysis <- function(req, data) {
-  root_nodes <- req$body$rootNodes
+runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
+  if(length(req$body$root_nodes) == 0) {
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_ROOT_NODES,
+        "No root nodes were selected for the analysis."
+      )
+    )
+  }
 
-  cell_data <- generateGraphData(data)
-  cell_data <- monocle3::order_cells(cell_data, reduction_method = "UMAP", root_pr_nodes = root_nodes)
+  cell_data <- generateTrajectoryGraph(
+    req$body$embedding,
+    req$body$embedding_settings,
+    req$body$clustering_settings,
+    data
+  )
+
+  seurat_embedding_method <- req$body$embedding_settings$method
+  monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
+
+
+  node_ids <- colnames(cell_data@principal_graph_aux[[monocle_embedding_method]]$dp_mst)
+
+  # Add 1 to indexes so they are 1-based
+  root_indexes <- req$body$root_nodes + 1
+  
+  # Translate the indexes to their ids
+  root_ids <- node_ids[root_indexes]
+  
+  cell_data <- monocle3::order_cells(cell_data, reduction_method = monocle_embedding_method, root_pr_nodes = root_ids)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
   # fill in the NULL values for filtered cells
   pseudotime <- fillNullForFilteredCells(pseudotime, data)
 
-  return(unname(pseudotime))
+  result <- list(pseudotime = pseudotime[[1]])
+  return(result)
 }
 
 
@@ -100,13 +156,42 @@ runTrajectoryAnalysis <- function(req, data) {
 #'
 #' @return a cell_data_set object with cluster and graph information stored internally
 #' @export
-generateGraphData <- function(data) {
-  cell_data <- SeuratWrappers::as.cell_data_set(data)
-
+generateTrajectoryGraph <- function(embedding_data, embedding_settings, clustering_settings, data) {
   set.seed(ULTIMATE_SEED)
 
-  cell_data <- monocle3::cluster_cells(cds = cell_data, reduction_method = "UMAP")
-  cell_data <- monocle3::learn_graph(cell_data, use_partition = TRUE)
+  Seurat::DefaultAssay(data) <- "RNA"
+
+  clustering_method <- clustering_settings$method
+  embedding_method <- embedding_settings$method
+
+  # Clustering resolution can only be used by monocle if the clustering method is leiden
+  clustering_resolution <- NULL
+  if (clustering_method == "leiden") {
+    clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
+  }
+
+  clustering_controls <- list()
+  if(embedding_method == "umap") {
+    clustering_controls <- list(
+      metric = embedding_settings$method_settings$distanceMetric
+    )
+  }
+
+  data <- assignEmbedding(embedding_data, data)
+
+  cell_data <- SeuratWrappers::as.cell_data_set(data)
+
+  message("Calculating trajectory graph...")
+  cell_data <- monocle3::cluster_cells(
+    cds = cell_data,
+    cluster_method = clustering_method,
+    reduction_method = SEURAT_TO_MONOCLE_METHOD_MAP[[embedding_method]],
+    resolution = clustering_resolution,
+    nn_control = clustering_controls,
+    k = 25
+  )
+
+  cell_data <- monocle3::learn_graph(cell_data)
 
   return(cell_data)
 }

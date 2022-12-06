@@ -28,12 +28,10 @@ runDE <- function(req, data) {
   na.genes <- is.na(result$gene_names)
   result$gene_names[na.genes] <- result$Gene[na.genes]
 
-
-  if (!("pagination" %in% names(req$body))) {
-    result <- list(gene_results = purrr::transpose(result), full_count = nrow(result))
-    message("Pagination not enabled, returning results: ", str(result))
-  } else {
+  if ("pagination" %in% names(req$body)) {
     result <- paginateDE(result, req)
+  } else{
+    result <- list(gene_results = result, full_count = nrow(result))
   }
 
   return(result)
@@ -83,7 +81,6 @@ paginateDE <- function(result, req) {
   }
 
   result <- handlePagination(result, offset, limit, order_by, order_decreasing)
-  result$gene_results <- purrr::transpose(result$gene_results)
 
   return(result)
 }

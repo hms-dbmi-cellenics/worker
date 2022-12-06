@@ -25,7 +25,7 @@ class DifferentialExpression(Task):
     def _format_result(self, result):
         # Return a list of formatted results.
 
-        return Result({"total": result["full_count"], "rows": result["gene_results"]})
+        return Result({"total": result["full_count"], "data": result["gene_results"]})
 
     def _format_request(self):
         # get cell sets from database
