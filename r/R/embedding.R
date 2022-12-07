@@ -18,6 +18,7 @@
 #' @export
 runEmbedding <- function(req, data) {
   method <- req$body$type
+  use_saved <- req$body$use_saved
   config <- req$body$config
   pca_nPCs <- 30
 
