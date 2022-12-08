@@ -85,6 +85,7 @@ spec:
         kind: GitRepository
         name: FILLED_IN_BY_CI
         namespace: FILLED_IN_BY_CI
+      reconcileStrategy: Revision
   values:
     sandboxId: FILLED_IN_BY_CI
     replicaCount: FILLED_IN_BY_CI
