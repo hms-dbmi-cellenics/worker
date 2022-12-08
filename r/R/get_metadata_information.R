@@ -1,22 +1,52 @@
-
-# Function to retrieve all the doublet score for the current experiment.
-# The doublet scores were computing in the data-ingest script. To compute then, we
-# use the package Scrublet [1]
+#' Extract doublet scores
+#'
+#' @param req list request
+#' @param data seurat object
+#'
 #' @export
 getDoubletScore <- function(req, data) {
   result <- formatMetadataResult(data, "doublet_scores")
   return(result)
 }
 
-# Function to retrieve all the mt-content score for the current experiment.
-# The MT-content was computing in the data-ingest script. To compute then, we
-# use the function PercentageFeatureSet fom Seurat package. We have been able to identify
-# the MT-genes only in Mus musculus, Homo sapiens  or drosophila by grepping "MT[-:]"
+
+#' Retrieve all the mt-content score for every cell
+#'
+#' The MT-content was calculated in GEM2S.
+#'
+#' @param req list
+#' @param data Seurat object
+#'
 #' @export
 getMitochondrialContent <- function(req, data) {
   result <- formatMetadataResult(data, "percent.mt")
   return(result)
 }
+
+
+#' Retrieve the number of features for every cell
+#'
+#' @param req list
+#' @param data Seurat object
+#'
+#' @export
+getNGenes <- function(req, data) {
+  result <- formatMetadataResult(data, "nFeature_RNA")
+  return(result)
+}
+
+
+#' Retrieve the number of UMIs for every cell
+#'
+#' @param req list
+#' @param data Seurat object
+#'
+#' @export
+getNUmis <- function(req, data) {
+  result <- formatMetadataResult(data, "nCount_RNA")
+  return(result)
+}
+
 
 formatMetadataResult <- function(data, column) {
 
@@ -30,16 +60,12 @@ formatMetadataResult <- function(data, column) {
     )
   }
 
-  # get the specified column, ordering by cells_id
-  cells_id_order <- order(data$cells_id, decreasing = FALSE)
-  result <- data@meta.data[cells_id_order, column]
-  result <- as.data.frame(result)
-  result$cells_id <- data@meta.data$cells_id[cells_id_order]
-  result <- result %>%
-    tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
-    dplyr::select(-cells_id)
-  result <- t(unname(as.data.frame(result)))
-  result <- purrr::map(result, function(x) {
+  # create correct size vector with NAs, add values ordered by cell_id
+  complete_values <- rep(NA_real_, max(data@meta.data$cells_id) + 1)
+  complete_values[data$cells_id + 1] <- data@meta.data[, column]
+
+  # convert to list, replacing NAs with NULLs
+  result <- lapply(complete_values, function(x) {
     if (is.na(x)) {
       return(NULL)
     } else {
@@ -54,8 +80,3 @@ formatMetadataResult <- function(data, column) {
 
   return(result)
 }
-
-
-# [1] Wolock SL, Lopez R, Klein AM. Scrublet: Computational Identification of Cell Doublets in Single-Cell
-# Transcriptomic Data. Cell Syst. 2019 Apr 24;8(4):281-291.e9. doi: 10.1016/j.cels.2018.11.005. Epub 2019 Apr 3.
-# PMID: 30954476; PMCID: PMC6625319.
