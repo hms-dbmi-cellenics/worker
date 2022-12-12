@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_metadata_information.R
 \name{getDoubletScore}
 \alias{getDoubletScore}
-\title{extract doublet scores}
+\title{Extract doublet scores}
 \usage{
 getDoubletScore(req, data)
 }
@@ -12,5 +12,5 @@ getDoubletScore(req, data)
 \item{data}{seurat object}
 }
 \description{
-extract doublet scores
+Extract doublet scores
 }

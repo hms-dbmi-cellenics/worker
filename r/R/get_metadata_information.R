@@ -85,6 +85,18 @@ formatMetadataResult <- function(data, column) {
 }
 
 
+#' Add NAs to fill variables for filtered cell ids
+#'
+#' This function creates a vector of size max(cell_ids) + 1, with NAs in each
+#' index that corresponds to a filtered cell and the corresponding value in the
+#' ones that were not. It returns the values ordered by cell id by design.
+#'
+#' @param variable vector of values to complete
+#' @param cell_ids integer vector of filtered cell ids
+#'
+#' @return NA filled vector, cell_id-complete
+#' @export
+#'
 complete_variable <- function(variable, cell_ids) {
   # create correct size vector with NAs, add values ordered by cell_id
   complete_values <- rep(NA_real_, max(cell_ids) + 1)
