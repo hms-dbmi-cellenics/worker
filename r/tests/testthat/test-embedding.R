@@ -44,7 +44,8 @@ test_that("TSNE embedding works", {
   req <- list(
     body = list(
       type = reduction_method,
-      config = list(perplexity = 10, learningRate = 100)
+      config = list(perplexity = 10, learningRate = 100),
+      use_saved = FALSE
     )
   )
 
@@ -75,7 +76,8 @@ test_that("UMAP embedding works", {
   req <- list(
     body = list(
       type = reduction_method,
-      config = list(minimumDistance = 0.1, distanceMetric = "cosine")
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
     )
   )
 
