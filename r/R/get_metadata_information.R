@@ -60,9 +60,12 @@ formatMetadataResult <- function(data, column) {
     )
   }
 
-  # create correct size vector with NAs, add values ordered by cell_id
-  complete_values <- rep(NA_real_, max(data@meta.data$cells_id) + 1)
-  complete_values[data$cells_id + 1] <- data@meta.data[, column]
+  variable <- data@meta.data[, column]
+  # log transform nGenes and nUMIs
+  if (column %in% c("nFeature_RNA", "nCount_RNA")) {
+    variable <- log10(variable)
+  }
+  complete_values <- complete_variable(variable, data$cells_id)
 
   # convert to list, replacing NAs with NULLs
   result <- lapply(complete_values, function(x) {

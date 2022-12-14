@@ -62,3 +62,34 @@ with_fake_http(test_that(
 
   }
 ))
+
+
+test_that("complete_variable fills a vector with NAs where there are filtered cells", {
+
+  mock_variable <- rnorm(50)
+  mock_cell_ids <- seq.int(0,99, 2)
+
+  res <- complete_variable(mock_variable, mock_cell_ids)
+
+  expect_equal(length(res), max(mock_cell_ids) + 1)
+
+})
+
+
+test_that("complete_variable returns results ordered by increasing cell id", {
+  set.seed(10)
+  mock_variable <- rnorm(50)
+  mock_cell_ids <- seq.int(0,99, 2)
+
+  # shuffle cell ids
+  mock_cell_ids <- sample(mock_cell_ids,size = length(mock_cell_ids), replace = FALSE)
+
+  # sort the variable by cell id
+  cell_id_sorted_variable <- mock_variable[order(mock_cell_ids)]
+
+  res <- complete_variable(mock_variable, mock_cell_ids)
+
+  # remove NAs from result vector
+  expect_equal(res[!is.na(res)], cell_id_sorted_variable)
+
+})
