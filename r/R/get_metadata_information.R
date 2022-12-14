@@ -83,6 +83,3 @@ formatMetadataResult <- function(data, column) {
 
   return(result)
 }
-
-
-
