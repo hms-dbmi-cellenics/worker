@@ -7,15 +7,15 @@ from exceptions import raise_if_error
 
 from ..config import config
 from ..result import Result
-from ..tasks import Task
+from . import Task
 
 
-class GetDoubletScore(Task):
+class GetNGenes(Task):
     def _format_result(self, result):
         # Return a list of formatted results.
         return Result(result)
 
-    @xray_recorder.capture("DoubletScore.compute")
+    @xray_recorder.capture("GetNGenes.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -24,10 +24,10 @@ class GetDoubletScore(Task):
 
     def compute(self):
 
-        # Retrieve the Doublet Score of all the cells
+        # Retrieve the number of genes of all the cells
         request = self._format_request()
         response = requests.post(
-            f"{config.R_WORKER_URL}/v0/getDoubletScore",
+            f"{config.R_WORKER_URL}/v0/getNGenes",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
