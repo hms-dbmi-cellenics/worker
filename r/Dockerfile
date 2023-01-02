@@ -1,5 +1,5 @@
 # Create builder step
-FROM rocker/r-ver:4.2.0 AS builder
+FROM rocker/r-ver:4.2.2 AS builder
 WORKDIR /src/worker
 
 # install required debian packages to install R packages
