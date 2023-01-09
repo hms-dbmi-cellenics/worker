@@ -3,6 +3,7 @@
 export(GetNormalizedExpression)
 export(assignEmbedding)
 export(completeExpression)
+export(complete_variable)
 export(ensure_is_list_in_json)
 export(extractErrorList)
 export(fillNullForFilteredCells)
