@@ -94,7 +94,7 @@ class Response:
                 f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
 
-        io.Emit(f'ExperimentUpdates-{self.request["experimentId"]}', {"type": "WorkResponse", "etag": self.request["ETag"], "info": self.request})
+        io.Emit(f'Heartbeat-{self.request["experimentId"]}', {"type": "WorkResponse", "etag": self.request["ETag"], "info": self.request})
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")

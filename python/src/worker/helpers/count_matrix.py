@@ -119,12 +119,12 @@ class CountMatrix:
         objects = self.get_objects()
 
         info(f"Found {len(objects)} objects matching experiment.")
-        io.Emit(f'ExperimentUpdates-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "downloading seurat object"})
+        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "downloading seurat object"})
         synced = {
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
 
-        io.Emit(f'ExperimentUpdates-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "checking if R worker is alive"})
+        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "checking if R worker is alive"})
         if True in synced.values():
             self.check_if_received()
