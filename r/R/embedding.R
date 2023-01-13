@@ -17,10 +17,12 @@
 #
 #' @export
 runEmbedding <- function(req, data) {
-  type <- req$body$type
+  method <- req$body$type
   use_saved <- req$body$use_saved
   config <- req$body$config
   pca_nPCs <- 30
+
+  set.seed(ULTIMATE_SEED)
 
   # To run embedding, we need to set the reduction.
   if ("active.reduction" %in% names(data@misc)) {
@@ -29,7 +31,7 @@ runEmbedding <- function(req, data) {
     active.reduction <- "pca"
   }
 
-  # The slot numPCs is set in dataIntegration with the selectd PCA by the user.
+  # The slot numPCs is set in dataIntegration with the selected PCA by the user.
   if ("numPCs" %in% names(data@misc)) {
     pca_nPCs <- data@misc[["numPCs"]]
   }
@@ -38,33 +40,11 @@ runEmbedding <- function(req, data) {
   message("Active numPCs --> ", pca_nPCs)
   message("Number of cells/sample:")
   table(data$samples)
-
-  if (use_saved | type == "pca") {
-    df_embedding <- Embeddings(data, reduction = type)[, 1:2]
-
-  } else if (type == "tsne") {
-    data <- RunTSNE(data,
-      reduction = active.reduction,
-      seed.use = 1,
-      dims = 1:pca_nPCs,
-      perplexity = config$perplexity,
-      learning.rate = config$learningRate
-    )
-    df_embedding <- Embeddings(data, reduction = type)
-
-  } else if (type == "umap") {
-    data <- RunUMAP(data,
-      seed.use = 42,
-      reduction = active.reduction,
-      dims = 1:pca_nPCs,
-      verbose = FALSE,
-      min.dist = config$minimumDistance,
-      metric = config$distanceMetric,
-      umap.method = "umap-learn"
-    )
-
-    df_embedding <- Embeddings(data, reduction = type)
-  }
+  
+  if (!use_saved)
+    data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
+  
+  df_embedding <- Seurat::Embeddings(data, reduction = method)
 
   # Order embedding by cells id in ascending form
   df_embedding <- as.data.frame(df_embedding)
@@ -83,4 +63,63 @@ runEmbedding <- function(req, data) {
   }
   res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], map2_fun)
   return(res)
+}
+
+
+# getEmbedding
+# Return embedding calculated for the seurat object.
+# config is the embedding work request config.
+# data is the seurat object.
+# method is the embedding method, e.g. UMAP.
+# reduction_type is the type of reduction that is used, e.g. PCA.
+# num_pcs is the number of principal components.
+#
+#' @export
+getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
+  if (method == "tsne") {
+    data <- Seurat::RunTSNE(data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      perplexity = config$perplexity,
+      learning.rate = config$learningRate
+    )
+  } else if (method == "umap") {
+    data <- Seurat::RunUMAP(data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      verbose = FALSE,
+      min.dist = config$minimumDistance,
+      metric = config$distanceMetric,
+      umap.method = "umap-learn",
+      seed.use = ULTIMATE_SEED
+    )
+  }
+
+  return(data)
+}
+
+
+# assignEmbedding
+# Assigns embedding from embedding json to the Seurat object.
+# embedding_data is the embedding coordinates.
+# data is the seurat object.
+#
+#' @export
+assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
+  cells_id <- data@meta.data$cells_id
+  embedding <- do.call(rbind, embedding_data)
+
+  # Add 1 to cells_id because it's 0-index and embeddings is not.
+  embedding <- embedding[cells_id + 1, ]
+  rownames(embedding) <- colnames(data)
+
+  embedding_key = "UMAP_"
+  if(reduction_method == "tsne") {
+    embedding_key = "tSNE_"
+  }
+
+  colnames(embedding) <- c(paste0(embedding_key, "1"), paste0(embedding_key, "2"))
+  data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key)
+
+  return(data)
 }

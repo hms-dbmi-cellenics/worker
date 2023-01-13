@@ -4,6 +4,7 @@ library(dplyr)
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
+
 load_data <- function(fpath) {
   loaded <- FALSE
   data <- NULL
@@ -18,6 +19,7 @@ load_data <- function(fpath) {
         f <- readRDS(fpath)
         loaded <- TRUE
         length <- dim(f)
+
         message(
           "Data successfully loaded, dimensions",
           length[1], "x", length[2]
@@ -128,11 +130,21 @@ create_app <- function(last_modified, data, fpath) {
     id = "last_modified_mw"
   )
 
-  app <- RestRserve::Application$new(
-    content_type = "application/json"
+  encode_decode_middleware <- RestRserve::EncodeDecodeMiddleware$new()
+
+  # the json encoder by default is not precise enough so we set a custom one without precision limit (digits=NA)
+  encode_decode_middleware$ContentHandlers$set_encode(
+    "application/json",
+    function(x, unbox = TRUE)  {
+      res = jsonlite::toJSON(x, dataframe = 'columns', auto_unbox = unbox, null = 'null', na = 'null', digits=I(4))
+      unclass(res)
+    }
   )
 
-  app$append_middleware(last_modified_mw)
+  app <- RestRserve::Application$new(
+    content_type = "application/json",
+    middleware = list(encode_decode_middleware, last_modified_mw)
+  )
 
   app$add_get(
     path = "/health",
@@ -165,6 +177,20 @@ create_app <- function(last_modified, data, fpath) {
     path = "/v0/getMitochondrialContent",
     FUN = function(req, res) {
       result <- run_post(req, getMitochondrialContent, data)
+      res$set_body(result)
+    }
+  )
+    app$add_post(
+    path = "/v0/getNGenes",
+    FUN = function(req, res) {
+      result <- run_post(req, getNGenes, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
+    path = "/v0/getNUmis",
+    FUN = function(req, res) {
+      result <- run_post(req, getNUmis, data)
       res$set_body(result)
     }
   )
@@ -211,16 +237,16 @@ create_app <- function(last_modified, data, fpath) {
     }
   )
   app$add_post(
-    path = "/v0/runTrajectoryAnalysis",
+    path = "/v0/runTrajectoryAnalysisPseudoTimeTask",
     FUN = function(req, res) {
-      result <- run_post(req, runTrajectoryAnalysis, data)
+      result <- run_post(req, runTrajectoryAnalysisPseudoTimeTask, data)
       res$set_body(result)
     }
   )
   app$add_post(
-    path = "/v0/runGenerateTrajectoryGraph",
+    path = "/v0/runTrajectoryAnalysisStartingNodesTask",
     FUN = function(req, res) {
-      result <- run_post(req, runGenerateTrajectoryGraph, data)
+      result <- run_post(req, runTrajectoryAnalysisStartingNodesTask, data)
       res$set_body(result)
     }
   )
@@ -228,6 +254,13 @@ create_app <- function(last_modified, data, fpath) {
     path = "/v0/runDotPlot",
     FUN = function(req, res) {
       result <- run_post(req, runDotPlot, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
+    path = "/v0/GetNormalizedExpression",
+    FUN = function(req, res) {
+      result <- run_post(req, GetNormalizedExpression, data)
       res$set_body(result)
     }
   )

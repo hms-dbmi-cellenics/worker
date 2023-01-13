@@ -52,6 +52,7 @@ test_that("runDE generates the expected return format for comparisons within sam
   req <- mock_req()
 
   res <- runDE(req, data)
+  res$gene_results <- purrr::transpose(res$gene_results)
 
   # number of genes is number of possible DE rows
   expect_equal(res$full_count, nrow(data))
@@ -87,6 +88,7 @@ test_that("runDE generates the expected return format for comparisons between sa
 
 
   res <- runDE(req, data)
+  res$gene_results <- purrr::transpose(res$gene_results)
 
   # number of genes is number of possible DE rows
   expect_equal(res$full_count, nrow(data))
@@ -120,6 +122,7 @@ test_that("runDE generates the expected return format for comparisons between sa
 
 
   res <- runDE(req, data)
+  res$gene_results <- purrr::transpose(res$gene_results)
 
   # number of genes is number of possible DE rows
   expect_equal(res$full_count, nrow(data))
@@ -149,6 +152,7 @@ test_that("runDE limit won't return more than available genes", {
   req$body$pagination$limit <- nrow(data) + 50
 
   res <- runDE(req, data)
+  res$gene_results <- purrr::transpose(res$gene_results)
   expect_equal(length(res$gene_results), nrow(data))
 })
 
@@ -157,6 +161,8 @@ test_that("runDE was able to convert from ensemblIDs to gene symbols", {
   req <- mock_req()
 
   res <- runDE(req, data)
+  res$gene_results <- purrr::transpose(res$gene_results)
+
   expect_equal(sum(is.na(res$gene_results$gene_names)), 0)
 
   # runDE returns list of named lists
@@ -178,7 +184,7 @@ test_that("runDE works with gene name filter", {
 
 
   res <- runDE(req, data)
-  expect_equal(res$gene_results[[1]]$gene_names, "CST3")
+  expect_equal(res$gene_results$gene_names[[1]], "CST3")
 })
 
 test_that("runDE works with numeric filters", {
@@ -204,7 +210,7 @@ test_that("runDE works when no genes match filters", {
     list(list(columnName = "gene_names", expression = "mythical_gene"))
 
   res <- runDE(req, data)
-  expect_equal(length(res$gene_results), 0)
+  expect_equal(length(res$gene_results$Gene), 0)
 
   req$body$pagination$filters <-
     list(list(
@@ -214,7 +220,7 @@ test_that("runDE works when no genes match filters", {
     ))
 
   res <- runDE(req, data)
-  expect_equal(length(res$gene_results), 0)
+  expect_equal(length(res$gene_results$Gene), 0)
 })
 
 test_that("DE with genes_only returns list of ENSEMBLIDS and gene symbols ", {

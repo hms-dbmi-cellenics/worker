@@ -47,83 +47,142 @@ get_npcs <- function(scdata, var_threshold = 0.85, max_npcs = 30) {
 }
 
 
-mock_req <- function() {
-  req <- list(
+mock_starting_nodes_req <- function(data) {
+  mock_embedding_data <- get_mock_embedding_data(data)
+  mock_embedding_settings <- get_mock_embedding_settings()
+  mock_clustering_settings <- get_mock_clustering_settings()
+
+  result <- list(
     body = list(
-      rootNodes = c("Y_1", "Y_2", "Y_3")
+      embedding = mock_embedding_data,
+      embedding_settings = mock_embedding_settings,
+      clustering_settings = mock_clustering_settings
     )
   )
 }
 
+mock_pseudotime_req <- function(data) {
+  mock_embedding_data <- get_mock_embedding_data(data)
+  mock_embedding_settings <- get_mock_embedding_settings()
+  mock_clustering_settings <- get_mock_clustering_settings()
 
-test_that("generateGraphData converts Seurat object to Monocle3 cell_data_set object", {
+  result <- list(
+    body = list(
+      embedding = mock_embedding_data,
+      embedding_settings = mock_embedding_settings,
+      clustering_settings = mock_clustering_settings,
+      root_nodes = c(0, 1, 2)
+    )
+  )
+
+}
+
+get_mock_embedding_data <- function(mock_data) {
+  embedding_data <- mock_data@reductions$umap@cell.embeddings
+  embedding_data <- unname(embedding_data)
+  embedding_data <- lapply(
+    seq_len(nrow(embedding_data)),
+    function(i) embedding_data[i,]
+  )
+}
+
+get_mock_embedding_settings <- function() {
+  result <- list (
+    Etag = "mockEmbeddingETag",
+    method = "umap",
+    methodSettings = list (
+      distanceMetric = "cosine",
+      minimumDistance = 0.3
+    )
+  )
+}
+
+get_mock_clustering_settings <- function() {
+  result <- list (
+    method = "louvain",
+    resolution = 0.8
+  )
+}
+
+test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_set object", {
   data <- mock_scdata()
 
-  cell_data <- suppressWarnings(generateGraphData(data))
+  mock_embedding_data <- get_mock_embedding_data(data)
+  mock_embedding_settings <- get_mock_embedding_settings()
+  mock_clustering_settings <- get_mock_clustering_settings()
+
+  cell_data <- suppressWarnings(
+    generateTrajectoryGraph(
+      mock_embedding_data,
+      mock_embedding_settings,
+      mock_clustering_settings,
+      data
+    )
+  )
 
   expect_s4_class(cell_data, "cell_data_set")
 })
 
-test_that("runGenerateTrajectoryGraph returns an object of class character", {
+
+test_that("runTrajectoryAnalysisStartingNodesTask output has the expected format", {
   data <- mock_scdata()
+  req <- mock_starting_nodes_req(data)
 
-  node_umap_coords <- suppressWarnings(runGenerateTrajectoryGraph(req, data))
+  root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
 
-  expect_type(node_umap_coords, "character")
+  expect_named(root_nodes, c("connectedNodes", "x", "y"))
+  expect_type(root_nodes$x[[1]], "double")
+  expect_type(root_nodes$y[[1]], "double")
+  expect_type(root_nodes$connectedNodes[[1]], "double")
+  # Second element is a list because it has length 1, so this way we ensure that
+  # it is encoded in json as a list too
+  expect_type(root_nodes$connectedNodes[[3]], "list")
 })
 
 
-test_that("runGenerateTrajectoryGraph json output has the expected list format when converted back to list", {
+test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of nodes", {
   data <- mock_scdata()
+  mock_embedding_data <- get_mock_embedding_data(data)
+  mock_embedding_settings <- get_mock_embedding_settings()
+  mock_clustering_settings <- get_mock_clustering_settings()
 
-  node_umap_coords <- suppressWarnings(runGenerateTrajectoryGraph(req, data))
+  req <- mock_starting_nodes_req(data)
 
-  # convert back to list from json
-  item <- RJSONIO::fromJSON(node_umap_coords)
-  expect_named(item, c("nodes", "umap"))
-  expect_named(item$nodes[[1]], c("x", "y", "node_id", "connected_nodes"))
-  expect_named(item$umap[[1]], c("x", "y"))
-  expect_type(item$nodes[[1]]$x, "double")
-  expect_type(item$nodes[[1]]$y, "double")
-  expect_type(item$nodes[[1]]$node_id, "character")
-  expect_type(item$nodes[[1]]$connected_nodes, "character")
-  expect_type(item$umap[[1]], "double")
+  cell_data <- suppressWarnings(
+    generateTrajectoryGraph(
+      mock_embedding_data,
+      mock_embedding_settings,
+      mock_clustering_settings,
+      data
+    )
+  )
+
+  root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
+  expected_length <- nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst))
+
+  expect_equal(expected_length, length(root_nodes$connectedNodes))
+  expect_equal(expected_length, length(root_nodes$x))
+  expect_equal(expected_length, length(root_nodes$y))
 })
 
 
-test_that("runGenerateTrajectoryGraph fills in NULL values in UMAP coordinates for filtered cells", {
-  filt_cell_id <- c(2, 5, 6)
-  data <- mock_scdata(filt_cell_id = filt_cell_id)
-
-  node_umap_coords <- suppressWarnings(runGenerateTrajectoryGraph(req, data))
-  # convert back to list from json
-  item <- RJSONIO::fromJSON(node_umap_coords)
-
-  # check that the number of cell ids for umap coords is the same as the number of cell ids of the unfiltered object
-  expect_equal(length(item$umap), (length(data$cells_id) + length(filt_cell_id)))
-  # check that filtered cells have NULL values
-  expect_equal(unlist(item$umap[filt_cell_id + 1]), NULL)
-})
-
-
-test_that("json generated by runGenerateTrajectoryGraph has the correct number of nodes", {
+test_that("runTrajectoryAnalysisPseudoTimeTask works", {
   data <- mock_scdata()
+  req <- mock_pseudotime_req(data)
 
-  cell_data <- suppressWarnings(generateGraphData(data))
-  node_umap_coords <- suppressWarnings(runGenerateTrajectoryGraph(req, data))
-  # convert back to list from json
-  item <- RJSONIO::fromJSON(node_umap_coords)
+  result <- suppressWarnings(runTrajectoryAnalysisPseudoTimeTask(req, data))
 
-  expect_equal(nrow(t(cell_data@principal_graph_aux[["UMAP"]]$dp_mst)), length(item$nodes))
+  expect_equal(length(data$cells_id), length(result$pseudotime))
+  expect_true(is.numeric(result$pseudotime))
 })
 
-
-test_that("runTrajectoryAnalysis works", {
+test_that('runTrajectoryAnalysisPseudoTimeTask fails if root_node is empty', {
   data <- mock_scdata()
-  req <- mock_req()
+  req <- mock_pseudotime_req(data)
 
-  pseudotime <- suppressWarnings(runTrajectoryAnalysis(req, data))
+  # Set root nodes to empty vector
+  req$body$root_nodes <- c()
 
-  expect_equal(length(data$cells_id), nrow(pseudotime))
-  expect_true(sapply(pseudotime, is.numeric))
+  expect_error(runTrajectoryAnalysisPseudoTimeTask(req, data), "No root nodes were selected for the analysis.")
 })
+

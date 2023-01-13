@@ -1,4 +1,4 @@
-{{- if ne .Values.sandboxId "default" }}
+{{- if (eq .Values.kubernetes.env "staging") }}
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -7,7 +7,7 @@ metadata:
   labels:
     sandboxId: "{{ .Values.sandboxId }}"
 spec:
-  schedule: '*/60 * * * *'
+  schedule: '30 * * * *'
   concurrencyPolicy: Replace
   jobTemplate:
     metadata:
