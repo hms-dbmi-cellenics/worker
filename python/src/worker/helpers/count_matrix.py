@@ -8,6 +8,7 @@ from logging import error, info
 import aws_xray_sdk as xray
 import boto3
 from aws_xray_sdk.core import xray_recorder
+from socket_io_emitter import Emitter
 
 from ..config import config
 
@@ -103,8 +104,11 @@ class CountMatrix:
             f"{config.R_WORKER_URL}/health",
         )
 
+
     @xray_recorder.capture("CountMatrix.sync")
     def sync(self):
+        io = Emitter({"client": config.REDIS_CLIENT})
+
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
 
@@ -115,11 +119,12 @@ class CountMatrix:
         objects = self.get_objects()
 
         info(f"Found {len(objects)} objects matching experiment.")
-
+        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "downloading seurat object"})
         synced = {
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
 
+        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "checking if R worker is alive"})
         if True in synced.values():
             self.check_if_received()
