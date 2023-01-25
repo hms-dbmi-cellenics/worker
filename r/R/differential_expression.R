@@ -29,7 +29,7 @@ runDE <- function(req, data) {
   result$gene_names[na.genes] <- result$Gene[na.genes]
 
   # replace 0 in p_val_adj with the smallest floating-point value
-  # this is required to corectly plot log(p_val_adj) in the volcano plot, because log(0)=Inf
+  # this is required to correctly plot log(p_val_adj) in the volcano plot, because log(0)=Inf
   result["p_val_adj"][result["p_val_adj"] == 0] <- .Machine$double.xmin
 
   if ("pagination" %in% names(req$body)) {
