@@ -1,5 +1,5 @@
 # Create builder step
-FROM rocker/r-ver:4.2.0 AS builder
+FROM --platform=amd64 rocker/r-ver:4.2.0 AS builder 
 WORKDIR /src/worker
 
 # install required debian packages to install R packages
@@ -71,8 +71,9 @@ RUN echo "python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
-    ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+# RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
+#     ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+# RUN ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -96,11 +97,12 @@ FROM common AS dev
 # install Radian for interactive R shell
 # also install watchdog to automatically restart
 # when source files change
-RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+# RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
 
 # add R package and runner
 ADD R ./R
 ADD tests ./tests
 COPY DESCRIPTION NAMESPACE work.R ./
 
-CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
+# CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
+CMD Rscript work.R
