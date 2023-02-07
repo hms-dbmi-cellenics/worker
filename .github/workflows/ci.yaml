@@ -9,6 +9,11 @@ on:
   pull_request:
     branches:
       - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   uncheck-integration-test:
     name: Mark integration test as not run
@@ -325,7 +330,7 @@ jobs:
             export IMAGE_POLICY_TYPE="semver"
             export IMAGE_POLICY_KEY="range"
             export IMAGE_POLICY_VALUE=">=0.0.0"
-            export MEMORY_REQUEST="40Gi"
+            export MEMORY_REQUEST="44Gi"
             export MANIFEST_PATH="./production"
           fi
 
