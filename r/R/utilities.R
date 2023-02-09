@@ -133,3 +133,72 @@ complete_variable <- function(variable, cell_ids) {
   complete_values[cell_ids + 1] <- variable
   return(complete_values)
 }
+
+
+add_clusters <- function(scdata, parsed_cellsets) {
+  seurat_clusters <- parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")]
+  data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
+  scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
+
+  if("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
+    custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]
+    # one cell can be assigned to more than one scratchpad cluster
+    custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
+
+    for (i in 1:length(custom_clusters_list)) {
+      scratchpad_colname <- paste0("scratchpad-", names(custom_clusters_list)[i])
+      data.table::setnames(custom_clusters_list[[i]], c(scratchpad_colname, "cells_id"))
+      scdata@meta.data <- dplyr::left_join(scdata@meta.data, custom_clusters_list[[i]], by = "cells_id")
+    }
+  }
+
+  return(scdata)
+}
+
+parse_cellsets <- function(cellsets) {
+  # filter out elements with lenght = 0 (e.g. if scratchpad doesn't exist)
+  cellsets <- cellsets[sapply(cellsets, length) > 0]
+
+  dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
+  dt <- data.table::setDT(dt)
+  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
+
+  # change cellset type to more generic names
+  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
+  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
+
+  return(dt)
+}
+
+
+#' Determine the type of features in the annot data frame
+#'
+#' Classifies the features file columns into either ensemblIds or symbols
+#'
+#' @param annot data.frame read from features file
+#' @return character vector indicating feature types
+#'
+#' @export
+get_feature_types <- function(annot) {
+  is_ens_col1 <- startsWith(annot[[1]], "ENS")
+  pct_ens_col1 <- sum(is_ens_col1) / nrow(annot)
+
+  is_ens_col2 <- startsWith(annot[[2]], "ENS")
+  pct_ens_col2 <- sum(is_ens_col2) / nrow(annot)
+
+  is_ens <- c(pct_ens_col1, pct_ens_col2) >= 0.5
+
+  # reverse case, sym in first and id in second column
+  if (!is_ens[1] && is_ens[2]) {
+    return(SYM_IDS)
+  }
+
+  # regular cases. sum of booleans returns ints. convert to char to string match
+  feature_type <- switch(as.character(sum(is_ens)),
+                         "0" = SYM_SYM,
+                         "1" = IDS_SYM,
+                         "2" = IDS_IDS
+  )
+
+  return(feature_type)
+}
