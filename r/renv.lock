@@ -317,6 +317,14 @@
         "rhdf5filters"
       ]
     },
+    "HGNChelper": {
+      "Package": "HGNChelper",
+      "Version": "0.8.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d756e596f0f9ddd90b82921f5964b71b",
+      "Requirements": []
+    },
     "IRanges": {
       "Package": "IRanges",
       "Version": "2.30.0",
@@ -749,7 +757,7 @@
       "RemoteRef": "master",
       "RemoteSha": "9652bddba522d2f00ec5f8f0f8227761b9a6afd2",
       "Remotes": "welch-lab/liger, hms-dbmi/conos, immunogenomics/harmony,\n    immunogenomics/presto, satijalab/seurat-data, velocyto-team/velocyto.R,\n    SaskiaFreytag/schex@031320d, cole-trapnell-lab/monocle3,\n    mojaveazure/seurat-disk, powellgenomicslab/Nebulosa,\n    atakanekiz/CIPR-Package, prabhakarlab/Banksy",
-      "Hash": "a33261877a1ad80ca3282ea2f7beaa9e",
+      "Hash": "f24c07d780c21f489c9d62e5bcfcb5dc",
       "Requirements": [
         "BiocManager",
         "Matrix",
@@ -2092,6 +2100,18 @@
         "askpass"
       ]
     },
+    "openxlsx": {
+      "Package": "openxlsx",
+      "Version": "4.2.5.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "e398ce13682a7409d16e13df09f65875",
+      "Requirements": [
+        "Rcpp",
+        "stringi",
+        "zip"
+      ]
+    },
     "parallelly": {
       "Package": "parallelly",
       "Version": "1.32.0",
@@ -2529,6 +2549,14 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "1de7ab598047a87bba48434ba35d497d",
+      "Requirements": []
+    },
+    "rrapply": {
+      "Package": "rrapply",
+      "Version": "1.2.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "65e732ee965ecaef51b5d71267d5ca74",
       "Requirements": []
     },
     "rsample": {
@@ -3249,6 +3277,14 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "2826c5d9efb0a88f657c7a679c7106db",
+      "Requirements": []
+    },
+    "zip": {
+      "Package": "zip",
+      "Version": "2.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c42bfcec3fa6a0cce17ce1f8bc684f88",
       "Requirements": []
     },
     "zlibbioc": {
