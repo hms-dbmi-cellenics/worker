@@ -27,13 +27,13 @@ class ScTypeAnnotate(Task):
         self.request = msg
 
     def _format_result(self, result):
-        return Result(result)
+        return Result(result, cacheable=False)
 
     def _format_request(self):
         # get cell sets from database
         cell_sets = get_cell_sets(self.experiment_id)
         cell_sets_dict = get_cell_sets_dict(cell_sets)
-    
+
         species = self.task_def["species"]
         tissue = self.task_def["tissue"]
 
