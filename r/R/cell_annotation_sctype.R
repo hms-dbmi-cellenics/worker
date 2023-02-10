@@ -15,7 +15,9 @@ ScTypeAnnotate <- function(req, data) {
   }
 
   scale_data <- get_formatted_data(data, active_assay)
+
   parsed_cellsets <- parse_cellsets(cell_sets)
+
   data <- add_clusters(data, parsed_cellsets)
 
   data[[active_assay]]@scale.data <- scale_data
@@ -39,13 +41,10 @@ ScTypeAnnotate <- function(req, data) {
 get_formatted_data <- function(scdata, active_assay) {
   scale_data <- data.table::as.data.table(scdata[[active_assay]]@scale.data, keep.rownames = TRUE)
 
-  # convert ENS ID to gene symbol
   scale_data <- add_gene_symbols(scale_data, scdata)
 
-  # take gene with highest mean expression for duplicated gene symbols
   scale_data <- collapse_genes(scale_data)
 
-  # convert to matrix and set gene symbols as rownames of the count matrix
   scale_data <- format_matrix(scale_data)
 
   return(scale_data)
@@ -77,6 +76,7 @@ add_gene_symbols <- function(scale_data, scdata) {
 }
 
 collapse_genes <- function(scale_data) {
+  # take gene with highest mean expression for duplicated gene symbols
   scale_data[, mean_expression := rowMeans(.SD), .SDcols = !c("input", "original_name")]
   scale_data <- scale_data[!duplicated(scale_data, by = "original_name") | mean_expression == max(mean_expression), ]
   scale_data[, mean_expression := NULL]
@@ -118,7 +118,6 @@ run_sctype <- function(data, active_assay, tissue, species) {
   sctype_scores <- cluster_scores %>%
     group_by(cluster) %>%
     top_n(n = 1, wt = scores)
-
 
   # set low-confident (low ScType score) clusters to "unknown"
   sctype_scores$type[as.numeric(as.character(sctype_scores$scores)) < sctype_scores$ncells / 4] <- "Unknown"

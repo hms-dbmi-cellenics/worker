@@ -142,9 +142,8 @@ add_clusters <- function(scdata, parsed_cellsets) {
 
   if("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
     custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]
-    # one cell can be assigned to more than one scratchpad cluster
+    # create one column for each scratchpad cluster because one cell can be assigned to more than one scratchpad cluster
     custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
-
     for (i in 1:length(custom_clusters_list)) {
       scratchpad_colname <- paste0("scratchpad-", names(custom_clusters_list)[i])
       data.table::setnames(custom_clusters_list[[i]], c(scratchpad_colname, "cells_id"))
@@ -156,7 +155,7 @@ add_clusters <- function(scdata, parsed_cellsets) {
 }
 
 parse_cellsets <- function(cellsets) {
-  # filter out elements with lenght = 0 (e.g. if scratchpad doesn't exist)
+  # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
   cellsets <- cellsets[sapply(cellsets, length) > 0]
 
   dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
