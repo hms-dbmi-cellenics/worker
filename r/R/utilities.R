@@ -209,7 +209,7 @@ format_sctype_cell_sets <-
 
     cell_class <-
       list(
-        key = cell_class_key,
+        key = uuid::UUIDgenerate(use.time = TRUE),
         name = cell_class_key,
         rootNode = TRUE,
         type = "cellSets",
@@ -220,7 +220,7 @@ format_sctype_cell_sets <-
       cell_set_key <- unique(data@meta.data$customclassif)[[i]]
 
       new_cell_set <- list(
-        key = cell_set_key,
+        key = uuid::UUIDgenerate(use.time = TRUE),
         name = cell_set_key,
         rootNode = FALSE,
         type = "cellSets",
