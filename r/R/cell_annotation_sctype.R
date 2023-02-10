@@ -1,37 +1,6 @@
 library("openxlsx")
 library("HGNChelper")
 
-format_sctype_cell_sets_object <-
-  function(data, species, tissue, color_pool) {
-    cell_class_key <- paste0("ScType-", tissue, "-", species)
-
-    cell_class <-
-      list(
-        key = cell_class_key,
-        name = cell_class_key,
-        rootNode = TRUE,
-        type = "cellSets",
-        children = list()
-      )
-
-    for (i in 1:length(unique(data@meta.data$customclassif))) {
-      cell_set_key <- unique(data@meta.data$customclassif)[[i]]
-
-      new_cell_set <- list(
-        key = cell_set_key,
-        name = cell_set_key,
-        rootNode = FALSE,
-        type = "cellSets",
-        color = sample(data@misc$color_pool, 1), 
-        cellIds = data@meta.data[data@meta.data$customclassif == data@meta.data$customclassif[[i]], "cells_id"]
-      )
-      color_pool <- color_pool[-1]
-      cell_class$children <- append(cell_class$children, list(new_cell_set))
-    }
-
-    return(cell_class)
-  }
-
 ScTypeAnnotate <- function(req, data) {
   cell_sets <- req$body$cellSets
   species <- req$body$species
@@ -53,10 +22,8 @@ ScTypeAnnotate <- function(req, data) {
 
   data <- run_sctype(data, active_assay, tissue, species)
 
-  message("formatting cellsets")
-  formatted_cell_class <- format_sctype_cell_sets_object(data, species, tissue, data@misc$color_pool)
+  formatted_cell_class <- format_sctype_cell_sets(data, species, tissue, data@misc$color_pool)
 
-  message("updating through api")
   updateCellSetsThroughApi(
     formatted_cell_class,
     req$body$apiUrl,
