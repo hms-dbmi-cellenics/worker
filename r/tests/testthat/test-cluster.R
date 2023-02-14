@@ -240,7 +240,8 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
   scdata <- Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = F)
 
   for (algo in algos) {
-    res <- runClusters(algo, resolution, scdata)
+    req <- mock_req(type = algo)
+    res <- runClusters(req, scdata)
     expect_equal(names(res), expected_keys)
   }
 })
