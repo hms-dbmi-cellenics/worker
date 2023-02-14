@@ -17,11 +17,9 @@ ScTypeAnnotate <- function(req, data) {
   scale_data <- get_formatted_data(data, active_assay)
 
   parsed_cellsets <- parse_cellsets(cell_sets)
-
   data <- add_clusters(data, parsed_cellsets)
 
   data[[active_assay]]@scale.data <- scale_data
-
   data <- run_sctype(data, active_assay, tissue, species)
 
   formatted_cell_class <- format_sctype_cell_sets(data, species, tissue, data@misc$color_pool)
