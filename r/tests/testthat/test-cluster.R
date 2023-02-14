@@ -228,3 +228,19 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
   }
 })
 
+
+test_that("runClusters does not crash with less than 10 dimensions available", {
+  algos <- c("louvain", "leiden")
+  scdata <- mock_scdata()
+  expected_keys <- c("cluster", "cell_ids")
+  resolution <- 0.8
+
+  # remove all pre-existing reductions and calculate low-PC PCA
+  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
+  scdata <- Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = F)
+
+  for (algo in algos) {
+    res <- runClusters(algo, resolution, scdata)
+    expect_equal(names(res), expected_keys)
+  }
+})
