@@ -31,7 +31,8 @@ ScTypeAnnotate <- function(req, data) {
     req$body$apiUrl,
     data@misc$experimentId,
     formatted_cell_class$key,
-    req$body$authJwt
+    req$body$authJwt,
+    annotation = TRUE
   )
 
   return(formatted_cell_class)

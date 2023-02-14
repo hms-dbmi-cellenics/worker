@@ -74,7 +74,10 @@ updateCellSetsThroughApi <-
            api_url,
            experiment_id,
            cell_set_key,
-           auth_JWT) {
+           auth_JWT,
+           annotation = FALSE) {
+    type <- "$prepend"
+    if (annotation) {type <- "$append"}
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
     httr::PATCH(
@@ -83,7 +86,7 @@ updateCellSetsThroughApi <-
         list(
           "$match" = list(query = httr_query, value = list("$remove" = TRUE))
         ),
-        list("$prepend" = cell_sets_object)
+        list(type = cell_sets_object)
       ),
       encode = "json",
       httr::add_headers(
