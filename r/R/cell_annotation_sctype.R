@@ -109,8 +109,8 @@ run_sctype <- function(data, active_assay, tissue, species) {
     head(data.frame(cluster = cl, type = names(cell_type_scores_cl), scores = cell_type_scores_cl, ncells = sum(metadata_clusters == cl)), 10)
   }))
 
-  sctype_scores <- cluster_scores %>%
-    group_by(cluster) %>%
+  sctype_scores <- cluster_scores |>
+    group_by(cluster) |>
     top_n(n = 1, wt = scores)
 
   # set low-confident (low ScType score) clusters to "unknown"
