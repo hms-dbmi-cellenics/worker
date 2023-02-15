@@ -75,19 +75,20 @@ updateCellSetsThroughApi <-
            experiment_id,
            cell_set_key,
            auth_JWT,
-           annotation = FALSE) {
-    type <- "$prepend"
-    if (annotation) {type <- "$append"}
+           append = TRUE) {
+    order <- "$append"
+    if (!append) {order <- "$prepend"}
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
+    body <- list(
+      list(
+        "$match" = list(query = httr_query, value = list("$remove" = TRUE))
+      )
+    )
+    body[[order]] <- cell_sets_object
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-      body = list(
-        list(
-          "$match" = list(query = httr_query, value = list("$remove" = TRUE))
-        ),
-        list(type = cell_sets_object)
-      ),
+      body = body,
       encode = "json",
       httr::add_headers(
         "Content-Type" = "application/boschni-json-merger+json",
