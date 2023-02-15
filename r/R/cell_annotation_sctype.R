@@ -61,10 +61,6 @@ add_gene_symbols <- function(scale_data, scdata) {
     )
   }
 
-  if (feature_types == SYM_IDS) {
-    annot[, c(1, 2)] <- annot[, c(2, 1)]
-  }
-
   scale_data <- annot[scale_data, on = .(input)]
 
   return(scale_data)
