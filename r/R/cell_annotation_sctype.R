@@ -48,7 +48,7 @@ get_formatted_data <- function(scdata, active_assay) {
 
 add_gene_symbols <- function(scale_data, scdata) {
   colnames(scale_data)[1] <- "input"
-  annot <- data.table::setDT(scdata@misc$gene_annotations)
+  annot <- data.table::as.data.table(scdata@misc$gene_annotations)
   annot <- annot[, .(input, original_name)]
 
   feature_types <- get_feature_types(annot)
