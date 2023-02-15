@@ -240,7 +240,7 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    res <- runClusters(req, scdata)
+    res <- stubbed_runClusters(req, scdata)
     expect_equal(names(res), expected_keys)
   }
 })
@@ -249,7 +249,6 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
 test_that("getClusters uses the default value of 10 if there are enough PCs available",{
   algos <- c("louvain", "leiden")
   scdata <- mock_scdata()
-  expected_keys <- c("cluster", "cell_ids")
   resolution <- 0.8
 
   # remove all pre-existing reductions and calculate low-PC PCA
