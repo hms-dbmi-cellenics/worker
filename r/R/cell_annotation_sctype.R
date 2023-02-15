@@ -1,6 +1,3 @@
-library("openxlsx")
-library("HGNChelper")
-
 ScTypeAnnotate <- function(req, data) {
   cell_sets <- req$body$cellSets
   species <- req$body$species
@@ -93,6 +90,9 @@ format_matrix <- function(scale_data) {
 
 
 run_sctype <- function(data, active_assay, tissue, species) {
+  library("openxlsx")
+  library("HGNChelper")
+
   source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/gene_sets_prepare.R")
   source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/sctype_score_.R")
 
