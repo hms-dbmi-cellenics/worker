@@ -76,16 +76,18 @@ updateCellSetsThroughApi <-
            cell_set_key,
            auth_JWT,
            append = TRUE) {
-    order <- "$append"
-    if (!append) {order <- "$prepend"}
+
+    insert_order <- "$append"
+    if (!append) { insert_order <- "$prepend" }
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
+    cell_sets_payload = list()
+    cell_sets_payload[[insert_order]] <- cell_sets_object
+
     body <- list(
-      list(
-        "$match" = list(query = httr_query, value = list("$remove" = TRUE))
-      )
+      list( "$match" = list(query = httr_query, value = list("$remove" = TRUE))),
+      cell_sets_payload
     )
-    body[[order]] <- cell_sets_object
     httr::PATCH(
       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
       body = body,

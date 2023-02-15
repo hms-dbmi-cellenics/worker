@@ -40,7 +40,8 @@ runClusters <- function(req, data) {
     req$body$apiUrl,
     data@misc$experimentId,
     type,
-    req$body$authJwt
+    req$body$authJwt,
+    append = FALSE
   )
 
   return(df)
