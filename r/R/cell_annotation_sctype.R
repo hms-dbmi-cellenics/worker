@@ -77,17 +77,16 @@ collapse_genes <- function(scale_data) {
 
 
 format_matrix <- function(scale_data) {
-  gene_symbols <- scale_data[, original_name]
-  scale_data <- apply(as.matrix.noquote(scale_data[, -c(1, 2)]), 2, as.numeric)
-  rownames(scale_data) <- gene_symbols
+  scale_data <- scale_data[, -"input"]
+  scale_data <- as.matrix(scale_data, rownames = "original_name")
 
   return(scale_data)
 }
 
 
 run_sctype <- function(data, active_assay, tissue, species) {
-  library("openxlsx")
-  library("HGNChelper")
+  library(openxlsx)
+  library(HGNChelper)
 
   source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/gene_sets_prepare.R")
   source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/sctype_score_.R")
@@ -104,6 +103,7 @@ run_sctype <- function(data, active_assay, tissue, species) {
   # merge by cluster
   clusters <- "seurat_clusters"
   metadata_clusters <- data@meta.data[[clusters]]
+  # from https://github.com/IanevskiAleksandr/sc-type/blob/master/README.md
   cluster_scores <- do.call("rbind", lapply(unique(metadata_clusters), function(cl) {
     cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(rownames(data@meta.data[metadata_clusters == cl, ]))]), decreasing = !0)
     head(data.frame(cluster = cl, type = names(cell_type_scores_cl), scores = cell_type_scores_cl, ncells = sum(metadata_clusters == cl)), 10)
@@ -113,7 +113,7 @@ run_sctype <- function(data, active_assay, tissue, species) {
     group_by(cluster) |>
     top_n(n = 1, wt = scores)
 
-  # set low-confident (low ScType score) clusters to "unknown"
+  # set low-confident (low ScType score) clusters to "unknown" (threshold defined by ScType authors)
   sctype_scores$type[as.numeric(as.character(sctype_scores$scores)) < sctype_scores$ncells / 4] <- "Unknown"
 
   data@meta.data$customclassif <- ""
