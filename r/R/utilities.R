@@ -152,8 +152,7 @@ add_clusters <- function(scdata, parsed_cellsets) {
     custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
     for (i in 1:length(custom_clusters_list)) {
       scratchpad_colname <- paste0("scratchpad-", names(custom_clusters_list)[i])
-      data.table::setnames(custom_clusters_list[[i]], c(scratchpad_colname, "cells_id"))
-      scdata@meta.data <- dplyr::left_join(scdata@meta.data, custom_clusters_list[[i]], by = "cells_id")
+      scdata@meta.data[[scratchpad_colname]] <- scdata@meta.data$cells_id %in% custom_clusters_list[[i]]$cell_id
     }
   }
 
@@ -165,7 +164,7 @@ parse_cellsets <- function(cellsets) {
   cellsets <- cellsets[sapply(cellsets, length) > 0]
 
   dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
-  dt <- data.table::setDT(dt)
+  data.table::setDT(dt)
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
 
   # change cellset type to more generic names
