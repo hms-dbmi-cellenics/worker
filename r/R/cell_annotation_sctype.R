@@ -19,7 +19,7 @@ ScTypeAnnotate <- function(req, data) {
   data[[active_assay]]@scale.data <- scale_data
   data <- run_sctype(data, active_assay, tissue, species)
 
-  formatted_cell_class <- format_sctype_cell_sets(data, species, tissue, data@misc$color_pool)
+  formatted_cell_class <- format_sctype_cell_sets(data, species, tissue)
 
   updateCellSetsThroughApi(
     formatted_cell_class,

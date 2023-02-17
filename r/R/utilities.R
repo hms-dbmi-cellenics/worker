@@ -209,7 +209,7 @@ get_feature_types <- function(annot) {
 
 
 format_sctype_cell_sets <-
-  function(data, species, tissue, color_pool) {
+  function(data, species, tissue) {
     cell_class_key <- paste0("ScType-", tissue, "-", species)
 
     cell_class <-
@@ -232,7 +232,6 @@ format_sctype_cell_sets <-
         color = sample(data@misc$color_pool, 1),
         cellIds = data@meta.data[data@meta.data$customclassif == cell_set_key, "cells_id"]
       )
-      color_pool <- color_pool[-1]
       cell_class$children <- append(cell_class$children, list(new_cell_set))
     }
 
