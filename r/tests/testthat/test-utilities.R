@@ -9,7 +9,7 @@ mock_scratchpad_cellset_object <- function(n) {
   )
 }
 
-mock_cellset_from_python <- function() {
+mock_cellset_from_python <- function(data) {
   cell_sets <- list(
     "louvain" = list(
       list(
@@ -175,7 +175,8 @@ test_that("complete_variable returns results ordered by increasing cell id", {
 
 
 test_that("parse_cellsets converts the cellsets object in the expected format", {
-  cell_sets <- mock_cellset_from_python()
+  data <- mock_scdata()
+  cell_sets <- mock_cellset_from_python(data)
   expected_columns <-
     c(
       "key",
@@ -209,7 +210,7 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
 
 test_that("add_clusters adds cluster information as metadata columns to the seurat object", {
   data <- mock_scdata()
-  cell_sets <- mock_cellset_from_python()
+  cell_sets <- mock_cellset_from_python(data)
   parsed_cellsets <- parse_cellsets(cell_sets)
 
   data <- add_clusters(data, parsed_cellsets)
@@ -232,6 +233,7 @@ test_that("add_clusters adds cluster information as metadata columns to the seur
 
 test_that("format_sctype_cell_sets correctly format cellset to be sent to the API", {
   data <- mock_scdata()
+  cell_sets <- mock_cellset_from_python(data)
   species <- "human"
   tissue <- "Pancreas"
   active_assay <- "RNA"
