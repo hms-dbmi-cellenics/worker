@@ -58,6 +58,7 @@ def get_cell_sets_dict(cell_sets):
         for cell_set in cell_class["children"]:
             cell_sets_dict[cell_class["key"]]["childrenKeys"].append(cell_set["key"])
             cell_sets_dict[cell_set["key"]] = cell_set
+            cell_sets_dict[cell_set["key"]]["rootNode"] = False
 
     return cell_sets_dict
 
