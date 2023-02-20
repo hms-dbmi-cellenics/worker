@@ -60,6 +60,7 @@ sendCellsetToApi <-
 #' Update the cell sets through the API
 #'
 #' Used when re-clustering, cell sets are replaced.
+#' Used after ScType, cell sets are added.
 #'
 #' @param cell_sets_object list of cellsets to patch
 #' @param api_url character - api endpoint url
@@ -76,16 +77,17 @@ updateCellSetsThroughApi <-
            cell_set_key,
            auth_JWT,
            append = TRUE) {
-
     insert_order <- "$append"
-    if (!append) { insert_order <- "$prepend" }
+    if (!append) {
+      insert_order <- "$prepend"
+    }
     httr_query <- paste0("$[?(@.key == \"", cell_set_key, "\")]")
 
-    cell_sets_payload = list()
+    cell_sets_payload <- list()
     cell_sets_payload[[insert_order]] <- cell_sets_object
 
     body <- list(
-      list( "$match" = list(query = httr_query, value = list("$remove" = TRUE))),
+      list("$match" = list(query = httr_query, value = list("$remove" = TRUE))),
       cell_sets_payload
     )
     httr::PATCH(
@@ -141,12 +143,27 @@ complete_variable <- function(variable, cell_ids) {
 }
 
 
+#' Add cluster information to the Seurat object
+#'
+#' This function adds cluster information coming from the parsed cellsets file
+#' to the metadata slot of the Seurat object.
+#' For Louvain/Leiden clusters, it adds a single column with cluster names as values.
+#' For scratchpad clusters, it adds one column for each cluster with TRUE/FALSE values
+#' to indicate if the corresponding cell belongs to that cluster. This is because
+#' a cell can belong to more than one scratchpad cluster.
+#'
+#' @param scdata Seurat object
+#' @param parsed_cellsets data.table cellsets object
+#'
+#' @return Seurat object
+#' @export
+#'
 add_clusters <- function(scdata, parsed_cellsets) {
   seurat_clusters <- parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
 
-  if("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
+  if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
     custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]
     # create one column for each scratchpad cluster because one cell can be assigned to more than one scratchpad cluster
     custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
@@ -159,6 +176,15 @@ add_clusters <- function(scdata, parsed_cellsets) {
   return(scdata)
 }
 
+#' Parse cellsets object to data.table
+#'
+#' Gets the cellsets list and converts it to a tidy data.table
+#'
+#' @param cellsets list
+#'
+#' @return data.table of cellset keys, names and corresponding cell_ids
+#' @export
+#'
 parse_cellsets <- function(cellsets) {
   # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
   cellsets <- cellsets[sapply(cellsets, length) > 0]
@@ -199,15 +225,27 @@ get_feature_types <- function(annot) {
 
   # regular cases. sum of booleans returns ints. convert to char to string match
   feature_type <- switch(as.character(sum(is_ens)),
-                         "0" = SYM_SYM,
-                         "1" = IDS_SYM,
-                         "2" = IDS_IDS
+    "0" = SYM_SYM,
+    "1" = IDS_SYM,
+    "2" = IDS_IDS
   )
 
   return(feature_type)
 }
 
 
+#' Formats ScType cell sets object for patching through the API
+#'
+#' This function is used to format ScType cellsets. Converting from
+#' data.frame to list and adding slots necessary for the cellsets file.
+#'
+#' @param data Seurat object with ScType anntations in the "customclassif" column of the metadata slot
+#' @param species string. Either "human" or "mouse"
+#' @param tissue string. Tissue information
+#'
+#' @return list
+#' @export
+#'
 format_sctype_cell_sets <-
   function(data, species, tissue) {
     cell_class_key <- paste0("ScType-", tissue, "-", species)
