@@ -12,7 +12,8 @@ class TestFindCellIdsInSameHierarchy:
     @pytest.fixture(autouse=True)
     def load_cellsets(self):
         with open(os.path.join("tests/data", "MockCellSet.json")) as f:
-            self.cellsets = json.load(f)
+          cell_sets = json.load(f)
+          self.cellsets = cell_sets["cellSets"]
 
     def test_empty_cell_set_returns_no_cells_hierchy(self):
         assert find_cell_ids_in_same_hierarchy("", []) == []
