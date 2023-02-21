@@ -177,7 +177,7 @@ generateTrajectoryGraph <- function(
   )
 
   if(rlang::has_name(TRAJECTORY_ANALYSIS_CACHE, cache_hash)) {
-    message(paste0("Using hash with key ", cache_hash))
+    message(paste0("Returning cache with key ", cache_hash))
     return(TRAJECTORY_ANALYSIS_CACHE[[cache_hash]])
   }
 
