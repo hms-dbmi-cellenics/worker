@@ -1,0 +1,6 @@
+DOWNLOAD_EXPERIMENT = 'download_experiment_s3'
+LOAD_EXPERIMENT = 'load_experiment_to_memory'
+STARTED_TASK = 'started_task'
+COMPRESSING_TASK_DATA = 'compressing_data'
+UPLOADING_TASK_DATA = 'upload_data'
+FINISHED_TASK = 'finished_task'
