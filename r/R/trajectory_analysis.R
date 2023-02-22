@@ -142,7 +142,8 @@ runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
   # fill in the NULL values for filtered cells
-  pseudotime <- fillNullForFilteredCells(pseudotime, subsetIds(data, req$body$cell_ids))
+  subset_data <- subsetIds(data, req$body$cell_ids)
+  pseudotime <- fillNullForFilteredCells(pseudotime, subset_data)
   result <- list(pseudotime = pseudotime[[1]])
   return(result)
 }
