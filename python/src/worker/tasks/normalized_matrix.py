@@ -6,7 +6,8 @@ from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.s3 import get_cell_sets, get_cell_sets_dict, get_cell_ids
+from ..helpers.s3 import get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict, subset_cell_sets_dict
 from ..result import Result
 from ..tasks import Task
 
@@ -39,7 +40,7 @@ class GetNormalizedExpression(Task):
             if (len(subset_by[category]) == 0):
                 continue
 
-            cell_ids = get_cell_ids(subset_by[category], cell_sets_dict)
+            cell_ids = subset_cell_sets_dict(subset_by[category], cell_sets_dict)
             cell_ids_to_intersect.append(cell_ids)
 
         # Intersect all sets of cell ids from different categories

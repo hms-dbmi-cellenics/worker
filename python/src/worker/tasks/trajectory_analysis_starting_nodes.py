@@ -6,7 +6,8 @@ from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.s3 import get_embedding, get_cell_sets, get_cell_sets_dict, get_cell_ids
+from ..helpers.s3 import get_embedding, get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict, subset_cell_sets_dict
 from ..result import Result
 from . import Task
 
@@ -24,7 +25,7 @@ class GetTrajectoryAnalysisStartingNodes(Task):
         cell_sets = get_cell_sets(self.experiment_id)
         cell_sets_dict = get_cell_sets_dict(cell_sets)
 
-        cell_ids = get_cell_ids(self.task_def["cellSets"], cell_sets_dict)
+        cell_ids = subset_cell_sets_dict(self.task_def["cellSets"], cell_sets_dict)
 
         embedding_etag = self.task_def["embedding"]["ETag"]
         embedding = get_embedding(embedding_etag, format_for_r=True)
