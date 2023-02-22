@@ -200,8 +200,8 @@ generateTrajectoryGraph <- function(
     )
   }
 
-  data <- assignEmbedding(embedding_data, data)
   data <- subsetIds(data, cell_ids)
+  data <- assignEmbedding(embedding_data, data)
 
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
