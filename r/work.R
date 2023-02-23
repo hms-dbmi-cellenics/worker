@@ -25,6 +25,8 @@ load_data <- function(fpath) {
           length[1], "x", length[2]
         )
 
+        print(sessionInfo())
+
         return(f)
       },
       warning = function(w) {
