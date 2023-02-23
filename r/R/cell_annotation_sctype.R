@@ -69,7 +69,7 @@ ScTypeAnnotate <- function(req, data) {
 #'
 #' @examples
 get_formatted_data <- function(scdata, active_assay) {
-  scale_data <- data.table::as.data.table(scdata[[active_assay]]@scale.data, keep.rownames = TRUE)
+  scale_data <- data.table::as.data.table(scdata[[active_assay]]@scale.data, keep.rownames = "input")
 
   scale_data <- add_gene_symbols(scale_data, scdata)
 
@@ -94,7 +94,6 @@ get_formatted_data <- function(scdata, active_assay) {
 #' @export
 #'
 add_gene_symbols <- function(scale_data, scdata) {
-  colnames(scale_data)[1] <- "input"
   annot <- data.table::as.data.table(scdata@misc$gene_annotations)
   annot <- annot[, .(input, original_name)]
 
