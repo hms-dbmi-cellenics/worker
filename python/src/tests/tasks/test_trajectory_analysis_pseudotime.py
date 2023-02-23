@@ -1,5 +1,6 @@
 import gzip
 import io
+import os
 import json
 from unittest import TestCase
 
@@ -21,64 +22,119 @@ class TestTrajectoryAnalysisPseudoTime:
     def load_correct_definition(self):
         self.correct_request = {
             "body": {
-                "name": "GetTrajectoryAnalysisPseudoTime",
-                "embedding": {
-                  "ETag": mock_embedding_etag,
-                  "method": "umap",
-                  "methodSettings": {
-                    "distanceMetric": "cosine",
-                    "minimumDistance": 0.3
-                  }
-                },
-                "clustering": {"method": "louvain", "resolution": 0.8},
-                "rootNodes": [
-                  "Y_77",
-                  "Y_79",
-                  "Y_92",
-                  "Y_110",
-                  "Y_128",
-                  "Y_130",
-                  "Y_131",
-                  "Y_152",
-                  "Y_184",
-                  "Y_191"
-                ]
+              "name": "GetTrajectoryAnalysisPseudoTime",
+              "embedding": {
+                "ETag": mock_embedding_etag,
+                "method": "umap",
+                "methodSettings": {
+                  "distanceMetric": "cosine",
+                  "minimumDistance": 0.3
+                }
+              },
+              "clustering": {"method": "louvain", "resolution": 0.8},
+              "rootNodes": [
+                "Y_77",
+                "Y_79",
+                "Y_92",
+                "Y_110",
+                "Y_128",
+                "Y_130",
+                "Y_131",
+                "Y_152",
+                "Y_184",
+                "Y_191"
+              ],
+              "cellSets": ["louvain"]
             }
         }
 
     def get_s3_stub(self):
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
-        response = {
-            "ContentLength": 10,
-            "ContentType": "utf-8",
-            "ResponseMetadata": {
-                "Bucket": config.RESULTS_BUCKET,
+        stubber = Stubber(s3)
+
+        # Stubbing responses for cell sets head object
+        cell_sets_head_object = {
+            "params": {
+              "Bucket": config.CELL_SETS_BUCKET,
+              "Key": config.EXPERIMENT_ID,
             },
+            "response": {
+              "ContentLength": 10,
+              "ContentType": "utf-8",
+              "ResponseMetadata": {
+                  "Bucket": config.CELL_SETS_BUCKET,
+              },
+            }
         }
 
-        expected_params = {
+        stubber.add_response("head_object", cell_sets_head_object["response"], cell_sets_head_object["params"])
+
+        # Stubbing responses for cell sets get object
+        data = io.BytesIO()
+        with open(os.path.join("tests/data", "MockCellSet.json"), "rb") as f:
+          content_bytes = f.read()
+
+        data.write(content_bytes)
+        data.seek(0)
+
+        cell_sets_get_object = {
+            "params": {
+              "Bucket": config.CELL_SETS_BUCKET,
+              "Key": config.EXPERIMENT_ID,
+            },
+            "response": {
+              "ContentLength": len(content_bytes),
+              "ContentType": "utf-8",
+              "Body": data,
+              "ResponseMetadata": {
+                  "Bucket": config.CELL_SETS_BUCKET,
+              },
+            }
+        }
+
+        stubber.add_response("get_object", cell_sets_get_object["response"], cell_sets_get_object["params"])
+
+        embedding_head_object = {
+          "params": {
             "Bucket": config.RESULTS_BUCKET,
             "Key": mock_embedding_etag,
+          },
+          "response": {
+              "ContentLength": 10,
+              "ContentType": "utf-8",
+              "ResponseMetadata": {
+                  "Bucket": config.RESULTS_BUCKET,
+              },
+          }
         }
-        stubber = Stubber(s3)
-        stubber.add_response("head_object", response, expected_params)
 
-        # Get object
+        # Stubbing response for embedding head object
+        stubber.add_response("head_object", embedding_head_object["response"], embedding_head_object["params"])
+
+        # Stubbing response for embedding get object
         content_string = json.dumps(mock_embedding).encode("utf-8")
         content_bytes = gzip.compress(content_string)
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
 
-        response = {
+        embedding_get_object = {
+          "params": {
+            "Bucket": config.RESULTS_BUCKET,
+            "Key": mock_embedding_etag,
+          },
+          "response": {
             "ContentLength": len(content_bytes),
             "ContentType": "application/gzip",
             "Body": data,
             "ResponseMetadata": {
                 "Bucket": config.RESULTS_BUCKET,
             },
+          }
         }
-        stubber.add_response("get_object", response, expected_params)
+
+        stubber.add_response("get_object", embedding_get_object["response"], embedding_get_object["params"])
+
         return (stubber, s3)
 
     def test_throws_on_missing_parameters(self):

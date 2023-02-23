@@ -49,12 +49,14 @@ mock_starting_nodes_req <- function(data) {
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
   mock_clustering_settings <- get_mock_clustering_settings()
+  mock_cell_ids <- get_mock_cell_ids(data)
 
   result <- list(
     body = list(
       embedding = mock_embedding_data,
       embedding_settings = mock_embedding_settings,
-      clustering_settings = mock_clustering_settings
+      clustering_settings = mock_clustering_settings,
+      cell_ids = mock_cell_ids
     )
   )
 }
@@ -63,12 +65,14 @@ mock_pseudotime_req <- function(data) {
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
   mock_clustering_settings <- get_mock_clustering_settings()
+  mock_cell_ids <- get_mock_cell_ids(data)
 
   result <- list(
     body = list(
       embedding = mock_embedding_data,
       embedding_settings = mock_embedding_settings,
       clustering_settings = mock_clustering_settings,
+      cell_ids = mock_cell_ids,
       root_nodes = c(0, 1, 2)
     )
   )
@@ -102,18 +106,24 @@ get_mock_clustering_settings <- function() {
   )
 }
 
+get_mock_cell_ids <- function(data) {
+  result <- data$cells_id[1:200]
+}
+
 test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_set object", {
   data <- mock_scdata()
 
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
   mock_clustering_settings <- get_mock_clustering_settings()
+  mock_cell_ids <- get_mock_cell_ids(data)
 
   cell_data <- suppressWarnings(
     generateTrajectoryGraph(
       mock_embedding_data,
       mock_embedding_settings,
       mock_clustering_settings,
+      mock_cell_ids,
       data
     )
   )
@@ -139,6 +149,7 @@ test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of 
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
   mock_clustering_settings <- get_mock_clustering_settings()
+  mock_cell_ids <- get_mock_cell_ids(data)
 
   req <- mock_starting_nodes_req(data)
 
@@ -147,6 +158,7 @@ test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of 
       mock_embedding_data,
       mock_embedding_settings,
       mock_clustering_settings,
+      mock_cell_ids,
       data
     )
   )
@@ -162,11 +174,13 @@ test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of 
 
 test_that("runTrajectoryAnalysisPseudoTimeTask works", {
   data <- mock_scdata()
+  mock_cell_ids = get_mock_cell_ids(data)
+
   req <- mock_pseudotime_req(data)
 
   result <- suppressWarnings(runTrajectoryAnalysisPseudoTimeTask(req, data))
 
-  expect_equal(length(data$cells_id), length(result$pseudotime))
+  expect_equal(length(mock_cell_ids), length(result$pseudotime))
   expect_true(is.numeric(result$pseudotime))
 })
 

@@ -7,28 +7,9 @@ from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.s3 import get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict, subset_cell_sets_dict
 from ..result import Result
 from ..tasks import Task
-
-# Move all cell_sets data into a dict with { cellSetKey: cellSetIds } for faster access
-def get_cell_sets_dict(cell_sets):
-    cell_sets_dict = {}
-
-    for cell_class in cell_sets:
-        for cell_set in cell_class["children"]:
-            cell_sets_dict[cell_set["key"]] = cell_set["cellIds"]
-
-    return cell_sets_dict
-
-# Get all cell sets that match the subset_keys
-def get_cell_ids(subset_keys, cell_sets_dict):
-    cell_ids = set()
-
-    for subset_key in subset_keys:
-        cell_ids = cell_ids.union(set(cell_sets_dict[subset_key]))
-    
-    return cell_ids
-
 
 class GetNormalizedExpression(Task):
     def __init__(self, msg):
@@ -58,8 +39,8 @@ class GetNormalizedExpression(Task):
         for category in categories:
             if (len(subset_by[category]) == 0):
                 continue
-            
-            cell_ids = get_cell_ids(subset_by[category], cell_sets_dict)
+
+            cell_ids = subset_cell_sets_dict(subset_by[category], cell_sets_dict)
             cell_ids_to_intersect.append(cell_ids)
 
         # Intersect all sets of cell ids from different categories
