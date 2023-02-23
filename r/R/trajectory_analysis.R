@@ -5,7 +5,8 @@
     umap = "UMAP"
   )
 
-  TRAJECTORY_ANALYSIS_CACHE <- list()
+  TRAJECTORY_ANALYSIS_CACHE <- NULL
+  TRAJECTORY_ANALYSIS_CACHE_KEY <- NULL
 
 #' Generate node coordinates for the initial trajectory analysis plot
 #'
@@ -177,9 +178,9 @@ generateTrajectoryGraph <- function(
     )
   )
 
-  if(rlang::has_name(TRAJECTORY_ANALYSIS_CACHE, cache_hash)) {
+  if(TRAJECTORY_ANALYSIS_CACHE_KEY == cache_hash) {
     message(paste0("Returning cache with key ", cache_hash))
-    return(TRAJECTORY_ANALYSIS_CACHE[[cache_hash]])
+    return(TRAJECTORY_ANALYSIS_CACHE)
   }
 
   Seurat::DefaultAssay(data) <- "RNA"
@@ -217,7 +218,8 @@ generateTrajectoryGraph <- function(
 
   cell_data <- monocle3::learn_graph(cell_data)
 
-  TRAJECTORY_ANALYSIS_CACHE[[cache_hash]] <- cell_data
+  TRAJECTORY_ANALYSIS_CACHE <- cell_data
+  TRAJECTORY_ANALYSIS_CACHE_KEY <- cache_hash
 
   message(paste0("Trajectory graph cell data cached with key ", cache_hash))
 
