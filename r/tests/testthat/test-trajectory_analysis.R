@@ -131,6 +131,42 @@ test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_
   expect_s4_class(cell_data, "cell_data_set")
 })
 
+test_that("generateTrajectoryGraph returns cache if available", {
+  data <- mock_scdata()
+
+  mock_embedding_data <- get_mock_embedding_data(data)
+  mock_embedding_settings <- get_mock_embedding_settings()
+  mock_clustering_settings <- get_mock_clustering_settings()
+  mock_cell_ids <- get_mock_cell_ids(data)
+
+  # assign and modify cache values
+  test_cache_value <- "test_data"
+  test_cache_key <- "5bca8fbb71c5f1368006d8bb29560fdf"
+
+  unlockBinding("TRAJECTORY_ANALYSIS_CACHE", asNamespace("rworker"))
+  unlockBinding("TRAJECTORY_ANALYSIS_CACHE_KEY", asNamespace("rworker"))
+  assign("TRAJECTORY_ANALYSIS_CACHE", test_cache_value, asNamespace("rworker"))
+  assign("TRAJECTORY_ANALYSIS_CACHE_KEY", test_cache_key, asNamespace("rworker"))
+
+  cell_data <- suppressWarnings(
+    generateTrajectoryGraph(
+      mock_embedding_data,
+      mock_embedding_settings,
+      mock_clustering_settings,
+      mock_cell_ids,
+      data
+    )
+  )
+
+  expect_equal(cell_data, test_cache_value)
+
+  # unset cache values
+  assign("TRAJECTORY_ANALYSIS_CACHE", NULL, asNamespace("rworker"))
+  assign("TRAJECTORY_ANALYSIS_CACHE_KEY", NULL, asNamespace("rworker"))
+  lockBinding("TRAJECTORY_ANALYSIS_CACHE", asNamespace("rworker"))
+  lockBinding("TRAJECTORY_ANALYSIS_CACHE_KEY", asNamespace("rworker"))
+})
+
 
 test_that("runTrajectoryAnalysisStartingNodesTask output has the expected format", {
   data <- mock_scdata()
