@@ -91,7 +91,7 @@ test_that("add_gene_symbols adds gene symbols to the count matrix", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = TRUE)
+  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
   scale_data <- add_gene_symbols(scale_data, data)
 
   expect_equal(colnames(scale_data)[2], "original_name")
@@ -102,7 +102,7 @@ test_that("collapse_genes collapses duplicated gene symbols", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = TRUE)
+  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
   scale_data <- add_gene_symbols(scale_data, data)
 
   # duplicate first 5 rows
@@ -119,7 +119,7 @@ test_that("format_matrix produces a matrix in the expected format", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = TRUE)
+  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
   scale_data <- add_gene_symbols(scale_data, data)
   scale_data <- collapse_genes(scale_data)
 
@@ -148,4 +148,22 @@ test_that("run_sctype produces adds cluster annotations as a new metadata column
 
   expect_true("customclassif" %in% colnames(data@meta.data))
   expect_equal(all(is.na(data@meta.data$customclassif)), FALSE)
+})
+
+test_that("run_sctype produces correct snapshots", {
+  data <- mock_scdata()
+  active_assay <- "RNA"
+  req <- mock_req(data)
+  tissue <- req$body$tissue
+  species <- req$body$species
+  cell_sets <- req$body$cellSets
+
+  scale_data <- get_formatted_data(data, active_assay)
+  parsed_cellsets <- parse_cellsets(cell_sets)
+  data <- add_clusters(data, parsed_cellsets)
+  data[[active_assay]]@scale.data <- scale_data
+
+  data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
+
+  expect_snapshot(data@meta.data[c("cells_id","customclassif")])
 })
