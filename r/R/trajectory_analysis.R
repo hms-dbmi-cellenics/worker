@@ -178,7 +178,7 @@ generateTrajectoryGraph <- function(
     )
   )
 
-  if(TRAJECTORY_ANALYSIS_CACHE_KEY == cache_hash) {
+  if(!is.null(TRAJECTORY_ANALYSIS_CACHE_KEY) && TRAJECTORY_ANALYSIS_CACHE_KEY == cache_hash) {
     message(paste0("Returning cache with key ", cache_hash))
     return(TRAJECTORY_ANALYSIS_CACHE)
   }
