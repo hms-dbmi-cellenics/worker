@@ -12,7 +12,7 @@ from ..tasks import Task
 
 
 # Move all cell_sets data into a dict
-def get_cell_sets_dict(cell_sets):
+def get_cell_sets_dict_sctype(cell_sets):
     cell_sets_dict = {}
 
     for cell_class in cell_sets:
@@ -32,7 +32,7 @@ class ScTypeAnnotate(Task):
     def _format_request(self):
         # get cell sets from database
         cell_sets = get_cell_sets(self.experiment_id)
-        cell_sets_dict = get_cell_sets_dict(cell_sets)
+        cell_sets_dict = get_cell_sets_dict_sctype(cell_sets)
 
         species = self.task_def["species"]
         tissue = self.task_def["tissue"]
