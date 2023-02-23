@@ -34,7 +34,13 @@ class TestScTypeAnnotate:
         cell_sets_dict = get_cell_sets_dict(cell_sets)
         species = self.task_def["species"]
 
-        return { "cellSets": cell_sets_dict, "species": species, "tissue": tissue, "apiUrl" : config.API_URL, "authJwt" : "mock_authJwt"}
+        return { 
+            "cellSets": cell_sets_dict, 
+            "species": species, 
+            "tissue": tissue, 
+            "apiUrl" : config.API_URL, 
+            "authJwt" : "mock_authJwt"
+            }
 
     def get_s3_stub(self, content_type):
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
