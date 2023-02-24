@@ -264,3 +264,19 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
     )
   }
 })
+
+
+with_fake_http(test_that("updateCellSetsThroughApi sends patch request using append = TRUE", {
+  expect_PATCH(
+    updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth", append = TRUE)
+  )
+}))
+
+
+with_fake_http(test_that("updateCellSetsThroughApi sends patch request using append = FALSE", {
+  expect_PATCH(
+    updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth", append = FALSE)
+  )
+}))
+
+
