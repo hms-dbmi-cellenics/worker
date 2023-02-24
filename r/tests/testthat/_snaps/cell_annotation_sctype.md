@@ -85,3 +85,86 @@
       79       78                Mast cells
       80       79                Mast cells
 
+# ScTypeAnnotate produces correct annotations
+
+    Code
+      res
+    Output
+      $key
+      [1] "0406419c-b43d-11ed-a18e-acde48001122"
+      
+      $name
+      [1] "ScType-Pancreas-human"
+      
+      $rootNode
+      [1] TRUE
+      
+      $type
+      [1] "cellSets"
+      
+      $children
+      $children[[1]]
+      $children[[1]]$key
+      [1] "04064318-b43d-11ed-a18e-acde48001122"
+      
+      $children[[1]]$name
+      [1] "Immune system cells"
+      
+      $children[[1]]$rootNode
+      [1] FALSE
+      
+      $children[[1]]$type
+      [1] "cellSets"
+      
+      $children[[1]]$color
+      [1] "color_2"
+      
+      $children[[1]]$cellIds
+       [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+      [26] 25 26
+      
+      
+      $children[[2]]
+      $children[[2]]$key
+      [1] "040645f2-b43d-11ed-a18e-acde48001122"
+      
+      $children[[2]]$name
+      [1] "Pancreatic stellate cells"
+      
+      $children[[2]]$rootNode
+      [1] FALSE
+      
+      $children[[2]]$type
+      [1] "cellSets"
+      
+      $children[[2]]$color
+      [1] "color_6"
+      
+      $children[[2]]$cellIds
+       [1] 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51
+      [26] 52 53
+      
+      
+      $children[[3]]
+      $children[[3]]$key
+      [1] "040647fa-b43d-11ed-a18e-acde48001122"
+      
+      $children[[3]]$name
+      [1] "Mast cells"
+      
+      $children[[3]]$rootNode
+      [1] FALSE
+      
+      $children[[3]]$type
+      [1] "cellSets"
+      
+      $children[[3]]$color
+      [1] "color_19"
+      
+      $children[[3]]$cellIds
+       [1] 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78
+      [26] 79
+      
+      
+      
+

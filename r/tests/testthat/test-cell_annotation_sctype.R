@@ -1,3 +1,7 @@
+mock_color_pool <- function(n) {
+  paste0("color_", 1:n)
+}
+
 mock_scdata <- function() {
   pbmc_raw <- read.table(
     file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
@@ -16,6 +20,7 @@ mock_scdata <- function() {
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- gene_annotations
+  pbmc_small@misc$color_pool <- mock_color_pool(20)
 
   pbmc_small <- Seurat::NormalizeData(pbmc_small, normalization.method = "LogNormalize", verbose = FALSE)
   pbmc_small <- Seurat::FindVariableFeatures(pbmc_small, verbose = FALSE)
@@ -85,6 +90,26 @@ mock_req <- function(data) {
 
   return(req)
 }
+
+
+stub_updateCellSetsThroughApi <- function(cell_sets_object,
+                                          api_url,
+                                          experiment_id,
+                                          cell_set_key,
+                                          auth_JWT,
+                                          append = TRUE) {
+
+  # empty function to simplify mocking. we test patching independently.
+}
+
+
+stubbed_ScTypeAnnotate <- function(req, data) {
+  mockery::stub(ScTypeAnnotate,
+                "updateCellSetsThroughApi",
+                stub_updateCellSetsThroughApi)
+  ScTypeAnnotate(req, data)
+}
+
 
 
 test_that("add_gene_symbols adds gene symbols to the count matrix", {
@@ -183,4 +208,15 @@ test_that("run_sctype produces correct snapshots", {
   data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
 
   expect_snapshot(data@meta.data[c("cells_id","customclassif")])
+})
+
+
+test_that("ScTypeAnnotate produces correct annotations", {
+  data <- mock_scdata()
+  active_assay <- "RNA"
+  req <- mock_req(data)
+
+  res <- suppressWarnings(stubbed_ScTypeAnnotate(req, data))
+
+  expect_snapshot(res)
 })
