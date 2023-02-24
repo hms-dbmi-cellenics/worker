@@ -277,7 +277,7 @@ test_that("get_feature_types correctly determines the ids_sym features type in t
 })
 
 
-test_that("get_feature_types correctly determines the sym_ids features type  in the annot data frame", {
+test_that("get_feature_types correctly determines the sym_ids features type in the annot data frame", {
   data <- mock_scdata()
   annot <- data.table::as.data.table(data@misc$gene_annotations)
   annot <- annot[, .(input, original_name)]
@@ -290,7 +290,7 @@ test_that("get_feature_types correctly determines the sym_ids features type  in 
 })
 
 
-test_that("get_feature_types correctly determines the sym_sym features type  in the annot data frame", {
+test_that("get_feature_types correctly determines the sym_sym features type in the annot data frame", {
   data <- mock_scdata()
   annot <- data.table::as.data.table(data@misc$gene_annotations)
   annot <- annot[, .(input, original_name)]
@@ -303,7 +303,7 @@ test_that("get_feature_types correctly determines the sym_sym features type  in 
 })
 
 
-test_that("get_feature_types correctly determines the sym_sym features type  in the annot data frame", {
+test_that("get_feature_types correctly determines the sym_sym features type in the annot data frame", {
   data <- mock_scdata()
   annot <- data.table::as.data.table(data@misc$gene_annotations)
   annot <- annot[, .(input, original_name)]
