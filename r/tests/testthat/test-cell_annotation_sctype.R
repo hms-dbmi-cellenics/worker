@@ -111,7 +111,6 @@ stubbed_ScTypeAnnotate <- function(req, data) {
 }
 
 
-
 test_that("add_gene_symbols adds gene symbols to the count matrix", {
   data <- mock_scdata()
   active_assay <- "RNA"
@@ -192,6 +191,7 @@ test_that("run_sctype produces adds cluster annotations as a new metadata column
   expect_equal(all(is.na(data@meta.data$customclassif)), FALSE)
 })
 
+
 test_that("run_sctype produces correct snapshots", {
   data <- mock_scdata()
   active_assay <- "RNA"
@@ -216,7 +216,16 @@ test_that("ScTypeAnnotate produces correct annotations", {
   active_assay <- "RNA"
   req <- mock_req(data)
 
+  # fix sampled colors
+  set.seed(1)
   res <- suppressWarnings(stubbed_ScTypeAnnotate(req, data))
+
+  # clean up time-based stuff
+  mock_uuid <- "this_is_not_an_uuid"
+  res$key <- mock_uuid
+  for (i in 1:length(res$children)) {
+    res$children[[i]]$key <- mock_uuid
+  }
 
   expect_snapshot(res)
 })
