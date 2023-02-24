@@ -266,6 +266,56 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
 })
 
 
+test_that("get_feature_types correctly determines the ids_sym features type in the annot data frame", {
+  data <- mock_scdata()
+  annot <- data.table::as.data.table(data@misc$gene_annotations)
+  annot <- annot[, .(input, original_name)]
+
+  feature_types <- get_feature_types(annot)
+
+  expect_equal(feature_types, IDS_SYM)
+})
+
+
+test_that("get_feature_types correctly determines the sym_ids features type  in the annot data frame", {
+  data <- mock_scdata()
+  annot <- data.table::as.data.table(data@misc$gene_annotations)
+  annot <- annot[, .(input, original_name)]
+
+  annot_switched <- annot[,c(2,1)]
+
+  feature_types <- get_feature_types(annot_switched)
+
+  expect_equal(feature_types, SYM_IDS)
+})
+
+
+test_that("get_feature_types correctly determines the sym_sym features type  in the annot data frame", {
+  data <- mock_scdata()
+  annot <- data.table::as.data.table(data@misc$gene_annotations)
+  annot <- annot[, .(input, original_name)]
+
+  annot_rep <- annot[,c(2,2)]
+
+  feature_types <- get_feature_types(annot_rep)
+
+  expect_equal(feature_types, SYM_SYM)
+})
+
+
+test_that("get_feature_types correctly determines the sym_sym features type  in the annot data frame", {
+  data <- mock_scdata()
+  annot <- data.table::as.data.table(data@misc$gene_annotations)
+  annot <- annot[, .(input, original_name)]
+
+  annot_rep <- annot[,c(1,1)]
+
+  feature_types <- get_feature_types(annot_rep)
+
+  expect_equal(feature_types, IDS_IDS)
+})
+
+
 with_fake_http(test_that("updateCellSetsThroughApi sends patch request using append = TRUE", {
   expect_PATCH(
     updateCellSetsThroughApi(list(), "api_url", "experiment_id", "cell_set_key", "auth", append = TRUE)
@@ -280,3 +330,46 @@ with_fake_http(test_that("updateCellSetsThroughApi sends patch request using app
 }))
 
 
+with_fake_http(test_that(
+  "updateCellSetsThroughApi appends cellset when append = TRUE",
+  {
+    scr_cellset_object <- mock_scratchpad_cellset_object(10)
+    req <- updateCellSetsThroughApi(
+      scr_cellset_object,
+      "api_url",
+      "experiment_id",
+      "cell_set_key",
+      "auth",
+      append = TRUE
+    )
+
+    # get req body, parsed as a json
+    req_body <-
+      httr::content(req, as = "parsed", type = "application/json")
+
+    expect_equal(names(req_body[[2]]), "$append")
+  }
+))
+
+
+
+with_fake_http(test_that(
+  "updateCellSetsThroughApi prepend cellset when append = FALSE",
+  {
+    scr_cellset_object <- mock_scratchpad_cellset_object(10)
+    req <- updateCellSetsThroughApi(
+      scr_cellset_object,
+      "api_url",
+      "experiment_id",
+      "cell_set_key",
+      "auth",
+      append = FALSE
+    )
+
+    # get req body, parsed as a json
+    req_body <-
+      httr::content(req, as = "parsed", type = "application/json")
+
+    expect_equal(names(req_body[[2]]), "$prepend")
+  }
+))
