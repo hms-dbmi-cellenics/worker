@@ -169,10 +169,10 @@ run_sctype <- function(data, active_assay, tissue, species) {
   library(openxlsx)
   library(HGNChelper)
 
-  source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/gene_sets_prepare.R")
-  source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/sctype_score_.R")
+  source("http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/gene_sets_prepare.R")
+  source("http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/sctype_score_.R")
 
-  db <- "https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/ScTypeDB_full.xlsx"
+  db <- "http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/ScTypeDB_full.xlsx"
   gs_list <- gene_sets_prepare(db, tissue)
 
   # get cell-type by cell matrix
@@ -191,8 +191,8 @@ run_sctype <- function(data, active_assay, tissue, species) {
   }))
 
   sctype_scores <- cluster_scores |>
-    group_by(cluster) |>
-    top_n(n = 1, wt = scores)
+    dplyr::group_by(cluster) |>
+    dplyr::top_n(n = 1, wt = scores)
 
   # set low-confident (low ScType score) clusters to "unknown" (threshold defined by ScType authors)
   sctype_scores$type[as.numeric(as.character(sctype_scores$scores)) < sctype_scores$ncells / 4] <- "Unknown"
