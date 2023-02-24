@@ -98,6 +98,23 @@ test_that("add_gene_symbols adds gene symbols to the count matrix", {
 })
 
 
+test_that("add_gene_symbols produces an error if there are no gene symbols in the annot data frame", {
+  data <- mock_scdata()
+  active_assay <- "RNA"
+
+  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
+
+  annot <- data.table::as.data.table(data@misc$gene_annotations)
+
+  annot_mod <- annot
+  annot_mod$name <- annot_mod$input
+  annot_mod$original_name <- annot_mod$input
+  data@misc$gene_annotations <- annot_mod
+
+  expect_error(add_gene_symbols(scale_data, data), "Features file doesn't contain gene symbols.")
+})
+
+
 test_that("collapse_genes collapses duplicated gene symbols", {
   data <- mock_scdata()
   active_assay <- "RNA"
