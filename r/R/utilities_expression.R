@@ -6,7 +6,8 @@
 #' @return list to send to the UI
 #' @export
 #'
-getGeneExpression <- function(data, genes) {
+getGeneExpression <- function(data, genes, cell_ids) {
+  data <- subsetIds(data, cell_ids)
   expression_values <- getExpressionValues(data, genes)
   stats <- getStats(expression_values)
 

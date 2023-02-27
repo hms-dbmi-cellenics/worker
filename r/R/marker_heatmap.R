@@ -9,9 +9,12 @@
 runMarkerHeatmap <- function(req, data) {
   nFeatures <- req$body$nGenes
   cellSets <- req$body$cellSets$children
+  cell_ids <- req$body$cellIds
 
   top_markers <- getTopMarkerGenes(nFeatures, data, cellSets)
   top_markers <- getMarkerNames(data, top_markers)
 
-  return(getGeneExpression(data, top_markers))
+  geneExpression <- getGeneExpression(data, top_markers, cell_ids)
+
+  return(geneExpression)
 }

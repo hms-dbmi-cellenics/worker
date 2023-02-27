@@ -23,7 +23,7 @@ class MarkerHeatmap(Task):
         return Result(result)
 
     def _format_request(self):
-        request = {"nGenes": self.task_def["nGenes"]}
+        request = {"nGenes": self.task_def["nGenes"], "cellIds": self.task_def["cellIds"]}
 
         cellSetKey = self.task_def["cellSetKey"]
 
