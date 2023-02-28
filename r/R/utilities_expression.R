@@ -1,3 +1,17 @@
+# #' "Subsets" a seurat object by setting any cells that aren't in cell_ids expression to 0
+# #' When returning the sparse matrix, this results in all the 0's 
+# #' being efficiently stored and not affecting the size of the matrix significantly
+# #'
+# #' @param data Seurat object to be subset
+# #' @param cell_ids ids of cells to subset by
+# #'
+# #' @return Seurat object with expression != 0 only in cell_ids
+# #' @export
+# #'
+# subset_with_zero <- function(data, cell_ids) {
+
+# }
+
 #' Extract expression values from Seurat object, add stats and format for UI
 #'
 #' @param data Seurat object
@@ -7,7 +21,10 @@
 #' @export
 #'
 getGeneExpression <- function(data, genes, cell_ids) {
-  data <- subsetIds(data, cell_ids)
+  if (!missing(cell_ids)) {
+    data <- subsetIds(data, cell_ids)
+  }
+
   expression_values <- getExpressionValues(data, genes)
   stats <- getStats(expression_values)
 
