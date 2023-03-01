@@ -48,7 +48,8 @@ stub_updateCellSetsThroughApi <- function(cell_sets_object,
                                           api_url,
                                           experiment_id,
                                           cell_set_key,
-                                          auth_JWT) {
+                                          auth_JWT,
+                                          append = TRUE) {
 
   # empty function to simplify mocking. we test patching independently.
 }

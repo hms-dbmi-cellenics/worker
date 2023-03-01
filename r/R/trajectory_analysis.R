@@ -38,6 +38,7 @@ runTrajectoryAnalysisStartingNodesTask <- function(req, data) {
     req$body$embedding,
     req$body$embedding_settings,
     req$body$clustering_settings,
+    req$body$cell_ids,
     data
   )
 
@@ -119,28 +120,28 @@ runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
     req$body$embedding,
     req$body$embedding_settings,
     req$body$clustering_settings,
+    req$body$cell_ids,
     data
   )
 
   seurat_embedding_method <- req$body$embedding_settings$method
   monocle_embedding_method <- SEURAT_TO_MONOCLE_METHOD_MAP[[seurat_embedding_method]]
 
-
   node_ids <- colnames(cell_data@principal_graph_aux[[monocle_embedding_method]]$dp_mst)
 
   # Add 1 to indexes so they are 1-based
   root_indexes <- req$body$root_nodes + 1
-  
+
   # Translate the indexes to their ids
   root_ids <- node_ids[root_indexes]
-  
+
   cell_data <- monocle3::order_cells(cell_data, reduction_method = monocle_embedding_method, root_pr_nodes = root_ids)
 
   pseudotime <- as.data.frame(cell_data@principal_graph_aux@listData$UMAP$pseudotime)
 
   # fill in the NULL values for filtered cells
-  pseudotime <- fillNullForFilteredCells(pseudotime, data)
-
+  subset_data <- subsetIds(data, req$body$cell_ids)
+  pseudotime <- fillNullForFilteredCells(pseudotime, subset_data)
   result <- list(pseudotime = pseudotime[[1]])
   return(result)
 }
@@ -156,7 +157,14 @@ runTrajectoryAnalysisPseudoTimeTask <- function(req, data) {
 #'
 #' @return a cell_data_set object with cluster and graph information stored internally
 #' @export
-generateTrajectoryGraph <- function(embedding_data, embedding_settings, clustering_settings, data) {
+generateTrajectoryGraph <- function(
+  embedding_data,
+  embedding_settings,
+  clustering_settings,
+  cell_ids,
+  data
+) {
+
   set.seed(ULTIMATE_SEED)
 
   Seurat::DefaultAssay(data) <- "RNA"
@@ -177,6 +185,7 @@ generateTrajectoryGraph <- function(embedding_data, embedding_settings, clusteri
     )
   }
 
+  data <- subsetIds(data, cell_ids)
   data <- assignEmbedding(embedding_data, data)
 
   cell_data <- SeuratWrappers::as.cell_data_set(data)
