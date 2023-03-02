@@ -30,5 +30,4 @@ FROM builder AS dev
 RUN pip3 install -U watchdog[watchmedo]
 
 WORKDIR /python/src
-# CMD watchmedo auto-restart --directory=. --pattern=*.py --recursive -- python -m worker
 CMD python -m worker
