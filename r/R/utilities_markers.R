@@ -66,7 +66,7 @@ memoisedGetTopMarkerGenes <- memoise(
   getTopMarkerGenes,
   envir = .GlobalEnv,
   # cache_mem doesn't work because each request is run on a different process
-  # so they don't share memory
+  # so they don't share memory, so use cache_disk
   cache = cachem::cache_disk(
     dir="cache_marker_genes",
     destroy_on_finalize = FALSE
@@ -81,9 +81,3 @@ memoisedGetTopMarkerGenes <- memoise(
 cleanupMarkersCache <- function() {
   forget(memoisedGetTopMarkerGenes)
 }
-
-# create_cache() <- {
-#   return(
-#     memoisedGetTopMarkerGenes
-#   );
-# }
