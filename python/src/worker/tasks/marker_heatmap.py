@@ -8,12 +8,10 @@ from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.process_gene_expression import process_gene_expression
+from ..helpers.get_heatmap_cell_order import get_heatmap_cell_order
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
-
-def get_heatmap_cell_order(n_genes, cell_set_key, grouped_tracks, selected_points, hidden_cell_set_keys, cell_sets):
-
 
 class MarkerHeatmap(Task):
     def __init__(self, msg):
