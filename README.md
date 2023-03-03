@@ -160,8 +160,12 @@ where `1234` is the experiment id of your choice.
     This error is due to a bug in DNS resolution of Alpine-based containers running on early releases of Docker Desktop for Mac version 3.
 
     To fix this, you can download and use a previous version of Docker (e.g. 2.5.0.1) from https://docs.docker.com/docker-for-mac/release-notes/
-    
-4.  Error when attempting to start the worker saying something like:
+
+4.  When working locally only: `Keyboard interrupt` shows up non-stop, impeding the worker to ever start up.
+
+    We believe this error is related to the hot reload mechanism and probably having some temporary files that, on changing, trigger the hot reload non-stop. The workaround to be able to continue working is to disable hot-reload (so, for changes to go through, you'll need to restart the worker manually). Just performing [these changes](https://github.com/biomage-org/worker/pull/76/files) in your local Dockerfiles should be enough
+
+5.  Error when attempting to start the worker saying something like:
 `botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://host.docker.internal:4566/biomage-source-development?...`
    
 First, check inframock is running. If it isn't, start it and try again. Otherwise, see below.
