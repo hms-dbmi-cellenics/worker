@@ -12,6 +12,8 @@ from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
 
+def get_heatmap_cell_order(n_genes, cell_set_key, grouped_tracks, selected_points, hidden_cell_set_keys, cell_sets):
+
 
 class MarkerHeatmap(Task):
     def __init__(self, msg):
@@ -27,14 +29,30 @@ class MarkerHeatmap(Task):
 
         cellSetKey = self.task_def["cellSetKey"]
 
-        cellSets = get_cell_sets(self.experiment_id)
+        cell_sets = get_cell_sets(self.experiment_id)
 
-        for set in cellSets:
+        n_genes = self.task_def["nGenes"]
+        cell_set_key = self.task_def["cellSetKey"]
+        grouped_tracks = self.task_def["groupByClasses"]
+        selected_points = self.task_def["selectedPoints"]
+        hidden_cell_set_keys = self.task_def["hiddenCellSetKeys"]
+
+        cell_order = get_heatmap_cell_order(
+            n_genes,
+            cell_set_key,
+            grouped_tracks,
+            selected_points,
+            hidden_cell_set_keys,
+            cell_sets
+        )
+
+        for set in cell_sets:
             if set["key"] == cellSetKey:
-                cellSets = set
+                cell_sets = set
                 break
 
-        request["cellSets"] = cellSets
+        request["cellSets"] = cell_sets
+        request["cellIds"] = cell_order
         return request
 
     @xray_recorder.capture("MarkerHeatmap.compute")
