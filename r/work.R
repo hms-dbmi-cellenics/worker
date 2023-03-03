@@ -300,11 +300,10 @@ repeat {
 backend <- RestRserve::BackendRserve$new()
 fpath <- file.path("/data", experiment_id, "r.rds")
 
-# cache <- create_cache()
-
 repeat {
   # need to load here as can change e.g. integration method
-  cleanup_cache()
+  cleanupMarkersCache()
+
   data <- load_data(fpath)
   last_modified <- file.info(fpath)$mtime
   app <- create_app(last_modified, data, fpath)

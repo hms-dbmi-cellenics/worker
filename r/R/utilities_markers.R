@@ -78,7 +78,7 @@ memoisedGetTopMarkerGenes <- memoise(
 
 # Cleans up all the caches that depend on the seurat object
 # should be run whenever the seurat object changes
-cleanup_cache <- function() {
+cleanupMarkersCache <- function() {
   forget(memoisedGetTopMarkerGenes)
 }
 
