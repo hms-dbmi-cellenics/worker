@@ -1,10 +1,6 @@
 library(Seurat)
 library(dplyr)
 
-str("HOALHOLAHOALHOLA")
-print(environment())
-counter_debug_global <<- 0
-
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 

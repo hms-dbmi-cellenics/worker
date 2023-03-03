@@ -1,3 +1,5 @@
+library(memoise)
+
 #' getTopMarkerGenes
 #'
 #' Uses presto::wilcoxauc to find the marker genes that distinguish the
@@ -19,8 +21,6 @@
 #'
 getTopMarkerGenes <- function(nFeatures, data, cellSets, cellSetsKeys = c(), aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
-
-  memoisedHola(1,2)
 
   object_ids <- data$cells_id
   for (i in seq_along(cellSets)) {
@@ -61,3 +61,29 @@ getMarkerNames <- function(data, all_markers) {
   rownames(all_markers) <- c()
   return(all_markers)
 }
+
+memoisedGetTopMarkerGenes <- memoise(
+  getTopMarkerGenes,
+  envir = .GlobalEnv,
+  # cache_mem doesn't work because each request is run on a different process
+  # so they don't share memory
+  cache = cachem::cache_disk(
+    dir="cache_marker_genes",
+    destroy_on_finalize = FALSE
+  ),
+  # Ignore scdata changing (its size makes it a bad idea to hash) use cleanup_cache instead
+  # Ignore cell_sets, we use cell_sets_keys for caching
+  omit_args = c("data", "cellSetsKeys")
+)
+
+# Cleans up all the caches that depend on the seurat object
+# should be run whenever the seurat object changes
+cleanup_cache <- function() {
+  forget(memoisedGetTopMarkerGenes)
+}
+
+# create_cache() <- {
+#   return(
+#     memoisedGetTopMarkerGenes
+#   );
+# }
