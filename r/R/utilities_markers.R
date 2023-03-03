@@ -20,8 +20,6 @@
 getTopMarkerGenes <- function(nFeatures, data, cellSets, cellSetsKeys = c(), aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
 
-  str("IMRUNNINGGGGGDEBGU")
-
   memoisedHola(1,2)
 
   object_ids <- data$cells_id

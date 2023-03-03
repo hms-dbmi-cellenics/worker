@@ -93,17 +93,6 @@ run_post <- function(req, post_fun, data) {
     )
 }
 
-handleRunMarkerHeatmap <- function(req, res) {
-  message("resDebgu")
-  str(res)
-
-  message("counter_debug_globalDebug")
-  message(counter_debug_global)
-  counter_debug_global <<- counter_debug_global + 1
-  result <- run_post(req, runMarkerHeatmap, data)
-  res$set_body(result)
-}
-
 handle_debug <- function(req, debug_step) {
   task_name <- basename(req$path)
   is_debug <- debug_step == task_name | debug_step == "all"
@@ -233,7 +222,10 @@ create_app <- function(last_modified, data, fpath) {
   )
   app$add_post(
     path = "/v0/runMarkerHeatmap",
-    FUN = handleRunMarkerHeatmap
+    FUN = function(req, res) {
+      result <- run_post(req, runMarkerHeatmap, data)
+      res$set_body(result)
+    }
   )
   app$add_post(
     path = "/v0/getBackgroundExpressedGenes",
