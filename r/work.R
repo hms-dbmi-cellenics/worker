@@ -1,9 +1,12 @@
 library(Seurat)
 library(dplyr)
 
+str("HOALHOLAHOALHOLA")
+print(environment())
+counter_debug_global <<- 0
+
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
-
 
 load_data <- function(fpath) {
   loaded <- FALSE
@@ -88,6 +91,17 @@ run_post <- function(req, post_fun, data) {
             )
         }
     )
+}
+
+handleRunMarkerHeatmap <- function(req, res) {
+  message("resDebgu")
+  str(res)
+
+  message("counter_debug_globalDebug")
+  message(counter_debug_global)
+  counter_debug_global <<- counter_debug_global + 1
+  result <- run_post(req, runMarkerHeatmap, data)
+  res$set_body(result)
 }
 
 handle_debug <- function(req, debug_step) {
@@ -219,10 +233,7 @@ create_app <- function(last_modified, data, fpath) {
   )
   app$add_post(
     path = "/v0/runMarkerHeatmap",
-    FUN = function(req, res) {
-      result <- run_post(req, runMarkerHeatmap, data)
-      res$set_body(result)
-    }
+    FUN = handleRunMarkerHeatmap
   )
   app$add_post(
     path = "/v0/getBackgroundExpressedGenes",
@@ -301,8 +312,11 @@ repeat {
 backend <- RestRserve::BackendRserve$new()
 fpath <- file.path("/data", experiment_id, "r.rds")
 
+# cache <- create_cache()
+
 repeat {
   # need to load here as can change e.g. integration method
+  cleanup_cache()
   data <- load_data(fpath)
   last_modified <- file.info(fpath)$mtime
   app <- create_app(last_modified, data, fpath)

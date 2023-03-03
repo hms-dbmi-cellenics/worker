@@ -17,8 +17,12 @@
 #' @return data.frame of top marker genes
 #' @export
 #'
-getTopMarkerGenes <- function(nFeatures, data, cellSets, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
+getTopMarkerGenes <- function(nFeatures, data, cellSets, cellSetsKeys = c(), aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
   data$marker_groups <- NA
+
+  str("IMRUNNINGGGGGDEBGU")
+
+  memoisedHola(1,2)
 
   object_ids <- data$cells_id
   for (i in seq_along(cellSets)) {
