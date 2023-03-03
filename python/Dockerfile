@@ -30,4 +30,4 @@ FROM builder AS dev
 RUN pip3 install -U watchdog[watchmedo]
 
 WORKDIR /python/src
-CMD python -m worker
+CMD ["python", "-m", "worker"]
