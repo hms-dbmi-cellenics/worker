@@ -6,19 +6,25 @@ from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.s3 import get_embedding
+from ..helpers.s3 import get_embedding, get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict, subset_cell_sets_dict
 from ..result import Result
 from . import Task
-
 
 class GetTrajectoryAnalysisPseudoTime(Task):
     def __init__(self, msg):
         super().__init__(msg)
+        self.experiment_id = config.EXPERIMENT_ID
 
     def _format_result(self, result):
         return Result(result["data"])
 
     def _format_request(self):
+
+        cell_sets = get_cell_sets(self.experiment_id)
+        cell_sets_dict = get_cell_sets_dict(cell_sets)
+
+        cell_ids = subset_cell_sets_dict(self.task_def["cellSets"], cell_sets_dict)
 
         embedding_etag = self.task_def["embedding"]["ETag"]
         embedding = get_embedding(embedding_etag, format_for_r=True)
@@ -33,7 +39,8 @@ class GetTrajectoryAnalysisPseudoTime(Task):
                 "method": self.task_def["clustering"]["method"],
                 "resolution": self.task_def["clustering"]["resolution"],
             },
-            "root_nodes": self.task_def["rootNodes"]
+            "root_nodes": self.task_def["rootNodes"],
+            "cell_ids": list(cell_ids)
         }
 
         return request
