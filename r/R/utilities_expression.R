@@ -9,8 +9,8 @@
 getGeneExpression <- function(data, genes, cell_ids) {
   # getStats needs to use the real expresionValues to extract correct stats
   # Can't use downsampled_expression_values
-  expression_values <- getExpressionValues(data, genes)
-  stats <- getStats(expression_values)
+  real_expression_values <- getExpressionValues(data, genes)
+  stats <- getStats(real_expression_values)
 
   if (!missing(cell_ids)) {
     data <- subsetIds(data, cell_ids)
@@ -21,14 +21,14 @@ getGeneExpression <- function(data, genes, cell_ids) {
   ordered_gene_names <- ensure_is_list_in_json(colnames(downsampled_expression_values$rawExpression))
 
   downsampled_expression_values <-
-    lapply(expression_values, formatExpression, data@meta.data$cells_id)
+    lapply(downsampled_expression_values, formatExpression, data@meta.data$cells_id)
 
   return(list(
     orderedGeneNames = ordered_gene_names,
     stats = stats,
-    rawExpression = expression_values$rawExpression,
-    truncatedExpression = expression_values$truncatedExpression,
-    zScore = expression_values$zScore
+    rawExpression = downsampled_expression_values$rawExpression,
+    truncatedExpression = downsampled_expression_values$truncatedExpression,
+    zScore = downsampled_expression_values$zScore
   ))
 }
 
