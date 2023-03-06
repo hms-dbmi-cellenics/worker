@@ -73,7 +73,7 @@ memoisedGetTopMarkerGenes <- memoise(
   ),
   # Ignore scdata changing (its size makes it a bad idea to hash) use cleanup_cache instead
   # Ignore cell_sets, we use cell_sets_keys for caching
-  omit_args = c("data", "cellSetsKeys")
+  omit_args = c("data", "cellSets")
 )
 
 # Cleans up all the caches that depend on the seurat object
