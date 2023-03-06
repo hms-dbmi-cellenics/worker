@@ -23,7 +23,7 @@ class MarkerHeatmap(Task):
         return Result(result)
 
     def _format_request(self):
-        request = {"nGenes": self.task_def["nGenes"], "cellIds": self.task_def["cellIds"]}
+        request = {"nGenes": self.task_def["nGenes"]}
 
         cellSetKey = self.task_def["cellSetKey"]
 
@@ -51,14 +51,14 @@ class MarkerHeatmap(Task):
 
         request["cellSets"] = cell_sets
         request["cellIds"] = cell_order
-        return request
+        return (request, cell_order)
 
     @xray_recorder.capture("MarkerHeatmap.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = self._format_request()
+        (request, cell_order) = self._format_request()
 
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/runMarkerHeatmap",
@@ -70,4 +70,7 @@ class MarkerHeatmap(Task):
         json_response = response.json()
         raise_if_error(json_response)
         result = json_response.get("data")
+
+        result["cellOrder"] = cell_order
+
         return self._format_result(result)
