@@ -11,9 +11,9 @@ runMarkerHeatmap <- function(req, data) {
   cellSets <- req$body$cellSets$children
   cell_ids <- req$body$cellIds
 
-  cell_sets_keys <- lapply(cellSets, function(x) x[["key"]])
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
 
-  top_markers <- memoisedGetTopMarkerGenes(nFeatures, data, cellSets, cell_sets_keys)
+  top_markers <- memoisedGetTopMarkerGenes(nFeatures, data, cellSets, cell_sets_ids)
   top_markers <- getMarkerNames(data, top_markers)
 
   geneExpression <- getGeneExpression(data, top_markers, cell_ids)
