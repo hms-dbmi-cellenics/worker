@@ -51,14 +51,14 @@ class MarkerHeatmap(Task):
 
         request["cellSets"] = cell_sets
         request["cellIds"] = cell_order
-        return (request, cell_order)
+        return request, cell_order
 
     @xray_recorder.capture("MarkerHeatmap.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        (request, cell_order) = self._format_request()
+        request, cell_order = self._format_request()
 
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/runMarkerHeatmap",
