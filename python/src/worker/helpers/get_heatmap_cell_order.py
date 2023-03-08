@@ -32,15 +32,12 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
     return filtered_cell_ids.intersection(set(unfiltered_cell_ids))
 
   def get_all_enabled_cell_ids():
-    cell_ids = None
+    cell_ids = get_cells(selected_cell_set, is_root_node=True)
 
-    if (selected_points == "All"):
-      cell_ids = get_cells(selected_cell_set, is_root_node=True)
-    else:
-      # TODO check this is working well for any selected_points value
+    if (selected_points != "All"):
       cell_set_key = selected_points.split('/')[1]
-      cell_ids = get_cells(cell_set_key)
-    
+      cell_ids = cell_ids.intersection(get_cells(cell_set_key))
+      
     for hidden_cell_set in hidden_cell_set_keys:
       cell_ids = cell_ids.difference(get_cells(hidden_cell_set))
 
@@ -77,14 +74,11 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
 
     return new_buckets
 
-  def split_by_cartesian_intersections():
+  def split_by_cartesian_intersections(enabled_cell_ids):
     buckets = None
     size = None
 
-    if (len(grouped_tracks) == 0):
-        return []
-    
-    buckets = [get_all_enabled_cell_ids()]
+    buckets = [enabled_cell_ids]
 
     for cell_class_key in grouped_tracks:
       buckets = cartesian_product_intersection(buckets, cell_class_key)
@@ -92,7 +86,7 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
     # We need to calculate size at the end because we may have repeated cells
     # (due to group bys having the same cell in different groups)
     size = reduce(lambda acum, bucket: acum + len(bucket), buckets, 0)
-    
+
     return buckets, size
   
   def downsample(buckets, amount_of_cells):
@@ -111,5 +105,12 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
 
     return downsampled_cell_ids
   
-  buckets, size = split_by_cartesian_intersections()
+  
+  enabled_cell_ids = get_all_enabled_cell_ids()
+  
+  if (len(grouped_tracks) == 0 or len(enabled_cell_ids) == 0): 
+    return []
+
+  buckets, size = split_by_cartesian_intersections(enabled_cell_ids)
+
   return downsample(buckets, size)
