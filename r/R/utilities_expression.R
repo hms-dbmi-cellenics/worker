@@ -2,6 +2,7 @@
 #'
 #' @param data Seurat object
 #' @param genes data.frame of genes of interest, with columns "input" and "name"
+#' @param cell_ids optional. If defined, only the expression for the specified cells is returned (every other cell is covered with 0's)
 #'
 #' @return list to send to the UI
 #' @export
