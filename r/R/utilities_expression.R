@@ -2,32 +2,30 @@
 #'
 #' @param data Seurat object
 #' @param genes data.frame of genes of interest, with columns "input" and "name"
-#' @param cell_ids optional. If defined, only the expression for the specified cells is returned (every other cell is covered with 0's)
+#' @param downsample_cell_ids vector. optional. If defined, only the expression is downsampled into these cells (every other cell is covered with 0's)
 #'
 #' @return list to send to the UI
 #' @export
 #'
-getGeneExpression <- function(data, genes, cell_ids) {
-  # getStats needs to use the real expresionValues to extract correct stats
+getGeneExpression <- function(data, genes, downsample_cell_ids) {
+  # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
   # Can't use downsampled_expression_values
-  real_expression_values <- getExpressionValues(data, genes)
-  stats <- getStats(real_expression_values)
+  expression_values <- getExpressionValues(data, genes)
+  stats <- getStats(expression_values)
 
-  if (!missing(cell_ids)) {
-    data <- subsetIds(data, cell_ids)
+  if (!missing(downsample_cell_ids)) {
+    data <- subsetIds(data, downsample_cell_ids)
+    expression_values <- getExpressionValues(data, genes)
   }
 
-  downsampled_expression_values <- getExpressionValues(data, genes)
+  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
 
-  ordered_gene_names <- ensure_is_list_in_json(colnames(downsampled_expression_values$rawExpression))
-
-  downsampled_expression_values <-
-    lapply(downsampled_expression_values, formatExpression, data@meta.data$cells_id)
+  expression_values <- lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   return(list(
     orderedGeneNames = ordered_gene_names,
     stats = stats,
-    rawExpression = downsampled_expression_values$rawExpression,
+    rawExpression = expression_values$rawExpression,
     truncatedExpression = downsampled_expression_values$truncatedExpression,
     zScore = downsampled_expression_values$zScore
   ))
