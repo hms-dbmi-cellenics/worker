@@ -153,7 +153,9 @@ test_that("getTopMarkerGenes returns an object with correct columns", {
       "pct_out"
     )
 
-  res <- getTopMarkerGenes(nFeatures, data, cellSets)
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
+  res <- getTopMarkerGenes(nFeatures, data, cell_sets_ids)
 
   expect_equal(colnames(res), expected_columns)
 })
@@ -163,7 +165,9 @@ test_that("getTopMarkerGenes returns at least 1 gene and n_genes * n_cellSets at
   cellSets <- mock_cellSets()$children
   nFeatures <- 1000
 
-  res <- getTopMarkerGenes(nFeatures, data, cellSets)
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
+  res <- getTopMarkerGenes(nFeatures, data, cell_sets_ids)
 
   expect_gte(nrow(res), 1)
   expect_lte(nrow(res), nFeatures * length(cellSets))
@@ -177,12 +181,13 @@ test_that("getTopMarkerGenes returns correctly filtered marker genes", {
   pctInMin <- 17
   pctOutMax <- 73
 
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
 
   res <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets,
+      cell_sets_ids,
       aucMin,
       pctInMin,
       pctOutMax
@@ -201,12 +206,13 @@ test_that("getTopMarkerGenes returns empty if no genes match filters", {
   pctInMin <- 100
   pctOutMax <- 0
 
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
 
   res <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets,
+      cell_sets_ids,
       aucMin,
       pctInMin,
       pctOutMax
@@ -219,11 +225,14 @@ test_that("getTopMarkerGenes markers in correct order", {
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
+  
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
   res <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets
+      cell_sets_ids
     )
 
   expect_equal(res, dplyr::arrange(res, group))
@@ -235,11 +244,13 @@ test_that("getMarkerNames returns object with correct columns", {
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
   all_markers <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets
+      cell_sets_ids
     )
 
   res <- getMarkerNames(data, all_markers)
@@ -252,11 +263,13 @@ test_that("getMarkerNames returns same number of gene names as requested", {
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
   all_markers <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets
+      cell_sets_ids
     )
 
   res <- getMarkerNames(data, all_markers)
@@ -268,11 +281,13 @@ test_that("getMarkerNames correct gene names", {
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
   all_markers <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets
+      cell_sets_ids
     )
 
   res <- getMarkerNames(data, all_markers)
@@ -289,11 +304,13 @@ test_that("getMarkerNames returns input if there's no gene name", {
   data <- mock_scdata()
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
+  cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
+
   all_markers <-
     getTopMarkerGenes(
       nFeatures,
       data,
-      cellSets
+      cell_sets_ids
     )
 
   res <- getMarkerNames(data, all_markers)

@@ -13,7 +13,7 @@ runMarkerHeatmap <- function(req, data) {
 
   cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
 
-  top_markers <- memoisedGetTopMarkerGenes(nFeatures, data, cellSets, cell_sets_ids)
+  top_markers <- memoisedGetTopMarkerGenes(nFeatures, data, cell_sets_ids)
   top_markers <- getMarkerNames(data, top_markers)
 
   geneExpression <- getGeneExpression(data, top_markers, cell_ids)

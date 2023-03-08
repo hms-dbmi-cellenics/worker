@@ -8,11 +8,12 @@
 #' @export
 #'
 getGeneExpression <- function(data, genes, downsample_cell_ids) {
-  # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
-  # Can't use downsampled_expression_values
   expression_values <- getExpressionValues(data, genes)
+  
+  # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
   stats <- getStats(expression_values)
 
+  # If downsample_cell_ids, replace data and expression_values with the downsampled version
   if (!missing(downsample_cell_ids)) {
     data <- subsetIds(data, downsample_cell_ids)
     expression_values <- getExpressionValues(data, genes)
@@ -26,8 +27,8 @@ getGeneExpression <- function(data, genes, downsample_cell_ids) {
     orderedGeneNames = ordered_gene_names,
     stats = stats,
     rawExpression = expression_values$rawExpression,
-    truncatedExpression = downsampled_expression_values$truncatedExpression,
-    zScore = downsampled_expression_values$zScore
+    truncatedExpression = expression_values$truncatedExpression,
+    zScore = expression_values$zScore
   ))
 }
 
