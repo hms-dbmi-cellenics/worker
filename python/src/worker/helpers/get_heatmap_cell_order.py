@@ -1,19 +1,10 @@
-#     import { difference, intersection } from 'utils/setOperations';
-# import { getFilteredCells, union } from 'utils/cellSetOperations';
 from functools import reduce
 import math
 import random
 
+from .cell_sets_dict import get_cell_sets_dict
+
 max_cells = 1000
-
-def get_cell_ids_by_key(cell_sets):
-  cell_sets_by_key = {}
-
-  for cell_class in cell_sets:
-    for cell_set in cell_class["children"]:
-      cell_sets_by_key[cell_set["key"]] = cell_set["cellIds"]
-
-  return cell_sets_by_key
 
 def get_cell_class_ids(key, cell_sets):
   children = next(cell_class for cell_class in cell_sets if cell_class["key"] == key)["children"]
@@ -26,7 +17,7 @@ def get_cell_class_ids(key, cell_sets):
   return cell_ids_set
 
 def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_points, hidden_cell_set_keys, cell_sets):
-  cell_ids_by_key = get_cell_ids_by_key(cell_sets)
+  cell_sets_by_key = get_cell_sets_dict(cell_sets)
 
   filtered_cell_ids = get_cell_class_ids('louvain', cell_sets)
 
@@ -36,7 +27,7 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
     if (is_root_node): 
       unfiltered_cell_ids = get_cell_class_ids(key, cell_sets)
     else: 
-      unfiltered_cell_ids = cell_ids_by_key[key]
+      unfiltered_cell_ids = cell_sets_by_key[key]["cellIds"]
 
     return filtered_cell_ids.intersection(set(unfiltered_cell_ids))
 
@@ -51,7 +42,7 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
       cell_ids = get_cells(cell_set_key)
     
     for hidden_cell_set in hidden_cell_set_keys:
-      cell_ids = get_cells(hidden_cell_set).intersection(cell_ids)
+      cell_ids = cell_ids.difference(get_cells(hidden_cell_set))
 
     return cell_ids
 
@@ -101,8 +92,8 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
     # We need to calculate size at the end because we may have repeated cells
     # (due to group bys having the same cell in different groups)
     size = reduce(lambda acum, bucket: acum + len(bucket), buckets, 0)
-
-    return (buckets, size)
+    
+    return buckets, size
   
   def downsample(buckets, amount_of_cells):
     downsampled_cell_ids = []
@@ -120,5 +111,5 @@ def get_heatmap_cell_order(n_genes, selected_cell_set, grouped_tracks, selected_
 
     return downsampled_cell_ids
   
-  (buckets, size) = split_by_cartesian_intersections()
+  buckets, size = split_by_cartesian_intersections()
   return downsample(buckets, size)
