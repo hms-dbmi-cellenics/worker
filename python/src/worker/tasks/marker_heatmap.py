@@ -44,12 +44,9 @@ class MarkerHeatmap(Task):
             cell_sets
         )
 
-        for set in cell_sets:
-            if set["key"] == cellSetKey:
-                cell_sets = set
-                break
-
-        request["cellSets"] = cell_sets
+        selected_cell_sets = next(set for set in cell_sets if set["key"] == cellSetKey)
+        
+        request["cellSets"] = selected_cell_sets
         request["cellIds"] = cell_order
         return request, cell_order
 
