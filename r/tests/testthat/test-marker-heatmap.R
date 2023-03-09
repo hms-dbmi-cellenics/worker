@@ -11,6 +11,7 @@ mock_req <- function() {
   return(req)
 }
 
+
 mock_scdata <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- c(0:30, 40:70, 100:117)
@@ -81,6 +82,7 @@ test_that("Marker Heatmap returns appropiate format", {
   )
 })
 
+
 test_that("Marker Heatmap nFeatures works appropiately", {
   data <- mock_scdata()
   req <- mock_req()
@@ -99,7 +101,6 @@ test_that("Marker Heatmap nFeatures works appropiately", {
   expect_true(all(
     unlist(lapply(res$stats, length)) <= req$body$nGenes * length(req$body$cellSets$children)
   ))
-
 })
 
 
@@ -122,5 +123,4 @@ test_that("Only one group throws error", {
 
   expect_error(runMarkerHeatmap(req, data))
   withr::defer(cleanupMarkersCache())
-
 })
