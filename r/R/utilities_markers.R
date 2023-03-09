@@ -1,5 +1,3 @@
-library(memoise)
-
 #' getTopMarkerGenes
 #'
 #' Uses presto::wilcoxauc to find the marker genes that distinguish the
@@ -23,7 +21,7 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
   data$marker_groups <- NA
 
   message("Running getTopMarkerGenes")
-  
+
   object_ids <- data$cells_id
   for (i in seq_along(cellSetsIds)) {
     filtered_cells <- intersect(cellSetsIds[[i]], object_ids)
@@ -63,7 +61,7 @@ getMarkerNames <- function(data, all_markers) {
   return(all_markers)
 }
 
-memoisedGetTopMarkerGenes <- memoise(
+memoisedGetTopMarkerGenes <- memoise::memoise(
   getTopMarkerGenes,
   envir = .GlobalEnv,
   # cache_mem doesn't work because each request is run on a different process
@@ -79,5 +77,5 @@ memoisedGetTopMarkerGenes <- memoise(
 # Cleans up all the caches that depend on the seurat object
 # should be run whenever the seurat object changes
 cleanupMarkersCache <- function() {
-  forget(memoisedGetTopMarkerGenes)
+  memoise::forget(memoisedGetTopMarkerGenes)
 }
