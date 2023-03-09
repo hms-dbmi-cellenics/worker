@@ -9,7 +9,7 @@
 #'
 getGeneExpression <- function(data, genes, downsample_cell_ids) {
   expression_values <- getExpressionValues(data, genes)
-  
+
   # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
   stats <- getStats(expression_values)
 
@@ -63,6 +63,7 @@ getExpressionValues <- function(data, genes) {
 getRawExpression <- function(data, genes) {
   rawExpression <-
     Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE])
+
   rawExpression <- data.table::as.data.table(rawExpression)
 
   symbol_idx <- match(colnames(rawExpression), genes$input)
@@ -166,7 +167,7 @@ scaleExpression <- function(rawExpression) {
 
 getStats <- function(data) {
   stats_unsafe <- list(
-    rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)), 
+    rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)),
     rawStdev = unname(apply(data$rawExpression, 2,  sd, na.rm = TRUE)),
     truncatedMin = unname(apply(data$truncatedExpression, 2,  min, na.rm = TRUE)),
     truncatedMax = unname(apply(data$truncatedExpression, 2,  max, na.rm = TRUE))

@@ -5,7 +5,9 @@ mock_req <- function() {
       louvain2 = list(cellIds = c(66:70, 100:117))
     )
   )
-  req <- list(body = list(nGenes = 5, cellSets = cellSets))
+  cellIds <- c(0:20, 45:62, 78:93)
+
+  req <- list(body = list(nGenes = 5, cellSets = cellSets, cellIds = cellIds))
   return(req)
 }
 

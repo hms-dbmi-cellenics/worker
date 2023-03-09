@@ -36,7 +36,6 @@ class MarkerHeatmap(Task):
         hidden_cell_set_keys = self.task_def["hiddenCellSetKeys"]
 
         cell_order = get_heatmap_cell_order(
-            n_genes,
             cell_set_key,
             grouped_tracks,
             selected_points,
