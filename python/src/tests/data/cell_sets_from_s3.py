@@ -1663,6 +1663,13 @@ cell_sets_from_s3 = {
                         504,
                         589,
                         150,
+                    ],
+                },
+                {
+                    "key": "5d88f799-c704-4667-99f8-8d6dee6cfc22",
+                    "name": "WT2",
+                    "color": "#77aabb",
+                    "cellIds": [
                         698,
                         777,
                         69,

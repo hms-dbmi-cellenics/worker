@@ -1,6 +1,7 @@
 import io
 import json
 
+import random
 import boto3
 import mock
 import pytest
@@ -11,6 +12,11 @@ from tests.data.cell_set_types import cell_set_types
 from tests.data.cell_sets_from_s3 import cell_sets_from_s3
 from worker.config import config
 from worker.tasks.marker_heatmap import MarkerHeatmap
+
+def get_cell_ids(cell_class_key, cell_set_key, cell_sets):
+    cell_class = next(cell_class for cell_class in cell_sets["cellSets"] if cell_class["key"] == cell_class_key)
+    cell_ids = next(cell_set for cell_set in cell_class["children"] if cell_set["key"] == cell_set_key)["cellIds"]
+    return cell_ids
 
 # cell_sets_from_s3
 class TestMarkerHeatmap:
@@ -127,3 +133,143 @@ class TestMarkerHeatmap:
 
             assert exc_info.value.args[0] == error_code
             assert exc_info.value.args[1] == user_message
+
+    def test_downsamples_correctly(self):
+        stubber, s3 = self.get_s3_stub(cell_sets_from_s3)
+
+        random.seed(900)
+
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+
+            py_request = {
+                "experimentId": config.EXPERIMENT_ID,
+                "timeout": "2099-12-31 00:00:00",
+                "body": {
+                    "name": "MarkerHeatmap",
+                    "nGenes": 5,
+                    "cellSetKey": "louvain",
+                    "groupByClasses": ["louvain"],
+                    "selectedPoints": "All",
+                    "hiddenCellSetKeys": [],
+                    "maxCells": 100,
+                },
+            }
+
+            bla = MarkerHeatmap(py_request)
+
+            r_request, cell_order = bla._format_request()
+            assert isinstance(py_request, dict)
+
+        expected_cell_ids = [324, 622, 166, 916, 38, 344, 31, 374, 630, 386, 149, 22, 68, 202, 620, 777, 701, 254, 134, 679, 384, 113, 277, 554, 213, 422, 751, 903, 247, 564, 356, 495, 655, 582, 882, 352, 331, 127, 673, 135, 89, 141, 814, 262, 506, 792, 502, 404, 599, 879, 594, 287, 864, 896, 21, 291, 547, 0, 351, 176, 13, 742, 285, 170, 121, 669, 132, 787, 319, 548, 760, 320, 315, 553, 230, 557, 371, 180, 556, 691, 409, 219, 289, 736, 726, 387, 909, 821, 768, 175, 771, 310, 207, 443, 158, 498, 697]
+
+        assert r_request["cellSets"]["key"] == py_request["body"]["cellSetKey"]
+        assert r_request["cellIds"] == expected_cell_ids
+    
+    def test_downsamples_by_many_groups_correctly(self):
+        stubber, s3 = self.get_s3_stub(cell_sets_from_s3)
+
+        random.seed(900)
+
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+
+            py_request = {
+                "experimentId": config.EXPERIMENT_ID,
+                "timeout": "2099-12-31 00:00:00",
+                "body": {
+                    "name": "MarkerHeatmap",
+                    "nGenes": 5,
+                    "cellSetKey": "louvain",
+                    "groupByClasses": ["louvain", "sample"],
+                    "selectedPoints": "All",
+                    "hiddenCellSetKeys": [],
+                    "maxCells": 100,
+                },
+            }
+
+            bla = MarkerHeatmap(py_request)
+
+            r_request, cell_order = bla._format_request()
+            assert isinstance(py_request, dict)
+
+        expected_cell_ids = [899, 644, 199, 558, 422, 551, 137, 178, 536, 100, 244, 131, 838, 229, 827, 665, 202, 134, 334, 57, 252, 420, 54, 438, 650, 383, 174, 595, 446, 397, 151, 221, 156, 624, 681, 882, 314, 298, 333, 465, 618, 382, 98, 458, 352, 876, 14, 452, 670, 868, 21, 303, 883, 0, 218, 831, 94, 376, 522, 122, 654, 484, 433, 586, 180, 683, 834, 887, 43, 302, 894, 371, 556, 780, 64, 851, 395, 329, 32, 890, 425, 245, 289, 25, 702, 771, 182, 17, 839, 205, 165]
+
+        assert cell_order == r_request["cellIds"]
+        assert r_request["cellIds"] == expected_cell_ids
+    
+    def test_downsamples_with_filter_correctly(self):
+        stubber, s3 = self.get_s3_stub(cell_sets_from_s3)
+
+        random.seed(900)
+
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+
+            py_request = {
+                "experimentId": config.EXPERIMENT_ID,
+                "timeout": "2099-12-31 00:00:00",
+                "body": {
+                    "name": "MarkerHeatmap",
+                    "nGenes": 5,
+                    "cellSetKey": "sample",
+                    "groupByClasses": ["louvain", "sample"],
+                    "selectedPoints": "louvain/louvain-6",
+                    "hiddenCellSetKeys": [],
+                    "maxCells": 100,
+                },
+            }
+
+            bla = MarkerHeatmap(py_request)
+
+            r_request, cell_order = bla._format_request()
+            assert isinstance(py_request, dict)
+
+        assert r_request["cellSets"]["key"] == py_request["body"]["cellSetKey"]
+        
+        louvain_6_cell_ids = get_cell_ids("louvain", "louvain-6", cell_sets_from_s3)
+        
+        # Contains only louvain 6 ids (filtered out the rest), doesn't downsample because not necessary
+        assert set(r_request["cellIds"]) == set(louvain_6_cell_ids)
+        
+        # They were reordered to match the groups
+        assert r_request["cellIds"] != louvain_6_cell_ids
+
+    def test_downsamples_with_hidden_cell_sets(self):
+        stubber, s3 = self.get_s3_stub(cell_sets_from_s3)
+
+        random.seed(900)
+
+        with mock.patch("boto3.client") as n, stubber:
+            n.return_value = s3
+
+            py_request = {
+                "experimentId": config.EXPERIMENT_ID,
+                "timeout": "2099-12-31 00:00:00",
+                "body": {
+                    "name": "MarkerHeatmap",
+                    "nGenes": 5,
+                    "cellSetKey": "sample",
+                    "groupByClasses": ["louvain", "sample"],
+                    "selectedPoints": "louvain/louvain-6",
+                    "hiddenCellSetKeys": ["5d88f799-c704-4667-99f8-8d6dee6cfc22"],
+                    "maxCells": 100,
+                },
+            }
+
+            bla = MarkerHeatmap(py_request)
+
+            r_request, cell_order = bla._format_request()
+            assert isinstance(py_request, dict)
+
+        assert r_request["cellSets"]["key"] == py_request["body"]["cellSetKey"]
+        
+        
+        louvain_6_cell_ids = get_cell_ids("louvain", "louvain-6", cell_sets_from_s3)
+        wt2_cell_ids = get_cell_ids("sample", "5d88f799-c704-4667-99f8-8d6dee6cfc22", cell_sets_from_s3)
+        
+        # Doesnt contain all louvain 6 cell ids (some were filtered out)
+        assert set(r_request["cellIds"]) != set(louvain_6_cell_ids)
+        
+        # Contains all louvain 6 cell ids that are not in sample wt2
+        assert set(r_request["cellIds"]) == set(louvain_6_cell_ids).difference(set(wt2_cell_ids))
