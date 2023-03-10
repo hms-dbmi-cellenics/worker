@@ -8,10 +8,11 @@ import responses
 from botocore.stub import Stubber
 from exceptions import RWorkerException
 from tests.data.cell_set_types import cell_set_types
+from tests.data.cell_sets_from_s3 import cell_sets_from_s3
 from worker.config import config
 from worker.tasks.marker_heatmap import MarkerHeatmap
 
-
+# cell_sets_from_s3
 class TestMarkerHeatmap:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -20,10 +21,11 @@ class TestMarkerHeatmap:
             "timeout": "2099-12-31 00:00:00",
             "body": {
                 "name": "MarkerHeatmap",
-                "cellSetKey": "set_hierarchy_1",
                 "nGenes": 5,
-                "type": "louvain",
-                "config": {"resolution": 0.5},
+                "cellSetKey": "louvain",
+                "groupByClasses": ["louvain"],
+                "selectedPoints": "All",
+                "hiddenCellSetKeys": []    
             },
         }
 
@@ -33,7 +35,7 @@ class TestMarkerHeatmap:
     cell sets content, depending on content_type
     """
 
-    def get_s3_stub(self, content_type):
+    def get_s3_stub(self, cell_sets):
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         response = {
             "ContentLength": 10,
@@ -51,7 +53,7 @@ class TestMarkerHeatmap:
         stubber.add_response("head_object", response, expected_params)
 
         # Get object
-        content_bytes = json.dumps(cell_set_types[content_type], indent=2).encode(
+        content_bytes = json.dumps(cell_sets, indent=2).encode(
             "utf-8"
         )
 
@@ -60,7 +62,7 @@ class TestMarkerHeatmap:
         data.seek(0)
 
         response = {
-            "ContentLength": len(cell_set_types[content_type]),
+            "ContentLength": len(cell_sets),
             "ContentType": "utf-8",
             "Body": data,
             "ResponseMetadata": {
@@ -78,13 +80,15 @@ class TestMarkerHeatmap:
         MarkerHeatmap(self.correct_request)
 
     def test_generates_correct_request_keys(self):
-        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
+        stubber, s3 = self.get_s3_stub(cell_sets_from_s3)
 
         with mock.patch("boto3.client") as n, stubber:
             n.return_value = s3
             bla = MarkerHeatmap(self.correct_request)
 
-            request = bla._format_request()
+            request, cell_order = bla._format_request()
+            print("requestDebug")
+            print(request)
             assert isinstance(request, dict)
 
             # all expected keys are in the request
@@ -100,7 +104,7 @@ class TestMarkerHeatmap:
 
     @responses.activate
     def test_should_throw_exception_on_r_worker_error(self):
-        stubber, s3 = self.get_s3_stub("hierarchichal_sets")
+        stubber, s3 = self.get_s3_stub(cell_sets_from_s3)
 
         error_code = "MOCK_R_WORKER_ERROR"
         user_message = "Some worker error"
