@@ -4,8 +4,6 @@ import random
 
 from .cell_sets_dict import get_cell_sets_dict
 
-max_cells = 1000
-
 def get_cell_class_ids(key, cell_sets):
   children = next(cell_class for cell_class in cell_sets if cell_class["key"] == key)["children"]
   cell_ids = map(lambda cell_set: cell_set["cellIds"], children)
@@ -16,7 +14,7 @@ def get_cell_class_ids(key, cell_sets):
 
   return cell_ids_set
 
-def get_heatmap_cell_order(selected_cell_set, grouped_tracks, selected_points, hidden_cell_set_keys, cell_sets):
+def get_heatmap_cell_order(selected_cell_set, grouped_tracks, selected_points, hidden_cell_set_keys, max_cells, cell_sets):
   cell_sets_by_key = get_cell_sets_dict(cell_sets)
 
   filtered_cell_ids = get_cell_class_ids('louvain', cell_sets)

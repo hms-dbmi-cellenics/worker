@@ -35,11 +35,16 @@ class MarkerHeatmap(Task):
         selected_points = self.task_def["selectedPoints"]
         hidden_cell_set_keys = self.task_def["hiddenCellSetKeys"]
 
+        # There is no max_cells being sent right now, but this allows
+        #  us to control this number in the future if we want to
+        max_cells = self.task_def.get("max_cells", 1000)
+
         cell_order = get_heatmap_cell_order(
             cell_set_key,
             grouped_tracks,
             selected_points,
             hidden_cell_set_keys,
+            max_cells,
             cell_sets
         )
 
