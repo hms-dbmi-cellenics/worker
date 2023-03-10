@@ -96,6 +96,7 @@ class TestMarkerHeatmap:
             expected_keys = [
                 "nGenes",
                 "cellSets",
+                "cellIds"
             ]
 
         assert all(key in request for key in expected_keys)
