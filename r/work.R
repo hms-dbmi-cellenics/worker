@@ -25,6 +25,8 @@ load_data <- function(fpath) {
           length[1], "x", length[2]
         )
 
+        print(sessionInfo())
+
         return(f)
       },
       warning = function(w) {
@@ -261,6 +263,13 @@ create_app <- function(last_modified, data, fpath) {
     path = "/v0/GetNormalizedExpression",
     FUN = function(req, res) {
       result <- run_post(req, GetNormalizedExpression, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
+    path = "/v0/ScTypeAnnotate",
+    FUN = function(req, res) {
+      result <- run_post(req, ScTypeAnnotate, data)
       res$set_body(result)
     }
   )
