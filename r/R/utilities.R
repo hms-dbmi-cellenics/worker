@@ -161,7 +161,7 @@ complete_variable <- function(variable, cell_ids) {
 add_clusters <- function(scdata, parsed_cellsets) {
   # seurat upload already has seurat_cluster column
   # remove to prevent 'seurat_clusters.x', 'seurat_clusters.y' from join
-  scdata$seurat_clusters <- NULL
+  scdata@meta.data$seurat_clusters <- NULL
 
   seurat_clusters <- parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
