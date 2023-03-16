@@ -173,6 +173,20 @@ add_clusters <- function(scdata, parsed_cellsets) {
     }
   }
 
+  sctype_groups <- unique(grep("^ScType-", parsed_cellsets[["cellset_type"]], value =T))
+  if (length(sctype_groups) > 0) {
+    sctype_rows <- grep("^ScType-", parsed_cellsets[["cellset_type"]])
+    sctype_values <- parsed_cellsets[sctype_rows]
+    # create one column for each combination of ScType tissue-species
+    sctype_values_list <- split(sctype_values, sctype_values[["cellset_type"]])
+    for (i in 1:length(sctype_values_list)) {
+      sctype_colname <- unique(sctype_values_list[[i]][,cellset_type])
+      sctype_dt <- sctype_values_list[[i]][, c("name", "cell_id")]
+      data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
+      scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
+     }
+  }
+
   return(scdata)
 }
 
@@ -186,6 +200,7 @@ add_clusters <- function(scdata, parsed_cellsets) {
 #' @export
 #'
 parse_cellsets <- function(cellsets) {
+  library(data.table)
   # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
   cellsets <- cellsets[sapply(cellsets, length) > 0]
 
@@ -195,7 +210,7 @@ parse_cellsets <- function(cellsets) {
 
   # change cellset type to more generic names
   dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-  dt[!cellset_type %in% c("cluster", "scratchpad", "sample"), cellset_type := "metadata"]
+  dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | cellset_type %like% "ScType-"), cellset_type := "metadata"]
 
   return(dt)
 }
