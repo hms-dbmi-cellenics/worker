@@ -1,9 +1,5 @@
 DownloadAnnotSeuratObject <- function(req, data) {
 
-  experiment_id <- req$body$expId
-
-  bucket <- req$body$bucket
-
   cell_sets <- req$body$cellSets
 
   parsed_cellsets <- parse_cellsets(cell_sets)
