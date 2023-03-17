@@ -37,3 +37,17 @@ def subset_cell_sets_dict(subset_keys, cell_sets_dict):
           cell_ids = cell_ids.union(set(cell_sets_dict[subset_key]['cellIds']))
 
     return cell_ids
+
+
+# Convert the cell sets object into a dictionary
+# that is easily parsable in R
+def get_cell_sets_dict_for_r(cell_sets):
+    cell_sets_dict = {}
+
+    for cell_class in cell_sets:
+        if cell_class["name"].startswith("ScType-"):
+            cell_sets_dict[cell_class["name"]] = cell_class["children"]
+        else:
+            cell_sets_dict[cell_class["key"]] = cell_class["children"]
+
+    return cell_sets_dict
