@@ -7,18 +7,9 @@ from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.s3 import get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict_for_r
 from ..result import Result
 from ..tasks import Task
-
-
-# Move all cell_sets data into a dict
-def get_cell_sets_dict_sctype(cell_sets):
-    cell_sets_dict = {}
-
-    for cell_class in cell_sets:
-        cell_sets_dict[cell_class["key"]] = cell_class["children"]
-
-    return cell_sets_dict
 
 class ScTypeAnnotate(Task):
     def __init__(self, msg):
@@ -32,7 +23,7 @@ class ScTypeAnnotate(Task):
     def _format_request(self):
         # get cell sets from database
         cell_sets = get_cell_sets(self.experiment_id)
-        cell_sets_dict = get_cell_sets_dict_sctype(cell_sets)
+        cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
 
         species = self.task_def["species"]
         tissue = self.task_def["tissue"]
