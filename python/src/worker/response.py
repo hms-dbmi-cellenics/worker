@@ -117,7 +117,8 @@ class Response:
                 self._upload(response_data, type)
             else:
                 response_data = self._construct_data_for_upload()
-                self._upload(response_data)
+                type = "obj"
+                self._upload(response_data, type)
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()
