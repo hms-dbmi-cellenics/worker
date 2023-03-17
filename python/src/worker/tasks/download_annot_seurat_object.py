@@ -6,25 +6,12 @@ from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-# from ..helpers.cell_sets_dict import get_cell_sets_dict
 from ..result import Result
 from ..tasks import Task
 from ..helpers.s3 import get_embedding, get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict_for_r
 
 import os
-
-# Move all cell_sets data into a dict
-# TODO: MOVE THIS INTO HELPERS
-def get_cell_sets_dict_sctype(cell_sets):
-    cell_sets_dict = {}
-
-    for cell_class in cell_sets:
-        if cell_class["name"].startswith("ScType-"):
-            cell_sets_dict[cell_class["name"]] = cell_class["children"]
-        else:
-            cell_sets_dict[cell_class["key"]] = cell_class["children"]
-
-    return cell_sets_dict
 
 class DownloadAnnotSeuratObject(Task):
     def __init__(self, msg):
@@ -37,19 +24,13 @@ class DownloadAnnotSeuratObject(Task):
     def _format_request(self):
 
         cell_sets = get_cell_sets(self.experiment_id)
-        cell_sets_dict = get_cell_sets_dict_sctype(cell_sets)
+        cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
 
         embedding_etag = self.task_def["embedding"]["ETag"]
         embedding = get_embedding(embedding_etag, format_for_r=True)
 
         request = {
-            "expId": config.EXPERIMENT_ID,
-            "bucket": config.RESULTS_BUCKET,
             "embedding": embedding,
-            "embedding_settings": {
-                "method": self.task_def["embedding"]["method"],
-                "methodSettings": self.task_def["embedding"]["methodSettings"]
-            },
             "cellSets": cell_sets_dict,
         }
 
