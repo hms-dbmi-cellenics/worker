@@ -37,7 +37,14 @@ class ScTypeAnnotate(Task):
         species = self.task_def["species"]
         tissue = self.task_def["tissue"]
 
-        return { "cellSets": cell_sets_dict, "species": species, "tissue": tissue, "apiUrl" : config.API_URL, "authJwt" : self.request["Authorization"]}
+        return { 
+            "cellSets": cell_sets_dict,
+            "species": species, 
+            "tissue": tissue, 
+            "apiUrl" : config.API_URL, 
+            "authJwt" : self.request["Authorization"],
+            "experimentId": self.experiment_id
+        }
 
 
     @xray_recorder.capture("ScTypeAnnotate.compute")
