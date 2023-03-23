@@ -25,6 +25,8 @@ ScTypeAnnotate <- function(req, data) {
   species <- req$body$species
   tissue <- req$body$tissue
 
+
+
   if ("integrated" %in% names(data@assays)) {
     active_assay <- "integrated"
   } else if ("SCT" %in% names(data@assays)) {
@@ -46,7 +48,7 @@ ScTypeAnnotate <- function(req, data) {
   updateCellSetsThroughApi(
     formatted_cell_class,
     req$body$apiUrl,
-    data@misc$experimentId,
+    req$body$experimentId,
     formatted_cell_class$key,
     req$body$authJwt
   )

@@ -8,10 +8,10 @@ from exceptions import raise_if_error
 
 from ..config import config
 from ..helpers.process_gene_expression import process_gene_expression
+from ..helpers.get_heatmap_cell_order import get_heatmap_cell_order
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
-
 
 class MarkerHeatmap(Task):
     def __init__(self, msg):
@@ -27,22 +27,39 @@ class MarkerHeatmap(Task):
 
         cellSetKey = self.task_def["cellSetKey"]
 
-        cellSets = get_cell_sets(self.experiment_id)
+        cell_sets = get_cell_sets(self.experiment_id)
 
-        for set in cellSets:
-            if set["key"] == cellSetKey:
-                cellSets = set
-                break
+        n_genes = self.task_def["nGenes"]
+        cell_set_key = self.task_def["cellSetKey"]
+        grouped_tracks = self.task_def["groupByClasses"]
+        selected_points = self.task_def["selectedPoints"]
+        hidden_cell_set_keys = self.task_def["hiddenCellSetKeys"]
 
-        request["cellSets"] = cellSets
-        return request
+        # There is no max_cells being sent right now, but this allows
+        #  us to control this number in the future if we want to
+        max_cells = self.task_def.get("maxCells", 1000)
+
+        cell_order = get_heatmap_cell_order(
+            cell_set_key,
+            grouped_tracks,
+            selected_points,
+            hidden_cell_set_keys,
+            max_cells,
+            cell_sets
+        )
+
+        selected_cell_sets = next(set for set in cell_sets if set["key"] == cellSetKey)
+        
+        request["cellSets"] = selected_cell_sets
+        request["cellIds"] = cell_order
+        return request, cell_order
 
     @xray_recorder.capture("MarkerHeatmap.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-        request = self._format_request()
+        request, cell_order = self._format_request()
 
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/runMarkerHeatmap",
@@ -54,4 +71,7 @@ class MarkerHeatmap(Task):
         json_response = response.json()
         raise_if_error(json_response)
         result = json_response.get("data")
+
+        result["cellOrder"] = cell_order
+
         return self._format_result(result)

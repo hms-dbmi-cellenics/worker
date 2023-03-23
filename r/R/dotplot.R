@@ -57,10 +57,13 @@ runDotPlot <- function(req, data) {
   subset_cells <- colnames(data)[!is.na(data$dotplot_groups)]
   data <- subset(data, cells = subset_cells)
 
+
   # Get marker genes or requested gene names.
   if (use_marker_genes) {
+    group_by_cell_sets_cell_ids <- lapply(group_by_cell_sets, function(x) x[["cellIds"]])
+
     num_features <- req$body$numberOfMarkers
-    all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
+    all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets_cell_ids)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
   } else {
