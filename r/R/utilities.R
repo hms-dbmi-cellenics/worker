@@ -200,7 +200,6 @@ add_clusters <- function(scdata, parsed_cellsets) {
 #' @export
 #'
 parse_cellsets <- function(cellsets) {
-  library(data.table)
   # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
   cellsets <- cellsets[sapply(cellsets, length) > 0]
 
@@ -210,7 +209,7 @@ parse_cellsets <- function(cellsets) {
 
   # change cellset type to more generic names
   dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-  dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | cellset_type %like% "ScType-"), cellset_type := "metadata"]
+  dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | startsWith(dt$cellset_type,"ScType-")), cellset_type := "metadata"]
 
   return(dt)
 }
