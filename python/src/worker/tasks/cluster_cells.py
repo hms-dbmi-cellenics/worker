@@ -15,6 +15,7 @@ class ClusterCells(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.colors = COLOR_POOL.copy()
+        self.experiment_id = config.EXPERIMENT_ID
         self.request = msg
 
     def _format_result(self, result):
@@ -28,7 +29,8 @@ class ClusterCells(Task):
             "type": self.task_def["type"],
             "config": {"resolution" : resolution},
             "apiUrl" : config.API_URL,
-            "authJwt" : self.request["Authorization"]
+            "authJwt" : self.request["Authorization"],
+            "experimentId": self.experiment_id
         }        
         return request
 
