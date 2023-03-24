@@ -38,7 +38,7 @@ mock_cellset_from_python <- function(data) {
     "sample" = list(
       list(
         "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
-        "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:length(data$cells_id) / 2])
+        "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
       ),
       list(
         "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
@@ -48,10 +48,20 @@ mock_cellset_from_python <- function(data) {
     "MISC_status" = list(
       list(
         "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
-        "cellIds" = unname(data$cells_id[1:length(data$cells_id) / 2])
+        "cellIds" = unname(data$cells_id[1:(length(data$cells_id)) / 2])
       ),
       list(
         "key" = "MISC_status-Convalescent", "name" = "Convalescent",
+        "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+      )
+    ),
+    "ScType-Spleen-human" = list(
+      list(
+        "key" = "67466668-bd95-11ed-9732-0242ac130003", "name" = "Naive CD4+ T cells", "color" = "#77aadd",
+        "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+      ),
+      list(
+        "key" = "67466668-bd95-11ed-9732-0242ac130003", "name" = "Platelets",
         "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
       )
     )
@@ -205,6 +215,10 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
   expect_equal(sapply(cell_sets$MISC_status, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "metadata", name]))
+  expect_equal(length(cell_sets$`ScType-Spleen-human`), length(unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name])))
+  expect_equal(sapply(cell_sets$`ScType-Spleen-human`, function(x) {
+    x$name
+  }), unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name]))
 })
 
 
@@ -227,6 +241,16 @@ test_that("add_clusters adds cluster information as metadata columns to the seur
   for (i in 1:length(scratchpad_clusters)) {
     expected_cells <- which(data@meta.data$cells_id %in% parsed_cellsets[name == scratchpad_clusters[i], cell_id])
     expect_true(all(data@meta.data[expected_cells, paste0("scratchpad-", scratchpad_clusters[i])]))
+  }
+
+  sctype_clusters <- unique(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), cellset_type])
+  for (i in 1:length(sctype_clusters)) {
+    expect_true(sctype_clusters[i] %in% colnames(data@meta.data))
+    expect_equal(unique(data@meta.data[,sctype_clusters[i]]), unique(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), name]))
+    expect_true(all.equal(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), c("name", "cell_id")],
+                          data@meta.data[, c(sctype_clusters[i], "cells_id")],
+                          check.attributes = FALSE
+    ))
   }
 })
 
