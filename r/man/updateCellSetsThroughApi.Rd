@@ -9,7 +9,8 @@ updateCellSetsThroughApi(
   api_url,
   experiment_id,
   cell_set_key,
-  auth_JWT
+  auth_JWT,
+  append = TRUE
 )
 }
 \arguments{
@@ -25,4 +26,5 @@ updateCellSetsThroughApi(
 }
 \description{
 Used when re-clustering, cell sets are replaced.
+Used after ScType, cell sets are added.
 }

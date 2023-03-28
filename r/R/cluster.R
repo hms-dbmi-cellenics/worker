@@ -38,9 +38,10 @@ runClusters <- function(req, data) {
   updateCellSetsThroughApi(
     formatted_cell_sets,
     req$body$apiUrl,
-    data@misc$experimentId,
+    req$body$experimentId,
     type,
-    req$body$authJwt
+    req$body$authJwt,
+    append = FALSE
   )
 
   return(df)
