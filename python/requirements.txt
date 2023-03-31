@@ -19,6 +19,6 @@ umap-learn==0.4.6
 watchdog==0.10.3
 backoff==1.10.0
 socket_io_emitter==0.1.5.1
-redis==2.10.5
+redis==4.4.4
 pytest-cov==2.10.1
 pytest-mock==3.7.0
