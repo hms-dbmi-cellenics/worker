@@ -26,7 +26,7 @@ class DownloadAnnotSeuratObject(Task):
         cell_sets = get_cell_sets(self.experiment_id)
         cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
 
-        embedding_etag = self.task_def["embedding"]["ETag"]
+        embedding_etag = self.task_def["embeddingETag"]
         embedding = get_embedding(embedding_etag, format_for_r=True)
 
         request = {
