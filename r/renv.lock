@@ -25,6 +25,10 @@
       {
         "Name": "CRAN",
         "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "CRAN-Snapshot",
+        "URL": "https://packagemanager.rstudio.com/cran/2023-03-31"
       }
     ]
   },
@@ -2911,7 +2915,7 @@
       "Package": "speedglm",
       "Version": "0.3-4",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "CRAN-Snapshot",
       "Hash": "a82eb1b2d58393b1e548982e467026e5",
       "Requirements": [
         "MASS",
