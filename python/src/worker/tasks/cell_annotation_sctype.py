@@ -6,15 +6,23 @@ from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.color_pool import COLOR_POOL
+from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
 
 
-class ClusterCells(Task):
+# Move all cell_sets data into a dict
+def get_cell_sets_dict_sctype(cell_sets):
+    cell_sets_dict = {}
+
+    for cell_class in cell_sets:
+        cell_sets_dict[cell_class["key"]] = cell_class["children"]
+
+    return cell_sets_dict
+
+class ScTypeAnnotate(Task):
     def __init__(self, msg):
         super().__init__(msg)
-        self.colors = COLOR_POOL.copy()
         self.experiment_id = config.EXPERIMENT_ID
         self.request = msg
 
@@ -22,28 +30,32 @@ class ClusterCells(Task):
         return Result(result, cacheable=False)
 
     def _format_request(self):
-        resolution = self.task_def["config"].get("resolution", 0.5)
+        # get cell sets from database
+        cell_sets = get_cell_sets(self.experiment_id)
+        cell_sets_dict = get_cell_sets_dict_sctype(cell_sets)
 
-    # add apiUrl and authJwt to req to be able to patch in R worker
-        request = {
-            "type": self.task_def["type"],
-            "config": {"resolution" : resolution},
-            "apiUrl" : config.API_URL,
+        species = self.task_def["species"]
+        tissue = self.task_def["tissue"]
+
+        return { 
+            "cellSets": cell_sets_dict,
+            "species": species, 
+            "tissue": tissue, 
+            "apiUrl" : config.API_URL, 
             "authJwt" : self.request["Authorization"],
             "experimentId": self.experiment_id
-        }        
-        return request
+        }
 
-    @xray_recorder.capture("ClusterCells.compute")
+
+    @xray_recorder.capture("ScTypeAnnotate.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
     def compute(self):
-
         request = self._format_request()
 
         response = requests.post(
-            f"{config.R_WORKER_URL}/v0/getClusters",
+            f"{config.R_WORKER_URL}/v0/ScTypeAnnotate",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
@@ -55,3 +67,4 @@ class ClusterCells(Task):
         data = result.get("data")
 
         return self._format_result(data)
+

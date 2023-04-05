@@ -9,7 +9,7 @@ class TestClusterCells:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_request = {
-            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "experimentId": config.EXPERIMENT_ID,
             "timeout": "2099-12-31 00:00:00",
             "Authorization" : "mock_authJwt",
             "body": {
@@ -24,7 +24,8 @@ class TestClusterCells:
             "type": self.correct_request["body"]["type"],
             "config": self.correct_request["body"]["config"],
             "apiUrl": config.API_URL,
-            "authJwt": "mock_authJwt"
+            "authJwt": "mock_authJwt",
+            "experimentId": config.EXPERIMENT_ID
         }
 
     def test_throws_on_missing_parameters(self):

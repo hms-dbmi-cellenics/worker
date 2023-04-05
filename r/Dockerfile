@@ -103,5 +103,4 @@ ADD R ./R
 ADD tests ./tests
 COPY DESCRIPTION NAMESPACE work.R ./
 
-# CMD watchmedo auto-restart --directory=. --pattern='*.R' --recursive -- Rscript work.R
-CMD Rscript work.R
+CMD ["Rscript", "work.R"]
