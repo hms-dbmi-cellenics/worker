@@ -1658,7 +1658,7 @@
       "Package": "httptest",
       "Version": "4.1.0",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "CRAN-Snapshot",
       "Hash": "cd910dc78e8edbc40b9723824baa7097",
       "Requirements": [
         "curl",
