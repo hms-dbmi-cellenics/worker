@@ -70,9 +70,8 @@ RUN echo "python3-pip" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-# RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
-#     ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
-# RUN ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
+    ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
@@ -96,7 +95,7 @@ FROM common AS dev
 # install Radian for interactive R shell
 # also install watchdog to automatically restart
 # when source files change
-# RUN pip install -U jedi radian PyYAML watchdog[watchmedo]
+RUN pip install -U jedi PyYAML watchdog[watchmedo]
 
 # add R package and runner
 ADD R ./R
