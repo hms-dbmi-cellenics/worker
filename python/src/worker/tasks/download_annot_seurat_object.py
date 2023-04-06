@@ -54,7 +54,7 @@ class DownloadAnnotSeuratObject(Task):
         raise_if_error(result)
 
         # path to the r.rds file
-        rds_file_path = "/R/r.rds"
+        rds_file_path = "/RResults/r.rds"
 
         # check if the file exists
         if os.path.exists(rds_file_path):
