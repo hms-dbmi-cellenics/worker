@@ -173,10 +173,11 @@ add_clusters <- function(scdata, parsed_cellsets) {
     }
   }
 
-  sctype_groups <- unique(grep("^ScType-", parsed_cellsets[["cellset_type"]], value =T))
+  parsed_cellsets_sctype <- parsed_cellsets[!(cellset_type %in% c("cluster", "scratchpad", "sample", "metadata")), ]
+  sctype_groups <- unique(grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]], value =T))
   if (length(sctype_groups) > 0) {
-    sctype_rows <- grep("^ScType-", parsed_cellsets[["cellset_type"]])
-    sctype_values <- parsed_cellsets[sctype_rows]
+    sctype_rows <- grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]])
+    sctype_values <- parsed_cellsets_sctype[sctype_rows]
     # create one column for each combination of ScType tissue-species
     sctype_values_list <- split(sctype_values, sctype_values[["cellset_type"]])
     for (i in 1:length(sctype_values_list)) {
@@ -208,8 +209,13 @@ parse_cellsets <- function(cellsets) {
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
 
   # change cellset type to more generic names
+  is_uuid <- function(x) {
+    uuid_regex <- "^\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b$"
+    return(grepl(uuid_regex, x))
+  }
+
   dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-  dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | startsWith(dt$cellset_type,"ScType-")), cellset_type := "metadata"]
+  dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | is_uuid(dt$key)), cellset_type := "metadata"]
 
   return(dt)
 }
