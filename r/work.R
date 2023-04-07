@@ -160,13 +160,6 @@ create_app <- function(last_modified, data, fpath) {
       res$set_body(result)
     }
   )
-   app$add_post(
-    path = "/v0/BatchDifferentialExpression",
-    FUN = function(req, res) {
-      result <- run_post(req, runBatchDE, data)
-      res$set_body(result)
-    }
-  )
   app$add_post(
     path = "/v0/getEmbedding",
     FUN = function(req, res) {
