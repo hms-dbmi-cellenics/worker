@@ -8,8 +8,7 @@ DownloadAnnotSeuratObject <- function(req, data) {
 
   data <- assignEmbedding(embedding_data, data)
 
-  fpath <- "/RResults/r.rds"
-  saveRDS(data, fpath)
+  saveRDS(data, RDS_PATH)
 
-  return(fpath)
+  return(RDS_PATH)
 }

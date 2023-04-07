@@ -34,18 +34,6 @@ class TestDownloadAnnotSeuratObject:
             }
         }
 
-    # def format_request(self):
-    #    cell_sets = get_cell_sets(self.experiment_id)
-    #    cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
-
-    #    embedding_etag = self.task_def["embeddingETag"]
-    #    embedding = get_embedding(embedding_etag, format_for_r=True)
-
-    #    return { 
-    #        "embedding": embedding,
-    #        "cellSets": cell_sets_dict,
-    #        }
-
     def get_s3_stub(self):
         s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         stubber = Stubber(s3)

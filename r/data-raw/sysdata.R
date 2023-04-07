@@ -18,6 +18,8 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
+RDS_PATH <- "/RResults/r.rds"
+
 usethis::use_data(error_codes,
                   ULTIMATE_SEED,
                   QUANTILE_THRESHOLD,
@@ -25,5 +27,6 @@ usethis::use_data(error_codes,
                   SYM_SYM,
                   IDS_SYM,
                   IDS_IDS,
+                  RDS_PATH,
                   internal = TRUE,
                   overwrite = TRUE)

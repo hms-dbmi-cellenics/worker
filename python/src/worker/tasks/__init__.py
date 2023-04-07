@@ -14,3 +14,6 @@ class Task(ABC):
     @abstractmethod
     def _format_result(self, result):
         ...
+
+
+RDS_PATH = "/RResults/r.rds"

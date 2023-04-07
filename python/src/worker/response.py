@@ -9,6 +9,7 @@ from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
 
 from .config import config
+from .tasks import RDS_PATH
 
 
 class Response:
@@ -111,7 +112,7 @@ class Response:
 
         if not self.error and self.cacheable:
             info("Uploading response to S3")
-            if (self.result.data == "/R/r.rds"):
+            if (self.result.data == RDS_PATH):
                 response_data = self.result.data
                 type = "path"
                 self._upload(response_data, type)
