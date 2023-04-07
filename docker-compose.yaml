@@ -10,8 +10,8 @@ services:
     volumes:
       - ./r/R:/src/worker/R:cached # for watcher
       - ./data:/data:cached
+      - ./data:/data/RResults:cached
       - ./data/debug:/debug
-      - ./local/RResults:/RResults
     expose:
       - "4000"
     ports:
@@ -27,7 +27,7 @@ services:
     volumes:
       - ./python:/python:cached
       - ./data:/data:cached
-      - ./local/RResults:/RResults
+      - ./data:/data/RResults:cached
     environment:
       - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - IGNORE_TIMEOUT=true

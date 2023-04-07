@@ -18,7 +18,7 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
-RDS_PATH <- "/RResults/r.rds"
+RDS_PATH <- "/data/RResults/r.rds"
 
 usethis::use_data(error_codes,
                   ULTIMATE_SEED,

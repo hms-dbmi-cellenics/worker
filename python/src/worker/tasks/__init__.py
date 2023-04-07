@@ -16,4 +16,4 @@ class Task(ABC):
         ...
 
 
-RDS_PATH = "/RResults/r.rds"
+RDS_PATH = "/data/RResults/r.rds"
