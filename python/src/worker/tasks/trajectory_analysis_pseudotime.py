@@ -26,7 +26,7 @@ class GetTrajectoryAnalysisPseudoTime(Task):
 
         cell_ids = subset_cell_sets_dict(self.task_def["cellSets"], cell_sets_dict)
 
-        embedding_etag = self.task_def["embeddingETag"]
+        embedding_etag = self.task_def["embedding"]["ETag"]
         embedding = get_embedding(embedding_etag, format_for_r=True)
 
         request = {
