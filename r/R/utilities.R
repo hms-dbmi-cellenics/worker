@@ -174,18 +174,16 @@ add_clusters <- function(scdata, parsed_cellsets) {
   }
 
   parsed_cellsets_sctype <- parsed_cellsets[!(cellset_type %in% c("cluster", "scratchpad", "sample", "metadata")), ]
-  sctype_groups <- unique(grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]], value =T))
-  if (length(sctype_groups) > 0) {
-    sctype_rows <- grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]])
-    sctype_values <- parsed_cellsets_sctype[sctype_rows]
+  sctype_clusters <- parsed_cellsets_sctype[grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]]),]
+  if (nrow(sctype_clusters) > 0) {
     # create one column for each combination of ScType tissue-species
-    sctype_values_list <- split(sctype_values, sctype_values[["cellset_type"]])
-    for (i in 1:length(sctype_values_list)) {
-      sctype_colname <- unique(sctype_values_list[[i]][,cellset_type])
-      sctype_dt <- sctype_values_list[[i]][, c("name", "cell_id")]
+    sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
+    for (sctype_group in sctype_clusters_list) {
+      sctype_colname <- unique(sctype_group[,cellset_type])
+      sctype_dt <- sctype_group[, c("name", "cell_id")]
       data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
       scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
-     }
+    }
   }
 
   return(scdata)
