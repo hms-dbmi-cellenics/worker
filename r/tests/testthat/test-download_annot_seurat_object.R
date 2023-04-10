@@ -135,5 +135,5 @@ test_that("DownloadAnnotSeuratObject saves the Seurat object using the correct p
   res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
 
   expect_type(res, "character")
-  expect_equal(res, "/RResults/r.rds")
+  expect_equal(res, RDS_PATH)
 })
