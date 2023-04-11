@@ -15,5 +15,3 @@ class Task(ABC):
     def _format_result(self, result):
         ...
 
-
-RDS_PATH = "/data/RResults/r.rds"

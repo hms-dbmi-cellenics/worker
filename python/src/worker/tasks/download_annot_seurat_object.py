@@ -10,9 +10,9 @@ from ..result import Result
 from ..tasks import Task
 from ..helpers.s3 import get_embedding, get_cell_sets
 from ..helpers.cell_sets_dict import get_cell_sets_dict_for_r
-from ..tasks import RDS_PATH
 
 import os
+
 
 class DownloadAnnotSeuratObject(Task):
     def __init__(self, msg):
@@ -55,10 +55,10 @@ class DownloadAnnotSeuratObject(Task):
         raise_if_error(result)
 
         # check if the file exists
-        if os.path.exists(RDS_PATH):
+        if os.path.exists(config.RDS_PATH):
             print("File r.rds exists")
         else:
             print("File not found.")
 
-        return self._format_result(RDS_PATH)
+        return self._format_result(config.RDS_PATH)
     
