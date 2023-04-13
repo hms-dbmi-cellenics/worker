@@ -4,12 +4,14 @@
 \alias{getGeneExpression}
 \title{Extract expression values from Seurat object, add stats and format for UI}
 \usage{
-getGeneExpression(data, genes)
+getGeneExpression(data, genes, downsample_cell_ids)
 }
 \arguments{
 \item{data}{Seurat object}
 
 \item{genes}{data.frame of genes of interest, with columns "input" and "name"}
+
+\item{downsample_cell_ids}{vector. optional. If defined, only the expression is downsampled into these cells (every other cell is covered with 0's)}
 }
 \value{
 list to send to the UI
