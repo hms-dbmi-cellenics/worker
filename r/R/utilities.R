@@ -213,18 +213,13 @@ add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
 
   message("scratchpad added")
 
-  message("temp")
-  print(cell_sets[[parsed_cellsets[1]$cellset_type]]$type)
-  message("temp 2")
-  print(cell_sets[[parsed_cellsets[1]$cellset_type]]$key)
-  message("temp 3")
-
-
   sctype_clusters <- parsed_cellsets[
-    cell_sets[[cellset_type]]$type == "cellSets"
-    && cell_sets[[cellset_type]]$key != "louvain"
-    && cell_sets[[cellset_type]]$key != "scratchpad",
-    ]
+    sapply(parsed_cellsets$cellset_type, function(cellset_type) {
+      cell_sets[[cellset_type]]$type == "cellSets" &&
+      cell_sets[[cellset_type]]$key != "louvain" &&
+      cell_sets[[cellset_type]]$key != "scratchpad"
+    }),
+  ]
 
   message("sctype clusters created")
 
