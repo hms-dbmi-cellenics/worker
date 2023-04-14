@@ -113,12 +113,10 @@ class Response:
             info("Uploading response to S3")
             if (self.result.data == config.RDS_PATH):
                 response_data = self.result.data
-                type = "path"
-                self._upload(response_data, type)
+                self._upload(response_data, "path")
             else:
                 response_data = self._construct_data_for_upload()
-                type = "obj"
-                self._upload(response_data, type)
+                self._upload(response_data, "obj")
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()
