@@ -15,7 +15,6 @@
 #' @export
 #'
 DownloadAnnotSeuratObject <- function(req, data) {
-
   cell_sets <- req$body$cellSets
   embedding_data <- req$body$embedding
 
