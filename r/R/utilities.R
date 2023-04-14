@@ -159,7 +159,7 @@ complete_variable <- function(variable, cell_ids) {
 #' @return Seurat object
 #' @export
 #'
-add_clusters <- function(scdata, parsed_cellsets) {
+add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
   seurat_clusters <- parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
@@ -169,13 +169,14 @@ add_clusters <- function(scdata, parsed_cellsets) {
     # create one column for each scratchpad cluster because one cell can be assigned to more than one scratchpad cluster
     custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
     for (i in 1:length(custom_clusters_list)) {
-      scratchpad_colname <- paste0("scratchpad-", names(custom_clusters_list)[i])
+      scratchpad_colname <- paste0("custom_cluster-", names(custom_clusters_list)[i])
       scdata@meta.data[[scratchpad_colname]] <- scdata@meta.data$cells_id %in% custom_clusters_list[[i]]$cell_id
     }
   }
 
   parsed_cellsets_sctype <- parsed_cellsets[!(cellset_type %in% c("cluster", "scratchpad", "sample", "metadata")), ]
   sctype_clusters <- parsed_cellsets_sctype[grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]]),]
+
   if (nrow(sctype_clusters) > 0) {
     # create one column for each combination of ScType tissue-species
     sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
@@ -186,6 +187,59 @@ add_clusters <- function(scdata, parsed_cellsets) {
       scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
     }
   }
+
+  return(scdata)
+}
+
+# TO DO: merge it back with add_clusters
+add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
+
+  message("add_cluster STARTS")
+  seurat_clusters <- parsed_cellsets[cellset_type == "louvain", c("name", "cell_id")]
+  data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
+  scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
+
+  message(" seurat clusters added
+          ")
+  if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
+    custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]
+    # create one column for each scratchpad cluster because one cell can be assigned to more than one scratchpad cluster
+    custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
+    for (i in 1:length(custom_clusters_list)) {
+      scratchpad_colname <- paste0("custom_cellset-", names(custom_clusters_list)[i])
+      scdata@meta.data[[scratchpad_colname]] <- scdata@meta.data$cells_id %in% custom_clusters_list[[i]]$cell_id
+    }
+  }
+
+  message("scratchpad added")
+
+  message("temp")
+  print(cell_sets[[parsed_cellsets[1]$cellset_type]]$type)
+  message("temp 2")
+  print(cell_sets[[parsed_cellsets[1]$cellset_type]]$key)
+  message("temp 3")
+
+
+  sctype_clusters <- parsed_cellsets[
+    cell_sets[[cellset_type]]$type == "cellSets"
+    && cell_sets[[cellset_type]]$key != "louvain"
+    && cell_sets[[cellset_type]]$key != "scratchpad",
+    ]
+
+  message("sctype clusters created")
+
+  if (nrow(sctype_clusters) > 0) {
+    # create one column for each combination of ScType tissue-species
+    sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
+    for (sctype_group in sctype_clusters_list) {
+      sctype_colname <- unique(cell_sets[[cellset_type]]$name)
+      sctype_dt <- sctype_group[, c("name", "cell_id")]
+      data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
+      scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
+    }
+  }
+
+  message("add_clusters FINISHED")
 
   return(scdata)
 }
@@ -215,6 +269,21 @@ parse_cellsets <- function(cellsets) {
 
   dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
   dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | is_uuid(dt$key)), cellset_type := "metadata"]
+
+  return(dt)
+}
+
+# TO DO: merge it back with parse_cellsets
+parse_cellsets_temp <- function(cellsets) {
+  # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
+  cellsets <- cellsets[sapply(cellsets, length) > 0]
+
+  dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
+  data.table::setDT(dt)
+  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
+
+  message("DT")
+  print(dt)
 
   return(dt)
 }

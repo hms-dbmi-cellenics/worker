@@ -18,8 +18,9 @@ DownloadAnnotSeuratObject <- function(req, data) {
   cell_sets <- req$body$cellSets
   embedding_data <- req$body$embedding
 
-  parsed_cellsets <- parse_cellsets(cell_sets)
-  data <- add_clusters(data, parsed_cellsets)
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets_temp(children_cell_sets)
+  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
 
   data <- assignEmbedding(embedding_data, data)
 

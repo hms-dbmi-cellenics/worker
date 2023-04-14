@@ -45,9 +45,9 @@ def get_cell_sets_dict_for_r(cell_sets):
     cell_sets_dict = {}
 
     for cell_class in cell_sets:
-        if cell_class["type"] == "cellSets" and cell_class["key"] != "louvain" and cell_class["key"] != "scratchpad":
-            cell_sets_dict[cell_class["name"]] = cell_class["children"]
-        else:
-            cell_sets_dict[cell_class["key"]] = cell_class["children"]
+       # if cell_class["type"] == "cellSets" and cell_class["key"] != "louvain" and cell_class["key"] != "scratchpad":
+       #     cell_sets_dict[cell_class["name"]] = cell_class["children"]
+       # else:
+        cell_sets_dict[cell_class["key"]] = cell_class
 
     return cell_sets_dict
