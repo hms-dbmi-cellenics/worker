@@ -196,7 +196,7 @@ add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
   # add sample names
   samples <- parsed_cellsets[cellset_type == "sample", c("name", "cell_id")]
   data.table::setnames(samples, c("sample_name", "cells_id"))
-  data.table::setnames(scdata@meta.data, "samples", "sample_id")
+  scdata@meta.data$samples <- NULL
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, samples, by = "cells_id")
 
   # add seurat clusters
