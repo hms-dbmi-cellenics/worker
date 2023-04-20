@@ -36,59 +36,87 @@ mock_scdata <- function() {
   # run UMAP
   pbmc_small <- suppressWarnings(Seurat::RunUMAP(pbmc_small, dims = 1:10, verbose = FALSE))
 
+  # add sample metadata
+  pbmc_small@meta.data$samples <- rep("0000-0000-0000-0000-0000", nrow(pbmc_small@meta.data))
+
   return(pbmc_small)
 }
 
 mock_cellset_from_python <- function(data) {
   cell_sets <- list(
     "louvain" = list(
-      list(
-        "key" = "louvain-0", "name" = "Cluster 0", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id) / 3)])
-      ),
-      list(
-        "key" = "louvain-1", "name" = "Cluster 1", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 + 1)):(ceiling(length(data$cells_id) / 3 * 2))])
-      ),
-      list(
-        "key" = "louvain-2", "name" = "Cluster 2", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 * 2 + 1)):(length(data$cells_id))])
+      "key" = "louvain",
+      "name" = "louvain clusters",
+      "rootNode" = TRUE,
+      "type" = "cellSets",
+      "children" = list(
+        list(
+          "key" = "louvain-0", "name" = "Cluster 0", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id) / 3)])
+        ),
+        list(
+          "key" = "louvain-1", "name" = "Cluster 1", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 + 1)):(ceiling(length(data$cells_id) / 3 * 2))])
+        ),
+        list(
+          "key" = "louvain-2", "name" = "Cluster 2", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 * 2 + 1)):(length(data$cells_id))])
+        )
       )
     ),
     "scratchpad" = list(
-      list(
-        "key" = "scratchpad-0", "name" = "Custom 0", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(sample(data$cells_id, 5))
-      ),
-      list(
-        "key" = "scratchpad-1", "name" = "Custom 1", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(sample(data$cells_id, 10))
+      "key" = "scratchpad",
+      "name" = "Custom cell sets",
+      "rootNode" = TRUE,
+      "type" = "cellSets",
+      "children" = list(
+        list(
+          "key" = "scratchpad-0", "name" = "Custom 0", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(sample(data$cells_id, 5))
+        ),
+        list(
+          "key" = "scratchpad-1", "name" = "Custom 1", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(sample(data$cells_id, 10))
+        )
       )
     ),
     "sample" = list(
-      list(
-        "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
-        "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:length(data$cells_id) / 2])
-      ),
-      list(
-        "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
-        "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+      "key" = "sample",
+      "name" = "Samples",
+      "rootNode" = TRUE,
+      "type" = "metadataCategorical",
+      "children" = list(
+        list(
+          "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
+          "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+        ),
+        list(
+          "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
+          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+        )
       )
     ),
     "MISC_status" = list(
-      list(
-        "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
-        "cellIds" = unname(data$cells_id[1:length(data$cells_id) / 2])
-      ),
-      list(
-        "key" = "MISC_status-Convalescent", "name" = "Convalescent",
-        "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+      "key" = "MISC_status",
+      "name" = "MISC_status",
+      "rootNode" = TRUE,
+      "type" = "metadataCategorical",
+      "children" = list(
+        list(
+          "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
+          "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+        ),
+        list(
+          "key" = "MISC_status-Convalescent", "name" = "Convalescent",
+          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+        )
       )
     )
   )
 
   return(cell_sets)
 }
+
 
 mock_embedding_data <- function(data) {
   embedding_data <- data@reductions$umap@cell.embeddings
@@ -112,11 +140,11 @@ mock_req <- function(data) {
 }
 
 stub_saveRDS <- function(data,fpath) {
-  rdir <- file.path(tempdir(), "R")
+  rdir <- file.path(tempdir(), "data")
   if (!dir.exists(rdir)) {
     dir.create(rdir, recursive = TRUE)
   }
-  fpath <- file.path(rdir, "r.rds")
+  fpath <- file.path(rdir, "processed.rds")
   saveRDS(data, fpath)
 }
 
@@ -137,3 +165,4 @@ test_that("DownloadAnnotSeuratObject saves the Seurat object using the correct p
   expect_type(res, "character")
   expect_equal(res, RDS_PATH)
 })
+
