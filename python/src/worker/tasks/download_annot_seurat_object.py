@@ -54,11 +54,5 @@ class DownloadAnnotSeuratObject(Task):
         result = response.json()
         raise_if_error(result)
 
-        # check if the file exists
-        if os.path.exists(config.RDS_PATH):
-            print("File r.rds exists")
-        else:
-            print("File not found.")
-
         return self._format_result(config.RDS_PATH)
     
