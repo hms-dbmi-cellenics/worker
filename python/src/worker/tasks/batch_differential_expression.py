@@ -55,11 +55,11 @@ class BatchDifferentialExpression(Task):
             cell_sets_list = [(b, first_cell_set_name[0]) for b in basis]
 
         responses_list = []
+
         for base_cs, first_cs in cell_sets_list:
             try:
                 request = self._format_request(base_cs, first_cs, second_cell_set_name, cell_sets)
                  # send request to r worker
-
                 response = requests.post(
                     f"{config.R_WORKER_URL}/v0/DifferentialExpression",
                     headers={"content-type": "application/json"},
@@ -70,9 +70,9 @@ class BatchDifferentialExpression(Task):
                 raise_if_error(result)
 
                 data = result.get("data")
-            except PythonWorkerException:
-                print('RECEIVED EXCEPTION !!!! : ')
-                data = {'full_count': 0, 'gene_results': 'No cell id fullfills the 1st cell set.'}
+            except PythonWorkerException as e:
+                print(f"Cannot run Differential Expression for the current comparison, skipping...", e)
+                data = {'full_count': 0, 'gene_results': 'No cell id fulfills the 1st cell set.'}
 
             responses_list.append(data)
 
