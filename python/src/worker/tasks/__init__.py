@@ -14,3 +14,4 @@ class Task(ABC):
     @abstractmethod
     def _format_result(self, result):
         ...
+
