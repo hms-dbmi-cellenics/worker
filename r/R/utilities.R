@@ -193,6 +193,9 @@ add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
 
 # TODO: merge it back with add_clusters after checking that ScType works correctly
 add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
+  # left_join function eliminates the row names from Seurat's metadata
+  barcodes <- rownames(scdata@meta.data)
+
   # add sample names
   samples <- parsed_cellsets[cellset_type == "sample", c("name", "cell_id")]
   data.table::setnames(samples, c("sample_name", "cells_id"))
@@ -236,6 +239,8 @@ add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
       scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
     }
   }
+
+  rownames(scdata@meta.data) <- barcodes
 
   return(scdata)
 }
