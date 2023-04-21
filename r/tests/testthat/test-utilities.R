@@ -12,50 +12,79 @@ mock_scratchpad_cellset_object <- function(n) {
 mock_cellset_from_python <- function(data) {
   cell_sets <- list(
     "louvain" = list(
-      list(
-        "key" = "louvain-0", "name" = "Cluster 0", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id) / 3)])
-      ),
-      list(
-        "key" = "louvain-1", "name" = "Cluster 1", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 + 1)):(ceiling(length(data$cells_id) / 3 * 2))])
-      ),
-      list(
-        "key" = "louvain-2", "name" = "Cluster 2", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 * 2 + 1)):(length(data$cells_id))])
+      "key" = "louvain",
+      "name" = "louvain clusters",
+      "rootNode" = TRUE,
+      "type" = "cellSets",
+      "children" = list(
+        list(
+          "key" = "louvain-0", "name" = "Cluster 0", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id) / 3)])
+        ),
+        list(
+          "key" = "louvain-1", "name" = "Cluster 1", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 + 1)):(ceiling(length(data$cells_id) / 3 * 2))])
+        ),
+        list(
+          "key" = "louvain-2", "name" = "Cluster 2", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 * 2 + 1)):(length(data$cells_id))])
+        )
       )
     ),
     "scratchpad" = list(
-      list(
-        "key" = "scratchpad-0", "name" = "Custom 0", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(sample(data$cells_id, 5))
-      ),
-      list(
-        "key" = "scratchpad-1", "name" = "Custom 1", "rootNode" = FALSE,
-        "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(sample(data$cells_id, 10))
+      "key" = "scratchpad",
+      "name" = "Custom cell sets",
+      "rootNode" = TRUE,
+      "type" = "cellSets",
+      "children" = list(
+        list(
+          "key" = "scratchpad-0", "name" = "Custom 0", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(sample(data$cells_id, 5))
+        ),
+        list(
+          "key" = "scratchpad-1", "name" = "Custom 1", "rootNode" = FALSE,
+          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(sample(data$cells_id, 10))
+        )
       )
     ),
     "sample" = list(
-      list(
-        "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
-        "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
-      ),
-      list(
-        "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
-        "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+      "key" = "sample",
+      "name" = "Samples",
+      "rootNode" = TRUE,
+      "type" = "metadataCategorical",
+      "children" = list(
+        list(
+          "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
+          "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+        ),
+        list(
+          "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
+          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+        )
       )
     ),
     "MISC_status" = list(
-      list(
-        "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
-        "cellIds" = unname(data$cells_id[1:(length(data$cells_id)) / 2])
-      ),
-      list(
-        "key" = "MISC_status-Convalescent", "name" = "Convalescent",
-        "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+      "key" = "MISC_status",
+      "name" = "MISC_status",
+      "rootNode" = TRUE,
+      "type" = "metadataCategorical",
+      "children" = list(
+        list(
+          "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
+          "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+        ),
+        list(
+          "key" = "MISC_status-Convalescent", "name" = "Convalescent",
+          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+        )
       )
     ),
     "ScType-Spleen-human" = list(
+      "key" = "67466668-bd95-11ed-9732-0242ac130003",
+      "name" = "ScType-Spleen-human",
+      "rootNode" = TRUE,
+      "type" = "cellSets",
+      "children" = list(
       list(
         "key" = "67466668-bd95-11ed-9732-0242ac130003", "name" = "Naive CD4+ T cells", "color" = "#77aadd",
         "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
@@ -66,9 +95,11 @@ mock_cellset_from_python <- function(data) {
       )
     )
   )
+)
 
   return(cell_sets)
 }
+
 
 mock_scdata <- function() {
   pbmc_raw <- read.table(
@@ -195,28 +226,29 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
       "cell_id"
     )
 
-  parsed_cellsets <- parse_cellsets(cell_sets)
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
 
   expect_true(data.table::is.data.table(parsed_cellsets))
   expect_equal(colnames(parsed_cellsets), expected_columns)
-  expect_equal(length(cell_sets$louvain), length(unique(parsed_cellsets[cellset_type == "cluster", name])))
-  expect_equal(sapply(cell_sets$louvain, function(x) {
+  expect_equal(length(children_cell_sets$louvain), length(unique(parsed_cellsets[cellset_type == "cluster", name])))
+  expect_equal(sapply(children_cell_sets$louvain, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "cluster", name]))
-  expect_equal(length(cell_sets$scratchpad), length(unique(parsed_cellsets[cellset_type == "scratchpad", name])))
-  expect_equal(sapply(cell_sets$scratchpad, function(x) {
+  expect_equal(length(children_cell_sets$scratchpad), length(unique(parsed_cellsets[cellset_type == "scratchpad", name])))
+  expect_equal(sapply(children_cell_sets$scratchpad, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "scratchpad", name]))
-  expect_equal(length(cell_sets$sample), length(unique(parsed_cellsets[cellset_type == "sample", name])))
-  expect_equal(sapply(cell_sets$sample, function(x) {
+  expect_equal(length(children_cell_sets$sample), length(unique(parsed_cellsets[cellset_type == "sample", name])))
+  expect_equal(sapply(children_cell_sets$sample, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "sample", name]))
-  expect_equal(length(cell_sets$MISC_status), length(unique(parsed_cellsets[cellset_type == "metadata", name])))
-  expect_equal(sapply(cell_sets$MISC_status, function(x) {
+  expect_equal(length(children_cell_sets$MISC_status), length(unique(parsed_cellsets[cellset_type == "metadata", name])))
+  expect_equal(sapply(children_cell_sets$MISC_status, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "metadata", name]))
-  expect_equal(length(cell_sets$`ScType-Spleen-human`), length(unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name])))
-  expect_equal(sapply(cell_sets$`ScType-Spleen-human`, function(x) {
+  expect_equal(length(children_cell_sets$`ScType-Spleen-human`), length(unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name])))
+  expect_equal(sapply(children_cell_sets$`ScType-Spleen-human`, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name]))
 })
@@ -225,7 +257,8 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
 test_that("add_clusters adds cluster information as metadata columns to the seurat object", {
   data <- mock_scdata()
   cell_sets <- mock_cellset_from_python(data)
-  parsed_cellsets <- parse_cellsets(cell_sets)
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
 
   data <- add_clusters(data, parsed_cellsets)
   expect_true("seurat_clusters" %in% colnames(data@meta.data))
@@ -255,6 +288,36 @@ test_that("add_clusters adds cluster information as metadata columns to the seur
 })
 
 
+test_that("add_clusters_temp adds cluster information as metadata columns to the seurat object", {
+  data <- mock_scdata()
+  cell_sets <- mock_cellset_from_python(data)
+
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets_temp(children_cell_sets)
+  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
+
+  sctype_clusters <- parsed_cellsets[
+    sapply(parsed_cellsets$cellset_type, function(cellset_type) {
+      cell_sets[[cellset_type]]$type == "cellSets" &&
+        cell_sets[[cellset_type]]$key != "louvain" &&
+        cell_sets[[cellset_type]]$key != "scratchpad"
+    }),
+  ]
+
+  sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
+  for (sctype_group in sctype_clusters_list) {
+    sctype_colname <- unique(sapply(sctype_group$cellset_type, function(x) {
+      cell_sets[[x]]$name
+    }))
+    expect_true(sctype_colname %in% colnames(data@meta.data))
+    sctype_dt <- sctype_group[, c("name", "cell_id")]
+    data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
+    expect_equal(unique(data@meta.data[,sctype_colname]), unique(sctype_dt[, get(sctype_colname)]))
+    expect_true(all.equal(sctype_dt, data@meta.data[,c(sctype_colname, "cells_id")],check.attributes = FALSE))
+  }
+})
+
+
 test_that("format_sctype_cell_sets correctly format cellset to be sent to the API", {
   data <- mock_scdata()
   cell_sets <- mock_cellset_from_python(data)
@@ -265,7 +328,8 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
   expected_cell_class_names <- c("key", "name", "rootNode", "type", "children")
 
   scale_data <- get_formatted_data(data, active_assay)
-  parsed_cellsets <- parse_cellsets(cell_sets)
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets)
   data[[active_assay]]@scale.data <- scale_data
 
