@@ -39,8 +39,8 @@ ScTypeAnnotate <- function(req, data) {
 
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-  parsed_cellsets <- rename_cell_set_types(parsed_cellsets)
-  data <- add_clusters(data, parsed_cellsets)
+
+  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
 
   data[[active_assay]]@scale.data <- scale_data
   data <- run_sctype(data, active_assay, tissue, species)
@@ -179,6 +179,7 @@ run_sctype <- function(data, active_assay, tissue, species) {
   db <- "http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/ScTypeDB_full.xlsx"
   gs_list <- gene_sets_prepare(db, tissue)
 
+
   # get cell-type by cell matrix
   cell_type_scores <- sctype_score(
     scRNAseqData = data[[active_assay]]@scale.data, scaled = TRUE,
@@ -188,10 +189,13 @@ run_sctype <- function(data, active_assay, tissue, species) {
   # merge by cluster
   clusters <- "seurat_clusters"
   metadata_clusters <- data@meta.data[[clusters]]
+
   # from https://github.com/IanevskiAleksandr/sc-type/blob/master/README.md
   cluster_scores <- do.call("rbind", lapply(unique(metadata_clusters), function(cl) {
-    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(rownames(data@meta.data[metadata_clusters == cl, ]))]), decreasing = !0)
+    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(seq_along(rownames(data@meta.data[metadata_clusters == cl, ])))]), decreasing = !0)
+
     head(data.frame(cluster = cl, type = names(cell_type_scores_cl), scores = cell_type_scores_cl, ncells = sum(metadata_clusters == cl)), 10)
+
   }))
 
   sctype_scores <- cluster_scores |>
@@ -200,6 +204,7 @@ run_sctype <- function(data, active_assay, tissue, species) {
 
   # set low-confident (low ScType score) clusters to "unknown" (threshold defined by ScType authors)
   sctype_scores$type[as.numeric(as.character(sctype_scores$scores)) < sctype_scores$ncells / 4] <- "Unknown"
+
 
   data@meta.data$customclassif <- ""
   for (j in unique(sctype_scores$cluster)) {

@@ -79,6 +79,7 @@ run_post <- function(req, post_fun, data) {
         error = function(e) {
             message("🚩 --------- 🚩")
             message("Error at worker task: ", e$message)
+
             return(
               formatResponse(
                 NULL,
