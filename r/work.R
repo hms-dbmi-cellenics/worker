@@ -272,6 +272,13 @@ create_app <- function(last_modified, data, fpath) {
       res$set_body(result)
     }
   )
+  app$add_post(
+    path = "/v0/DownloadAnnotSeuratObject",
+    FUN = function(req, res) {
+      result <- run_post(req, DownloadAnnotSeuratObject, data)
+      res$set_body(result)
+    }
+  )
   return(app)
 }
 
