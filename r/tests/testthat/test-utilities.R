@@ -293,7 +293,7 @@ test_that("add_clusters_temp adds cluster information as metadata columns to the
   cell_sets <- mock_cellset_from_python(data)
 
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
-  parsed_cellsets <- parse_cellsets_temp(children_cell_sets)
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
 
   sctype_clusters <- parsed_cellsets[

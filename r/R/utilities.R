@@ -262,6 +262,10 @@ parse_cellsets <- function(cellsets) {
   data.table::setDT(dt)
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
 
+  return (dt)
+}
+
+rename_cell_set_types <- function(dt) {
   # change cellset type to more generic names
   is_uuid <- function(x) {
     uuid_regex <- "^\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b$"
@@ -273,19 +277,6 @@ parse_cellsets <- function(cellsets) {
 
   return(dt)
 }
-
-# TODO: merge it back with parse_cellsets after checking that ScType works correctly
-parse_cellsets_temp <- function(cellsets) {
-  # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
-  cellsets <- cellsets[sapply(cellsets, length) > 0]
-
-  dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
-  data.table::setDT(dt)
-  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
-
-  return(dt)
-}
-
 
 #' Determine the type of features in the annot data frame
 #'
