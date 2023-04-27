@@ -32,6 +32,7 @@ cell_set_types = {
             {
                 "name": "hierarchy 1",
                 "key": "set_hierarchy_1",
+                "type": "cellSets",
                 "cellIds": [],
                 "children": [
                     {"name": "one set", "key": "cluster1", "cellIds": [4]},
@@ -41,6 +42,7 @@ cell_set_types = {
             {
                 "name": "hierarchy 2",
                 "key": "set_hierarchy_2",
+                "type": "cellSets",
                 "cellIds": [],
                 "children": [
                     {"name": "set", "key": "cluster3", "cellIds": [0, 1, 2, 3]},

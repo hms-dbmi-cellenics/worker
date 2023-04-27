@@ -22,6 +22,7 @@ from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
 from .trajectory_analysis_starting_nodes import GetTrajectoryAnalysisStartingNodes
 from .normalized_matrix import GetNormalizedExpression
 from .cell_annotation_sctype import ScTypeAnnotate
+from .download_annot_seurat_object import DownloadAnnotSeuratObject
 
 
 class TaskFactory:
@@ -45,7 +46,8 @@ class TaskFactory:
             GetTrajectoryAnalysisPseudoTime,
             GetExpressionCellSets,
             GetNormalizedExpression,
-            ScTypeAnnotate
+            ScTypeAnnotate,
+            DownloadAnnotSeuratObject
         )
     }
 
