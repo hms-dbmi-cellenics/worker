@@ -70,8 +70,8 @@ class BatchDifferentialExpression(Task):
                 raise_if_error(result)
 
                 data = result.get("data")
-            except PythonWorkerException as e:
-                print(f"Cannot run Differential Expression for the current comparison, skipping...", e)
+            except PythonWorkerException:
+                print(f"Cannot run Differential Expression for the current comparison, skipping...")
                 data = {'full_count': 0, 'gene_results': 'No cell id fulfills the 1st cell set.'}
 
             responses_list.append(data)

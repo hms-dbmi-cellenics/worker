@@ -53,4 +53,10 @@ cell_set_types = {
             },
         ]
     },
+    "two_sets_no_overlap": {
+        "cellSets":[
+            {"name": "my amazing cluster", "key": "cluster1", "cellIds": [1, 2, 3]},
+            {"name": "another cluster", "key": "cluster2", "cellIds": [4, 5, 6]},
+        ]
+    }
 }
