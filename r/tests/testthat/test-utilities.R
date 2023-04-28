@@ -255,48 +255,13 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
   }), unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name]))
 })
 
-
 test_that("add_clusters adds cluster information as metadata columns to the seurat object", {
   data <- mock_scdata()
   cell_sets <- mock_cellset_from_python(data)
-  children_cell_sets <- sapply(cell_sets, `[[`, "children")
-  parsed_cellsets <- parse_cellsets(children_cell_sets)
-
-  data <- add_clusters(data, parsed_cellsets)
-  expect_true("seurat_clusters" %in% colnames(data@meta.data))
-  expect_equal(all(is.na(data@meta.data$seurat_clusters)), FALSE)
-
-  expect_equal(unique(data@meta.data$seurat_clusters), unique(parsed_cellsets[cellset_type == "cluster", name]))
-  expect_true(all.equal(parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")],
-    data@meta.data[, c("seurat_clusters", "cells_id")],
-    check.attributes = FALSE
-  ))
-
-  scratchpad_clusters <- unique(parsed_cellsets[cellset_type == "scratchpad", name])
-  for (i in 1:length(scratchpad_clusters)) {
-    expected_cells <- which(data@meta.data$cells_id %in% parsed_cellsets[name == scratchpad_clusters[i], cell_id])
-    expect_true(all(data@meta.data[expected_cells, paste0("scratchpad-", scratchpad_clusters[i])]))
-  }
-
-  sctype_clusters <- unique(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), cellset_type])
-  for (i in 1:length(sctype_clusters)) {
-    expect_true(sctype_clusters[i] %in% colnames(data@meta.data))
-    expect_equal(unique(data@meta.data[,sctype_clusters[i]]), unique(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), name]))
-    expect_true(all.equal(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), c("name", "cell_id")],
-                          data@meta.data[, c(sctype_clusters[i], "cells_id")],
-                          check.attributes = FALSE
-    ))
-  }
-})
-
-
-test_that("add_clusters_temp adds cluster information as metadata columns to the seurat object", {
-  data <- mock_scdata()
-  cell_sets <- mock_cellset_from_python(data)
 
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
 
   sctype_clusters <- parsed_cellsets[
     sapply(parsed_cellsets$cellset_type, function(cellset_type) {
@@ -332,7 +297,7 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
   scale_data <- get_formatted_data(data, active_assay)
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-  data <- add_clusters(data, parsed_cellsets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
   data[[active_assay]]@scale.data <- scale_data
 
   data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
