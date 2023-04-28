@@ -160,7 +160,7 @@ complete_variable <- function(variable, cell_ids) {
 #' @return Seurat object
 #' @export
 #'
-add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
+add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
   # left_join function eliminates the row names from Seurat's metadata
   barcodes <- rownames(scdata@meta.data)
 
@@ -232,19 +232,6 @@ parse_cellsets <- function(cellsets) {
 
   return (dt)
 }
-
-# rename_cell_set_types <- function(dt) {
-#   # change cellset type to more generic names
-#   is_uuid <- function(x) {
-#     uuid_regex <- "^\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b$"
-#     return(grepl(uuid_regex, x))
-#   }
-
-#   dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-#   dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | is_uuid(dt$key)), cellset_type := "metadata"]
-
-#   return(dt)
-# }
 
 #' Determine the type of features in the annot data frame
 #'
