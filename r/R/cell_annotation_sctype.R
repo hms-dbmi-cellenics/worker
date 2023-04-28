@@ -190,9 +190,12 @@ run_sctype <- function(data, active_assay, tissue, species) {
   clusters <- "seurat_clusters"
   metadata_clusters <- data@meta.data[[clusters]]
 
+  # Remove rownames that aren't numbers, as.integer won't work otherwise
+  rownames(data@meta.data) <- NULL
+
   # from https://github.com/IanevskiAleksandr/sc-type/blob/master/README.md
   cluster_scores <- do.call("rbind", lapply(unique(metadata_clusters), function(cl) {
-    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(seq_along(rownames(data@meta.data[metadata_clusters == cl, ])))]), decreasing = !0)
+    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(rownames(data@meta.data[metadata_clusters == cl, ]))]), decreasing = !0)
 
     head(data.frame(cluster = cl, type = names(cell_type_scores_cl), scores = cell_type_scores_cl, ncells = sum(metadata_clusters == cl)), 10)
 
