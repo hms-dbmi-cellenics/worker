@@ -1,3 +1,5 @@
+library('httptest')
+
 mock_scratchpad_cellset_object <- function(n) {
   # ensure cellIds is an int vector. same as when created by getExpressionCellSet
   list(
@@ -231,10 +233,10 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
 
   expect_true(data.table::is.data.table(parsed_cellsets))
   expect_equal(colnames(parsed_cellsets), expected_columns)
-  expect_equal(length(children_cell_sets$louvain), length(unique(parsed_cellsets[cellset_type == "cluster", name])))
+  expect_equal(length(children_cell_sets$louvain), length(unique(parsed_cellsets[cellset_type == "louvain", name])))
   expect_equal(sapply(children_cell_sets$louvain, function(x) {
     x$name
-  }), unique(parsed_cellsets[cellset_type == "cluster", name]))
+  }), unique(parsed_cellsets[cellset_type == "louvain", name]))
   expect_equal(length(children_cell_sets$scratchpad), length(unique(parsed_cellsets[cellset_type == "scratchpad", name])))
   expect_equal(sapply(children_cell_sets$scratchpad, function(x) {
     x$name
@@ -243,10 +245,10 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
   expect_equal(sapply(children_cell_sets$sample, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "sample", name]))
-  expect_equal(length(children_cell_sets$MISC_status), length(unique(parsed_cellsets[cellset_type == "metadata", name])))
+  expect_equal(length(children_cell_sets$MISC_status), length(unique(parsed_cellsets[cellset_type == "MISC_status", name])))
   expect_equal(sapply(children_cell_sets$MISC_status, function(x) {
     x$name
-  }), unique(parsed_cellsets[cellset_type == "metadata", name]))
+  }), unique(parsed_cellsets[cellset_type == "MISC_status", name]))
   expect_equal(length(children_cell_sets$`ScType-Spleen-human`), length(unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name])))
   expect_equal(sapply(children_cell_sets$`ScType-Spleen-human`, function(x) {
     x$name
