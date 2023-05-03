@@ -8,6 +8,7 @@ generateTrajectoryGraph(
   embedding_data,
   embedding_settings,
   clustering_settings,
+  cell_ids,
   data
 )
 }
