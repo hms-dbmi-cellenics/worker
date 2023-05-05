@@ -20,6 +20,8 @@ class BatchDifferentialExpression(Task):
     def _format_result(self, results):
         # Return a list of formatted results.
         final_result=[]
+
+        # Return a list of formatted results in the same order as the list of requested diff expr arrived
         for data in results:
             final_result.append({"total": data["full_count"], "data": data["gene_results"]})
         return Result(final_result)
