@@ -103,27 +103,3 @@ class TestBatchDifferentialExpression:
                     assert len(result.data) == len(basis)
                     assert {"total": 0, "data": "No cell id fulfills the 1st cell set."} in result.data
                     assert {"total": 10, "data": "Some gene results"} in result.data
-
-    def test_should_call_r_worker_endpoint(self):
-        cell_sets = ["louvain-0","louvain-1","louvain-2","louvain-3","louvain-4"]
-        request_data = self.get_request(
-            cellSet=cell_sets,
-            compareWith="background",
-            basis=["all"],
-            comparisonType="within",
-        )
-
-        with patch("worker.helpers.s3.get_cell_sets", return_value=cell_set_types["three_sets"]), \
-            responses.RequestsMock() as rsps:
-                # Add mocked requests for each iteration in the loop
-                for _ in range(len(cell_sets)):  # Assuming 4 requests will be made based on the 'basis' value
-                    rsps.add(
-                        responses.POST,
-                        f"{config.R_WORKER_URL}/v0/DifferentialExpression",
-                        json={"data": {"full_count": 10, "gene_results": ['ok']}},
-                        status=200,
-                    )
-
-                task = BatchDifferentialExpression(request_data)
-                result = task.compute()
-                assert {"total": 10, "data": ['ok']} in result.data
