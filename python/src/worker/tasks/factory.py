@@ -7,6 +7,7 @@ from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
+from .batch_differential_expression import BatchDifferentialExpression
 from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
@@ -31,6 +32,7 @@ class TaskFactory:
             GetEmbedding,
             ListGenes,
             DifferentialExpression,
+            BatchDifferentialExpression,
             GeneExpression,
             GetBackgroundExpressedGenes,
             ClusterCells,
