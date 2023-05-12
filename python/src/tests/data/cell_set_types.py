@@ -32,6 +32,7 @@ cell_set_types = {
             {
                 "name": "hierarchy 1",
                 "key": "set_hierarchy_1",
+                "type": "cellSets",
                 "cellIds": [],
                 "children": [
                     {"name": "one set", "key": "cluster1", "cellIds": [4]},
@@ -41,6 +42,7 @@ cell_set_types = {
             {
                 "name": "hierarchy 2",
                 "key": "set_hierarchy_2",
+                "type": "cellSets",
                 "cellIds": [],
                 "children": [
                     {"name": "set", "key": "cluster3", "cellIds": [0, 1, 2, 3]},
@@ -53,4 +55,10 @@ cell_set_types = {
             },
         ]
     },
+    "two_sets_no_overlap": {
+        "cellSets":[
+            {"name": "my amazing cluster", "key": "cluster1", "cellIds": [1, 2, 3]},
+            {"name": "another cluster", "key": "cluster2", "cellIds": [4, 5, 6]},
+        ]
+    }
 }

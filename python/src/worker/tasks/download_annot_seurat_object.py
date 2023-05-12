@@ -6,39 +6,38 @@ from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.s3 import get_cell_sets
-from ..helpers.cell_sets_dict import get_cell_sets_dict_for_r
 from ..result import Result
 from ..tasks import Task
+from ..helpers.s3 import get_embedding, get_cell_sets
+from ..helpers.cell_sets_dict import get_cell_sets_dict_for_r
 
-class ScTypeAnnotate(Task):
+import os
+
+
+class DownloadAnnotSeuratObject(Task):
     def __init__(self, msg):
         super().__init__(msg)
         self.experiment_id = config.EXPERIMENT_ID
-        self.request = msg
 
     def _format_result(self, result):
-        return Result(result, cacheable=False)
+        return Result(result)
 
     def _format_request(self):
-        # get cell sets from database
+
         cell_sets = get_cell_sets(self.experiment_id)
         cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
 
-        species = self.task_def["species"]
-        tissue = self.task_def["tissue"]
+        embedding_etag = self.task_def["embeddingETag"]
+        embedding = get_embedding(embedding_etag, format_for_r=True)
 
-        return { 
+        request = {
+            "embedding": embedding,
             "cellSets": cell_sets_dict,
-            "species": species, 
-            "tissue": tissue, 
-            "apiUrl" : config.API_URL, 
-            "authJwt" : self.request["Authorization"],
-            "experimentId": self.experiment_id
         }
 
+        return request
 
-    @xray_recorder.capture("ScTypeAnnotate.compute")
+    @xray_recorder.capture("DownloadAnnotSeuratObject.compute")
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=30
     )
@@ -46,7 +45,7 @@ class ScTypeAnnotate(Task):
         request = self._format_request()
 
         response = requests.post(
-            f"{config.R_WORKER_URL}/v0/ScTypeAnnotate",
+            f"{config.R_WORKER_URL}/v0/DownloadAnnotSeuratObject",
             headers={"content-type": "application/json"},
             data=json.dumps(request),
         )
@@ -55,7 +54,5 @@ class ScTypeAnnotate(Task):
         result = response.json()
         raise_if_error(result)
 
-        data = result.get("data")
-
-        return self._format_result(data)
-
+        return self._format_result(config.RDS_PATH)
+    

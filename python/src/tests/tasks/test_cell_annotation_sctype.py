@@ -10,7 +10,8 @@ from botocore.stub import Stubber
 from exceptions import RWorkerException
 from tests.data.cell_set_types import cell_set_types
 from worker.config import config
-from worker.tasks.cell_annotation_sctype import ScTypeAnnotate,  get_cell_sets_dict_sctype
+from worker.tasks.cell_annotation_sctype import ScTypeAnnotate
+from worker.helpers.cell_sets_dict import get_cell_sets_dict_for_r
 
 import pdb
 from worker.helpers.s3 import get_cell_sets
@@ -31,7 +32,7 @@ class TestScTypeAnnotate:
 
     def format_request(self):
         cell_sets = get_cell_sets(self.experiment_id)
-        cell_sets_dict = get_cell_sets_dict_sctype(cell_sets)
+        cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
         species = self.task_def["species"]
 
         return { 
