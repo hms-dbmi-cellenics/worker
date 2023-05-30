@@ -37,7 +37,8 @@ ScTypeAnnotate <- function(req, data) {
 
   scale_data <- get_formatted_data(data, active_assay)
 
-  parsed_cellsets <- parse_cellsets(cell_sets)
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets)
 
   data[[active_assay]]@scale.data <- scale_data
