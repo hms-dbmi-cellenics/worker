@@ -90,7 +90,7 @@ class TestBatchDifferentialExpression:
                 "genesOnly": False,
                 "comparisonType": "within",
             }
-            mock_format_request.side_effect = [PythonWorkerException(ErrorCodes.INVALID_INPUT, "No cell id fulfills the 1st cell set."), valid_request]
+            mock_format_request.side_effect = [PythonWorkerException(ErrorCodes.INVALID_INPUT, "No data available for this comparison"), valid_request]
 
             with patch('requests.post') as mock_post:
                 mock_post.return_value = MagicMock(status_code=200, json=lambda: {"data": {"full_count": 10, "gene_results": "Some gene results"}})
@@ -101,5 +101,5 @@ class TestBatchDifferentialExpression:
                     result = task.compute()
 
                     assert len(result.data) == len(basis)
-                    assert {"total": 0, "data": "No cell id fulfills the 1st cell set."} in result.data
+                    assert {"total": 0, "data": "No data available for this comparison"} in result.data
                     assert {"total": 10, "data": "Some gene results"} in result.data
