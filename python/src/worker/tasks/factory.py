@@ -7,6 +7,7 @@ from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
+from .batch_differential_expression import BatchDifferentialExpression
 from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
@@ -21,6 +22,7 @@ from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
 from .trajectory_analysis_starting_nodes import GetTrajectoryAnalysisStartingNodes
 from .normalized_matrix import GetNormalizedExpression
 from .cell_annotation_sctype import ScTypeAnnotate
+from .download_annot_seurat_object import DownloadAnnotSeuratObject
 
 
 class TaskFactory:
@@ -30,6 +32,7 @@ class TaskFactory:
             GetEmbedding,
             ListGenes,
             DifferentialExpression,
+            BatchDifferentialExpression,
             GeneExpression,
             GetBackgroundExpressedGenes,
             ClusterCells,
@@ -43,7 +46,8 @@ class TaskFactory:
             GetTrajectoryAnalysisPseudoTime,
             GetExpressionCellSets,
             GetNormalizedExpression,
-            ScTypeAnnotate
+            ScTypeAnnotate,
+            DownloadAnnotSeuratObject
         )
     }
 

@@ -4,7 +4,6 @@ library(dplyr)
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
-
 load_data <- function(fpath) {
   loaded <- FALSE
   data <- NULL
@@ -273,6 +272,13 @@ create_app <- function(last_modified, data, fpath) {
       res$set_body(result)
     }
   )
+  app$add_post(
+    path = "/v0/DownloadAnnotSeuratObject",
+    FUN = function(req, res) {
+      result <- run_post(req, DownloadAnnotSeuratObject, data)
+      res$set_body(result)
+    }
+  )
   return(app)
 }
 
@@ -303,6 +309,8 @@ fpath <- file.path("/data", experiment_id, "r.rds")
 
 repeat {
   # need to load here as can change e.g. integration method
+  cleanupMarkersCache()
+
   data <- load_data(fpath)
   last_modified <- file.info(fpath)$mtime
   app <- create_app(last_modified, data, fpath)

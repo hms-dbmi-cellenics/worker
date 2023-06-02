@@ -25,6 +25,8 @@ ScTypeAnnotate <- function(req, data) {
   species <- req$body$species
   tissue <- req$body$tissue
 
+
+
   if ("integrated" %in% names(data@assays)) {
     active_assay <- "integrated"
   } else if ("SCT" %in% names(data@assays)) {
@@ -35,7 +37,8 @@ ScTypeAnnotate <- function(req, data) {
 
   scale_data <- get_formatted_data(data, active_assay)
 
-  parsed_cellsets <- parse_cellsets(cell_sets)
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets)
 
   data[[active_assay]]@scale.data <- scale_data
@@ -46,7 +49,7 @@ ScTypeAnnotate <- function(req, data) {
   updateCellSetsThroughApi(
     formatted_cell_class,
     req$body$apiUrl,
-    data@misc$experimentId,
+    req$body$experimentId,
     formatted_cell_class$key,
     req$body$authJwt
   )

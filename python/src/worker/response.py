@@ -32,6 +32,7 @@ class Response:
                 info('Encoding and compressing json work result')
                 json.dump(self.result.data, zipfile)
 
+
         gzipped_body.seek(0)
 
         info("Compression finished")
@@ -51,7 +52,7 @@ class Response:
         return message
 
     @xray_recorder.capture("Response._upload")
-    def _upload(self, response_data):
+    def _upload(self, response_data, type):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
 
@@ -62,7 +63,12 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.upload_fileobj(response_data, self.s3_bucket, ETag)
+        if (type == "path"):
+            with open(response_data, 'rb') as file:
+                client.upload_fileobj(file, self.s3_bucket, ETag)
+        else:
+            client.upload_fileobj(response_data, self.s3_bucket, ETag)
+
 
         client.put_object_tagging(
             Key=ETag,
@@ -114,7 +120,12 @@ class Response:
             io.Emit(f'Heartbeat-{self.request["experimentId"]}',
              {"type": "WorkResponse", "workingOn": UPLOADING_TASK_DATA, "request": self.request})
             info("Uploading response to S3")
-            self._upload(response_data)
+            if (self.result.data == config.RDS_PATH):
+                response_data = self.result.data
+                self._upload(response_data, "path")
+            else:
+                response_data = self._construct_data_for_upload()
+                self._upload(response_data, "obj")
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()

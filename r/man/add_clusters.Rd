@@ -21,4 +21,5 @@ For Louvain/Leiden clusters, it adds a single column with cluster names as value
 For scratchpad clusters, it adds one column for each cluster with TRUE/FALSE values
 to indicate if the corresponding cell belongs to that cluster. This is because
 a cell can belong to more than one scratchpad cluster.
+For ScType annotations, it adds a column for each unique species-tissue annotation.
 }

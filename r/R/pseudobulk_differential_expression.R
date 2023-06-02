@@ -11,7 +11,7 @@ runPseudobulkDE <- function(pbulk) {
   y <- edgeR::DGEList(
     pbulk[["RNA"]]@counts,
     samples = data.frame(group),
-    genes = pbulk@misc$gene_annotations[, "name", drop = FALSE]
+    genes = pbulk@misc$gene_annotations[rownames(pbulk), "name", drop = FALSE]
   )
 
 
