@@ -18,13 +18,44 @@ DownloadAnnotSeuratObject <- function(req, data) {
   cell_sets <- req$body$cellSets
   embedding_data <- req$body$embedding
 
-  children_cell_sets <- sapply(cell_sets, `[[`, "children")
-  parsed_cellsets <- parse_cellsets_temp(children_cell_sets)
-  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
-
+  data <- add_cellsets(data, cell_sets)
   data <- assignEmbedding(embedding_data, data)
 
   saveRDS(data, RDS_PATH)
 
   return(RDS_PATH)
+}
+
+
+
+add_cellsets <- function(scdata, cellsets) {
+
+  for (i in seq_along(cellsets)) {
+
+    cellset <- cellsets[[i]]
+
+    # get children
+    children <- cellset$children
+    if (!length(children)) next()
+
+    # use key for name of column
+    key <- cellset$key
+    scdata[[key]] <- NA_character_
+
+
+    for (j in seq_along(children)) {
+      child <- children[[j]]
+
+      # use name (aka user supplied label) as value
+      value <- child$name
+
+      # get associated 'cells_id'
+      cells_id <- unlist(child$cellIds)
+
+      # add value for relevant 'cells_id'
+      is.cells_id <- scdata$cells_id %in% cells_id
+      scdata@meta.data[is.cells_id, key] <- value
+    }
+  }
+  return(scdata)
 }
