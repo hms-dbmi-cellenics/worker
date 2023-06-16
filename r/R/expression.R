@@ -28,5 +28,10 @@ runExpression <- function(req, data) {
 
   gene_subset <- gene_subset[, c("input", "name")]
 
-  return(getGeneExpression(data, gene_subset))
+  if (req$body$downsampled) {
+    return(getGeneExpression(data, gene_subset, req$body$cellIds))
+  } else {
+    return(getGeneExpression(data, gene_subset))
+  }
+
 }
