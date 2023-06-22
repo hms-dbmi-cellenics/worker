@@ -46,18 +46,6 @@ class GeneExpression(Task):
             #  us to control this number in the future if we want to
             max_cells = downsample_settings.get("maxCells", 1000)
 
-            print('cell_set_keyDebug')
-            print(cell_set_key)
-            print('grouped_tracksDebug')
-            print(grouped_tracks)
-            print('selected_pointsDebug')
-            print(selected_points)
-            print('hidden_cell_set_keysDebug')
-            print(hidden_cell_set_keys)
-
-            print("cell_setsDebug")
-            print(cell_sets)
-
             cell_order = get_heatmap_cell_order(
                 cell_set_key,
                 grouped_tracks,
