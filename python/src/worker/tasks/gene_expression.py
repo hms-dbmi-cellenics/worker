@@ -37,10 +37,6 @@ class GeneExpression(Task):
             grouped_tracks = downsample_settings["groupedTracks"]
             selected_points = downsample_settings["selectedPoints"]
             hidden_cell_set_keys = downsample_settings["hiddenCellSets"]
-            # cell_set_key = downsample_settings["cellSetKey"]
-            # grouped_tracks = downsample_settings["groupByClasses"]
-            # selected_points = downsample_settings["selectedPoints"]
-            # hidden_cell_set_keys = downsample_settings["hiddenCellSetKeys"]
 
             # There is no max_cells being sent right now, but this allows
             #  us to control this number in the future if we want to

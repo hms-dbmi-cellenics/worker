@@ -30,7 +30,7 @@ class MarkerHeatmap(Task):
         selected_cell_set = downsample_settings["selectedCellSet"]
         grouped_tracks = downsample_settings["groupedTracks"]
         selected_points = downsample_settings["selectedPoints"]
-        hidden_cell_set_keys = downsample_settings["hiddenCellSetKeys"]
+        hidden_cell_set_keys = downsample_settings["hiddenCellSets"]
 
         cell_sets = get_cell_sets(self.experiment_id)
 
