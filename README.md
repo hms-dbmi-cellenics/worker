@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/hms-dbmi-cellenics/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/hms-dbmi-cellenics/worker)
+[![codecov](https://codecov.io/gh/biomage-org/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/biomage-org/worker)
 worker
 ======
 
@@ -14,11 +14,11 @@ More specific details about the Python or the R part of the worker can be found 
 
 The worker is deployed as a Helm chart to an AWS-managed Kubernetes cluster and runs on a Fargate-managed node. The Helm chart template for the worker is located in `chart-infra/` folder.
 
- The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/hms-dbmi-cellenics/worker/blob/master/.github/workflows/ci.yaml). 
+ The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/biomage-org/worker/blob/master/.github/workflows/ci.yaml). 
 
 During a deployment, the worker Github Actions workflow does the following:
 - It pushes new worker images to ECR.
-- Adds deployment-specific configurations to the worker Helm chart. Pushes those deployment-specific configuration changes in [releases/](https://github.com/hms-dbmi-cellenics/iac/tree/master/releases) folder in iac, under the relevant environment.
+- Adds deployment-specific configurations to the worker Helm chart. Pushes those deployment-specific configuration changes in [releases/](https://github.com/biomage-org/iac/tree/master/releases) folder in iac, under the relevant environment.
 
 ## Development
 
