@@ -4,7 +4,7 @@
 \alias{add_clusters}
 \title{Add cluster information to the Seurat object}
 \usage{
-add_clusters(scdata, parsed_cellsets)
+add_clusters(scdata, parsed_cellsets, cell_sets)
 }
 \arguments{
 \item{scdata}{Seurat object}

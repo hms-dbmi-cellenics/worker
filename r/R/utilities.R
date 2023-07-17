@@ -159,7 +159,11 @@ complete_variable <- function(variable, cell_ids) {
 #' @return Seurat object
 #' @export
 #'
-add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
+add_clusters <- function(scdata, parsed_cellsets) {
+  # seurat upload already has seurat_cluster column
+  # remove to prevent 'seurat_clusters.x', 'seurat_clusters.y' from join
+  scdata@meta.data$seurat_clusters <- NULL
+
   seurat_clusters <- parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
@@ -203,6 +207,7 @@ add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, samples, by = "cells_id")
 
   # add seurat clusters
+  scdata@meta.data$seurat_clusters <- NULL
   seurat_clusters <- parsed_cellsets[cellset_type == "louvain", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")

@@ -299,7 +299,7 @@ repeat {
     message("No experiment ID label set yet, waiting...")
     Sys.sleep(5)
   } else {
-    message(paste("Welcome to Biomage R worker, experiment id", experiment_id))
+    message(paste("Welcome to Cellenics R worker, experiment id", experiment_id))
     break
   }
 }
