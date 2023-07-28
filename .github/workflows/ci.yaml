@@ -150,7 +150,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -227,7 +227,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -305,7 +305,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -380,6 +380,7 @@ jobs:
           echo "sandbox-id=$SANDBOX_ID" >> $GITHUB_OUTPUT
           echo "kubernetes-env=$KUBERNETES_ENV" >> $GITHUB_OUTPUT
 
+          export GITHUB_OWNER=${{ github.repository_owner }}
           export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
           export R_IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME-r:tag\"}"
           export CHART_CRD_NAME="$DEPLOYMENT_NAME-chart"
@@ -388,6 +389,7 @@ jobs:
           yq '
             select(di == 0).metadata.name = strenv(NAMESPACE) |
             select(di == 0).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 1).spec.url = "https://github.com/" + strenv(GITHUB_OWNER) + "/worker" |
             select(di == 1).metadata.name = strenv(CHART_CRD_NAME) |
             select(di == 1).metadata.namespace = strenv(NAMESPACE) |
             select(di == 1).spec.ref.[strenv(CHART_REF_TYPE)] = strenv(CHART_REF) |
@@ -434,6 +436,7 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
+          GITHUB_OWNER: ${{ github.repository_owner }}
           IMAGE_TAG: ${{ needs.build-docker.outputs.image-tag }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}

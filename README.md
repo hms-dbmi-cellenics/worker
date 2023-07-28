@@ -163,7 +163,7 @@ where `1234` is the experiment id of your choice.
 
 4.  When working locally only: `Keyboard interrupt` shows up non-stop, impeding the worker to ever start up.
 
-    We believe this error is related to the hot reload mechanism and probably having some temporary files that, on changing, trigger the hot reload non-stop. The workaround to be able to continue working is to disable hot-reload (so, for changes to go through, you'll need to restart the worker manually). Just performing [these changes](https://github.com/biomage-org/worker/pull/76/files) in your local Dockerfiles should be enough
+    We believe this error is related to the hot reload mechanism and probably having some temporary files that, on changing, trigger the hot reload non-stop. The workaround to be able to continue working is to disable hot-reload (so, for changes to go through, you'll need to restart the worker manually). Just performing [these changes](https://github.com/hms-dbmi-cellenics/worker/pull/76/files) in your local Dockerfiles should be enough
 
 5.  Error when attempting to start the worker saying something like:
 `botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://host.docker.internal:4566/biomage-source-development?...`
