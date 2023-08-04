@@ -32,10 +32,10 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
+hooks: ## Configures path to git hooks
+	@git config core.hooksPath .githooks
 run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
-setup-hooks: ## Configures path to git hooks
-	@git config core.hooksPath .githooks
 run: build run-only ## Runs & builds the docker environment
 test: ## Executes unit tests
 	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
