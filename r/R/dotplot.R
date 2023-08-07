@@ -77,8 +77,7 @@ runDotPlot <- function(req, data) {
 
   # features.plot has the ensemble ids: get gene symbols
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
-  dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
-
+  dotplot_data <- dotplot_data[order(as.numeric(dotplot_data$id)), ]
   dotplot_data <- dotplot_data %>%
     dplyr::transmute(
       cellSetsIdx = id,
