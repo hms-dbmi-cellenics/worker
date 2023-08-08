@@ -10,9 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout forked repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
-        token: ${{ secrets.WORKFLOW_STATUS_BOT_TOKEN }}
         fetch-depth: 0 # Fetch all history
 
     - name: Fetch original repo
