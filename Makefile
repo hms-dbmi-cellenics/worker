@@ -32,6 +32,8 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
+hooks: ## Configures path to git hooks
+	@git config core.hooksPath .githooks
 run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
 run: build run-only ## Runs & builds the docker environment
