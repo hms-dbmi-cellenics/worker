@@ -240,21 +240,21 @@ jobs:
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
 
-      - id: codecov
-        name: Generate codecov report
-        run: |-
-          docker run \
-            --entrypoint /bin/bash \
-            -v $(pwd)/r/covr:/covr $R_IMAGE_NAME \
-            -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
-        env:
-          R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+      # - id: codecov
+      #   name: Generate codecov report
+      #   run: |-
+      #     docker run \
+      #       --entrypoint /bin/bash \
+      #       -v $(pwd)/r/covr:/covr $R_IMAGE_NAME \
+      #       -c "R -e 'cov <- covr::package_coverage(); covr::to_cobertura(cov, \"/covr/coverage.xml\")'"
+      #   env:
+      #     R_IMAGE_NAME: ${{ format('{0}/{1}:{2}-r-ci', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
 
-      - id: upload-coverage
-        name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./r/covr/coverage.xml
+      # - id: upload-coverage
+      #   name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v2
+      #   with:
+      #     files: ./r/covr/coverage.xml
 
       - id: test
         name: Run unit tests
