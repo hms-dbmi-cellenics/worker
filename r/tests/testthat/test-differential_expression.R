@@ -54,8 +54,8 @@ test_that("runDE generates the expected return format for comparisons within sam
   res <- runDE(req, data)
   res$gene_results <- purrr::transpose(res$gene_results)
 
-  # number of genes is number of possible DE rows
-  expect_equal(res$full_count, nrow(data))
+  # number of genes is the min of pagination limit and DE genes
+  expect_equal(res$full_count, min(nrow(data), req$body$pagination$limit))
 
   # returning only at most limit number of genes
   expect_equal(length(res$gene_results), req$body$pagination$limit)
