@@ -31,13 +31,14 @@ mock_scdata <- function() {
 }
 
 test_that("List of genes generates the expected return format", {
+  default_limit <- 20
   data <- mock_scdata()
-  req <- mock_req()
+  req <- mock_req(limit = default_limit)
 
   res <- getList(req, data)
 
   # number of genes is number of possible DE rows
-  expect_equal(res$full_count, 50)
+  expect_equal(res$full_count, min(default_limit, nrow(data)))
 
   # returning only at most limit number of genes
   expect_equal(nrow(res$gene_results), req$body$limit)
@@ -125,12 +126,13 @@ test_that("Start with pattern is applied", {
 
 test_that("Ends with pattern is applied", {
   pat <- "1$"
+  req_limit <- 40
   data <- mock_scdata()
   req <- mock_req(
     orderBy = "gene_names",
     orderDirection = "DESC",
     offset = 0,
-    limit = 40,
+    limit = req_limit,
     geneNamesFilter = pat
   )
 
@@ -140,17 +142,18 @@ test_that("Ends with pattern is applied", {
 
   grep_results <- grepl(pat, rownames(data))
   expect_true(all(res$gene_results$gene_names %in% data@misc$gene_annotations[grep_results, "name"]))
-  expect_equal(res$full_count, 20)
+  expect_equal(res$full_count, min(sum(grep_results), req_limit))
 })
 
 test_that("Contains pattern is applied", {
   pat <- "CR"
+  req_limit <- 40
   data <- mock_scdata()
   req <- mock_req(
     orderBy = "gene_names",
     orderDirection = "DESC",
     offset = 0,
-    limit = 40,
+    limit = req_limit,
     geneNamesFilter = pat
   )
 
@@ -160,5 +163,5 @@ test_that("Contains pattern is applied", {
 
   grep_results <- grepl(pat, rownames(data))
   expect_true(all(res$gene_results$gene_names %in% data@misc$gene_annotations[grep_results, "name"]))
-  expect_equal(res$full_count, 40)
+  expect_equal(res$full_count, min(sum(grep_results), req_limit))
 })
