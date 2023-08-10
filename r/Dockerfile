@@ -21,13 +21,14 @@ RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-proje
     R -q -e "remotes::install_github('rstudio/renv@0.16.0')" && \
     R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
-# an initial lockfile is used to avoid frequent re-installs
-# use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
-# delete renv cache
+# fast pre-restore with pkgbuild
+COPY ./renv.lock.init ./renv.lock
+COPY setup/restore_fast.R .
+RUN Rscript restore_fast.R
+
 # strip debug from shared libraries
 # see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
-COPY ./renv.lock.init .
-RUN R -q -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
+RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB')" && \
     R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
     strip --strip-debug $RENV_LIB/*/libs/*.so
 RUN R -q -e "renv::deactivate()"
