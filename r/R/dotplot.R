@@ -57,10 +57,13 @@ runDotPlot <- function(req, data) {
   subset_cells <- colnames(data)[!is.na(data$dotplot_groups)]
   data <- subset(data, cells = subset_cells)
 
+
   # Get marker genes or requested gene names.
   if (use_marker_genes) {
+    group_by_cell_sets_cell_ids <- lapply(group_by_cell_sets, function(x) x[["cellIds"]])
+
     num_features <- req$body$numberOfMarkers
-    all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets)
+    all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets_cell_ids)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
   } else {
@@ -71,17 +74,27 @@ runDotPlot <- function(req, data) {
   }
 
   dotplot_data <- Seurat::DotPlot(data, assay = "RNA", features = features$input, group.by = "dotplot_groups")$data
+
   # features.plot has the ensemble ids: get gene symbols
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
-  dotplot_data <- dotplot_data[stringr::str_order(dotplot_data$id, numeric = TRUE), ]
+  dotplot_data <- dotplot_data[order(as.numeric(dotplot_data$id)), ]
   dotplot_data <- dotplot_data %>%
     dplyr::transmute(
-      cellSets = as.character(id),
-      geneName = as.character(name),
+      cellSetsIdx = id,
+      geneNameIdx = factor(name),
       avgExpression = avg.exp.scaled,
       cellsPercentage = pct.exp
     )
 
-  res <- purrr::transpose(dotplot_data)
-  return(res)
+  dotplot_data <- as.list(dotplot_data)
+
+  # Store repeating entries as arrays
+  dotplot_data$cellSetsNames <- levels(dotplot_data$cellSetsIdx)
+  dotplot_data$geneNames <- levels(dotplot_data$geneNameIdx)
+
+  # Adjust idx to start from 0 as expected in the UI
+  dotplot_data$cellSetsIdx <- as.integer(dotplot_data$cellSetsIdx) - 1
+  dotplot_data$geneNameIdx <- as.integer(dotplot_data$geneNameIdx) - 1
+
+  return(dotplot_data)
 }

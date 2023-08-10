@@ -2,19 +2,29 @@
 #'
 #' @param data Seurat object
 #' @param genes data.frame of genes of interest, with columns "input" and "name"
+#' @param downsample_cell_ids vector. optional. If defined, only the expression is downsampled into these cells (every other cell is covered with 0's)
 #'
 #' @return list to send to the UI
 #' @export
 #'
-getGeneExpression <- function(data, genes) {
+getGeneExpression <- function(data, genes, downsample_cell_ids) {
   expression_values <- getExpressionValues(data, genes)
-  stats <- summaryStats(expression_values)
 
-  expression_values <-
-    lapply(expression_values, formatExpression, data@meta.data$cells_id)
+  # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
+  stats <- getStats(expression_values)
+
+  # If downsample_cell_ids, replace data and expression_values with the downsampled version
+  if (!missing(downsample_cell_ids)) {
+    data <- subsetIds(data, downsample_cell_ids)
+    expression_values <- getExpressionValues(data, genes)
+  }
+
+  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
+
+  expression_values <- lapply(expression_values, formatExpression, data@meta.data$cells_id)
 
   return(list(
-    orderedGeneNames = as.list(names(stats)),
+    orderedGeneNames = ordered_gene_names,
     stats = stats,
     rawExpression = expression_values$rawExpression,
     truncatedExpression = expression_values$truncatedExpression,
@@ -53,6 +63,7 @@ getExpressionValues <- function(data, genes) {
 getRawExpression <- function(data, genes) {
   rawExpression <-
     Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE])
+
   rawExpression <- data.table::as.data.table(rawExpression)
 
   symbol_idx <- match(colnames(rawExpression), genes$input)
@@ -154,23 +165,18 @@ scaleExpression <- function(rawExpression) {
 }
 
 
-summaryStats <- function(data) {
-  return(purrr::map2(
-    data$rawExpression,
-    data$truncatedExpression,
-    summaryStatsAux
-  ))
-}
+getStats <- function(data) {
+  stats_unsafe <- list(
+    rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)),
+    rawStdev = unname(apply(data$rawExpression, 2,  sd, na.rm = TRUE)),
+    truncatedMin = unname(apply(data$truncatedExpression, 2,  min, na.rm = TRUE)),
+    truncatedMax = unname(apply(data$truncatedExpression, 2,  max, na.rm = TRUE))
+  )
 
-summaryStatsAux <- function(raw, trunc) {
-  return(list(
-    rawMean = mean(raw, na.rm = TRUE),
-    rawStdev = sd(raw, na.rm = TRUE),
-    truncatedMin = min(trunc, na.rm = TRUE),
-    truncatedMax = max(trunc, na.rm = TRUE)
-  ))
-}
+  stats <- lapply(stats_unsafe, ensure_is_list_in_json)
 
+  return(stats)
+}
 
 #' Convert data.table to CSC sparse matrix
 #'

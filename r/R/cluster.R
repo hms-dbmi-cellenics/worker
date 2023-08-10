@@ -38,9 +38,10 @@ runClusters <- function(req, data) {
   updateCellSetsThroughApi(
     formatted_cell_sets,
     req$body$apiUrl,
-    data@misc$experimentId,
+    req$body$experimentId,
     type,
-    req$body$authJwt
+    req$body$authJwt,
+    append = FALSE
   )
 
   return(df)
@@ -81,12 +82,15 @@ getClusters <- function(type, resolution, data) {
   } else {
     graph_name <- paste0(Seurat::DefaultAssay(data), "_snn")
     if (!graph_name %in% names(data)) {
+      # number of dimensions used must be lte to available dimensions
+      dims <- 1:min(10, length(data@reductions[[active.reduction]]))
       data <-
         Seurat::FindNeighbors(
           data,
           annoy.metric = "cosine",
+          reduction = active.reduction,
+          dims = dims,
           verbose = FALSE,
-          reduction = active.reduction
         )
     }
     data <- Seurat::FindClusters(
@@ -116,7 +120,12 @@ getSNNiGraph <- function(data, active.reduction) {
 
   # if doesn't exist, run SNN
   if (!snn_name %in% names(data)) {
-    data <- Seurat::FindNeighbors(data, reduction = active.reduction)
+    dims <- 1:min(10, length(data@reductions[[active.reduction]]))
+    data <-
+      Seurat::FindNeighbors(data,
+                            reduction = active.reduction,
+                            dims = dims,
+                            verbose = FALSE)
   }
 
   # convert Seurat Graph object to igraph

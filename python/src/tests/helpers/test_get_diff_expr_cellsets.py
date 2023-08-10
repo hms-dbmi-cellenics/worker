@@ -10,7 +10,8 @@ class TestGetDiffExprCellSets:
     @pytest.fixture(autouse=True)
     def load_cellsets(self):
         with open(os.path.join("tests/data", "MockCellSet.json")) as f:
-            self.cellsets = json.load(f)
+            cell_sets = json.load(f)
+            self.cellsets = cell_sets["cellSets"]
 
     def test_should_throw_error_if_1st_cell_sets_is_empty(self):
         basis_name = "patient-b"

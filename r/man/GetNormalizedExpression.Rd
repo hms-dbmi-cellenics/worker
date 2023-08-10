@@ -7,11 +7,7 @@
 GetNormalizedExpression(req, data)
 }
 \arguments{
-\item{req}{{body: {
-filterBy: Cellsets to subset the experiment with
-applyFilter: TRUE/FALSE determines whether to subset the data
-}
-}}
+\item{req}{{ body: { subsetBy: cell ids to subset the matrix with } }}
 
 \item{data}{SeuratObject}
 }

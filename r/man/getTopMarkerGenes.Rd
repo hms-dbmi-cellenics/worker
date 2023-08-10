@@ -7,7 +7,7 @@
 getTopMarkerGenes(
   nFeatures,
   data,
-  cellSets,
+  cellSetsIds,
   aucMin = 0.3,
   pctInMin = 20,
   pctOutMax = 70
@@ -18,8 +18,6 @@ getTopMarkerGenes(
 
 \item{data}{SeuratObject}
 
-\item{cellSets}{list of cellsets to split for marker gene selection}
-
 \item{aucMin}{min area under the wilcoxon test's ROC for a gene to be
 considered a marker}
 
@@ -28,6 +26,8 @@ gene for it to be considered a marker}
 
 \item{pctOutMax}{max percentage of cells outside cellset that can express a
 gene for it to be considered a marker}
+
+\item{cellSets}{list of cellsets to split for marker gene selection}
 }
 \value{
 data.frame of top marker genes

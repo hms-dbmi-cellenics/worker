@@ -1,5 +1,5 @@
 {
-	"name": "Biomage Python Worker",
+	"name": "Cellenics Python Worker",
 	"workspaceFolder": "/python",
     "dockerComposeFile": ["../docker-compose.yaml"],
     "service": "python",

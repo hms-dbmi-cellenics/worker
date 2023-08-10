@@ -1,7 +1,6 @@
 import gzip
 import io
 import ujson
-import pandas as pd
 from logging import info
 
 import aws_xray_sdk as xray
@@ -26,8 +25,9 @@ class Response:
         info("Starting compression before upload to s3")
         gzipped_body = io.BytesIO()
         with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            if isinstance(self.result.data, pd.DataFrame):
-                self.result.data.to_csv(zipfile)
+            if (isinstance(self.result.data, str)):
+                info('Compressing string work result')
+                zipfile.write(self.result.data)
             else:
                 ujson.dump(self.result.data, zipfile)
 
@@ -50,7 +50,7 @@ class Response:
         return message
 
     @xray_recorder.capture("Response._upload")
-    def _upload(self, response_data):
+    def _upload(self, response_data, type):
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
 
@@ -61,7 +61,12 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        client.upload_fileobj(response_data, self.s3_bucket, ETag)
+        if (type == "path"):
+            with open(response_data, 'rb') as file:
+                client.upload_fileobj(file, self.s3_bucket, ETag)
+        else:
+            client.upload_fileobj(response_data, self.s3_bucket, ETag)
+
 
         client.put_object_tagging(
             Key=ETag,
@@ -93,6 +98,7 @@ class Response:
                 f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
 
+        io.Emit(f'Heartbeat-{self.request["experimentId"]}', {"type": "WorkResponse", "etag": self.request["ETag"], "info": self.request})
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
@@ -102,10 +108,13 @@ class Response:
         info(f"Request {self.request['ETag']} processed, response:")
 
         if not self.error and self.cacheable:
-            response_data = self._construct_data_for_upload()
-
             info("Uploading response to S3")
-            self._upload(response_data)
+            if (self.result.data == config.RDS_PATH):
+                response_data = self.result.data
+                self._upload(response_data, "path")
+            else:
+                response_data = self._construct_data_for_upload()
+                self._upload(response_data, "obj")
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()

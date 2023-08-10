@@ -1,7 +1,6 @@
 import json
 
 import backoff
-import pandas as pd
 import requests
 from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
@@ -11,14 +10,10 @@ from ..helpers.remove_regex import remove_regex
 from ..result import Result
 from ..tasks import Task
 
-
 class ListGenes(Task):
     def _format_result(self, result, total):
-        # convert result to list of row dicts
-        result = result.to_dict(orient="records")
-
         # Return a list of formatted results.
-        return Result({"total": total, "rows": result})
+        return Result({"total": total,  **result})
 
     def _format_request(self):
         request = self.task_def
@@ -58,6 +53,6 @@ class ListGenes(Task):
         data = result.get("data")
 
         total = data["full_count"]
-        result = pd.DataFrame.from_dict(data["gene_results"])
+        result = data["gene_results"]
 
         return self._format_result(result, total)

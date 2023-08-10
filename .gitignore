@@ -1,9 +1,8 @@
 .DS_Store
 .vscode/
-
 data/**
-
 !data/test
 data/test/**
 !data/test/*.gz
 .Rproj.user
+r/cache_marker_genes

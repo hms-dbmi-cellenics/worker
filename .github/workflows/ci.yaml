@@ -6,14 +6,47 @@ on:
   release:
     types:
       - released
-  pull_request:
+  pull_request_target:
     branches:
       - master
+    types:
+      - labeled
+      - unlabeled
+      - opened
+      - synchronize
+      - reopened
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  is-safe-to-run:
+    name: Sensitive jobs are safe to be run
+    runs-on: ubuntu-20.04
+    if: (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe to run')) || github.event_name == 'release' || github.event_name == 'push'
+    steps:
+      - id: is-safe-to-run
+        name: Is safe to run
+        run: |-
+          echo "Safe to run, checks will proceed"
+
+  is-not-safe-to-run:
+    name: Sensitive jobs aren't labeled safe to be run
+    runs-on: ubuntu-20.04
+    if: (github.event_name == 'pull_request_target' && !contains(github.event.pull_request.labels.*.name, 'safe to run'))
+    steps:
+      - id: is-not-safe-to-run
+        name: The pull request hasn't been labeled safe to run
+        run: |-
+          echo "Pull request not labeled safe to run"
+          exit 1
+
   uncheck-integration-test:
     name: Mark integration test as not run
     runs-on: ubuntu-20.04
-    if: github.event_name == 'pull_request'
+    needs: is-safe-to-run
+    if: github.event_name == 'pull_request_target'
     steps:
       - id: get-pr-body
         name: Get the current PR body
@@ -29,14 +62,14 @@ jobs:
           EOF
           )
 
-          UNCHECKED_BODY="${UNCHECKED_BODY//'%'/'%25'}"
-          UNCHECKED_BODY="${UNCHECKED_BODY//$'\n'/'%0A'}"
-          UNCHECKED_BODY="${UNCHECKED_BODY//$'\r'/'%0D'}"
-
           echo "Unchecked PR body"
           echo $UNCHECKED_BODY
 
-          echo "::set-output name=body::$UNCHECKED_BODY"
+          # This sets multiline strings into the output variable
+          # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-of-a-multiline-string
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$UNCHECKED_BODY" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - id: uncheck-integration-checkbox
         name: Uncheck the integration checkbox
@@ -51,6 +84,7 @@ jobs:
   build-docker:
     name: Build Docker container
     runs-on: ubuntu-20.04
+    needs: is-safe-to-run
     strategy:
       matrix:
         project: ["python", "r"]
@@ -58,6 +92,7 @@ jobs:
       repo-name: ${{ steps.ref.outputs.repo-name }}
       image-tag: ${{ steps.ref.outputs.image-tag }}
       ref-id: ${{ steps.ref.outputs.ref-id }}
+      timestamp: ${{ steps.ref.outputs.timestamp }}
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -72,7 +107,7 @@ jobs:
           # This will take a ref like `refs/heads/master`
           # and turn it into `refs-heads-master`
           REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
-          echo "::set-output name=ref-id::$REF_ID"
+          echo "ref-id=$REF_ID" >> $GITHUB_OUTPUT
 
           # the final tag is something like:
           # refs-heads-master-a4f8bc313dae
@@ -83,27 +118,37 @@ jobs:
           # in push events, the latest commit of the master branch is GITHUB_SHA
           # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
 
+          TIMESTAMP=$(date +%s)
+
           if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "released" ]; then
             COMMIT_SHA=""
             IMAGE_TAG=$REF_ID
+            TIMESTAMP=""
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
+            TIMESTAMP=$TIMESTAMP
           else
             COMMIT_SHA=$GITHUB_SHA
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
+            TIMESTAMP=$TIMESTAMP
           fi
 
           # IMAGE_TAG is used in the Build Docker Image step.
           # We can easily build the image-tag from REF_ID and COMMIT_SHA for non-production releases.
           # But we can not easily create the image tag for production releases, so we're bulding it here
-          echo "::set-output name=image-tag::$IMAGE_TAG"
+          echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-          # This will take a GitHub repo name like `biomage-org/iac`
+          # TIMESTAMP is used to postfix images in the "push docker images to ECR" step.
+          # The timestamp is used by Flux to auto update images for staging environments.
+          # Images for production uses semantic versioning to determine the latest image.
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+          # This will take a GitHub repo name like `hms-dbmi-cellenics/iac`
           # and turns it into `iac`. This will be the name of the
           # ECR repository.
           IMAGE_REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
-          echo "::set-output name=repo-name::$IMAGE_REPO_NAME"
+          echo "repo-name=$IMAGE_REPO_NAME" >> $GITHUB_OUTPUT
 
       - id: ref-previous
         name: Format docker tag and repository name for the previous pushed image.
@@ -112,20 +157,20 @@ jobs:
             echo "This is a pull request, base ref and sha set to the target branch."
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
-            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+            echo "tag=$BASE_REF-$BASE_SHA" >> $GITHUB_OUTPUT
           fi
 
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "This is a push, base ref and sha set to the previous commit."
             BASE_REF=$(echo $GITHUB_REF | sed 's/\//-/g')
             BASE_SHA="${{ github.event.before }}"
-            echo "::set-output name=tag::$BASE_REF-$BASE_SHA"
+            echo "tag=$BASE_REF-$BASE_SHA" >> $GITHUB_OUTPUT
           fi
 
           if [ "${{ github.event_name }}" = "release" ]; then
             echo "This is a release, base ref and sha set to the current commit."
             BASE_SHA="$GITHUB_SHA"
-            echo "::set-output name=tag::refs-heads-master-$BASE_SHA"
+            echo "tag=refs-heads-master-$BASE_SHA" >> $GITHUB_OUTPUT
           fi
 
       - id: set-up-creds
@@ -134,7 +179,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -186,7 +231,7 @@ jobs:
           echo Pushing image $IMAGE_NAME-builder to ECR.
           docker push $IMAGE_NAME-builder
 
-          echo Pushing image $IMAGE_NAME-builder-ci to ECR.
+          echo Pushing image $IMAGE_NAME-ci to ECR.
           docker push $IMAGE_NAME-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
@@ -197,7 +242,7 @@ jobs:
     # python:3.7-buster docker image, this runs on
     # ubuntu-20.04. earlier versions of ubuntu will break the test
     runs-on: ubuntu-20.04
-    needs: build-docker
+    needs: [build-docker, is-safe-to-run]
     env:
       CI: "true"
     steps:
@@ -211,7 +256,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -251,18 +296,29 @@ jobs:
         name: Push docker images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-[python/r] to ECR.
+
           docker tag $IMAGE_NAME-python-ci $IMAGE_NAME-python
           docker tag $IMAGE_NAME-r-ci $IMAGE_NAME-r
 
           docker push $IMAGE_NAME-python
           docker push $IMAGE_NAME-r
+
+          if [ ! -z "$TIMESTAMP" ]; then
+            echo Pushing timestamped $IMAGE_NAME-$TIMESTAMP-[python/r] to ECR
+            docker tag $IMAGE_NAME-python $IMAGE_NAME-$TIMESTAMP-python
+            docker tag $IMAGE_NAME-r $IMAGE_NAME-$TIMESTAMP-r
+
+            docker push $IMAGE_NAME-$TIMESTAMP-python
+            docker push $IMAGE_NAME-$TIMESTAMP-r
+          fi
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+          TIMESTAMP: ${{ needs.build-docker.outputs.timestamp }}
 
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-20.04
-    needs: ["test", "build-docker"]
+    needs: [test, build-docker, is-safe-to-run]
     strategy:
       max-parallel: 1
       matrix:
@@ -278,77 +334,143 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - id: install-yq
-        name: Install yq for modifying the deployment spec.
-        run: |-
-          sudo wget https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq
-
       - id: fill-metadata
         name: Fill out a new HelmRelease resource
         run: |-
-          DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
-          echo "::set-output name=deployment-name::$DEPLOYMENT_NAME"
+          export DEPLOYMENT_NAME=$(echo $GITHUB_REPOSITORY | awk -F '/' '{print $2}')
+          echo "deployment-name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
 
+          # Deployment config for `production-default`
           if [ "${{ matrix.environment }}" = "production" ]; then
-            SANDBOX_ID="default"
-            CHART_REF="$GITHUB_SHA"
-            KUBERNETES_ENV="production"
-            REPLICA_COUNT="2"
-            VERSION_NUMBER=${REF_ID/refs-tags-/}
-            IMAGE_GLOB="${REF_ID/$VERSION_NUMBER/*}"
-            MEMORY_REQUEST="28Gi"
+            export SANDBOX_ID="default"
+            export CHART_REF_TYPE="commit"
+            export CHART_REF="$GITHUB_SHA"
+            export KUBERNETES_ENV="production"
+            export IMAGE_NAME="$IMAGE_TAG"
+            export REPLICA_COUNT="1"
+            export IMAGE_PATTERN="^refs-tags-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)"
+            export IMAGE_EXTRACT='$version'
+            export IMAGE_POLICY_TYPE="semver"
+            export IMAGE_POLICY_KEY="range"
+            export IMAGE_POLICY_VALUE=">=0.0.0"
+            export MEMORY_REQUEST="44Gi"
+            export MANIFEST_PATH="./production"
           fi
 
+          # Deployment config for `staging-default`
           if [ "${{ matrix.environment }}" = "develop" ]; then
-            SANDBOX_ID="default"
-            CHART_REF="$GITHUB_SHA"
-            KUBERNETES_ENV="staging"
-            REPLICA_COUNT="1"
-            IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="28Gi"
+            export SANDBOX_ID="default"
+            export CHART_REF_TYPE="branch"
+            export CHART_REF="master"
+            export KUBERNETES_ENV="staging"
+            export IMAGE_NAME="$IMAGE_TAG-$TIMESTAMP"
+            export REPLICA_COUNT="0"
+            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
+            export IMAGE_EXTRACT='$timestamp'
+            export IMAGE_POLICY_TYPE="numerical"
+            export IMAGE_POLICY_KEY="order"
+            export IMAGE_POLICY_VALUE="asc"
+            export MEMORY_REQUEST="20Gi"
+            export MANIFEST_PATH="./staging"
           fi
 
+          # Deployment config for other staging env i.e. non `default`
           if [ "${{ matrix.environment }}" = "staging" ]; then
-            SANDBOX_ID="STAGING_SANDBOX_ID"
-            CHART_REF="STAGING_CHART_REF"
-            KUBERNETES_ENV="staging"
-            REPLICA_COUNT="0"
-            IMAGE_GLOB="$REF_ID-*"
-            MEMORY_REQUEST="4Gi"
+
+            export CHART_REF="$GITHUB_HEAD_REF"
+
+            # $GITHUB_HEAD_REF references the source branch of the pull request in a workflow run
+            # $GITHUB_HEAD_REF does not have a value when we merge, because merging is counted as a "push" event to master branch
+            # Therefore we set this value to "master" manually
+            if [ -z "$CHART_REF" ]; then
+              export CHART_REF="master"
+            fi
+
+            export SANDBOX_ID="STAGING_SANDBOX_ID"
+            export CHART_REF_TYPE="branch"
+            export KUBERNETES_ENV="staging"
+            export IMAGE_NAME="$IMAGE_TAG-$TIMESTAMP"
+            export REPLICA_COUNT="0"
+            export IMAGE_PATTERN="^$REF_ID-[a-f0-9]+-(?P<timestamp>[0-9]+)"
+            export IMAGE_EXTRACT='$timestamp'
+            export IMAGE_POLICY_TYPE="numerical"
+            export IMAGE_POLICY_KEY="order"
+            export IMAGE_POLICY_VALUE="asc"
+            export MEMORY_REQUEST="4Gi"
+            export MANIFEST_PATH="./staging"
           fi
 
-          echo "::set-output name=sandbox-id::$SANDBOX_ID"
-          echo "::set-output name=kubernetes-env::$KUBERNETES_ENV"
+          echo "sandbox-id=$SANDBOX_ID" >> $GITHUB_OUTPUT
+          echo "kubernetes-env=$KUBERNETES_ENV" >> $GITHUB_OUTPUT
 
-          yq w -d1 .flux.yaml metadata.name "$DEPLOYMENT_NAME" \
-          | yq w -d1 - metadata.namespace "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d0 - metadata.name "$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d0 - metadata.labels.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - metadata.labels.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.releaseName "$DEPLOYMENT_NAME" \
-          | yq w -d1 - spec.chart.ref "$CHART_REF" \
-          | yq w -d1 - spec.values.kubernetes.env "$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.serviceAccount.iamRole "worker-role-$KUBERNETES_ENV" \
-          | yq w -d1 - spec.values.sandboxId "$SANDBOX_ID" \
-          | yq w -d1 - spec.values.replicaCount $REPLICA_COUNT \
-          | yq w -d1 - spec.values.r.image "$IMAGE_NAME-r" \
-          | yq w -d1 - spec.values.r.memoryRequest "$MEMORY_REQUEST" \
-          | yq w -d1 - spec.values.python.image "$IMAGE_NAME-python" \
-          | yq w -d1 - spec.values.datadogTags "kube_namespace:$DEPLOYMENT_NAME-$SANDBOX_ID" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/r]" "glob:$IMAGE_GLOB-r" \
-          | yq w -d1 - "metadata.annotations[filter.fluxcd.io/python]" "glob:$IMAGE_GLOB-python" \
-          > $DEPLOYMENT_NAME.yaml
+          export GITHUB_OWNER=${{ github.repository_owner }}
+          export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
+          export R_IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME-r:tag\"}"
+          export CHART_CRD_NAME="$DEPLOYMENT_NAME-chart"
+          export PYTHON_IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME-python:tag\"}"
+
+          yq '
+            select(di == 0).metadata.name = strenv(NAMESPACE) |
+            select(di == 0).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 1).spec.url = "https://github.com/" + strenv(GITHUB_OWNER) + "/worker" |
+            select(di == 1).metadata.name = strenv(CHART_CRD_NAME) |
+            select(di == 1).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 1).spec.ref.[strenv(CHART_REF_TYPE)] = strenv(CHART_REF) |
+            select(di == 2).metadata.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 2).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 2).spec.image = strenv(REGISTRY) + "/" + strenv(DEPLOYMENT_NAME) |
+            select(di == 3).metadata.name = strenv(DEPLOYMENT_NAME) + "-r" |
+            select(di == 3).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 3).spec.imageRepositoryRef.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 3).spec.imageRepositoryRef.namespace = strenv(NAMESPACE) |
+            select(di == 3).spec.filterTags.pattern = strenv(IMAGE_PATTERN) + "-r$" |
+            select(di == 3).spec.filterTags.extract = strenv(IMAGE_EXTRACT) |
+            select(di == 3).spec.policy.[strenv(IMAGE_POLICY_TYPE)].[strenv(IMAGE_POLICY_KEY)] = strenv(IMAGE_POLICY_VALUE) |
+            select(di == 4).metadata.name = strenv(DEPLOYMENT_NAME) + "-python" |
+            select(di == 4).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 4).spec.imageRepositoryRef.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 4).spec.filterTags.pattern = strenv(IMAGE_PATTERN) + "-python$" |
+            select(di == 4).spec.filterTags.extract = strenv(IMAGE_EXTRACT) |
+            select(di == 4).spec.policy.[strenv(IMAGE_POLICY_TYPE)].[strenv(IMAGE_POLICY_KEY)] = strenv(IMAGE_POLICY_VALUE) |
+            select(di == 5).metadata.name = strenv(DEPLOYMENT_NAME) + "-image-update" |
+            select(di == 5).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 5).spec.update.path = strenv(MANIFEST_PATH) |
+            select(di == 6).metadata.name = strenv(DEPLOYMENT_NAME) |
+            select(di == 6).metadata.namespace = strenv(NAMESPACE) |
+            select(di == 6).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 6).spec.releaseName = strenv(DEPLOYMENT_NAME) |
+            select(di == 6).spec.chart.spec.sourceRef.name = strenv(CHART_CRD_NAME) |
+            select(di == 6).spec.chart.spec.sourceRef.namespace = strenv(NAMESPACE) |
+            select(di == 6).spec.values.kubernetes.env = strenv(KUBERNETES_ENV) |
+            select(di == 6).spec.values.serviceAccount.iamRole = "worker-role-" + strenv(KUBERNETES_ENV) |
+            select(di == 6).spec.values.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 6).spec.values.replicaCount = env(REPLICA_COUNT) |
+            select(di == 6).spec.values.r.image.registry = strenv(REGISTRY) |
+            select(di == 6).spec.values.r.image.repository = strenv(REPOSITORY) |
+            select(di == 6).spec.values.r.image.tag = strenv(IMAGE_NAME) + "-r" |
+            select(di == 6).spec.values.r.image.tag line_comment = strenv(R_IMAGE_POLICY_TAG) |
+            select(di == 6).spec.values.r.memoryRequest = strenv(MEMORY_REQUEST) |
+            select(di == 6).spec.values.python.image.registry = strenv(REGISTRY) |
+            select(di == 6).spec.values.python.image.repository = strenv(REPOSITORY) |
+            select(di == 6).spec.values.python.image.tag = strenv(IMAGE_NAME) + "-python" |
+            select(di == 6).spec.values.python.image.tag line_comment = strenv(PYTHON_IMAGE_POLICY_TAG) |
+            select(di == 6).spec.values.datadogTags = "kube_namespace:" + strenv(NAMESPACE)
+          ' .flux.yaml > $DEPLOYMENT_NAME.yaml
 
           cat $DEPLOYMENT_NAME.yaml
         env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, needs.build-docker.outputs.repo-name, needs.build-docker.outputs.image-tag) }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          IMAGE_TAG: ${{ needs.build-docker.outputs.image-tag }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ needs.build-docker.outputs.repo-name }}
+          TIMESTAMP: ${{ needs.build-docker.outputs.timestamp }}
 
       - name: Push production/develop template to releases
         if:
@@ -388,7 +510,7 @@ jobs:
   ready-to-merge:
     name: Ready for merging
     runs-on: ubuntu-20.04
-    needs: deploy
+    needs: [deploy, is-safe-to-run]
     steps:
       - id: ready-to-merge
         name: Signal readiness to merge
@@ -398,7 +520,7 @@ jobs:
   report-if-failed:
     name: Report if workflow failed
     runs-on: ubuntu-20.04
-    needs: [build-docker, test, deploy]
+    needs: [build-docker, test, deploy, is-safe-to-run]
     if: failure() && github.ref == 'refs/heads/master'
     steps:
       - id: send-to-slack

@@ -1,5 +1,15 @@
 library('mockery')
 
+mock_req <- function() {
+  req <- list(
+    body = list(
+      type = "umap",
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
+    )
+  )
+}
+
 mock_scdata <- function() {
   data("pbmc_small", package = "SeuratObject", envir = environment())
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
@@ -34,7 +44,8 @@ test_that("TSNE embedding works", {
   req <- list(
     body = list(
       type = reduction_method,
-      config = list(perplexity = 10, learningRate = 100)
+      config = list(perplexity = 10, learningRate = 100),
+      use_saved = FALSE
     )
   )
 
@@ -65,7 +76,8 @@ test_that("UMAP embedding works", {
   req <- list(
     body = list(
       type = reduction_method,
-      config = list(minimumDistance = 0.1, distanceMetric = "cosine")
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
     )
   )
 
@@ -213,4 +225,22 @@ test_that("assignEmbedding assigns embedding correctly for tSNE", {
 
   # Add 1 to test_cell_id because cell_id 0 corresponds to embedding [[1]]
   expect_equal(unname(resulting_embedding), mock_embedding[[test_cell_id + 1]])
+})
+
+test_that("can request saved embedding result", {
+  data <- suppressWarnings(mock_scdata())
+  req <- mock_req()
+  req$body$type <- "pca"
+  req$body$use_saved <- TRUE
+
+  res <- runEmbedding(req, data)
+
+  expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
+
+  expected_res <- expected_res %>%
+    as.data.frame() %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(PCS = list(c(PC_1, PC_2)))
+
+  expect_equal(res,expected_res$PCS)
 })

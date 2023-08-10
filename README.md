@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/biomage-org/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/biomage-org/worker)
+[![codecov](https://codecov.io/gh/hms-dbmi-cellenics/worker/branch/master/graph/badge.svg?token=3PHqr61GpH)](https://codecov.io/gh/hms-dbmi-cellenics/worker)
 worker
 ======
 
@@ -14,11 +14,11 @@ More specific details about the Python or the R part of the worker can be found 
 
 The worker is deployed as a Helm chart to an AWS-managed Kubernetes cluster and runs on a Fargate-managed node. The Helm chart template for the worker is located in `chart-infra/` folder.
 
- The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/biomage-org/worker/blob/master/.github/workflows/ci.yaml). 
+ The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/hms-dbmi-cellenics/worker/blob/master/.github/workflows/ci.yaml). 
 
 During a deployment, the worker Github Actions workflow does the following:
 - It pushes new worker images to ECR.
-- Adds deployment-specific configurations to the worker Helm chart. Pushes those deployment-specific configuration changes in [releases/](https://github.com/biomage-org/iac/tree/master/releases) folder in iac, under the relevant environment.
+- Adds deployment-specific configurations to the worker Helm chart. Pushes those deployment-specific configuration changes in [releases/](https://github.com/hms-dbmi-cellenics/iac/tree/master/releases) folder in iac, under the relevant environment.
 
 ## Development
 
@@ -160,8 +160,12 @@ where `1234` is the experiment id of your choice.
     This error is due to a bug in DNS resolution of Alpine-based containers running on early releases of Docker Desktop for Mac version 3.
 
     To fix this, you can download and use a previous version of Docker (e.g. 2.5.0.1) from https://docs.docker.com/docker-for-mac/release-notes/
-    
-4.  Error when attempting to start the worker saying something like:
+
+4.  When working locally only: `Keyboard interrupt` shows up non-stop, impeding the worker to ever start up.
+
+    We believe this error is related to the hot reload mechanism and probably having some temporary files that, on changing, trigger the hot reload non-stop. The workaround to be able to continue working is to disable hot-reload (so, for changes to go through, you'll need to restart the worker manually). Just performing [these changes](https://github.com/hms-dbmi-cellenics/worker/pull/76/files) in your local Dockerfiles should be enough
+
+5.  Error when attempting to start the worker saying something like:
 `botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://host.docker.internal:4566/biomage-source-development?...`
    
 First, check inframock is running. If it isn't, start it and try again. Otherwise, see below.

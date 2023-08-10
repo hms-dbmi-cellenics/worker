@@ -34,7 +34,8 @@ class TestResponse:
     def test_upload_returns_etag_as_key_when_uploading(self, mocked_client):
         r = Result({})
         resp = Response(self.request, r)
-        key = resp._upload(r)
+        type = "obj"
+        key = resp._upload(r, type)
 
         assert key == self.request["ETag"]
 
