@@ -6,19 +6,47 @@ on:
   release:
     types:
       - released
-  pull_request:
+  pull_request_target:
     branches:
       - master
+    types:
+      - labeled
+      - unlabeled
+      - opened
+      - synchronize
+      - reopened
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  is-safe-to-run:
+    name: Sensitive jobs are safe to be run
+    runs-on: ubuntu-20.04
+    if: (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe to run')) || github.event_name == 'release' || github.event_name == 'push'
+    steps:
+      - id: is-safe-to-run
+        name: Is safe to run
+        run: |-
+          echo "Safe to run, checks will proceed"
+
+  is-not-safe-to-run:
+    name: Sensitive jobs aren't labeled safe to be run
+    runs-on: ubuntu-20.04
+    if: (github.event_name == 'pull_request_target' && !contains(github.event.pull_request.labels.*.name, 'safe to run'))
+    steps:
+      - id: is-not-safe-to-run
+        name: The pull request hasn't been labeled safe to run
+        run: |-
+          echo "Pull request not labeled safe to run"
+          exit 1
+
   uncheck-integration-test:
     name: Mark integration test as not run
     runs-on: ubuntu-20.04
-    if: github.event_name == 'pull_request'
+    needs: is-safe-to-run
+    if: github.event_name == 'pull_request_target'
     steps:
       - id: get-pr-body
         name: Get the current PR body
@@ -56,6 +84,7 @@ jobs:
   build-docker:
     name: Build Docker container
     runs-on: ubuntu-20.04
+    needs: is-safe-to-run
     strategy:
       matrix:
         project: ["python", "r"]
@@ -213,7 +242,7 @@ jobs:
     # python:3.7-buster docker image, this runs on
     # ubuntu-20.04. earlier versions of ubuntu will break the test
     runs-on: ubuntu-20.04
-    needs: build-docker
+    needs: [build-docker, is-safe-to-run]
     env:
       CI: "true"
     steps:
@@ -289,7 +318,7 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-20.04
-    needs: ["test", "build-docker"]
+    needs: [test, build-docker, is-safe-to-run]
     strategy:
       max-parallel: 1
       matrix:
@@ -481,7 +510,7 @@ jobs:
   ready-to-merge:
     name: Ready for merging
     runs-on: ubuntu-20.04
-    needs: deploy
+    needs: [deploy, is-safe-to-run]
     steps:
       - id: ready-to-merge
         name: Signal readiness to merge
@@ -491,7 +520,7 @@ jobs:
   report-if-failed:
     name: Report if workflow failed
     runs-on: ubuntu-20.04
-    needs: [build-docker, test, deploy]
+    needs: [build-docker, test, deploy, is-safe-to-run]
     if: failure() && github.ref == 'refs/heads/master'
     steps:
       - id: send-to-slack
