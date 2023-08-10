@@ -36,8 +36,8 @@ test_that("List of genes generates the expected return format", {
 
   res <- getList(req, data)
 
-  # number of genes is number of possible DE rows
-  expect_equal(res$full_count, nrow(data))
+  # number of genes is the min of pagination limit and potentially DE genes
+  expect_equal(res$full_count, min(nrow(data), req$body$limit))
 
   # returning only at most limit number of genes
   expect_equal(nrow(res$gene_results), req$body$limit)
@@ -140,7 +140,8 @@ test_that("Ends with pattern is applied", {
 
   grep_results <- grepl(pat, rownames(data))
   expect_true(all(res$gene_results$gene_names %in% data@misc$gene_annotations[grep_results, "name"]))
-  expect_equal(res$full_count, sum(grep_results == TRUE))
+  # number of genes is the min of pagination limit and DE genes
+  expect_equal(res$full_count, min(sum(grep_results == TRUE), req$body$limit))
 })
 
 test_that("Contains pattern is applied", {
