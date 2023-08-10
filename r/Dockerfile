@@ -26,6 +26,9 @@ COPY ./renv.lock.init ./renv.lock
 COPY setup/restore_fast.R .
 RUN Rscript restore_fast.R
 
+# an initial lockfile is used to avoid frequent re-installs
+# use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
+# delete renv cache
 # strip debug from shared libraries
 # see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
 RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB')" && \
