@@ -510,7 +510,7 @@ jobs:
   ready-to-merge:
     name: Ready for merging
     runs-on: ubuntu-20.04
-    needs: [deploy, is-safe-to-merge]
+    needs: [deploy, is-safe-to-run]
     steps:
       - id: ready-to-merge
         name: Signal readiness to merge
