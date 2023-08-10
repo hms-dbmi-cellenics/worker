@@ -72,7 +72,7 @@ remotes[is.github.no.ver] <- paste0(remotes[is.github.no.ver], '@', shas[is.gith
 # renv::snapshot()
 
 prop.install <- pkgdepends::new_pkg_installation_proposal(
-  remotes, config = list(library = .libPaths()[[1]], dependencies = NA), policy = 'lazy')
+  remotes, config = list(library = Sys.getenv('RENV_LIB'), dependencies = NA), policy = 'lazy')
 
 # will be cached for dl
 prop.install$download()
