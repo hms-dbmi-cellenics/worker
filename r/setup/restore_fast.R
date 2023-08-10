@@ -1,4 +1,4 @@
-renv::install('pkgdepends')
+renv::install('pkgdepends@0.6.0')
 lockfile <- renv:::renv_lockfile_read('renv.lock')
 
 # get records to install
