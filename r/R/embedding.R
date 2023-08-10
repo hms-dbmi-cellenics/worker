@@ -18,6 +18,7 @@
 #' @export
 runEmbedding <- function(req, data) {
   method <- req$body$type
+  use_saved <- req$body$use_saved
   config <- req$body$config
   pca_nPCs <- 30
 
@@ -39,8 +40,10 @@ runEmbedding <- function(req, data) {
   message("Active numPCs --> ", pca_nPCs)
   message("Number of cells/sample:")
   table(data$samples)
-
-  data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
+  
+  if (!use_saved)
+    data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
+  
   df_embedding <- Seurat::Embeddings(data, reduction = method)
 
   # Order embedding by cells id in ascending form
