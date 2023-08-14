@@ -99,7 +99,11 @@ jobs:
     steps:
       - id: checkout
         name: Check out source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
 
       - id: ref
         name: Format docker tag and repository name.
@@ -248,7 +252,11 @@ jobs:
     steps:
       - id: checkout
         name: Check out source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
 
       - id: set-up-creds
         name: Configure AWS credentials
@@ -326,7 +334,11 @@ jobs:
     steps:
       - id: checkout
         name: Check out source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
 
       - id: setup-aws
         name: Configure AWS credentials
