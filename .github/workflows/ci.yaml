@@ -72,7 +72,7 @@ jobs:
         name: Check out source code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: fast-build
 
       - id: ref
         name: Format docker tag and repository name.
