@@ -59,8 +59,6 @@ is.github.no.ver <- !grepl('@', remotes) & is.github
 shas <- sapply(records, `[[`, 'RemoteSha')
 remotes[is.github.no.ver] <- paste0(remotes[is.github.no.ver], '@', shas[is.github.no.ver])
 
-# TODO: figure out why some Bioconductor and GithHub packages aren't being installed
-
 # try all at once
 # invalid version specification 'NA' was from Matrix.utils and spatstat.core
 # too resolve: search for packages removed from CRAN
@@ -72,11 +70,26 @@ remotes[is.github.no.ver] <- paste0(remotes[is.github.no.ver], '@', shas[is.gith
 # renv::snapshot()
 
 prop.install <- pkgdepends::new_pkg_installation_proposal(
-  remotes, config = list(library = Sys.getenv('RENV_PATHS_LIBRARY'), dependencies = NA), policy = 'lazy')
+  remotes, config = list(library = Sys.getenv('RENV_LIB'), dependencies = NA), policy = 'lazy')
 
 # will be cached for dl
 prop.install$download()
 prop.install$install()
+
+# some Bioconductor and GitHub packages aren't being installed
+# we can see which one
+current <- renv:::snapshot(
+  project = '.',
+  library = Sys.getenv('RENV_LIB'),
+  lockfile = NULL,
+  type = 'all'
+)
+
+# TODO: skip 'crossgrade' packages = same version installed but lockfile record names or info differ
+diff <- renv:::renv_lockfile_diff_packages(current, lockfile)
+need <- names(diff)[diff != 'crossgrade']
+
+# TODO: figure out why pkgdepends couldn't install 'need'
 
 # cleanup downloaded packages
 cache_info <- pkgcache::pkg_cache_summary()

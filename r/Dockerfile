@@ -13,8 +13,9 @@ ENV GITHUB_PAT $GITHUB_PAT
 RUN R -q -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
 # add renv library to .libPaths
-ENV RENV_PATHS_LIBRARY=/src/lib
-RUN echo ".libPaths(c('$RENV_PATHS_LIBRARY', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+# this is path with R package folders when renv deactivated or not used
+ENV RENV_LIB=/src/lib
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
 # install renv to install required R packages
 RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" && \
@@ -28,12 +29,20 @@ RUN Rscript restore_fast.R
 
 # an initial lockfile is used to avoid frequent re-installs
 # use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
-# delete renv cache
+#
+# explicit library to install R packages:
+# renv looks for installed R packages in different folder
+# okay since only using renv for restore
+#
+# reduce size of image by:
+# deleting renv cache
 # strip debug from shared libraries
 # see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
-RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_PATHS_LIBRARY')" && \
+RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB')" && \
     R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_PATHS_LIBRARY/*/libs/*.so
+    strip --strip-debug $RENV_LIB/*/libs/*.so
+
+# deactivate so that above .libPaths used
 RUN R -q -e "renv::deactivate()"
 
 # install miniconda and python umap-learn for RunUMAP
@@ -46,9 +55,9 @@ RUN R -q -e "reticulate::install_miniconda()" && \
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
-RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_PATHS_LIBRARY', clean = TRUE)" && \
+RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
     R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_PATHS_LIBRARY/*/libs/*.so
+    strip --strip-debug $RENV_LIB/*/libs/*.so
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -72,9 +81,9 @@ ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 # get source code and R packages
 COPY --from=builder /src /src
 
-# add renv library to .libPaths
+# add path where renv installed R packages to .libPaths
 ENV RENV_LIB=/src/lib
-RUN echo ".libPaths(c('$RENV_PATHS_LIBRARY', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
+RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
 # install runtime system deps
 # cleanup setup files
