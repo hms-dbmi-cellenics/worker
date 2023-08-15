@@ -27,20 +27,9 @@ COPY ./renv.lock.init ./renv.lock
 COPY setup/restore_fast.R .
 RUN Rscript restore_fast.R
 
-# an initial lockfile is used to avoid frequent re-installs
-# use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
-#
-# explicit library to install R packages:
-# renv looks for installed R packages in different folder
-# okay since only using renv for restore
-#
-# reduce size of image by:
-# deleting renv cache
-# strip debug from shared libraries
-# see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
-RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB')" && \
-    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_LIB/*/libs/*.so
+# restore anything pkgbuild missed
+COPY setup/restore_renv.R .
+RUN Rscript restore_renv.R
 
 # deactivate so that above .libPaths used
 RUN R -q -e "renv::deactivate()"
@@ -55,9 +44,7 @@ RUN R -q -e "reticulate::install_miniconda()" && \
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
-RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
-    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_LIB/*/libs/*.so
+RUN Rscript restore_renv.R
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .

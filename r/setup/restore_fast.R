@@ -55,6 +55,7 @@ remotes[has.url] <- paste0('url::', unlist(urls))
 # fix github refs
 sources <- sapply(records, `[[`, 'Source')
 is.github <- sources == 'GitHub'
+remotes[is.github] <- gsub('@HEAD', '', remotes[is.github])
 is.github.no.ver <- !grepl('@', remotes) & is.github
 shas <- sapply(records, `[[`, 'RemoteSha')
 remotes[is.github.no.ver] <- paste0(remotes[is.github.no.ver], '@', shas[is.github.no.ver])
