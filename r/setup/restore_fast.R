@@ -77,20 +77,7 @@ prop.install <- pkgdepends::new_pkg_installation_proposal(
 prop.install$download()
 prop.install$install()
 
-# some Bioconductor and GitHub packages aren't being installed
-# we can see which one
-current <- renv:::snapshot(
-  project = '.',
-  library = Sys.getenv('RENV_LIB'),
-  lockfile = NULL,
-  type = 'all'
-)
-
-# TODO: skip 'crossgrade' packages = same version installed but lockfile record names or info differ
-diff <- renv:::renv_lockfile_diff_packages(current, lockfile)
-need <- names(diff)[diff != 'crossgrade']
-
-# TODO: figure out why pkgdepends couldn't install 'need'
+# TODO: figure out why pkgdepends couldn't install some packages
 
 # cleanup downloaded packages
 cache_info <- pkgcache::pkg_cache_summary()
