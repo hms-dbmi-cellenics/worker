@@ -128,7 +128,7 @@ jobs:
             COMMIT_SHA=""
             IMAGE_TAG=$REF_ID
             TIMESTAMP=""
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+          elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
             COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
@@ -157,7 +157,7 @@ jobs:
       - id: ref-previous
         name: Format docker tag and repository name for the previous pushed image.
         run: |-
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
             echo "This is a pull request, base ref and sha set to the target branch."
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
