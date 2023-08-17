@@ -128,8 +128,15 @@ jobs:
             IMAGE_TAG=$REF_ID
             TIMESTAMP=""
           elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
-            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
-            IMAGE_TAG="$REF_ID-$COMMIT_SHA"
+            COMMIT_SHA="${{ github.sha }}"
+              
+            # Construct the REF_ID for our pull request in the same format
+            # We can't use GITHUB_REF because it is set to master
+            # More info: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
+            PR_GITHUB_REF="refs/pull/${{ github.event.pull_request.number }}/merge"
+            PR_REF_ID=$(echo $PR_GITHUB_REF | sed 's/\//-/g')
+
+            IMAGE_TAG="$PR_REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
           else
             COMMIT_SHA=$GITHUB_SHA
