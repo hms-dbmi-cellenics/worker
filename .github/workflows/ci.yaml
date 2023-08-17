@@ -104,7 +104,6 @@ jobs:
           ref: ${{github.head_ref}}
           repository: ${{github.event.pull_request.head.repo.full_name}}
 
-
       - id: ref
         name: Format docker tag and repository name.
         run: |-
