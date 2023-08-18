@@ -208,29 +208,22 @@ jobs:
         env:
           REPO_NAME: ${{ steps.ref.outputs.repo-name }}
 
-      - id: pull-latest-image
-        name: Pull latest Docker images from mainline
-        run: |-
-          echo Pulling $IMAGE_NAME from ECR.
-          docker pull $IMAGE_NAME || true
-
-          echo Pulling $IMAGE_NAME-builder from ECR.
-          docker pull $IMAGE_NAME-builder || true
-
-        env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+      - id: setup-docker-buildx
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - id: build
         name: Build Docker images
         run: |-
-          docker build --target builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+          docker buildx build --target builder \
+            --output=type=docker \
+            --cache-from type=registry,ref=$PREVIOUS_IMAGE_NAME-builder \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
-          docker build --target prod \
+          docker buildx build --target prod \
+            --output=type=docker \
             --cache-from=$IMAGE_NAME-builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-ci .
         env:
@@ -242,13 +235,16 @@ jobs:
         name: Push builder images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-builder to ECR.
-          docker push $IMAGE_NAME-builder
+          docker buildx build --push --target builder \
+            --cache-to type=registry,ref=$IMAGE_NAME-builder,mode=max,image-manifest=true \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
+            --tag $IMAGE_NAME-builder .
 
           echo Pushing image $IMAGE_NAME-ci to ECR.
           docker push $IMAGE_NAME-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
-
+          GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
   test:
     name: Run tests
     # to ensure compatibility with the sqlite found in the
