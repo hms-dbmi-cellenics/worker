@@ -35,7 +35,7 @@ def _read_sqs_message():
             raise e
 
     message = queue.receive_messages(
-        WaitTimeSeconds=20, AttributeNames=["AWSTraceHeader"]
+        WaitTimeSeconds=0, AttributeNames=["AWSTraceHeader"]
     )
 
     if not message:
