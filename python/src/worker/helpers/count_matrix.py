@@ -11,6 +11,7 @@ from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
 
 from ..config import config
+from ..constants import DOWNLOAD_EXPERIMENT,LOAD_EXPERIMENT
 
 
 class CountMatrix:
@@ -80,12 +81,16 @@ class CountMatrix:
             xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
+            io = Emitter({"client": config.REDIS_CLIENT})
+            io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "workingOn": DOWNLOAD_EXPERIMENT})
             info(f"Downloading {key} from S3...")
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
                 Key=key,
                 Fileobj=f,
             )
+
+            io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "workingOn": LOAD_EXPERIMENT})
 
             self.last_fetch = last_modified
             f.seek(0)
@@ -107,7 +112,6 @@ class CountMatrix:
 
     @xray_recorder.capture("CountMatrix.sync")
     def sync(self):
-        io = Emitter({"client": config.REDIS_CLIENT})
 
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
@@ -119,12 +123,10 @@ class CountMatrix:
         objects = self.get_objects()
 
         info(f"Found {len(objects)} objects matching experiment.")
-        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "downloading seurat object"})
         synced = {
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
 
-        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "checking if R worker is alive"})
         if True in synced.values():
             self.check_if_received()

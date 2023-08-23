@@ -9,6 +9,8 @@ from .config import config
 from .consume_message import consume
 from .response import Response
 from .tasks.factory import TaskFactory
+from socket_io_emitter import Emitter
+from .constants import STARTED_TASK
 
 # configure logging
 basicConfig(format="%(asctime)s %(message)s", level=INFO)
@@ -41,6 +43,9 @@ def main():
 
         request = consume()
         if request:
+            io = Emitter({"client": config.REDIS_CLIENT})
+            io.Emit(f'Heartbeat-{request["experimentId"]}', {"type": "WorkResponse", "workingOn": STARTED_TASK, "request": request})
+
             result = task_factory.submit(request)
 
             response = Response(request, result)
