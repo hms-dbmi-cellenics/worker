@@ -13,6 +13,7 @@ ENV GITHUB_PAT $GITHUB_PAT
 RUN R -q -e "if(Sys.getenv('GITHUB_PAT') == '') stop('need to export GITHUB_PAT')"
 
 # add renv library to .libPaths
+# this is path with R package folders when renv deactivated or not used
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
@@ -21,15 +22,16 @@ RUN R -q -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-proje
     R -q -e "remotes::install_github('rstudio/renv@0.16.0')" && \
     R -q -e "renv::init(bare = TRUE, settings = list(use.cache = FALSE))"
 
-# an initial lockfile is used to avoid frequent re-installs
-# use renv::snapshot(lockfile='renv.lock.init') if R dependency updates become slow to build
-# delete renv cache
-# strip debug from shared libraries
-# see http://dirk.eddelbuettel.com/blog/2017/08/20/#010_stripping_shared_libraries
-COPY ./renv.lock.init .
-RUN R -q -e "renv::restore(lockfile='renv.lock.init', library = '$RENV_LIB')" && \
-    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_LIB/*/libs/*.so
+# fast pre-restore with pkgbuild
+COPY ./renv.lock.init ./renv.lock
+COPY setup/restore_fast.R .
+RUN Rscript restore_fast.R
+
+# restore anything pkgbuild missed
+COPY setup/restore_renv.R .
+RUN Rscript restore_renv.R
+
+# deactivate so that above .libPaths used
 RUN R -q -e "renv::deactivate()"
 
 # install miniconda and python umap-learn for RunUMAP
@@ -42,9 +44,7 @@ RUN R -q -e "reticulate::install_miniconda()" && \
 
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
-RUN R -q -e "renv::restore(lockfile='renv.lock', library = '$RENV_LIB', clean = TRUE)" && \
-    R -q -e 'root <- renv::paths$root(); unlink(root, recursive = TRUE)' && \
-    strip --strip-debug $RENV_LIB/*/libs/*.so
+RUN Rscript restore_renv.R
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -68,7 +68,7 @@ ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 # get source code and R packages
 COPY --from=builder /src /src
 
-# add renv library to .libPaths
+# add path where renv installed R packages to .libPaths
 ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 

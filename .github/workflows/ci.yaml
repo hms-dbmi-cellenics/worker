@@ -104,13 +104,22 @@ jobs:
           ref: ${{github.head_ref}}
           repository: ${{github.event.pull_request.head.repo.full_name}}
 
-
       - id: ref
         name: Format docker tag and repository name.
         run: |-
-          # This will take a ref like `refs/heads/master`
-          # and turn it into `refs-heads-master`
-          REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+          
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            # Construct the PR_GITHUB_REF for our pull request copying GITHUB_REF's format
+            # We can't use GITHUB_REF because it is set to master in this event
+            # More info: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
+            PR_GITHUB_REF="refs/pull/${{ github.event.pull_request.number }}/merge"
+            REF_ID=$(echo $PR_GITHUB_REF | sed 's/\//-/g')
+          else
+            # This will take a ref like `refs/heads/master`
+            # and turn it into `refs-heads-master`
+            REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+          fi
+
           echo "ref-id=$REF_ID" >> $GITHUB_OUTPUT
 
           # the final tag is something like:
@@ -120,7 +129,7 @@ jobs:
 
           # In push & PR events we want the tag to contain the latest commit on the branch:
           # in push events, the latest commit of the master branch is GITHUB_SHA
-          # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
+          # in PR synch the latest commit of the branch is found in github.sha instead
 
           TIMESTAMP=$(date +%s)
 
@@ -129,7 +138,7 @@ jobs:
             IMAGE_TAG=$REF_ID
             TIMESTAMP=""
           elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
-            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+            COMMIT_SHA="${{ github.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
           else
@@ -199,29 +208,22 @@ jobs:
         env:
           REPO_NAME: ${{ steps.ref.outputs.repo-name }}
 
-      - id: pull-latest-image
-        name: Pull latest Docker images from mainline
-        run: |-
-          echo Pulling $IMAGE_NAME from ECR.
-          docker pull $IMAGE_NAME || true
-
-          echo Pulling $IMAGE_NAME-builder from ECR.
-          docker pull $IMAGE_NAME-builder || true
-
-        env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+      - id: setup-docker-buildx
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - id: build
         name: Build Docker images
         run: |-
-          docker build --target builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+          docker buildx build --target builder \
+            --output=type=docker \
+            --cache-from type=registry,ref=$PREVIOUS_IMAGE_NAME-builder \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
-          docker build --target prod \
+          docker buildx build --target prod \
+            --output=type=docker \
             --cache-from=$IMAGE_NAME-builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-ci .
         env:
@@ -233,13 +235,16 @@ jobs:
         name: Push builder images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-builder to ECR.
-          docker push $IMAGE_NAME-builder
+          docker buildx build --push --target builder \
+            --cache-to type=registry,ref=$IMAGE_NAME-builder,mode=max,image-manifest=true \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
+            --tag $IMAGE_NAME-builder .
 
           echo Pushing image $IMAGE_NAME-ci to ECR.
           docker push $IMAGE_NAME-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
-
+          GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
   test:
     name: Run tests
     # to ensure compatibility with the sqlite found in the
