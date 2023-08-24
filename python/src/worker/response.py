@@ -1,6 +1,6 @@
 import gzip
 import io
-import json
+import ujson
 from logging import info
 
 import aws_xray_sdk as xray
@@ -30,7 +30,7 @@ class Response:
                 zipfile.write(self.result.data)
             else:
                 info('Encoding and compressing json work result')
-                json.dump(self.result.data, zipfile)
+                ujson.dump(self.result.data, zipfile)
 
 
         gzipped_body.seek(0)
