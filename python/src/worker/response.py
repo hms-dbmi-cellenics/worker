@@ -2,6 +2,8 @@ import gzip
 import io
 import ujson
 from logging import info
+import base64
+import sys
 
 import aws_xray_sdk as xray
 import boto3
@@ -33,12 +35,28 @@ class Response:
                 ujson.dump(self.result.data, zipfile)
 
 
+
+        gz_body_bytes = None
+        # If size is less than 10 kb, then send it over notification too
+        # Needs to be done here because upload_fileobj closes the file:
+        # https://github.com/boto/boto3/issues/929
+        kb = 1000
+        if (sys.getsizeof(gzipped_body) <= 10 * kb):
+            gzipped_body.seek(0)
+            gz_body_bytes = gzipped_body.read()
+
         gzipped_body.seek(0)
 
-        info("Compression finished")
-        return gzipped_body
+        print("nbytesDebug")
+        print(gzipped_body.getbuffer().nbytes)
 
-    def _construct_response_msg(self):
+        print("gzipped_bodySIzeDebug")
+        print(sys.getsizeof(gzipped_body))
+
+        info("Compression finished")
+        return gzipped_body, gz_body_bytes
+
+    def _construct_response_msg(self, data = None):
         message = {
             "request": self.request,
             "response": {"cacheable": self.cacheable, "error": self.error, "signedUrl": self.request["signedUrl"]},
@@ -48,6 +66,17 @@ class Response:
         if self.error:
             message["response"]["errorCode"] = self.result.data["error_code"]
             message["response"]["userMessage"] = self.result.data["user_message"]
+
+        # print("gzipped_bodySIzeDebug")
+        # print(sys.getsizeof(gzipped_body))
+        kb = 1000
+        # If size is less than 10 kb, then send it over notification too
+        if (data):
+            return base64.b64encode(data)
+            # return message
+            # message["response"]["data"] = data
+            # with open(response_data) as bytes_response:
+            #     message["response"]["data"] = bytes_response.getvalue().decode
 
         return message
 
@@ -88,7 +117,7 @@ class Response:
 
         return ETag
 
-    def _send_notification(self):
+    def _send_notification(self, data=None):
         io = Emitter({"client": config.REDIS_CLIENT})
         if self.request.get("broadcast"):
             io.Emit(
@@ -101,7 +130,7 @@ class Response:
             )
 
         io.Emit(f'Heartbeat-{self.request["experimentId"]}', {"type": "WorkResponse", "etag": self.request["ETag"], "info": self.request})
-        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
+        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
@@ -109,14 +138,23 @@ class Response:
     def publish(self):
         info(f"Request {self.request['ETag']} processed, response:")
 
+        response_data = None
+
         if not self.error and self.cacheable:
             info("Uploading response to S3")
             if (self.result.data == config.RDS_PATH):
                 response_data = self.result.data
                 self._upload(response_data, "path")
+
+                info("Sending socket.io message to clients subscribed to work response")
+                return self._send_notification()
             else:
-                response_data = self._construct_data_for_upload()
+                response_data, data_for_notification = self._construct_data_for_upload()
                 self._upload(response_data, "obj")
+
+                info("Sending socket.io message to clients subscribed to work response")
+                return self._send_notification(data_for_notification)
+
 
         info("Sending socket.io message to clients subscribed to work response")
         return self._send_notification()
