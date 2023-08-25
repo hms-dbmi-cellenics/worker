@@ -40,11 +40,11 @@ class Response:
         # If size is less than 10 kb, then send it over notification too
         # Needs to be done here because upload_fileobj closes the file:
         # https://github.com/boto/boto3/issues/929
-        kb = 1000
+        mb = 1000000
         body_size = sys.getsizeof(gzipped_body)
         info(f"Body size is {body_size}")
-        if (body_size <= 10 * kb):
-            info("Sending data over socket")
+        if (body_size <= 2 * mb):
+            info("Data is smaller than 2 mb, sending over socket")
             gzipped_body.seek(0)
             gz_body_bytes = gzipped_body.read()
 
