@@ -8,18 +8,17 @@ from logging import error, info
 import aws_xray_sdk as xray
 import boto3
 from aws_xray_sdk.core import xray_recorder
-from socket_io_emitter import Emitter
+
+from worker.helpers.worker_updates import send_status_update
+from worker_status_codes import DOWNLOAD_EXPERIMENT, LOAD_EXPERIMENT
 
 from ..config import config
-from ..constants import DOWNLOAD_EXPERIMENT,LOAD_EXPERIMENT
 
 
 class CountMatrix:
     def __init__(self):
         self.config = config
-        self.local_path = os.path.join(
-            self.config.LOCAL_DIR, self.config.EXPERIMENT_ID
-        )
+        self.local_path = os.path.join(self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
 
         self.last_fetch = None
@@ -33,9 +32,7 @@ class CountMatrix:
         if not objects:
             return {}
 
-        objects = {
-            o["Key"]: o["LastModified"] for o in objects if o["Size"] > 0
-        }
+        objects = {o["Key"]: o["LastModified"] for o in objects if o["Size"] > 0}
 
         return objects
 
@@ -81,8 +78,7 @@ class CountMatrix:
             xray.global_sdk_config.set_sdk_enabled(False)
 
         with open(path, "wb+") as f:
-            io = Emitter({"client": config.REDIS_CLIENT})
-            io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "workingOn": DOWNLOAD_EXPERIMENT})
+            send_status_update({self.config.EXPERIMENT_ID}, DOWNLOAD_EXPERIMENT)
             info(f"Downloading {key} from S3...")
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
@@ -90,7 +86,7 @@ class CountMatrix:
                 Fileobj=f,
             )
 
-            io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "workingOn": LOAD_EXPERIMENT})
+            send_status_update({self.config.EXPERIMENT_ID}, LOAD_EXPERIMENT)
 
             self.last_fetch = last_modified
             f.seek(0)
@@ -104,15 +100,13 @@ class CountMatrix:
         backoff.constant, requests.exceptions.RequestException, interval=5
     )
     def check_if_received(self):
-        info('Count matrices updated, checking if R worker is alive...')
+        info("Count matrices updated, checking if R worker is alive...")
         r = requests.get(
             f"{config.R_WORKER_URL}/health",
         )
 
-
     @xray_recorder.capture("CountMatrix.sync")
     def sync(self):
-
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
 

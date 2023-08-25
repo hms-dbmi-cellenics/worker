@@ -9,7 +9,13 @@ from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
 
 from .config import config
-from .constants import COMPRESSING_TASK_DATA, UPLOADING_TASK_DATA, FINISHED_TASK
+from worker_status_codes import (
+    COMPRESSING_TASK_DATA,
+    UPLOADING_TASK_DATA,
+    FINISHED_TASK,
+)
+from worker.helpers.worker_updates import send_status_update
+
 
 class Response:
     def __init__(self, request, result):
@@ -23,15 +29,18 @@ class Response:
 
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
+        send_status_update(
+            self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
+        )
+
         gzipped_body = io.BytesIO()
         with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            if (isinstance(self.result.data, str)):
-                info('Compressing string work result')
+            if isinstance(self.result.data, str):
+                info("Compressing string work result")
                 zipfile.write(self.result.data)
             else:
-                info('Encoding and compressing json work result')
+                info("Encoding and compressing json work result")
                 json.dump(self.result.data, zipfile)
-
 
         gzipped_body.seek(0)
 
@@ -53,6 +62,10 @@ class Response:
 
     @xray_recorder.capture("Response._upload")
     def _upload(self, response_data, type):
+        send_status_update(
+            self.request["experimentId"], UPLOADING_TASK_DATA, self.request
+        )
+
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
         ETag = self.request["ETag"]
 
@@ -63,12 +76,11 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
-        if (type == "path"):
-            with open(response_data, 'rb') as file:
+        if type == "path":
+            with open(response_data, "rb") as file:
                 client.upload_fileobj(file, self.s3_bucket, ETag)
         else:
             client.upload_fileobj(response_data, self.s3_bucket, ETag)
-
 
         client.put_object_tagging(
             Key=ETag,
@@ -100,7 +112,8 @@ class Response:
                 f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
 
-        io.Emit(f'Heartbeat-{self.request["experimentId"]}', {"type": "WorkResponse", "workingOn": FINISHED_TASK, "request": self.request})
+        send_status_update(self.request["experimentId"], FINISHED_TASK, self.request)
+
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
@@ -110,17 +123,8 @@ class Response:
         info(f"Request {self.request['ETag']} processed, response:")
 
         if not self.error and self.cacheable:
-            io = Emitter({"client": config.REDIS_CLIENT})
-
-            io.Emit(f'Heartbeat-{self.request["experimentId"]}',
-             {"type": "WorkResponse", "workingOn": COMPRESSING_TASK_DATA, "request": self.request})
-
-            response_data = self._construct_data_for_upload()
-
-            io.Emit(f'Heartbeat-{self.request["experimentId"]}',
-             {"type": "WorkResponse", "workingOn": UPLOADING_TASK_DATA, "request": self.request})
             info("Uploading response to S3")
-            if (self.result.data == config.RDS_PATH):
+            if self.result.data == config.RDS_PATH:
                 response_data = self.result.data
                 self._upload(response_data, "path")
             else:
