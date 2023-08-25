@@ -8,8 +8,9 @@ from logging import error, info
 import aws_xray_sdk as xray
 import boto3
 from aws_xray_sdk.core import xray_recorder
+from socket_io_emitter import Emitter
 
-from worker.helpers.worker_updates import send_status_update
+from worker.helpers.send_status_updates import send_status_update
 from worker_status_codes import DOWNLOAD_EXPERIMENT, LOAD_EXPERIMENT
 
 from ..config import config
@@ -77,8 +78,9 @@ class CountMatrix:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
+        io = Emitter({"client": config.REDIS_CLIENT})
         with open(path, "wb+") as f:
-            send_status_update({self.config.EXPERIMENT_ID}, DOWNLOAD_EXPERIMENT)
+            send_status_update(io, self.config.EXPERIMENT_ID, DOWNLOAD_EXPERIMENT)
             info(f"Downloading {key} from S3...")
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
@@ -86,7 +88,7 @@ class CountMatrix:
                 Fileobj=f,
             )
 
-            send_status_update({self.config.EXPERIMENT_ID}, LOAD_EXPERIMENT)
+            send_status_update(io, self.config.EXPERIMENT_ID, LOAD_EXPERIMENT)
 
             self.last_fetch = last_modified
             f.seek(0)

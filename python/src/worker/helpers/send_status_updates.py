@@ -7,19 +7,13 @@ from worker_status_codes import (
     FINISHED_TASK,
 )
 
-from socket_io_emitter import Emitter
-
-from worker.config import config
-
-io = Emitter({"client": config.REDIS_CLIENT})
-
 
 # format_task_name is a helper function that takes a request and returns a formatted task name
 # if the request has a name, otherwise it returns an empty string
 def format_task_name(request):
     try:
         task_name = request["body"]["name"]
-    except KeyError:
+    except TypeError:
         return ""
     # Remove "Get" from the name
     name_without_get = task_name.replace("Get", "")
@@ -47,18 +41,7 @@ def format_user_message(status_code, request):
     return status_code
 
 
-class SingletonEmitter:
-    _instance = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = Emitter({"client": config.REDIS_CLIENT})
-        return cls._instance
-
-
-def send_status_update(experiment_id, status_code, request=None):
-    io = SingletonEmitter.get_instance()
+def send_status_update(io, experiment_id, status_code, request=None):
     io.Emit(
         f"Heartbeat-{experiment_id}",
         {

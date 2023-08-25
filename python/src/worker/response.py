@@ -1,5 +1,4 @@
 import gzip
-import io
 import json
 from logging import info
 
@@ -7,6 +6,7 @@ import aws_xray_sdk as xray
 import boto3
 from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
+from io import BytesIO
 
 from .config import config
 from worker_status_codes import (
@@ -14,7 +14,7 @@ from worker_status_codes import (
     UPLOADING_TASK_DATA,
     FINISHED_TASK,
 )
-from worker.helpers.worker_updates import send_status_update
+from worker.helpers.send_status_updates import send_status_update
 
 
 class Response:
@@ -29,11 +29,12 @@ class Response:
 
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
+        io = Emitter({"client": config.REDIS_CLIENT})
         send_status_update(
-            self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
+            io, self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
         )
 
-        gzipped_body = io.BytesIO()
+        gzipped_body = BytesIO()
         with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
             if isinstance(self.result.data, str):
                 info("Compressing string work result")
@@ -62,8 +63,9 @@ class Response:
 
     @xray_recorder.capture("Response._upload")
     def _upload(self, response_data, type):
+        io = Emitter({"client": config.REDIS_CLIENT})
         send_status_update(
-            self.request["experimentId"], UPLOADING_TASK_DATA, self.request
+            io, self.request["experimentId"], UPLOADING_TASK_DATA, self.request
         )
 
         client = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
@@ -112,7 +114,9 @@ class Response:
                 f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
 
-        send_status_update(self.request["experimentId"], FINISHED_TASK, self.request)
+        send_status_update(
+            io, self.request["experimentId"], FINISHED_TASK, self.request
+        )
 
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
 

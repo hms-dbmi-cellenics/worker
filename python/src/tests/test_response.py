@@ -1,9 +1,6 @@
-import botocore.session
 import mock
 import pytest
-from botocore.stub import Stubber
 
-from worker.config import config
 from worker.response import Response
 from worker.result import Result
 
@@ -35,9 +32,10 @@ class TestResponse:
         r = Result({})
         resp = Response(self.request, r)
         type = "obj"
-        key = resp._upload(r, type)
-
-        assert key == self.request["ETag"]
+        with mock.patch("worker.response.Emitter") as redis_emitter:
+            key = resp._upload(r, type)
+            assert redis_emitter.call_count >= 1
+            assert key == self.request["ETag"]
 
     def test_construct_response_msg_works(self):
         resp = Response(self.request, Result({"result1key": "result1val"}))
