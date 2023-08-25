@@ -41,17 +41,20 @@ class Response:
         # Needs to be done here because upload_fileobj closes the file:
         # https://github.com/boto/boto3/issues/929
         kb = 1000
-        if (sys.getsizeof(gzipped_body) <= 10 * kb):
+        body_size = sys.getsizeof(gzipped_body)
+        info(f"Body size is {body_size}")
+        if (body_size <= 10 * kb):
+            info("Sending data over socket")
             gzipped_body.seek(0)
             gz_body_bytes = gzipped_body.read()
 
         gzipped_body.seek(0)
 
-        print("nbytesDebug")
-        print(gzipped_body.getbuffer().nbytes)
+        info("nbytesDebug")
+        info(gzipped_body.getbuffer().nbytes)
 
-        print("gzipped_bodySIzeDebug")
-        print(sys.getsizeof(gzipped_body))
+        info("gzipped_bodySIzeDebug")
+        info(sys.getsizeof(gzipped_body))
 
         info("Compression finished")
         return gzipped_body, gz_body_bytes
@@ -67,16 +70,8 @@ class Response:
             message["response"]["errorCode"] = self.result.data["error_code"]
             message["response"]["userMessage"] = self.result.data["user_message"]
 
-        # print("gzipped_bodySIzeDebug")
-        # print(sys.getsizeof(gzipped_body))
-        kb = 1000
-        # If size is less than 10 kb, then send it over notification too
         if (data):
             return base64.b64encode(data)
-            # return message
-            # message["response"]["data"] = data
-            # with open(response_data) as bytes_response:
-            #     message["response"]["data"] = bytes_response.getvalue().decode
 
         return message
 
