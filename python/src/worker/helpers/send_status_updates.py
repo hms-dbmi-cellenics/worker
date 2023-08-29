@@ -19,7 +19,7 @@ def format_task_name(request):
     name_without_get = task_name.replace("Get", "")
 
     # Insert a space before capital letters, then strip leading/trailing spaces
-    final_name = " ".join(
+    final_name = "".join(
         [c if not c.isupper() else f" {c}" for c in name_without_get]
     ).strip()
 
