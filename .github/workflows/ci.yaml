@@ -107,7 +107,7 @@ jobs:
       - id: ref
         name: Format docker tag and repository name.
         run: |-
-          
+
           if [ "${{ github.event_name }}" = "pull_request_target" ]; then
             # Construct the PR_GITHUB_REF for our pull request copying GITHUB_REF's format
             # We can't use GITHUB_REF because it is set to master in this event
@@ -331,7 +331,7 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-20.04
-    needs: [test, build-docker, is-safe-to-run]
+    needs: [build-docker, is-safe-to-run]
     strategy:
       max-parallel: 1
       matrix:
