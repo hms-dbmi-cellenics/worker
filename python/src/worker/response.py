@@ -142,13 +142,17 @@ class Response:
                 self._upload(response_data, "path")
 
                 info("Sending socket.io message to clients subscribed to work response")
-                return self._send_notification()
+                self._send_notification()
+                info("FinishedDebug")
+                return
             else:
                 response_data, data_for_notification = self._construct_data_for_upload()
                 self._upload(response_data, "obj")
 
                 info("Sending socket.io message to clients subscribed to work response")
-                return self._send_notification(data_for_notification)
+                self._send_notification(data_for_notification)
+                info("FinishedDebug")
+                return
 
 
         info("Sending socket.io message to clients subscribed to work response")
