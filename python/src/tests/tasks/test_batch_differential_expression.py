@@ -1,7 +1,8 @@
 import json
 import pytest
 import responses
-from exceptions import ErrorCodes, PythonWorkerException
+from worker_status_codes import INVALID_INPUT
+from exceptions import PythonWorkerException
 from tests.data.cell_set_types import cell_set_types
 from worker.config import config
 from worker.tasks.batch_differential_expression import BatchDifferentialExpression
@@ -90,7 +91,7 @@ class TestBatchDifferentialExpression:
                 "genesOnly": False,
                 "comparisonType": "within",
             }
-            mock_format_request.side_effect = [PythonWorkerException(ErrorCodes.INVALID_INPUT, "No data available for this comparison"), valid_request]
+            mock_format_request.side_effect = [PythonWorkerException(INVALID_INPUT, "No data available for this comparison"), valid_request]
 
             with patch('requests.post') as mock_post:
                 mock_post.return_value = MagicMock(status_code=200, json=lambda: {"data": {"full_count": 10, "gene_results": "Some gene results"}})

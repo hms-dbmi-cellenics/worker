@@ -9,6 +9,12 @@ from .config import config
 from .consume_message import consume
 from .response import Response
 from .tasks.factory import TaskFactory
+from worker.helpers.send_status_updates import send_status_update
+
+from socket_io_emitter import Emitter
+
+
+from worker_status_codes import STARTED_TASK
 
 # configure logging
 basicConfig(format="%(asctime)s %(message)s", level=INFO)
@@ -35,12 +41,14 @@ def main():
     while (
         datetime.datetime.utcnow() - last_activity
     ).total_seconds() <= config.TIMEOUT or config.IGNORE_TIMEOUT:
-
         # Disable X-Ray before message is identified and processed
         xray.global_sdk_config.set_sdk_enabled(False)
 
         request = consume()
         if request:
+            io = Emitter({"client": config.REDIS_CLIENT})
+            send_status_update(io, request["experimentId"], STARTED_TASK, request)
+
             result = task_factory.submit(request)
 
             response = Response(request, result)
