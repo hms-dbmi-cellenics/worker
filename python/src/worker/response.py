@@ -37,7 +37,7 @@ class Response:
 
 
         gz_body_bytes = None
-        # If size is less than 10 kb, then send it over notification too
+        # If size is less than 2 mb, then send it over notification too
         # Needs to be done here because upload_fileobj closes the file:
         # https://github.com/boto/boto3/issues/929
         mb = 1000000
