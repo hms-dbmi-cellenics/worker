@@ -1,10 +1,6 @@
 import gzip
-<<<<<<< HEAD
 import io
 import ujson
-=======
-import json
->>>>>>> master
 from logging import info
 import base64
 import sys
@@ -142,16 +138,11 @@ class Response:
                 f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
 
-<<<<<<< HEAD
-        io.Emit(f'Heartbeat-{self.request["experimentId"]}', {"type": "WorkResponse", "etag": self.request["ETag"], "info": self.request})
-        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
-=======
         send_status_update(
             io, self.request["experimentId"], FINISHED_TASK, self.request
         )
 
-        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg())
->>>>>>> master
+        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
