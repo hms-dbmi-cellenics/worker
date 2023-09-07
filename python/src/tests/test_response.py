@@ -1,9 +1,6 @@
-import botocore.session
 import mock
 import pytest
-from botocore.stub import Stubber
 
-from worker.config import config
 from worker.response import Response
 from worker.result import Result
 
@@ -30,6 +27,7 @@ class TestResponse:
     #     with pytest.raises(TypeError):
     #         Response({})
 
+<<<<<<< HEAD
     # @mock.patch("boto3.client")
     # def test_upload_returns_etag_as_key_when_uploading(self, mocked_client):
     #     r = Result({})
@@ -38,6 +36,17 @@ class TestResponse:
     #     key = resp._upload(r, type)
 
     #     assert key == self.request["ETag"]
+=======
+    @mock.patch("boto3.client")
+    def test_upload_returns_etag_as_key_when_uploading(self, mocked_client):
+        r = Result({})
+        resp = Response(self.request, r)
+        type = "obj"
+        with mock.patch("worker.response.Emitter") as redis_emitter:
+            key = resp._upload(r, type)
+            assert redis_emitter.call_count >= 1
+            assert key == self.request["ETag"]
+>>>>>>> master
 
     # def test_construct_response_msg_works(self):
     #     resp = Response(self.request, Result({"result1key": "result1val"}))
@@ -58,10 +67,17 @@ class TestResponse:
     #     resp = Response(self.request, result)
     #     spy = mocker.spy(resp, "_upload")
 
+<<<<<<< HEAD
     #     with mock.patch("worker.response.Emitter") as redis_emitter:
     #         resp.publish()
     #         assert redis_emitter.call_count == 1
     #     assert spy.call_count == 1
+=======
+        with mock.patch("worker.response.Emitter") as redis_emitter:
+            resp.publish()
+            assert redis_emitter.call_count >= 1
+        assert spy.call_count >= 1
+>>>>>>> master
 
     # @mock.patch("boto3.client")
     # def test_publishing_one_long_response_results_in_both_being_pushed_to_s3(
@@ -76,10 +92,17 @@ class TestResponse:
     #     resp = Response(self.request, result)
     #     spy = mocker.spy(resp, "_upload")
 
+<<<<<<< HEAD
     #     with mock.patch("worker.response.Emitter") as redis_emitter:
     #         resp.publish()
     #         assert redis_emitter.call_count == 1
     #     assert spy.call_count == 1
+=======
+        with mock.patch("worker.response.Emitter") as redis_emitter:
+            resp.publish()
+            assert redis_emitter.call_count >= 1
+        assert spy.call_count >= 1
+>>>>>>> master
 
     # @mock.patch("boto3.client")
     # def test_old_requests_do_get_sent(self, mocked_client, mocker):
@@ -95,7 +118,14 @@ class TestResponse:
     #     resp = Response(self.request, result)
     #     spy = mocker.spy(resp, "_upload")
 
+<<<<<<< HEAD
     #     with mock.patch("worker.response.Emitter") as redis_emitter:
     #         resp.publish()
     #         assert redis_emitter.call_count == 1
     #     assert spy.call_count == 1
+=======
+        with mock.patch("worker.response.Emitter") as redis_emitter:
+            resp.publish()
+            assert redis_emitter.call_count >= 1
+        assert spy.call_count >= 1
+>>>>>>> master
