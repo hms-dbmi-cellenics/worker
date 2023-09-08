@@ -138,11 +138,15 @@ class Response:
                 f"Broadcast results to users viewing experiment {self.request['experimentId']}."
             )
 
+        info(f"SendStatusUpdateDebug")
+
         send_status_update(
             io, self.request["experimentId"], FINISHED_TASK, self.request
         )
 
+        info(f"BegunSocketSendDebug")
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
+        info(f"EndedSocketSendDebug")
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
