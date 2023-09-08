@@ -53,7 +53,7 @@ class Response:
         mb = 1000000
         body_size = sys.getsizeof(gzipped_body)
         info(f"Body size is {body_size}")
-        if (body_size <= 2 * mb):
+        if (False and body_size <= 2 * mb):
             info("Data is smaller than 2 mb, sending over socket")
             gzipped_body.seek(0)
             gz_body_bytes = gzipped_body.read()
