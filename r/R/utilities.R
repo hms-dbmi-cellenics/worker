@@ -166,14 +166,16 @@ add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
 
   # add sample names
   samples <- parsed_cellsets[cellset_type == "sample", c("name", "cell_id")]
-  data.table::setnames(samples, c("sample_name", "cells_id"))
+  data.table::setnames(samples, c("samples", "cells_id"))
   scdata@meta.data$samples <- NULL
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, samples, by = "cells_id")
 
-  # add seurat clusters
+  # add seurat clusters and set as active ident
+  scdata@meta.data$seurat_clusters <- NULL
   seurat_clusters <- parsed_cellsets[cellset_type == "louvain", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
+  scdata <- Seurat::SetIdent(scdata, value = 'seurat_clusters')
 
   # add custom clusters
   if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
@@ -186,8 +188,8 @@ add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
     }
   }
 
-  # add ScType clusters
-  sctype_clusters <- parsed_cellsets[
+  # add other clusters (ScType and others from projects with Seurat technology)
+  other_clusters <- parsed_cellsets[
     sapply(parsed_cellsets$cellset_type, function(cellset_type) {
       cell_sets[[cellset_type]]$type == "cellSets" &&
         cell_sets[[cellset_type]]$key != "louvain" &&
@@ -195,21 +197,21 @@ add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
     }),
   ]
 
-  if (nrow(sctype_clusters) > 0) {
-    # create one column for each combination of ScType tissue-species
-    sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
-    for (sctype_group in sctype_clusters_list) {
-      sctype_colname <- unique(sapply(sctype_group$cellset_type, function(x) {
+  if (nrow(other_clusters) > 0) {
+    # create one column for each clustering
+    other_clusters_list <- split(other_clusters, other_clusters[["cellset_type"]])
+    for (other_group in other_clusters_list) {
+      other_colname <- unique(sapply(other_group$cellset_type, function(x) {
         cell_sets[[x]]$name
       }))
-      sctype_dt <- sctype_group[, c("name", "cell_id")]
-      data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
-      scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
+      other_dt <- other_group[, c("name", "cell_id")]
+      data.table::setnames(other_dt, c(other_colname, "cells_id"))
+      scdata@meta.data[[other_colname]] <- NULL
+      scdata@meta.data <- dplyr::left_join(scdata@meta.data, other_dt, by = "cells_id")
     }
   }
 
   rownames(scdata@meta.data) <- barcodes
-
   return(scdata)
 }
 

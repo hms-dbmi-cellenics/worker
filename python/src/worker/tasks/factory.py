@@ -1,4 +1,5 @@
-from exceptions import ErrorCodes, WorkerException
+from exceptions import WorkerException
+from worker_status_codes import PYTHON_WORKER_ERROR
 
 from ..helpers.count_matrix import CountMatrix
 from ..helpers.xray_log_exception import xray_log_exception
@@ -7,6 +8,7 @@ from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
+from .batch_differential_expression import BatchDifferentialExpression
 from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
 from .embedding import GetEmbedding
@@ -31,6 +33,7 @@ class TaskFactory:
             GetEmbedding,
             ListGenes,
             DifferentialExpression,
+            BatchDifferentialExpression,
             GeneExpression,
             GetBackgroundExpressedGenes,
             ClusterCells,
@@ -75,7 +78,7 @@ class TaskFactory:
             xray_log_exception(task, e)
             return Result(
                 {
-                    "error_code": ErrorCodes.PYTHON_WORKER_ERROR,
+                    "error_code": PYTHON_WORKER_ERROR,
                     "user_message": "An unexpected error occurred while performing the work.",
                 },
                 error=True,

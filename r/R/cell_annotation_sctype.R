@@ -73,7 +73,17 @@ ScTypeAnnotate <- function(req, data) {
 #'
 #' @examples
 get_formatted_data <- function(scdata, active_assay) {
-  scale_data <- data.table::as.data.table(scdata[[active_assay]]@scale.data, keep.rownames = "input")
+
+  scale_data <- scdata[[active_assay]]@scale.data
+
+  # no hvgs or scale.data if seurat object was uploaded
+  if (sum(dim(scale_data)) == 0) {
+    scdata <- Seurat::FindVariableFeatures(scdata)
+    scdata <- Seurat::ScaleData(scdata)
+    scale_data <- scdata[[active_assay]]@scale.data
+  }
+
+  scale_data <- data.table::as.data.table(scale_data, keep.rownames = "input")
 
   scale_data <- add_gene_symbols(scale_data, scdata)
 

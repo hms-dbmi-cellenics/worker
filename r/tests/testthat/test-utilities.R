@@ -284,6 +284,21 @@ test_that("add_clusters adds cluster information as metadata columns to the seur
   }
 })
 
+test_that("add_clusters uses conventions that support re-upload with technology Seurat", {
+  data <- mock_scdata()
+  cell_sets <- mock_cellset_from_python(data)
+
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
+
+  # 'samples' column used for sample identity
+  expect_true("samples" %in% colnames(data@meta.data))
+
+  # active ident used as default louvain clusters
+  expect_identical(as.character(data$seurat_clusters), as.character(Seurat::Idents(data)))
+})
+
 
 test_that("format_sctype_cell_sets correctly format cellset to be sent to the API", {
   data <- mock_scdata()
