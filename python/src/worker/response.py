@@ -19,7 +19,7 @@ from worker_status_codes import (
 )
 from worker.helpers.send_status_updates import send_status_update
 
-import time
+from datetime import datetime
 
 class Response:
     def __init__(self, request, result):
@@ -145,7 +145,8 @@ class Response:
             io, self.request["experimentId"], FINISHED_TASK, self.request
         )
 
-        time_send_socket = time.time()
+        # time_send_socket = time.time()
+        time_send_socket = str(datetime.now())
         info(f"BegunSocketSendDebug, {time_send_socket}")
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
         info(f"EndedSocketSendDebug")
