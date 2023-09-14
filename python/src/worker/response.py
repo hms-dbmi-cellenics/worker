@@ -11,6 +11,8 @@ from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
 from io import BytesIO
 
+import time
+
 from .config import config
 from worker_status_codes import (
     COMPRESSING_TASK_DATA,
@@ -144,7 +146,8 @@ class Response:
             io, self.request["experimentId"], FINISHED_TASK, self.request
         )
 
-        info(f"BegunSocketSendDebug")
+        time_send_socket = time.time()
+        info(f"BegunSocketSendDebug, {time_send_socket}")
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
         info(f"EndedSocketSendDebug")
 
