@@ -143,8 +143,6 @@ class Response:
     def publish(self):
         info(f"Request {self.request['ETag']} processed, response:")
 
-        response_data = None
-
         if not self.error and self.cacheable:
             info("Uploading response to S3")
             if self.result.data == config.RDS_PATH:
