@@ -23,9 +23,9 @@ class TestResponse:
         with pytest.raises(TypeError):
             Response()
 
-    # def test_throws_on_missing_results(self):
-    #     with pytest.raises(TypeError):
-    #         Response({})
+    def test_throws_on_missing_results(self):
+        with pytest.raises(TypeError):
+            Response({})
 
     @mock.patch("boto3.client")
     def test_upload_returns_etag_as_key_when_uploading(self, mocked_client):
