@@ -121,6 +121,13 @@ class Response:
 
         return ETag
 
+    #' Send a notification that a work response finished
+    #'
+    #' @param self
+    #' @param socket_data Optional. The work result, if not None, it is sent instead
+    #'  of the default json response msg so it reaches the client faster
+    #'
+    #' @export
     def _send_notification(self, socket_data=None):
         io = Emitter({"client": config.REDIS_CLIENT})
         if self.request.get("broadcast"):
