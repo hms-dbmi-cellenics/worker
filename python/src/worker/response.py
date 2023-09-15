@@ -139,11 +139,7 @@ class Response:
             io, self.request["experimentId"], FINISHED_TASK, self.request
         )
 
-        # time_send_socket = time.time()
-        time_send_socket = str(datetime.now())
-        info(f"BegunSocketSendDebug, {time_send_socket}")
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
-        info(f"EndedSocketSendDebug")
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
@@ -158,18 +154,12 @@ class Response:
             if self.result.data == config.RDS_PATH:
                 response_data = self.result.data
                 self._upload(response_data, "path")
-
-                info("Sending socket.io message to clients subscribed to work response")
                 self._send_notification()
-                info("FinishedDebug")
                 return
             else:
                 response_data, data_for_notification = self._construct_data_for_upload()
                 self._upload(response_data, "obj")
-
-                info("Sending socket.io message to clients subscribed to work response")
                 self._send_notification(data_for_notification)
-                info("FinishedDebug")
                 return
 
 
