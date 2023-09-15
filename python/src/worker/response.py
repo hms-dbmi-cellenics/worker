@@ -48,24 +48,18 @@ class Response:
                 ujson.dump(self.result.data, zipfile)
 
         gz_body_bytes = None
-        # If size is less than 2 mb, then send it over notification too
+        # If size is less than 250 kb, then send it over notification too
         # Needs to be done here because upload_fileobj closes the file:
         # https://github.com/boto/boto3/issues/929
-        mb = 1000000
+        kb = 1000
         body_size = sys.getsizeof(gzipped_body)
         info(f"Body size is {body_size}")
-        if (body_size <= 2 * mb):
-            info("Data is smaller than 2 mb, sending over socket")
+        if (body_size <= 250 * kb):
+            info("Data is smaller than 250 kb, sending over socket")
             gzipped_body.seek(0)
             gz_body_bytes = gzipped_body.read()
 
         gzipped_body.seek(0)
-
-        info("nbytesDebug")
-        info(gzipped_body.getbuffer().nbytes)
-
-        info("gzipped_bodySIzeDebug")
-        info(sys.getsizeof(gzipped_body))
 
         info("Compression finished")
         return gzipped_body, gz_body_bytes
