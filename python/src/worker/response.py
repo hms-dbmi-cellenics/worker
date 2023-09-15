@@ -64,7 +64,10 @@ class Response:
         info("Compression finished")
         return gzipped_body, gz_body_bytes
 
-    def _construct_response_msg(self, data = None):
+    def _construct_response_msg(self, socket_data = None):
+        if socket_data:
+            return base64.b64encode(socket_data)
+
         message = {
             "request": self.request,
             "response": {"cacheable": self.cacheable, "error": self.error, "signedUrl": self.request["signedUrl"]},
@@ -74,9 +77,6 @@ class Response:
         if self.error:
             message["response"]["errorCode"] = self.result.data["error_code"]
             message["response"]["userMessage"] = self.result.data["user_message"]
-
-        if (data):
-            return base64.b64encode(data)
 
         return message
 
@@ -121,7 +121,7 @@ class Response:
 
         return ETag
 
-    def _send_notification(self, data=None):
+    def _send_notification(self, socket_data=None):
         io = Emitter({"client": config.REDIS_CLIENT})
         if self.request.get("broadcast"):
             io.Emit(
@@ -135,7 +135,7 @@ class Response:
             io, self.request["experimentId"], FINISHED_TASK, self.request
         )
 
-        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(data))
+        io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(socket_data))
 
         info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
 
