@@ -129,11 +129,7 @@ class Response:
                 self._construct_response_msg(),
             )
 
-            info(
-                f"Broadcast results to users viewing experiment {self.request['experimentId']}."
-            )
-
-        info(f"SendStatusUpdateDebug")
+            info(f"Broadcast results to users viewing experiment {self.request['experimentId']}.")
 
         send_status_update(
             io, self.request["experimentId"], FINISHED_TASK, self.request
