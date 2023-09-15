@@ -31,6 +31,10 @@ class Response:
 
         self.s3_bucket = config.RESULTS_BUCKET
 
+    #' Returns the compressed work result to be sent
+    #'
+    #' @return gzipped_body to upload to s3 and the compressed bytes 
+    #' object to send over redis if the work result is small enough
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
         io = Emitter({"client": config.REDIS_CLIENT})
@@ -123,7 +127,6 @@ class Response:
 
     #' Send a notification that a work response finished
     #'
-    #' @param self
     #' @param socket_data Optional. The work result, if not None, it is sent instead
     #'  of the default json response msg so it reaches the client faster
     #'
