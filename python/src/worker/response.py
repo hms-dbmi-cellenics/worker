@@ -143,19 +143,16 @@ class Response:
     def publish(self):
         info(f"Request {self.request['ETag']} processed, response:")
 
+        socket_data = None
+
         if not self.error and self.cacheable:
             info("Uploading response to S3")
             if self.result.data == config.RDS_PATH:
-                response_data = self.result.data
-                self._upload(response_data, "path")
-                self._send_notification()
-                return
+                s3_data = self.result.data
+                self._upload(s3_data, "path")
             else:
-                response_data, data_for_notification = self._construct_data_for_upload()
-                self._upload(response_data, "obj")
-                self._send_notification(data_for_notification)
-                return
-
+                s3_data, socket_data = self._construct_data_for_upload()
+                self._upload(s3_data, "obj")
 
         info("Sending socket.io message to clients subscribed to work response")
-        return self._send_notification()
+        return self._send_notification(socket_data)
