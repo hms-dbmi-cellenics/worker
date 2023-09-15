@@ -148,8 +148,7 @@ class Response:
         if not self.error and self.cacheable:
             info("Uploading response to S3")
             if self.result.data == config.RDS_PATH:
-                s3_data = self.result.data
-                self._upload(s3_data, "path")
+                self._upload(self.result.data, "path")
             else:
                 s3_data, socket_data = self._construct_data_for_upload()
                 self._upload(s3_data, "obj")
