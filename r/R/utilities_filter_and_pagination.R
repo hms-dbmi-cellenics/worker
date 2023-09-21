@@ -34,7 +34,6 @@ applyNumericFilter <- function(gene_results, column, comparison, value) {
 }
 
 handlePagination <- function(gene_results, offset, limit, order_by, order_decreasing) {
-  full_count <- nrow(gene_results)
 
   if (order_by %in% names(gene_results)) {
     gene_results <- gene_results[order(gene_results[, order_by], decreasing = order_decreasing), ]
@@ -45,5 +44,7 @@ handlePagination <- function(gene_results, offset, limit, order_by, order_decrea
   limit <- limit - 1
 
   gene_results <- na.omit(gene_results[(offset):(offset + limit), ])
+  full_count <- nrow(gene_results)
+  
   return(list(gene_results = gene_results, full_count = full_count))
 }

@@ -10,15 +10,16 @@ import boto3
 from aws_xray_sdk.core import xray_recorder
 from socket_io_emitter import Emitter
 
+from worker.helpers.send_status_updates import send_status_update
+from worker_status_codes import DOWNLOAD_EXPERIMENT, LOAD_EXPERIMENT
+
 from ..config import config
 
 
 class CountMatrix:
     def __init__(self):
         self.config = config
-        self.local_path = os.path.join(
-            self.config.LOCAL_DIR, self.config.EXPERIMENT_ID
-        )
+        self.local_path = os.path.join(self.config.LOCAL_DIR, self.config.EXPERIMENT_ID)
         self.s3 = boto3.client("s3", **self.config.BOTO_RESOURCE_KWARGS)
 
         self.last_fetch = None
@@ -32,9 +33,7 @@ class CountMatrix:
         if not objects:
             return {}
 
-        objects = {
-            o["Key"]: o["LastModified"] for o in objects if o["Size"] > 0
-        }
+        objects = {o["Key"]: o["LastModified"] for o in objects if o["Size"] > 0}
 
         return objects
 
@@ -79,13 +78,17 @@ class CountMatrix:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
+        io = Emitter({"client": config.REDIS_CLIENT})
         with open(path, "wb+") as f:
+            send_status_update(io, self.config.EXPERIMENT_ID, DOWNLOAD_EXPERIMENT)
             info(f"Downloading {key} from S3...")
             self.s3.download_fileobj(
                 Bucket=self.config.SOURCE_BUCKET,
                 Key=key,
                 Fileobj=f,
             )
+
+            send_status_update(io, self.config.EXPERIMENT_ID, LOAD_EXPERIMENT)
 
             self.last_fetch = last_modified
             f.seek(0)
@@ -99,16 +102,13 @@ class CountMatrix:
         backoff.constant, requests.exceptions.RequestException, interval=5
     )
     def check_if_received(self):
-        info('Count matrices updated, checking if R worker is alive...')
+        info("Count matrices updated, checking if R worker is alive...")
         r = requests.get(
             f"{config.R_WORKER_URL}/health",
         )
 
-
     @xray_recorder.capture("CountMatrix.sync")
     def sync(self):
-        io = Emitter({"client": config.REDIS_CLIENT})
-
         # check if path existed before running this
         self.path_exists = os.path.exists(self.local_path)
 
@@ -119,12 +119,10 @@ class CountMatrix:
         objects = self.get_objects()
 
         info(f"Found {len(objects)} objects matching experiment.")
-        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "downloading seurat object"})
         synced = {
             key: self.download_object(key, last_modified)
             for key, last_modified in objects.items()
         }
 
-        io.Emit(f'Heartbeat-{self.config.EXPERIMENT_ID}', {"type": "WorkResponse", "info": "checking if R worker is alive"})
         if True in synced.values():
             self.check_if_received()

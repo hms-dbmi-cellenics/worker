@@ -2,7 +2,8 @@ import json
 import os
 
 import pytest
-from exceptions import ErrorCodes, PythonWorkerException
+from worker_status_codes import INVALID_INPUT
+from exceptions import PythonWorkerException
 from worker.helpers.get_diff_expr_cellsets import get_diff_expr_cellsets
 
 
@@ -23,7 +24,7 @@ class TestGetDiffExprCellSets:
                 basis_name, first_cell_set_name, second_cell_set_name, self.cellsets
             )
 
-        assert exception_info.value.args[0] == ErrorCodes.INVALID_INPUT
+        assert exception_info.value.args[0] == INVALID_INPUT
         assert exception_info.value.args[1] == "No cell id fullfills the 1st cell set."
 
     def test_should_throw_error_if_2nd_cell_sets_is_empty(self):
@@ -36,5 +37,5 @@ class TestGetDiffExprCellSets:
                 basis_name, first_cell_set_name, second_cell_set_name, self.cellsets
             )
 
-        assert exception_info.value.args[0] == ErrorCodes.INVALID_INPUT
+        assert exception_info.value.args[0] == INVALID_INPUT
         assert exception_info.value.args[1] == "No cell id fullfills the 2nd cell set."
