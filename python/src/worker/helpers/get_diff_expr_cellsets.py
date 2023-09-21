@@ -1,4 +1,5 @@
-from exceptions import ErrorCodes, PythonWorkerException
+from exceptions import PythonWorkerException
+from worker_status_codes import INVALID_INPUT
 
 from .find_cell_ids_in_same_hierarchy import (find_all_cell_ids_in_cell_sets,
                                               find_cell_ids_in_same_hierarchy)
@@ -49,13 +50,13 @@ def get_diff_expr_cellsets(
     # Check if the first cell set is empty
     if len(first_cell_set) == 0:
         raise PythonWorkerException(
-            ErrorCodes.INVALID_INPUT, "No cell id fullfills the 1st cell set."
+            INVALID_INPUT, "No cell id fullfills the 1st cell set."
         )
 
     # Check if the second cell set is empty
     if len(second_cell_set) == 0:
         raise PythonWorkerException(
-            ErrorCodes.INVALID_INPUT, "No cell id fullfills the 2nd cell set."
+            INVALID_INPUT, "No cell id fullfills the 2nd cell set."
         )
 
     return first_cell_set, second_cell_set

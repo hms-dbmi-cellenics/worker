@@ -13,6 +13,7 @@ from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
 
+
 class MarkerHeatmap(Task):
     def __init__(self, msg):
         super().__init__(msg)
@@ -45,11 +46,11 @@ class MarkerHeatmap(Task):
             selected_points,
             hidden_cell_set_keys,
             max_cells,
-            cell_sets
+            cell_sets,
         )
 
         selected_cell_sets = next(set for set in cell_sets if set["key"] == cellSetKey)
-        
+
         request["cellSets"] = selected_cell_sets
         request["cellIds"] = cell_order
         return request, cell_order
