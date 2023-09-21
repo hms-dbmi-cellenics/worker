@@ -1,5 +1,6 @@
 import mock
 import pytest
+import base64
 
 from worker.response import Response
 from worker.result import Result
@@ -17,6 +18,7 @@ class TestResponse:
             "uuid": "random-uuid",
             "ETag": "random-etag",
             "socketId": "random-socketId",
+            "signedUrl": "mockSignedUrl"
         }
 
     def test_throws_on_empty_response_init(self):
@@ -37,13 +39,23 @@ class TestResponse:
             assert redis_emitter.call_count >= 1
             assert key == self.request["ETag"]
 
-    def test_construct_response_msg_works(self):
+    def test_construct_response_msg_works_with_signed_url(self):
         resp = Response(self.request, Result({"result1key": "result1val"}))
         response_msg = resp._construct_response_msg()
 
         assert response_msg["request"] == self.request
         assert response_msg["response"]["cacheable"] is True
         assert response_msg["response"]["error"] is False
+        assert response_msg["response"]["signedUrl"] is "mockSignedUrl"
+
+    def test_construct_response_msg_works_with_data(self):
+        resp = Response(self.request, Result({"result1key": "result1val"}))
+
+        data = bytes([1,2,3,4,5])
+
+        response_msg = resp._construct_response_msg(data)
+
+        assert response_msg == base64.b64encode(data)
 
     @mock.patch("boto3.client")
     def test_publishing_long_responses_get_pushed_to_s3(self, mocked_client, mocker):
