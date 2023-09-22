@@ -10,18 +10,26 @@
 getGeneExpression <- function(data, genes, downsample_cell_ids) {
   expression_values <- getExpressionValues(data, genes)
 
+  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
+
   # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
   stats <- getStats(expression_values)
 
-  # If downsample_cell_ids, replace data and expression_values with the downsampled version
+  # The cell ids that will have their real expression returned
+  # (the rest are set to expression 0 to optimize space)
+  cell_ids_to_return <- data@meta.data$cells_id
+
+  # If downsample_cell_ids exist, replace expression_values with the downsample subset of expressions
+  # This includes rawExpression, truncatedExpression and zScore inside expression_values
   if (!missing(downsample_cell_ids)) {
-    data <- subsetIds(data, downsample_cell_ids)
-    expression_values <- getExpressionValues(data, genes)
+    matched_cell_ids <- match(downsample_cell_ids, data@meta.data$cells_id)
+
+    expression_values <- lapply(expression_values, \(dt) dt[matched_cell_ids, ])
+
+    cell_ids_to_return <- downsample_cell_ids
   }
 
-  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
-
-  expression_values <- lapply(expression_values, formatExpression, data@meta.data$cells_id)
+  expression_values <- lapply(expression_values, formatExpression, cell_ids_to_return)
 
   return(list(
     orderedGeneNames = ordered_gene_names,
