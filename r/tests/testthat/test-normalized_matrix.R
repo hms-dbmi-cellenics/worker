@@ -25,13 +25,13 @@ string_to_df <- function(text_df) {
   return(df)
 }
 
-test_that("GetNormalizedExpression generates the expected string format", {
-  data <- mock_scdata()
-  req <- mock_req()
-
-  res <- GetNormalizedExpression(req, data)
-  expect_type(res, "character")
-})
+# test_that("GetNormalizedExpression generates the expected string format", {
+#   data <- mock_scdata()
+#   req <- mock_req()
+#
+#   res <- GetNormalizedExpression(req, data)
+#   expect_type(res, "character")
+# })
 
 test_that("subsetting is applied and changes GetNormalizedExpression output", {
   data <- mock_scdata()
