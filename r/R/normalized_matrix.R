@@ -40,5 +40,36 @@ GetNormalizedExpression <- function(req, data) {
 
   matrix <- tibble::rownames_to_column(matrix, var = " ")
 
-  return(readr::format_csv(matrix, quote = "none"))
+  # Write the matrix to a temporary file
+  tmp_file <- tempfile()
+  data.table::fwrite(data.table::as.data.table(matrix), tmp_file, sep = ",")
+
+  # Read the contents of the file into a raw vector
+  raw_data <- readBin(tmp_file, "raw", file.info(tmp_file)$size)
+
+  # Initialize an empty list to store the encoded chunks
+  encoded_data <- list()
+
+  # Define the chunk size
+  chunk_size <- 2^20  # 1 MB
+
+  # Open a connection to the temporary file
+  con <- file(tmp_file, "rb")
+
+  repeat {
+    # Read a chunk from the file into a raw vector
+    raw_chunk <- readBin(con, "raw", chunk_size)
+
+    # If the chunk is empty, we've reached the end of the file
+    if (length(raw_chunk) == 0) break
+
+    # Encode the chunk and append it to the list
+    encoded_data[[length(encoded_data) + 1]] <- base64enc::base64encode(raw_chunk)
+  }
+
+  # Close the connection and delete the temporary file
+  close(con)
+  unlink(tmp_file)
+
+  return(encoded_data)
 }

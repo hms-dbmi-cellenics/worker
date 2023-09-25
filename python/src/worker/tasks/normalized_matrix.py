@@ -1,4 +1,5 @@
 import json
+import base64
 
 import backoff
 import requests
@@ -65,7 +66,15 @@ class GetNormalizedExpression(Task):
         result = response.json()
         raise_if_error(result)
 
-        data = result.get("data")
+       # data = result.get("data")
 
-        return self._format_result(data)
+       # return self._format_result(data)
+    
+
+        encoded_chunks = result.get("data")
+        
+        # Decode the base64 chunks and concatenate them
+        decoded_data = ''.join([base64.b64decode(chunk).decode('utf-8') for chunk in encoded_chunks])
+
+        return self._format_result(decoded_data)
 
