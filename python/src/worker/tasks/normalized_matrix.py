@@ -66,11 +66,6 @@ class GetNormalizedExpression(Task):
         result = response.json()
         raise_if_error(result)
 
-       # data = result.get("data")
-
-       # return self._format_result(data)
-    
-
         encoded_chunks = result.get("data")
         
         # Decode the base64 chunks and concatenate them
