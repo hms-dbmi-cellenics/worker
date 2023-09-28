@@ -32,11 +32,21 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
+
 hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
 run: build run-only ## Runs & builds the docker environment
+
+download-image: ## Downloads a docker image
+	@aws ecr get-login-password --region '${AWS_REGION}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+	@docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-python
+	@docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-r
+	@docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-python worker_python
+	@docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-r worker_r
+run-downloaded: ## Runs a downloaded docker image
+	@docker-compose -f docker-compose.downloaded.yaml up
 test: ## Executes unit tests
 	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
 	@docker top biomage-worker-python > /dev/null 2>&1 || \
