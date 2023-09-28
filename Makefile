@@ -38,7 +38,6 @@ hooks: ## Configures path to git hooks
 run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
 run: build run-only ## Runs & builds the docker environment
-
 download-image: ## Downloads a docker image
 	@aws ecr get-login-password --region '${AWS_REGION}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 	@docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-python
@@ -65,4 +64,4 @@ clean: ## Cleans up temporary files
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: bootstrap fmt check build run-only run test logs kill clean help
+.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test logs kill clean help
