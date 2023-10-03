@@ -93,8 +93,6 @@ class TestMarkerHeatmap:
             bla = MarkerHeatmap(self.correct_request)
 
             request, cell_order = bla._format_request()
-            print("requestDebug")
-            print(request)
             assert isinstance(request, dict)
 
             # all expected keys are in the request
