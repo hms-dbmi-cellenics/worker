@@ -62,12 +62,25 @@ class GetNormalizedExpression(Task):
             data=json.dumps(request),
         )
 
-        response.raise_for_status()
-        result = response.json()
-        raise_if_error(result)
+        print("responseDebug")
+        print(response)
 
-        encoded_chunks = result.get("data")
+        print("responseREasonDebug")
+        print(response.reason)
+
+
+        response.raise_for_status()
+        result = response.text
+        # raise_if_error(result)
+
+        print("resultDebug")
+        print(result)
+
+        encoded_chunks = json.loads(result)
+        # encoded_chunks = result.get("data")
         
+        
+
         # Decode the base64 chunks and concatenate them
         decoded_data = ''.join([base64.b64decode(chunk).decode('utf-8') for chunk in encoded_chunks])
 

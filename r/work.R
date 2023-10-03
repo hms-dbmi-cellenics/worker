@@ -133,10 +133,18 @@ create_app <- function(last_modified, data, fpath) {
 
   encode_decode_middleware <- RestRserve::EncodeDecodeMiddleware$new()
 
+  encode_decode_middleware$ContentHandlers$set_encode(
+    "application/json",
+    function(x, unbox = TRUE) {
+      res = jsonlite::toJSON(x, dataframe = 'columns', auto_unbox = unbox, null = 'null', na = 'null', digits=I(4))
+      unclass(res)
+    }
+  )
+
   # the json encoder by default is not precise enough so we set a custom one without precision limit (digits=NA)
   encode_decode_middleware$ContentHandlers$set_encode(
     "application/json",
-    function(x, unbox = TRUE)  {
+    function(x, unbox = TRUE) {
       res = jsonlite::toJSON(x, dataframe = 'columns', auto_unbox = unbox, null = 'null', na = 'null', digits=I(4))
       unclass(res)
     }
@@ -263,6 +271,7 @@ create_app <- function(last_modified, data, fpath) {
     FUN = function(req, res) {
       result <- run_post(req, GetNormalizedExpression, data)
       res$set_body(result)
+      # res$set_content_type("text/plain")
     }
   )
   app$add_post(
