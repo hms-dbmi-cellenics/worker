@@ -288,36 +288,6 @@ test_that("add_clusters adds cluster information as metadata columns to the seur
 })
 
 
-test_that("add_clusters_temp adds cluster information as metadata columns to the seurat object", {
-  data <- mock_scdata()
-  cell_sets <- mock_cellset_from_python(data)
-
-  children_cell_sets <- sapply(cell_sets, `[[`, "children")
-  parsed_cellsets <- parse_cellsets_temp(children_cell_sets)
-  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
-
-  sctype_clusters <- parsed_cellsets[
-    sapply(parsed_cellsets$cellset_type, function(cellset_type) {
-      cell_sets[[cellset_type]]$type == "cellSets" &&
-        cell_sets[[cellset_type]]$key != "louvain" &&
-        cell_sets[[cellset_type]]$key != "scratchpad"
-    }),
-  ]
-
-  sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
-  for (sctype_group in sctype_clusters_list) {
-    sctype_colname <- unique(sapply(sctype_group$cellset_type, function(x) {
-      cell_sets[[x]]$name
-    }))
-    expect_true(sctype_colname %in% colnames(data@meta.data))
-    sctype_dt <- sctype_group[, c("name", "cell_id")]
-    data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
-    expect_equal(unique(data@meta.data[,sctype_colname]), unique(sctype_dt[, get(sctype_colname)]))
-    expect_true(all.equal(sctype_dt, data@meta.data[,c(sctype_colname, "cells_id")],check.attributes = FALSE))
-  }
-})
-
-
 test_that("format_sctype_cell_sets correctly format cellset to be sent to the API", {
   data <- mock_scdata()
   cell_sets <- mock_cellset_from_python(data)

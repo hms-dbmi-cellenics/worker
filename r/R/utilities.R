@@ -15,19 +15,49 @@ subsetIds <- function(scdata, cells_id) {
 }
 
 
-#' Send cell set to the API
+#' #' Send cell set to the API
+#' #'
+#' #' This sends a single, new cell set to the API for patching to the cell sets
+#' #' file.
+#' #'
+#' #' @param new_cell_set named list of cell sets
+#' #' @param api_url string URL of the API
+#' #' @param experiment_id string experiment ID
+#' #' @param cell_set_key string cell set UUID
+#' #' @param auth_JWT string authorization token
+#' #'
+#' #' @export
+#' #'
+#' sendCellsetToApi <-
+#'   function(new_cell_set,
+#'            api_url,
+#'            experiment_id,
+#'            cell_set_key,
+#'            auth_JWT) {
+#'     httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
 #'
-#' This sends a single, new cell set to the API for patching to the cell sets
-#' file.
+#'     new_cell_set$cellIds <- as.list(new_cell_set$cellIds)
 #'
-#' @param new_cell_set named list of cell sets
-#' @param api_url string URL of the API
-#' @param experiment_id string experiment ID
-#' @param cell_set_key string cell set UUID
-#' @param auth_JWT string authorization token
+#'     children <-
+#'       list(list("$insert" = list(index = "-", value = new_cell_set)))
 #'
-#' @export
-#'
+#'     httr::PATCH(
+#'       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
+#'       body = list(list(
+#'         "$match" = list(
+#'           query = httr_query,
+#'           value = list("children" = children)
+#'         )
+#'       )),
+#'       encode = "json",
+#'       httr::add_headers(
+#'         "Content-Type" = "application/boschni-json-merger+json",
+#'         "Authorization" = auth_JWT
+#'       )
+#'     )
+#'   }
+
+
 sendCellsetToApi <-
   function(new_cell_set,
            api_url,
@@ -56,6 +86,7 @@ sendCellsetToApi <-
       )
     )
   }
+
 
 #' Update the cell sets through the API
 #'
@@ -195,60 +226,6 @@ add_clusters <- function(scdata, parsed_cellsets) {
   return(scdata)
 }
 
-# TODO: merge it back with add_clusters after checking that ScType works correctly
-add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
-  # left_join function eliminates the row names from Seurat's metadata
-  barcodes <- rownames(scdata@meta.data)
-
-  # add sample names
-  samples <- parsed_cellsets[cellset_type == "sample", c("name", "cell_id")]
-  data.table::setnames(samples, c("sample_name", "cells_id"))
-  scdata@meta.data$samples <- NULL
-  scdata@meta.data <- dplyr::left_join(scdata@meta.data, samples, by = "cells_id")
-
-  # add seurat clusters
-  scdata@meta.data$seurat_clusters <- NULL
-  seurat_clusters <- parsed_cellsets[cellset_type == "louvain", c("name", "cell_id")]
-  data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
-  scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
-
-  # add custom clusters
-  if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
-    custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]
-    # create one column for each scratchpad cluster because one cell can be assigned to more than one scratchpad cluster
-    custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
-    for (i in 1:length(custom_clusters_list)) {
-      scratchpad_colname <- paste0("custom_cellset-", names(custom_clusters_list)[i])
-      scdata@meta.data[[scratchpad_colname]] <- scdata@meta.data$cells_id %in% custom_clusters_list[[i]]$cell_id
-    }
-  }
-
-  # add ScType clusters
-  sctype_clusters <- parsed_cellsets[
-    sapply(parsed_cellsets$cellset_type, function(cellset_type) {
-      cell_sets[[cellset_type]]$type == "cellSets" &&
-        cell_sets[[cellset_type]]$key != "louvain" &&
-        cell_sets[[cellset_type]]$key != "scratchpad"
-    }),
-  ]
-
-  if (nrow(sctype_clusters) > 0) {
-    # create one column for each combination of ScType tissue-species
-    sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
-    for (sctype_group in sctype_clusters_list) {
-      sctype_colname <- unique(sapply(sctype_group$cellset_type, function(x) {
-        cell_sets[[x]]$name
-      }))
-      sctype_dt <- sctype_group[, c("name", "cell_id")]
-      data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
-      scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
-    }
-  }
-
-  rownames(scdata@meta.data) <- barcodes
-
-  return(scdata)
-}
 
 #' Parse cellsets object to data.table
 #'
@@ -275,18 +252,6 @@ parse_cellsets <- function(cellsets) {
 
   dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
   dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | is_uuid(dt$key)), cellset_type := "metadata"]
-
-  return(dt)
-}
-
-# TODO: merge it back with parse_cellsets after checking that ScType works correctly
-parse_cellsets_temp <- function(cellsets) {
-  # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
-  cellsets <- cellsets[sapply(cellsets, length) > 0]
-
-  dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
-  data.table::setDT(dt)
-  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
 
   return(dt)
 }
