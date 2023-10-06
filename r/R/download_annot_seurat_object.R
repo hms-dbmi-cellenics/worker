@@ -30,9 +30,6 @@ DownloadAnnotSeuratObject <- function(req, data) {
 
 add_cellsets <- function(scdata, cellsets) {
 
-  saveRDS(scdata, '/debug/scdata.rds')
-  saveRDS(cellsets, '/debug/cellsets.rds')
-  message(cellsets)
   for (i in seq_along(cellsets)) {
 
     cellset <- cellsets[[i]]
@@ -41,7 +38,7 @@ add_cellsets <- function(scdata, cellsets) {
     children <- cellset$children
     if (!length(children)) next()
 
-  if (UUIDvalidate(cellset$key)) {
+  if (uuid::UUIDvalidate(cellset$key)) {
         key <- cellset$name
     } else {
         key <- cellset$key
