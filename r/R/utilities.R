@@ -15,49 +15,19 @@ subsetIds <- function(scdata, cells_id) {
 }
 
 
-#' #' Send cell set to the API
-#' #'
-#' #' This sends a single, new cell set to the API for patching to the cell sets
-#' #' file.
-#' #'
-#' #' @param new_cell_set named list of cell sets
-#' #' @param api_url string URL of the API
-#' #' @param experiment_id string experiment ID
-#' #' @param cell_set_key string cell set UUID
-#' #' @param auth_JWT string authorization token
-#' #'
-#' #' @export
-#' #'
-#' sendCellsetToApi <-
-#'   function(new_cell_set,
-#'            api_url,
-#'            experiment_id,
-#'            cell_set_key,
-#'            auth_JWT) {
-#'     httr_query <- paste0('$[?(@.key == "', cell_set_key, '")]')
+#' Send cell set to the API
 #'
-#'     new_cell_set$cellIds <- as.list(new_cell_set$cellIds)
+#' This sends a single, new cell set to the API for patching to the cell sets
+#' file.
 #'
-#'     children <-
-#'       list(list("$insert" = list(index = "-", value = new_cell_set)))
+#' @param new_cell_set named list of cell sets
+#' @param api_url string URL of the API
+#' @param experiment_id string experiment ID
+#' @param cell_set_key string cell set UUID
+#' @param auth_JWT string authorization token
 #'
-#'     httr::PATCH(
-#'       paste0(api_url, "/v2/experiments/", experiment_id, "/cellSets"),
-#'       body = list(list(
-#'         "$match" = list(
-#'           query = httr_query,
-#'           value = list("children" = children)
-#'         )
-#'       )),
-#'       encode = "json",
-#'       httr::add_headers(
-#'         "Content-Type" = "application/boschni-json-merger+json",
-#'         "Authorization" = auth_JWT
-#'       )
-#'     )
-#'   }
-
-
+#' @export
+#'
 sendCellsetToApi <-
   function(new_cell_set,
            api_url,
