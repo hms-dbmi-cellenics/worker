@@ -30,9 +30,6 @@ DownloadAnnotSeuratObject <- function(req, data) {
 
 add_cellsets <- function(scdata, cellsets) {
 
-  saveRDS(scdata, '/debug/scdata.rds')
-  saveRDS(cellsets, '/debug/cellsets.rds')
-  message(cellsets)
   for (i in seq_along(cellsets)) {
 
     cellset <- cellsets[[i]]
