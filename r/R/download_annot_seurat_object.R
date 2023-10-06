@@ -41,10 +41,7 @@ add_cellsets <- function(scdata, cellsets) {
     children <- cellset$children
     if (!length(children)) next()
 
-    uuid_pattern <- "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-
-    # if the cellset key is a UUID, use intead the name
-    if (grepl(uuid_pattern, cellset$key, ignore.case = TRUE)) {
+  if (UUIDvalidate(cellset$key)) {
         key <- cellset$name
     } else {
         key <- cellset$key
