@@ -30,6 +30,9 @@ DownloadAnnotSeuratObject <- function(req, data) {
 
 add_cellsets <- function(scdata, cellsets) {
 
+  saveRDS(scdata, '/debug/scdata.rds')
+  saveRDS(cellsets, '/debug/cellsets.rds')
+  message(cellsets)
   for (i in seq_along(cellsets)) {
 
     cellset <- cellsets[[i]]
@@ -38,9 +41,17 @@ add_cellsets <- function(scdata, cellsets) {
     children <- cellset$children
     if (!length(children)) next()
 
-    # use key for name of column
-    key <- cellset$key
+    uuid_pattern <- "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+    # if the cellset key is a UUID, use intead the name
+    if (grepl(uuid_pattern, cellset$key, ignore.case = TRUE)) {
+        key <- cellset$name
+    } else {
+        key <- cellset$key
+    }
+
     scdata[[key]] <- NA_character_
+
 
 
     for (j in seq_along(children)) {
