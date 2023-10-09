@@ -38,9 +38,14 @@ add_cellsets <- function(scdata, cellsets) {
     children <- cellset$children
     if (!length(children)) next()
 
-    # use key for name of column
-    key <- cellset$key
+  if (uuid::UUIDvalidate(cellset$key)) {
+        key <- cellset$name
+    } else {
+        key <- cellset$key
+    }
+
     scdata[[key]] <- NA_character_
+
 
 
     for (j in seq_along(children)) {
