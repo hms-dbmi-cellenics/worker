@@ -101,6 +101,9 @@ class Response:
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(False)
 
+        print("response_dataDebug")
+        print(response_data)
+
         if type == "path":
             with open(response_data, "rb") as file:
                 client.upload_fileobj(file, self.s3_bucket, ETag)
@@ -157,7 +160,7 @@ class Response:
 
         if not self.error and self.cacheable:
             info("Uploading response to S3")
-            if self.result.data == config.RDS_PATH:
+            if self.result.data == config.RDS_PATH or self.result.data == config.INTERNAL_RESULTS_PATH:
                 self._upload(self.result.data, "path")
             else:
                 s3_data, socket_data = self._construct_data_for_upload()

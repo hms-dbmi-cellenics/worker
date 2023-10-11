@@ -20,6 +20,8 @@ IDS_IDS <- "ids_ids"
 
 RDS_PATH <- "/data/processed.rds"
 
+INTERNAL_RESULTS_PATH <- "/data/results/"
+
 usethis::use_data(error_codes,
                   ULTIMATE_SEED,
                   QUANTILE_THRESHOLD,
@@ -28,5 +30,6 @@ usethis::use_data(error_codes,
                   IDS_SYM,
                   IDS_IDS,
                   RDS_PATH,
+                  INTERNAL_RESULTS_PATH,
                   internal = TRUE,
                   overwrite = TRUE)

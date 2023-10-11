@@ -40,5 +40,22 @@ GetNormalizedExpression <- function(req, data) {
 
   matrix <- tibble::rownames_to_column(matrix, var = " ")
 
-  return(vroom::vroom_format(matrix, delim=","))
+  INTERNAL_RESULTS_PATH <- "/data/rResult"
+
+  print("HOLA3")
+
+  tryCatch({
+    write.csv(matrix, INTERNAL_RESULTS_PATH)
+  }, warning = function(warning_condition) {
+    print("warning_conditionDebug")
+    print(warning_condition)
+  }, error = function(error_condition) {
+    print("error_conditionDebug")
+    print(error_condition)
+  }, finally={})
+
+
+  print("HOLA5")
+
+  return(INTERNAL_RESULTS_PATH)
 }
