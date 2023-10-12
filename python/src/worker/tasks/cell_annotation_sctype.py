@@ -11,6 +11,7 @@ from ..helpers.cell_sets_dict import get_cell_sets_dict_for_r
 from ..result import Result
 from ..tasks import Task
 
+
 class ScTypeAnnotate(Task):
     def __init__(self, msg):
         super().__init__(msg)
@@ -18,7 +19,7 @@ class ScTypeAnnotate(Task):
         self.request = msg
 
     def _format_result(self, result):
-        return Result(result, cacheable=False)
+        return Result(result, cacheable=True)
 
     def _format_request(self):
         # get cell sets from database
@@ -28,15 +29,14 @@ class ScTypeAnnotate(Task):
         species = self.task_def["species"]
         tissue = self.task_def["tissue"]
 
-        return { 
+        return {
             "cellSets": cell_sets_dict,
-            "species": species, 
-            "tissue": tissue, 
-            "apiUrl" : config.API_URL, 
-            "authJwt" : self.request["Authorization"],
-            "experimentId": self.experiment_id
+            "species": species,
+            "tissue": tissue,
+            "apiUrl": config.API_URL,
+            "authJwt": self.request["Authorization"],
+            "experimentId": self.experiment_id,
         }
-
 
     @xray_recorder.capture("ScTypeAnnotate.compute")
     @backoff.on_exception(
@@ -58,4 +58,3 @@ class ScTypeAnnotate(Task):
         data = result.get("data")
 
         return self._format_result(data)
-
