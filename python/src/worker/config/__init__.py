@@ -124,7 +124,8 @@ config = Config(
     # whereas in a container, it is mounted to `/data`. Either way, this ensures
     # that the appropriate path is selected, as both are two directories up
     LOCAL_DIR=os.path.join(os.pardir, os.pardir, "data"),
-    RDS_PATH = "/data/processed.rds"
+    RDS_PATH = "/data/processed.rds",
+    INTERNAL_RESULTS_PATH = "/data/rResult"
 )
 
 config.API_URL = (

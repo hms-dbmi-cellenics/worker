@@ -40,5 +40,7 @@ GetNormalizedExpression <- function(req, data) {
 
   matrix <- tibble::rownames_to_column(matrix, var = " ")
 
-  return(vroom::vroom_format(matrix, delim=","))
+  vroom::vroom_write(matrix, INTERNAL_RESULTS_PATH, delim = ",", quote = "none")
+
+  return(INTERNAL_RESULTS_PATH)
 }
