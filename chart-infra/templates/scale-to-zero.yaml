@@ -1,4 +1,4 @@
-{{- if (eq .Values.kubernetes.env "staging") }}
+{{- if eq .Values.myAccount.workerScaleToZero "true" }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
