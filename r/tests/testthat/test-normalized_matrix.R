@@ -11,52 +11,97 @@ mock_req <- function(apply_subset = TRUE) {
     body = list(
       subsetBy = subset_by,
       applySubset = apply_subset
-        )
+    )
+  )
+}
+
+mockery::stub(
+  GetNormalizedExpression,
+  "vroom::vroom_write",
+  INTERNAL_RESULTS_PATH
+)
+
+stubbed_GetNormalizedExpression <- function(req, data) {
+  GetNormalizedExpression(req, data)
+}
+
+mock_GetNormalizedExpression <- function(req, data) {
+  subset_ids <- req$body$subsetBy
+  apply_subset <- req$body$applySubset
+
+  if (apply_subset && length(subset_ids) == 0) {
+    stop(
+      generateErrorMessage(
+        error_codes$EMPTY_CELL_SET,
+        "No cells match requested filters."
       )
+    )
+  }
+
+  message("Extracting normalized expression matrix")
+
+  if (apply_subset) {
+    message("Number of cells before subsetting: ", ncol(data))
+    data <- subsetIds(data, cells_id = subset_ids)
+  } else {
+    message("No subsetting specified, sending the whole matrix")
+  }
+
+  matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
+
+  message("Number of cells in matrix to return: ", ncol(matrix))
+
+  matrix <- tibble::rownames_to_column(matrix, var = " ")
+
+  temp_path <- tempfile(fileext = ".csv")
+  vroom::vroom_write(matrix, temp_path, delim = ",", quote = "none")
+  return(temp_path)
 }
 
-string_to_df <- function(text_df) {
-  df <- read.table(text = text_df, sep =",", header=TRUE)
 
-  # This part to rollback: rownames_to_column
-  rownames(df) <- df[,1]
-  df[,1] <- NULL
 
-  return(df)
-}
-
-test_that("GetNormalizedExpression generates the expected string format", {
+test_that("GetNormalizedExpression saves the normalized matrix using the correct path", {
   data <- mock_scdata()
   req <- mock_req()
 
-  res <- GetNormalizedExpression(req, data)
+  res <- stubbed_GetNormalizedExpression(req, data)
+
   expect_type(res, "character")
+  expect_equal(res, INTERNAL_RESULTS_PATH)
+})
+
+
+test_that("GetNormalizedExpression correctly subsets the data", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  original_ncol <- ncol(data)
+
+  res <- mock_GetNormalizedExpression(req, data)
+
+  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
+
+  expect_equal(ncol(matrix) - 1, length(req$body$subsetBy)) # -1 because of the rownames column
+  expect_false(ncol(data) == ncol(matrix))
+
+  unlink(res)
 })
 
 test_that("subsetting is applied and changes GetNormalizedExpression output", {
   data <- mock_scdata()
   req <- mock_req()
 
-  res_filt <- GetNormalizedExpression(req, data)
+  res_filt <- mock_GetNormalizedExpression(req, data)
+  matrix_filt <- vroom::vroom(res_filt, delim = ",", col_names = TRUE)
 
   req <- mock_req(apply_subset = FALSE)
-  res_unfilt <- GetNormalizedExpression(req, data)
+  res_unfilt <- mock_GetNormalizedExpression(req, data)
+  matrix_unfilt <- vroom::vroom(res_unfilt, delim = ",", col_names = TRUE)
 
-  expect_false(identical(res_unfilt, res_filt))
-})
+  expect_false(identical(matrix_unfilt, matrix_filt))
 
-test_that("GetNormalizedExpression correctly subsets the data", {
-  data <- mock_scdata()
-  req <- mock_req()
-
-  subset_ids <- req$body$subsetBy
-
-  res <- GetNormalizedExpression(req, data)
-
-  df <- string_to_df(res)
-
-  expect_false(ncol(data) == ncol(df))
-  expect_equal(ncol(df), length(subset_ids))
+  unlink(res_filt)
+  unlink(res_unfilt)
 })
 
 
@@ -64,11 +109,13 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
   data <- mock_scdata()
   req <- mock_req(apply_subset = FALSE)
 
-  res <- GetNormalizedExpression(req, data)
+  res <- mock_GetNormalizedExpression(req, data)
 
-  df <- string_to_df(res)
+  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
 
-  expect_true(ncol(data) == ncol(df))
+  expect_true(ncol(data) == ncol(matrix) - 1)
+
+  unlink(res)
 })
 
 
@@ -80,3 +127,4 @@ test_that("GetNormalizedExpression fails if subsetBy is empty", {
 
   expect_error(GetNormalizedExpression(req, data), "No cells match requested filters.")
 })
+
