@@ -32,6 +32,8 @@
           value: xray-service.default:2000
         - name: 'K8S_ENV'
           value: {{ .Values.kubernetes.env | quote }}
+        - name: 'WORKER_TIMEOUT'
+          value: "{{ .Values.myAccount.workerTimeout }}"
         - name: 'IGNORE_TIMEOUT'
           valueFrom:
             configMapKeyRef:
