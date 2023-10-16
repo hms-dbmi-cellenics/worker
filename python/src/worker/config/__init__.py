@@ -12,7 +12,7 @@ cluster_env = os.getenv("CLUSTER_ENV")
 
 timeout = int(
     os.getenv(
-        "WORK_TIMEOUT",
+        "WORKER_TIMEOUT",
         default=str(60 * 10),
     )
 )
