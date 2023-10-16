@@ -109,7 +109,9 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
   data <- mock_scdata()
   req <- mock_req(apply_subset = FALSE)
 
-  res <- mock_GetNormalizedExpression(req, data)
+  expect_message({
+    res <- mock_GetNormalizedExpression(req, data)
+  }, "No subsetting specified, sending the whole matrix")
 
   matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
 
