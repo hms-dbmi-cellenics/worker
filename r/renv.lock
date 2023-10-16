@@ -387,9 +387,11 @@
     "Matrix.utils": {
       "Package": "Matrix.utils",
       "Version": "0.9.8",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
-      "Hash": "74d1586cef483fdd0703316240ed8c1e",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/Matrix.utils/Matrix.utils_0.9.8.tar.gz",
+      "Hash": "837bf62ea47730acce356702fb99c47e",
       "Requirements": [
         "Matrix",
         "grr"
@@ -761,7 +763,7 @@
       "RemoteRef": "master",
       "RemoteSha": "9652bddba522d2f00ec5f8f0f8227761b9a6afd2",
       "Remotes": "welch-lab/liger, hms-dbmi/conos, immunogenomics/harmony,\n    immunogenomics/presto, satijalab/seurat-data, velocyto-team/velocyto.R,\n    SaskiaFreytag/schex@031320d, cole-trapnell-lab/monocle3,\n    mojaveazure/seurat-disk, powellgenomicslab/Nebulosa,\n    atakanekiz/CIPR-Package, prabhakarlab/Banksy",
-      "Hash": "650b936fe198250f5c32eb74d0a537a7",
+      "Hash": "f24c07d780c21f489c9d62e5bcfcb5dc",
       "Requirements": [
         "BiocManager",
         "Matrix",
@@ -1333,6 +1335,14 @@
       "Hash": "77bd60a6157420d4ffa93b27cf6a58b8",
       "Requirements": []
     },
+    "filelock": {
+      "Package": "filelock",
+      "Version": "1.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "38ec653c2613bed60052ba3787bd8a2c",
+      "Requirements": []
+    },
     "fitdistrplus": {
       "Package": "fitdistrplus",
       "Version": "1.1-5",
@@ -1664,7 +1674,7 @@
       "Package": "httptest",
       "Version": "4.1.0",
       "Source": "Repository",
-      "Repository": "CRAN-Snapshot",
+      "Repository": "CRAN",
       "Hash": "cd910dc78e8edbc40b9723824baa7097",
       "Requirements": [
         "curl",
@@ -1896,6 +1906,14 @@
       "Requirements": [
         "lattice"
       ]
+    },
+    "lpSolve": {
+      "Package": "lpSolve",
+      "Version": "5.6.18",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "12c7a918599d5700e4265dd8a21f684f",
+      "Requirements": []
     },
     "magrittr": {
       "Package": "magrittr",
@@ -2179,6 +2197,41 @@
         "vctrs"
       ]
     },
+    "pkgbuild": {
+      "Package": "pkgbuild",
+      "Version": "1.4.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "beb25b32a957a22a5c301a9e441190b3",
+      "Requirements": [
+        "R6",
+        "callr",
+        "cli",
+        "crayon",
+        "desc",
+        "prettyunits",
+        "processx",
+        "rprojroot"
+      ]
+    },
+    "pkgcache": {
+      "Package": "pkgcache",
+      "Version": "2.2.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "2622106d5651a653c55430ee5f583978",
+      "Requirements": [
+        "R6",
+        "callr",
+        "cli",
+        "curl",
+        "filelock",
+        "jsonlite",
+        "prettyunits",
+        "processx",
+        "rappdirs"
+      ]
+    },
     "pkgconfig": {
       "Package": "pkgconfig",
       "Version": "2.0.3",
@@ -2186,6 +2239,31 @@
       "Repository": "CRAN",
       "Hash": "01f28d4278f15c76cddbea05899c5d6f",
       "Requirements": []
+    },
+    "pkgdepends": {
+      "Package": "pkgdepends",
+      "Version": "0.6.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d0a9c1ca3fbc82d3db84e65f09b42720",
+      "Requirements": [
+        "R6",
+        "callr",
+        "cli",
+        "curl",
+        "desc",
+        "filelock",
+        "glue",
+        "jsonlite",
+        "lpSolve",
+        "pkgbuild",
+        "pkgcache",
+        "prettyunits",
+        "processx",
+        "ps",
+        "rprojroot",
+        "zip"
+      ]
     },
     "pkgload": {
       "Package": "pkgload",
@@ -2832,9 +2910,11 @@
     "spatstat.core": {
       "Package": "spatstat.core",
       "Version": "2.1-2",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
-      "Hash": "6c1e3cc9e7df1bdfd312e4e75339feae",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/spatstat.core/spatstat.core_2.1-2.tar.gz",
+      "Hash": "4dbb2095c186a3f0837ff6bfe40fe36b",
       "Requirements": [
         "Matrix",
         "abind",
@@ -2915,7 +2995,7 @@
       "Package": "speedglm",
       "Version": "0.3-4",
       "Source": "Repository",
-      "Repository": "CRAN-Snapshot",
+      "Repository": "CRAN",
       "Hash": "a82eb1b2d58393b1e548982e467026e5",
       "Requirements": [
         "MASS",
@@ -3123,11 +3203,13 @@
     },
     "uuid": {
       "Package": "uuid",
-      "Version": "0.1-4",
+      "Version": "1.1-1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "e4169eb989a5d03ccb6b628cad1b1b50",
-      "Requirements": []
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "3d78edfb977a69fc7a0341bee25e163f"
     },
     "uwot": {
       "Package": "uwot",
@@ -3275,10 +3357,10 @@
     },
     "zip": {
       "Package": "zip",
-      "Version": "2.2.2",
+      "Version": "2.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "c42bfcec3fa6a0cce17ce1f8bc684f88",
+      "Hash": "d98c94dacb7e0efcf83b0a133a705504",
       "Requirements": []
     },
     "zlibbioc": {

@@ -14,11 +14,6 @@ class PythonWorkerException(WorkerException):
         super().__init__(error_code, user_message)
 
 
-class ErrorCodes:
-    PYTHON_WORKER_ERROR = "PYTHON_WORKER_ERROR"
-    INVALID_INPUT = "INVALID_INPUT"
-
-
 def raise_if_error(result):
     """Raise exception if result is an error.
 

@@ -6,19 +6,47 @@ on:
   release:
     types:
       - released
-  pull_request:
+  pull_request_target:
     branches:
       - master
+    types:
+      - labeled
+      - unlabeled
+      - opened
+      - synchronize
+      - reopened
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  is-safe-to-run:
+    name: Sensitive jobs are safe to be run
+    runs-on: ubuntu-20.04
+    if: (github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'safe to run')) || github.event_name == 'release' || github.event_name == 'push'
+    steps:
+      - id: is-safe-to-run
+        name: Is safe to run
+        run: |-
+          echo "Safe to run, checks will proceed"
+
+  is-not-safe-to-run:
+    name: Sensitive jobs aren't labeled safe to be run
+    runs-on: ubuntu-20.04
+    if: (github.event_name == 'pull_request_target' && !contains(github.event.pull_request.labels.*.name, 'safe to run'))
+    steps:
+      - id: is-not-safe-to-run
+        name: The pull request hasn't been labeled safe to run
+        run: |-
+          echo "Pull request not labeled safe to run"
+          exit 1
+
   uncheck-integration-test:
     name: Mark integration test as not run
     runs-on: ubuntu-20.04
-    if: github.event_name == 'pull_request'
+    needs: is-safe-to-run
+    if: github.event_name == 'pull_request_target'
     steps:
       - id: get-pr-body
         name: Get the current PR body
@@ -44,6 +72,7 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
 
       - id: uncheck-integration-checkbox
+        if: steps.create-unchecked-pr-body.outputs.body != ''
         name: Uncheck the integration checkbox
         uses: tzkhan/pr-update-action@v2
         with:
@@ -56,6 +85,7 @@ jobs:
   build-docker:
     name: Build Docker container
     runs-on: ubuntu-20.04
+    needs: is-safe-to-run
     strategy:
       matrix:
         project: ["python", "r"]
@@ -70,14 +100,27 @@ jobs:
     steps:
       - id: checkout
         name: Check out source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
 
       - id: ref
         name: Format docker tag and repository name.
         run: |-
-          # This will take a ref like `refs/heads/master`
-          # and turn it into `refs-heads-master`
-          REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            # Construct the PR_GITHUB_REF for our pull request copying GITHUB_REF's format
+            # We can't use GITHUB_REF because it is set to master in this event
+            # More info: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
+            PR_GITHUB_REF="refs/pull/${{ github.event.pull_request.number }}/merge"
+            REF_ID=$(echo $PR_GITHUB_REF | sed 's/\//-/g')
+          else
+            # This will take a ref like `refs/heads/master`
+            # and turn it into `refs-heads-master`
+            REF_ID=$(echo $GITHUB_REF | sed 's/\//-/g')
+          fi
+
           echo "ref-id=$REF_ID" >> $GITHUB_OUTPUT
 
           # the final tag is something like:
@@ -87,7 +130,7 @@ jobs:
 
           # In push & PR events we want the tag to contain the latest commit on the branch:
           # in push events, the latest commit of the master branch is GITHUB_SHA
-          # in PR synch the latest commit of the branch is found in github.event.pull_request.head.sha instead
+          # in PR synch the latest commit of the branch is found in github.sha instead
 
           TIMESTAMP=$(date +%s)
 
@@ -95,8 +138,8 @@ jobs:
             COMMIT_SHA=""
             IMAGE_TAG=$REF_ID
             TIMESTAMP=""
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            COMMIT_SHA="${{ github.sha }}"
             IMAGE_TAG="$REF_ID-$COMMIT_SHA"
             TIMESTAMP=$TIMESTAMP
           else
@@ -124,7 +167,7 @@ jobs:
       - id: ref-previous
         name: Format docker tag and repository name for the previous pushed image.
         run: |-
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
             echo "This is a pull request, base ref and sha set to the target branch."
             BASE_REF="refs-heads-${{ github.event.pull_request.base.ref }}"
             BASE_SHA=${{ github.event.pull_request.base.sha }}
@@ -150,7 +193,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -166,29 +209,22 @@ jobs:
         env:
           REPO_NAME: ${{ steps.ref.outputs.repo-name }}
 
-      - id: pull-latest-image
-        name: Pull latest Docker images from mainline
-        run: |-
-          echo Pulling $IMAGE_NAME from ECR.
-          docker pull $IMAGE_NAME || true
-
-          echo Pulling $IMAGE_NAME-builder from ECR.
-          docker pull $IMAGE_NAME-builder || true
-
-        env:
-          IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref-previous.outputs.tag, matrix.project) }}
+      - id: setup-docker-buildx
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - id: build
         name: Build Docker images
         run: |-
-          docker build --target builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME-builder \
+          docker buildx build --target builder \
+            --output=type=docker \
+            --cache-from type=registry,ref=$PREVIOUS_IMAGE_NAME-builder \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-builder .
 
-          docker build --target prod \
+          docker buildx build --target prod \
+            --output=type=docker \
             --cache-from=$IMAGE_NAME-builder \
-            --cache-from=$PREVIOUS_IMAGE_NAME \
             --build-arg GITHUB_PAT=$GITHUB_PAT \
             --tag $IMAGE_NAME-ci .
         env:
@@ -200,26 +236,33 @@ jobs:
         name: Push builder images to ECR
         run: |-
           echo Pushing image $IMAGE_NAME-builder to ECR.
-          docker push $IMAGE_NAME-builder
+          docker buildx build --push --target builder \
+            --cache-to type=registry,ref=$IMAGE_NAME-builder,mode=max,image-manifest=true \
+            --build-arg GITHUB_PAT=$GITHUB_PAT \
+            --tag $IMAGE_NAME-builder .
 
           echo Pushing image $IMAGE_NAME-ci to ECR.
           docker push $IMAGE_NAME-ci
         env:
           IMAGE_NAME: ${{ format('{0}/{1}:{2}-{3}', steps.login-ecr.outputs.registry, steps.ref.outputs.repo-name, steps.ref.outputs.image-tag, matrix.project) }}
-
+          GITHUB_PAT: ${{ secrets.API_TOKEN_GITHUB }}
   test:
     name: Run tests
     # to ensure compatibility with the sqlite found in the
     # python:3.7-buster docker image, this runs on
     # ubuntu-20.04. earlier versions of ubuntu will break the test
     runs-on: ubuntu-20.04
-    needs: build-docker
+    needs: [build-docker, is-safe-to-run]
     env:
       CI: "true"
     steps:
       - id: checkout
         name: Check out source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
 
       - id: set-up-creds
         name: Configure AWS credentials
@@ -227,7 +270,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -289,7 +332,7 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-20.04
-    needs: ["test", "build-docker"]
+    needs: [build-docker, is-safe-to-run]
     strategy:
       max-parallel: 1
       matrix:
@@ -297,7 +340,11 @@ jobs:
     steps:
       - id: checkout
         name: Check out source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
 
       - id: setup-aws
         name: Configure AWS credentials
@@ -305,7 +352,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{secrets.AWS_REGION}}
 
       - id: login-ecr
         name: Login to Amazon ECR
@@ -380,6 +427,7 @@ jobs:
           echo "sandbox-id=$SANDBOX_ID" >> $GITHUB_OUTPUT
           echo "kubernetes-env=$KUBERNETES_ENV" >> $GITHUB_OUTPUT
 
+          export GITHUB_OWNER=${{ github.repository_owner }}
           export NAMESPACE="$DEPLOYMENT_NAME-$SANDBOX_ID"
           export R_IMAGE_POLICY_TAG="{\"\$imagepolicy\": \"$NAMESPACE:$DEPLOYMENT_NAME-r:tag\"}"
           export CHART_CRD_NAME="$DEPLOYMENT_NAME-chart"
@@ -388,6 +436,7 @@ jobs:
           yq '
             select(di == 0).metadata.name = strenv(NAMESPACE) |
             select(di == 0).metadata.labels.sandboxId = strenv(SANDBOX_ID) |
+            select(di == 1).spec.url = "https://github.com/" + strenv(GITHUB_OWNER) + "/worker" |
             select(di == 1).metadata.name = strenv(CHART_CRD_NAME) |
             select(di == 1).metadata.namespace = strenv(NAMESPACE) |
             select(di == 1).spec.ref.[strenv(CHART_REF_TYPE)] = strenv(CHART_REF) |
@@ -434,6 +483,7 @@ jobs:
 
           cat $DEPLOYMENT_NAME.yaml
         env:
+          GITHUB_OWNER: ${{ github.repository_owner }}
           IMAGE_TAG: ${{ needs.build-docker.outputs.image-tag }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -455,7 +505,7 @@ jobs:
 
       - name: Change name of deployment file for staging deployment
         if:
-          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+          (github.event_name == 'pull_request_target' || github.event_name == 'push') && matrix.environment == 'staging'
         env:
           DEPLOYMENT_NAME: ${{ steps.fill-metadata.outputs.deployment-name }}
           REF_ID: ${{ needs.build-docker.outputs.ref-id }}
@@ -464,7 +514,7 @@ jobs:
 
       - name: Push staging deployment template to releases
         if:
-          (github.event_name == 'pull_request' || github.event_name == 'push') && matrix.environment == 'staging'
+          (github.event_name == 'pull_request_target' || github.event_name == 'push') && matrix.environment == 'staging'
         uses: dmnemec/copy_file_to_another_repo_action@v1.0.4
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
@@ -478,7 +528,7 @@ jobs:
   ready-to-merge:
     name: Ready for merging
     runs-on: ubuntu-20.04
-    needs: deploy
+    needs: [deploy, is-safe-to-run]
     steps:
       - id: ready-to-merge
         name: Signal readiness to merge
@@ -488,7 +538,7 @@ jobs:
   report-if-failed:
     name: Report if workflow failed
     runs-on: ubuntu-20.04
-    needs: [build-docker, test, deploy]
+    needs: [build-docker, test, deploy, is-safe-to-run]
     if: failure() && github.ref == 'refs/heads/master'
     steps:
       - id: send-to-slack
