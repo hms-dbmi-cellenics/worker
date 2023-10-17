@@ -7,15 +7,12 @@ import boto3
 import redis
 from aws_xray_sdk import core, global_sdk_config
 
+
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")
-
-timeout = int(
-    os.getenv(
-        "WORKER_TIMEOUT",
-        default=str(60 * 10),
-    )
-)
+default_timeout = 60 * 10
+timeout = os.getenv("WORKER_TIMEOUT", default = str(default_timeout))
+timeout = int(timeout) if timeout else default_timeout
 
 ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 aws_account_id = os.getenv("AWS_ACCOUNT_ID")
