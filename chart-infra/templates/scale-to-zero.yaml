@@ -1,4 +1,5 @@
-{{- if eq .Values.myAccount.workerScaleToZero "true" }}
+# workerScaleToZero isn't picked up - needs to be in master?
+{{- if or (eq .Values.myAccount.workerScaleToZero "true") (eq .Values.kubernetes.env "staging") }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:

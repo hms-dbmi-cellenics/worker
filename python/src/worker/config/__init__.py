@@ -14,9 +14,6 @@ default_timeout = 60 * 10
 timeout = os.getenv("WORKER_TIMEOUT", default = str(default_timeout))
 timeout = int(timeout) if timeout else default_timeout
 
-print("Worker timeout (s):")
-print(timeout)
-
 ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 aws_account_id = os.getenv("AWS_ACCOUNT_ID")
 aws_region = os.getenv("AWS_DEFAULT_REGION")
