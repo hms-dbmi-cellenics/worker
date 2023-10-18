@@ -139,7 +139,7 @@ test_that("RunUMAP uses umap-learn with seed.use", {
    verbose = FALSE,
    min.dist = config$minimumDistance,
    metric = config$distanceMetric,
-   umap.method = "uwot",
+   umap.method = "umap-learn",
    seed.use = ULTIMATE_SEED))
 
 })
