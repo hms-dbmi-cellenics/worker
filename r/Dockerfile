@@ -34,19 +34,6 @@ RUN Rscript restore_renv.R
 # deactivate so that above .libPaths used
 RUN R -q -e "renv::deactivate()"
 
-# install miniconda and python umap-learn for RunUMAP
-# clean conda
-# ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
-# RUN R -q -e "reticulate::install_miniconda()" && \
-#     R -q -e "reticulate::conda_remove('r-reticulate')" && \
-#     R -q -e "reticulate::conda_create('r-reticulate', python_version='3.10')" && \
-#     R -q -e "reticulate::conda_install('r-reticulate', packages = c('umap-learn=0.5.3'))" && \
-#     export PATH=$PATH:$RETICULATE_MINICONDA_PATH/bin && \
-#     conda install conda-pack && \
-#     conda clean -fay && \
-#     conda pack -n r-reticulate && \
-#     R -q -e "reticulate::miniconda_uninstall()"
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
@@ -68,14 +55,9 @@ RUN Rscript check_package_licenses.R
 # ---------------------------------------------------
 FROM rocker/r-ver:4.2.2 AS common
 WORKDIR /src/worker
-# ENV RETICULATE_MINICONDA_PATH=/src/r-miniconda
 
 # get source code and R packages
 COPY --from=builder /src /src
-
-# # setup reticulate env
-# RUN mkdir -p $RETICULATE_MINICONDA_PATH/envs/r-reticulate && \
-#     tar -xzf r-reticulate.tar.gz -C $RETICULATE_MINICONDA_PATH/envs/r-reticulate
 
 # add path where renv installed R packages to .libPaths
 ENV RENV_LIB=/src/lib
@@ -83,13 +65,14 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 
 # install runtime system deps
 # cleanup setup files
-RUN echo "python3-pip" >> sysdeps_run.txt && \
+RUN echo "python3-pip python3-venv python3-dev" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-# link system libstdc++ to conda installed version
-# RUN rm /usr/lib/x86_64-linux-gnu/libstdc++.so.6 && \
-#     ln -s /src/r-miniconda/envs/r-reticulate/lib/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+# install umap-learn for RunUMAP
+ENV WORKON_HOME=/src/.virtualenvs
+RUN R -q -e "reticulate::virtualenv_create('r-reticulate')" && \
+    R -q -e "reticulate::virtualenv_install('r-reticulate', 'umap-learn==0.5.3', pip_options='--no-cache-dir')" 
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
