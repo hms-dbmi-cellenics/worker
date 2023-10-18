@@ -6,7 +6,7 @@ ACCOUNT_ID = {
 }
 
 domain_specific = {
-    'HMS': {'timeout': 40 * 60},
+    'HMS': {'production': {'timeout': 40 * 60}},
     'BIOMAGE': {},
     'BIOMAGE_PRIVATE': {}
 }
