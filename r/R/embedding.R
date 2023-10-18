@@ -40,10 +40,10 @@ runEmbedding <- function(req, data) {
   message("Active numPCs --> ", pca_nPCs)
   message("Number of cells/sample:")
   table(data$samples)
-  
+
   if (!use_saved)
     data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
-  
+
   df_embedding <- Seurat::Embeddings(data, reduction = method)
 
   # Order embedding by cells id in ascending form
@@ -90,7 +90,7 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
       verbose = FALSE,
       min.dist = config$minimumDistance,
       metric = config$distanceMetric,
-      umap.method = "umap-learn",
+      umap.method = "uwot",
       seed.use = ULTIMATE_SEED
     )
   }
