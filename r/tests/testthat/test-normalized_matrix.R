@@ -18,7 +18,7 @@ mock_req <- function(apply_subset = TRUE) {
 mockery::stub(
   GetNormalizedExpression,
   "vroom::vroom_write",
-  INTERNAL_RESULTS_PATH
+  TMP_RESULTS_PATH_GZ
 )
 
 stubbed_GetNormalizedExpression <- function(req, data) {
@@ -67,7 +67,7 @@ test_that("GetNormalizedExpression saves the normalized matrix using the correct
   res <- stubbed_GetNormalizedExpression(req, data)
 
   expect_type(res, "character")
-  expect_equal(res, INTERNAL_RESULTS_PATH)
+  expect_equal(res, TMP_RESULTS_PATH_GZ)
 })
 
 
