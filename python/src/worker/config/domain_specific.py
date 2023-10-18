@@ -13,9 +13,6 @@ domain_specific = {
 
 
 def get_domain_specific():
-    if os.environ.get('NODE_ENV') == 'test':
-        return domain_specific['TEST']
-
     aws_account_id = os.getenv('AWS_ACCOUNT_ID')
 
     if aws_account_id == ACCOUNT_ID['HMS']:
