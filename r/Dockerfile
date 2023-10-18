@@ -64,6 +64,7 @@ ENV RENV_LIB=/src/lib
 RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.site
 
 # install runtime system deps
+# python3-dev prevents 'reticulate can only bind to copies of Python built with --enable-shared'
 # cleanup setup files
 RUN echo "python3-pip python3-venv python3-dev" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
