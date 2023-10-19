@@ -72,11 +72,12 @@ test_that("subsetting is applied and changes GetNormalizedExpression output", {
   req <- mock_req()
 
   res_filt <- stubbed_GetNormalizedExpression(req, data)
-  withr::defer(unlink(dirname(res), recursive = TRUE))
+  withr::defer(unlink(dirname(res_filt), recursive = TRUE))
   matrix_filt <- vroom::vroom(res_filt, delim = ",", col_names = TRUE)
 
   req <- mock_req(apply_subset = FALSE)
   res_unfilt <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res_unfilt), recursive = TRUE))
   matrix_unfilt <- vroom::vroom(res_unfilt, delim = ",", col_names = TRUE)
 
   expect_false(identical(matrix_unfilt, matrix_filt))
