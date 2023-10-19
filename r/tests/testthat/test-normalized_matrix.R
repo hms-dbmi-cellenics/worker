@@ -15,49 +15,29 @@ mock_req <- function(apply_subset = TRUE) {
   )
 }
 
-mockery::stub(
-  GetNormalizedExpression,
-  "vroom::vroom_write",
-  TMP_RESULTS_PATH_GZ
-)
+
+stub_vroom_write <- function(matrix, fpath, delim = ",", quote = "none") {
+  # global variable points to system root
+  fpath <- paste0(".", fpath)
+  if (!dir.exists(dirname(fpath))) {
+    dir.create(dirname(fpath), recursive = TRUE)
+  }
+  vroom::vroom_write(matrix, fpath, delim = delim, quote = quote)
+  return(fpath)
+}
+
+
 
 stubbed_GetNormalizedExpression <- function(req, data) {
-  GetNormalizedExpression(req, data)
+  mockery::stub(
+    GetNormalizedExpression,
+    "vroom::vroom_write",
+    stub_vroom_write
+  )
+
+  res <- GetNormalizedExpression(req, data)
+  return(paste0(".", res))
 }
-
-mock_GetNormalizedExpression <- function(req, data) {
-  subset_ids <- req$body$subsetBy
-  apply_subset <- req$body$applySubset
-
-  if (apply_subset && length(subset_ids) == 0) {
-    stop(
-      generateErrorMessage(
-        error_codes$EMPTY_CELL_SET,
-        "No cells match requested filters."
-      )
-    )
-  }
-
-  message("Extracting normalized expression matrix")
-
-  if (apply_subset) {
-    message("Number of cells before subsetting: ", ncol(data))
-    data <- subsetIds(data, cells_id = subset_ids)
-  } else {
-    message("No subsetting specified, sending the whole matrix")
-  }
-
-  matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
-
-  message("Number of cells in matrix to return: ", ncol(matrix))
-
-  matrix <- tibble::rownames_to_column(matrix, var = " ")
-
-  temp_path <- tempfile(fileext = ".csv")
-  vroom::vroom_write(matrix, temp_path, delim = ",", quote = "none")
-  return(temp_path)
-}
-
 
 
 test_that("GetNormalizedExpression saves the normalized matrix using the correct path", {
@@ -65,9 +45,10 @@ test_that("GetNormalizedExpression saves the normalized matrix using the correct
   req <- mock_req()
 
   res <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res), recursive = TRUE))
 
   expect_type(res, "character")
-  expect_equal(res, TMP_RESULTS_PATH_GZ)
+  expect_equal(gsub("^\\.", "", res), TMP_RESULTS_PATH_GZ)
 })
 
 
@@ -77,31 +58,28 @@ test_that("GetNormalizedExpression correctly subsets the data", {
 
   original_ncol <- ncol(data)
 
-  res <- mock_GetNormalizedExpression(req, data)
+  res <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res), recursive = TRUE))
 
   matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
 
   expect_equal(ncol(matrix) - 1, length(req$body$subsetBy)) # -1 because of the rownames column
   expect_false(ncol(data) == ncol(matrix))
-
-  unlink(res)
 })
 
 test_that("subsetting is applied and changes GetNormalizedExpression output", {
   data <- mock_scdata()
   req <- mock_req()
 
-  res_filt <- mock_GetNormalizedExpression(req, data)
+  res_filt <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res), recursive = TRUE))
   matrix_filt <- vroom::vroom(res_filt, delim = ",", col_names = TRUE)
 
   req <- mock_req(apply_subset = FALSE)
-  res_unfilt <- mock_GetNormalizedExpression(req, data)
+  res_unfilt <- stubbed_GetNormalizedExpression(req, data)
   matrix_unfilt <- vroom::vroom(res_unfilt, delim = ",", col_names = TRUE)
 
   expect_false(identical(matrix_unfilt, matrix_filt))
-
-  unlink(res_filt)
-  unlink(res_unfilt)
 })
 
 
@@ -109,15 +87,17 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
   data <- mock_scdata()
   req <- mock_req(apply_subset = FALSE)
 
-  expect_message({
-    res <- mock_GetNormalizedExpression(req, data)
-  }, "No subsetting specified, sending the whole matrix")
+  expect_message(
+    {
+      res <- stubbed_GetNormalizedExpression(req, data)
+      withr::defer(unlink(dirname(res), recursive = TRUE))
+    },
+    "No subsetting specified, sending the whole matrix"
+  )
 
   matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
 
   expect_true(ncol(data) == ncol(matrix) - 1)
-
-  unlink(res)
 })
 
 
@@ -129,4 +109,3 @@ test_that("GetNormalizedExpression fails if subsetBy is empty", {
 
   expect_error(GetNormalizedExpression(req, data), "No cells match requested filters.")
 })
-
