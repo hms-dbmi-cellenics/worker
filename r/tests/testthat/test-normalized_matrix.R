@@ -61,7 +61,7 @@ test_that("GetNormalizedExpression correctly subsets the data", {
   res <- stubbed_GetNormalizedExpression(req, data)
   withr::defer(unlink(dirname(res), recursive = TRUE))
 
-  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
+  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE, show_col_types = FALSE)
 
   expect_equal(ncol(matrix) - 1, length(req$body$subsetBy)) # -1 because of the rownames column
   expect_false(ncol(data) == ncol(matrix))
@@ -73,12 +73,12 @@ test_that("subsetting is applied and changes GetNormalizedExpression output", {
 
   res_filt <- stubbed_GetNormalizedExpression(req, data)
   withr::defer(unlink(dirname(res_filt), recursive = TRUE))
-  matrix_filt <- vroom::vroom(res_filt, delim = ",", col_names = TRUE)
+  matrix_filt <- vroom::vroom(res_filt, delim = ",", col_names = TRUE, show_col_types = FALSE)
 
   req <- mock_req(apply_subset = FALSE)
   res_unfilt <- stubbed_GetNormalizedExpression(req, data)
   withr::defer(unlink(dirname(res_unfilt), recursive = TRUE))
-  matrix_unfilt <- vroom::vroom(res_unfilt, delim = ",", col_names = TRUE)
+  matrix_unfilt <- vroom::vroom(res_unfilt, delim = ",", col_names = TRUE, show_col_types = FALSE)
 
   expect_false(identical(matrix_unfilt, matrix_filt))
 })
@@ -96,7 +96,7 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
     "No subsetting specified, sending the whole matrix"
   )
 
-  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE)
+  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE, show_col_types = FALSE)
 
   expect_true(ncol(data) == ncol(matrix) - 1)
 })
