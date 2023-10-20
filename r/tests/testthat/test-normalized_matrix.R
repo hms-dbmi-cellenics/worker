@@ -17,7 +17,7 @@ mock_req <- function(apply_subset = TRUE) {
 
 
 stub_vroom_write <- function(matrix, fpath, delim = ",", quote = "none") {
-  # global variable points to system root
+  # add '.' to path to point it to cwd instead of system root
   fpath <- paste0(".", fpath)
   if (!dir.exists(dirname(fpath))) {
     dir.create(dirname(fpath), recursive = TRUE)
