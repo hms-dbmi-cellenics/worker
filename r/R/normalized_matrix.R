@@ -40,7 +40,7 @@ GetNormalizedExpression <- function(req, data) {
 
   matrix <- tibble::rownames_to_column(matrix, var = " ")
 
-  # vroom_write will compress the file too because TMP_RESULTS_PATH_GZ ends with .gz
+  # vroom_write compresses the file based on filename extension
   vroom::vroom_write(matrix, TMP_RESULTS_PATH_GZ, delim = ",", quote = "none")
 
   return(TMP_RESULTS_PATH_GZ)
