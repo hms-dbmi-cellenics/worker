@@ -16,13 +16,13 @@ mock_req <- function(apply_subset = TRUE) {
 }
 
 
-stub_vroom_write <- function(matrix, fpath, delim = ",", quote = "none") {
+stub_fwrite <- function(matrix, fpath, quote = FALSE, row.names = TRUE) {
   # add '.' to path to point it to cwd instead of system root
   fpath <- paste0(".", fpath)
   if (!dir.exists(dirname(fpath))) {
     dir.create(dirname(fpath), recursive = TRUE)
   }
-  vroom::vroom_write(matrix, fpath, delim = delim, quote = quote)
+  data.table::fwrite(matrix, fpath, quote = FALSE, row.names = TRUE)
   return(fpath)
 }
 
@@ -31,8 +31,8 @@ stub_vroom_write <- function(matrix, fpath, delim = ",", quote = "none") {
 stubbed_GetNormalizedExpression <- function(req, data) {
   mockery::stub(
     GetNormalizedExpression,
-    "vroom::vroom_write",
-    stub_vroom_write
+    "data.table::fwrite",
+    stub_fwrite
   )
 
   res <- GetNormalizedExpression(req, data)
@@ -61,9 +61,9 @@ test_that("GetNormalizedExpression correctly subsets the data", {
   res <- stubbed_GetNormalizedExpression(req, data)
   withr::defer(unlink(dirname(res), recursive = TRUE))
 
-  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE, show_col_types = FALSE)
+  matrix <- data.table::fread(res, sep=",", quote = F, header = TRUE)
 
-  expect_equal(ncol(matrix) - 1, length(req$body$subsetBy)) # -1 because of the rownames column
+  expect_equal(ncol(matrix) - 2, length(req$body$subsetBy)) # -1 because of the rownames and index columns
   expect_false(ncol(data) == ncol(matrix))
 })
 
@@ -73,12 +73,12 @@ test_that("subsetting is applied and changes GetNormalizedExpression output", {
 
   res_filt <- stubbed_GetNormalizedExpression(req, data)
   withr::defer(unlink(dirname(res_filt), recursive = TRUE))
-  matrix_filt <- vroom::vroom(res_filt, delim = ",", col_names = TRUE, show_col_types = FALSE)
+  matrix_filt <- data.table::fread(res_filt, sep=",", quote = F, header = TRUE)
 
   req <- mock_req(apply_subset = FALSE)
   res_unfilt <- stubbed_GetNormalizedExpression(req, data)
   withr::defer(unlink(dirname(res_unfilt), recursive = TRUE))
-  matrix_unfilt <- vroom::vroom(res_unfilt, delim = ",", col_names = TRUE, show_col_types = FALSE)
+  matrix_unfilt <- data.table::fread(res_unfilt, sep=",", quote = F, header = TRUE)
 
   expect_false(identical(matrix_unfilt, matrix_filt))
 })
@@ -96,9 +96,9 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
     "No subsetting specified, sending the whole matrix"
   )
 
-  matrix <- vroom::vroom(res, delim = ",", col_names = TRUE, show_col_types = FALSE)
+  matrix <-data.table::fread(res, sep=",", quote = F, header = TRUE)
 
-  expect_true(ncol(data) == ncol(matrix) - 1)
+  expect_true(ncol(data) == ncol(matrix) - 2)
 })
 
 
