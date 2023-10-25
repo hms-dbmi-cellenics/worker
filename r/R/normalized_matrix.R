@@ -40,5 +40,8 @@ GetNormalizedExpression <- function(req, data) {
 
   matrix <- tibble::rownames_to_column(matrix, var = " ")
 
-  return(vroom::vroom_format(matrix, delim=","))
+  # fwrite compresses the file based on filename extension
+  data.table::fwrite(matrix, TMP_RESULTS_PATH_GZ, quote = F, row.names = T)
+
+  return(TMP_RESULTS_PATH_GZ)
 }
