@@ -74,7 +74,7 @@ class GeneExpression(Task):
         raise_if_error(result)
         result = result.get("data")
 
-        if cell_order:
+        if cell_order != None:
             result["cellOrder"] = cell_order
 
         return self._format_result(result)
