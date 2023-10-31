@@ -193,7 +193,7 @@ jobs:
 
       - id: setup-aws
         name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ci-role-worker
           aws-region: ${{ secrets.AWS_REGION }}
@@ -255,6 +255,10 @@ jobs:
     # python:3.7-buster docker image, this runs on
     # ubuntu-20.04. earlier versions of ubuntu will break the test
     runs-on: ubuntu-20.04
+    # TODO: the permissions here are too broad and need narrowing down
+    # They are needed for the upload-coverage step, so that it can
+    # upload the coverage report and post comments.
+    permissions: write-all
     needs: [build-docker, is-safe-to-run]
     env:
       CI: "true"
@@ -268,7 +272,7 @@ jobs:
 
       - id: setup-aws
         name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ci-role-worker
           aws-region: ${{ secrets.AWS_REGION }}
@@ -348,7 +352,7 @@ jobs:
 
       - id: setup-aws
         name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ci-role-worker
           aws-region: ${{ secrets.AWS_REGION }}
