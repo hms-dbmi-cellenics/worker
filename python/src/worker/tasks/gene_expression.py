@@ -61,6 +61,9 @@ class GeneExpression(Task):
     def compute(self):
         request = self._format_request()
         
+        print("requestDebug")
+        print(request)
+
         cell_order = request.get("cellIds")
 
         response = requests.post(

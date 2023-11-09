@@ -13,6 +13,7 @@ class TestGeneExpression:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
         self.correct_one_gene = {
+            "downsampled": False,
             "experimentId": "e52b39624588791a7889e39c617f669e",
             "timeout": "2099-12-31 00:00:00",
             "body": {
@@ -21,6 +22,7 @@ class TestGeneExpression:
             },
         }
         self.correct_request = {
+            "downsampled": True,
             "experimentId": "e52b39624588791a7889e39c617f669e",
             "timeout": "2099-12-31 00:00:00",
             "body": {
