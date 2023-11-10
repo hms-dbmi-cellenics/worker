@@ -28,10 +28,12 @@ class TestMarkerHeatmap:
             "body": {
                 "name": "MarkerHeatmap",
                 "nGenes": 5,
-                "selectedCellSet": "louvain",
-                "groupByClasses": ["louvain"],
-                "selectedPoints": "All",
-                "hiddenCellSets": []    
+                "downsampleSettings": {
+                    "selectedCellSet": "louvain",
+                    "groupedTracks": ["sample", "louvain"],
+                    "selectedPoints": 'All',
+                    "hiddenCellSets": []
+                }
             },
         }
 
@@ -105,7 +107,7 @@ class TestMarkerHeatmap:
 
         assert all(key in request for key in expected_keys)
         assert "children" in request["cellSets"].keys()
-        assert request["cellSets"]["key"] == self.correct_request["body"]["selectedCellSet"]
+        assert request["cellSets"]["key"] == self.correct_request["body"]["downsampleSettings"]["selectedCellSet"]
 
     @responses.activate
     def test_should_throw_exception_on_r_worker_error(self):
@@ -146,11 +148,13 @@ class TestMarkerHeatmap:
                 "body": {
                     "name": "MarkerHeatmap",
                     "nGenes": 5,
-                    "selectedCellSet": "louvain",
-                    "groupByClasses": ["louvain"],
-                    "selectedPoints": "All",
-                    "hiddenCellSets": [],
-                    "maxCells": 100,
+                    "downsampleSettings": {
+                        "maxCells": 100,
+                        "selectedCellSet": "louvain",
+                        "groupedTracks": ["louvain"],
+                        "selectedPoints": 'All',
+                        "hiddenCellSets": []
+                    }
                 },
             }
 
@@ -161,7 +165,7 @@ class TestMarkerHeatmap:
 
         expected_cell_ids = [324, 622, 166, 916, 38, 344, 31, 374, 630, 386, 149, 22, 68, 202, 620, 777, 701, 254, 134, 679, 384, 113, 277, 554, 213, 422, 751, 903, 247, 564, 356, 495, 655, 582, 882, 352, 331, 127, 673, 135, 89, 141, 814, 262, 506, 792, 502, 404, 599, 879, 594, 287, 864, 896, 21, 291, 547, 0, 351, 176, 13, 742, 285, 170, 121, 669, 132, 787, 319, 548, 760, 320, 315, 553, 230, 557, 371, 180, 556, 691, 409, 219, 289, 736, 726, 387, 909, 821, 768, 175, 771, 310, 207, 443, 158, 498, 697]
 
-        assert r_request["cellSets"]["key"] == py_request["body"]["selectedCellSet"]
+        assert r_request["cellSets"]["key"] == py_request["body"]["downsampleSettings"]["selectedCellSet"]
         assert r_request["cellIds"] == expected_cell_ids
     
     def test_downsamples_by_many_groups_correctly(self):
@@ -178,11 +182,13 @@ class TestMarkerHeatmap:
                 "body": {
                     "name": "MarkerHeatmap",
                     "nGenes": 5,
-                    "selectedCellSet": "louvain",
-                    "groupByClasses": ["louvain", "sample"],
-                    "selectedPoints": "All",
-                    "hiddenCellSets": [],
-                    "maxCells": 100,
+                    "downsampleSettings": {
+                        "maxCells": 100,
+                        "selectedCellSet": "louvain",
+                        "groupedTracks": ["louvain", "sample"],
+                        "selectedPoints": 'All',
+                        "hiddenCellSets": []
+                    }
                 },
             }
 
@@ -210,11 +216,13 @@ class TestMarkerHeatmap:
                 "body": {
                     "name": "MarkerHeatmap",
                     "nGenes": 5,
-                    "selectedCellSet": "sample",
-                    "groupByClasses": ["louvain", "sample"],
-                    "selectedPoints": "louvain/louvain-6",
-                    "hiddenCellSets": [],
-                    "maxCells": 100,
+                    "downsampleSettings": {
+                        "maxCells": 100,
+                        "selectedCellSet": "louvain",
+                        "groupedTracks": ["louvain", "sample"],
+                        "selectedPoints": 'louvain/louvain-6',
+                        "hiddenCellSets": []
+                    }
                 },
             }
 
@@ -223,7 +231,7 @@ class TestMarkerHeatmap:
             r_request, cell_order = bla._format_request()
             assert isinstance(py_request, dict)
 
-        assert r_request["cellSets"]["key"] == py_request["body"]["selectedCellSet"]
+        assert r_request["cellSets"]["key"] == py_request["body"]["downsampleSettings"]["selectedCellSet"]
         
         louvain_6_cell_ids = get_cell_ids("louvain", "louvain-6", cell_sets_from_s3)
         
@@ -247,11 +255,13 @@ class TestMarkerHeatmap:
                 "body": {
                     "name": "MarkerHeatmap",
                     "nGenes": 5,
-                    "selectedCellSet": "sample",
-                    "groupByClasses": ["louvain", "sample"],
-                    "selectedPoints": "louvain/louvain-6",
-                    "hiddenCellSets": ["5d88f799-c704-4667-99f8-8d6dee6cfc22"],
-                    "maxCells": 100,
+                    "downsampleSettings": {
+                        "maxCells": 100,
+                        "selectedCellSet": "sample",
+                        "groupedTracks": ["louvain", "sample"],
+                        "selectedPoints": 'louvain/louvain-6',
+                        "hiddenCellSets": ["5d88f799-c704-4667-99f8-8d6dee6cfc22"]
+                    }
                 },
             }
 
@@ -260,7 +270,7 @@ class TestMarkerHeatmap:
             r_request, cell_order = bla._format_request()
             assert isinstance(py_request, dict)
 
-        assert r_request["cellSets"]["key"] == py_request["body"]["selectedCellSet"]
+        assert r_request["cellSets"]["key"] == py_request["body"]["downsampleSettings"]["selectedCellSet"]
         
         
         louvain_6_cell_ids = get_cell_ids("louvain", "louvain-6", cell_sets_from_s3)

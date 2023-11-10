@@ -26,6 +26,9 @@ class MarkerHeatmap(Task):
     def _format_request(self):
         request = {"nGenes": self.task_def["nGenes"]}
 
+        print("selftask_defDebug")
+        print(self.task_def)
+
         downsample_settings = self.task_def["downsampleSettings"]
 
         selected_cell_set = downsample_settings["selectedCellSet"]
@@ -37,7 +40,7 @@ class MarkerHeatmap(Task):
 
         # There is no max_cells being sent right now, but this allows
         #  us to control this number in the future if we want to
-        max_cells = self.task_def.get("maxCells", 1000)
+        max_cells = downsample_settings.get("maxCells", 1000)
 
         cell_order = get_heatmap_cell_order(
             selected_cell_set,
