@@ -8,17 +8,12 @@ import pytest
 import responses
 from botocore.stub import Stubber
 from exceptions import RWorkerException
-from tests.data.cell_set_types import cell_set_types
 from tests.data.cell_sets_from_s3 import cell_sets_from_s3
 from worker.config import config
 from worker.tasks.marker_heatmap import MarkerHeatmap
 
-def get_cell_ids(cell_class_key, cell_set_key, cell_sets):
-    cell_class = next(cell_class for cell_class in cell_sets["cellSets"] if cell_class["key"] == cell_class_key)
-    cell_ids = next(cell_set for cell_set in cell_class["children"] if cell_set["key"] == cell_set_key)["cellIds"]
-    return cell_ids
+from tests.utils import get_cell_ids 
 
-# cell_sets_from_s3
 class TestMarkerHeatmap:
     @pytest.fixture(autouse=True)
     def load_correct_definition(self):
@@ -107,6 +102,7 @@ class TestMarkerHeatmap:
 
         assert all(key in request for key in expected_keys)
         assert "children" in request["cellSets"].keys()
+        
         assert request["cellSets"]["key"] == self.correct_request["body"]["downsampleSettings"]["selectedCellSet"]
 
     @responses.activate
