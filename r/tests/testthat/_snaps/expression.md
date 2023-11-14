@@ -1,3 +1,69 @@
+# Expression task works correctly with downsampled = TRUE.
+
+    Code
+      res
+    Output
+      $orderedGeneNames
+      [1] "MS4A1" "CD79B"
+      
+      $stats
+      $stats$rawMean
+      [1] 0.7890259 1.3545382
+      
+      $stats$rawStdev
+      [1] 1.930257 2.203956
+      
+      $stats$truncatedMin
+      [1] 0 0
+      
+      $stats$truncatedMax
+      [1] 5.698965 5.545942
+      
+      
+      $rawExpression
+      $rawExpression$values
+      list()
+      
+      $rawExpression$index
+      list()
+      
+      $rawExpression$ptr
+      [1] 0 0 0
+      
+      $rawExpression$size
+      [1] 6 2
+      
+      
+      $truncatedExpression
+      $truncatedExpression$values
+      list()
+      
+      $truncatedExpression$index
+      list()
+      
+      $truncatedExpression$ptr
+      [1] 0 0 0
+      
+      $truncatedExpression$size
+      [1] 6 2
+      
+      
+      $zScore
+      $zScore$values
+       [1] -0.4087672 -0.4087672 -0.4087672 -0.4087672 -0.4087672 -0.6145940
+       [7] -0.6145940 -0.6145940 -0.6145940 -0.6145940
+      
+      $zScore$index
+       [1] 1 2 3 4 5 1 2 3 4 5
+      
+      $zScore$ptr
+      [1]  0  5 10
+      
+      $zScore$size
+      [1] 6 2
+      
+      
+
 # Expression task keeps order regardless of the request received.
 
     Code

@@ -1,8 +1,8 @@
-mock_req <- function(downsampled) {
+mock_req <- function() {
   req <- list(
     body = list(
       genes = list("MS4A1", "CD79B"),
-      downsampled = downsampled
+      downsampled = FALSE
     )
   )
   return(req)
@@ -21,7 +21,7 @@ mock_scdata <- function() {
 
 test_that("Expression task returns appropriate number and names of genes.", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
 
   res <- runExpression(req, data)
 
@@ -37,9 +37,37 @@ test_that("Expression task returns appropriate number and names of genes.", {
   expect_equal(as.list(res$orderedGeneNames), req$body$genes)
 })
 
+test_that("Expression task works correctly with downsampled = TRUE.", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  req$body$downsampled = TRUE
+  req$body$downsampleSettings = list(
+    selectedCellSet = "louvain",
+    groupedTracks = list(
+      "louvain",
+      "sample"
+    ),
+    selectedPoints = "All",
+    hiddenCellSets = list()
+  )
+  req$body$cellIds <- c(1,2,3,4,5)
+
+  res <- runExpression(req, data)
+
+  expect_equal(
+    names(res),
+    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
+  )
+
+  expect_equal(res$orderedGeneNames, c("MS4A1", "CD79B"))
+  expect_equal(res$stats$rawMean, c(0.7890259, 1.3545382))
+  expect_snapshot(res)
+})
+
 test_that("Expression task keeps order regardless of the request received.", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
 
   # Change order so that we can make sure this doesnt affect order
   rev_req <- req
@@ -64,7 +92,7 @@ test_that("Expression task keeps order regardless of the request received.", {
 
 test_that("Expression matrices are correctly formatted for mathJS", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
 
   res <- runExpression(req, data)
 
@@ -91,7 +119,7 @@ test_that("Expression matrices are correctly formatted for mathJS", {
 
 test_that("Expression task returns appropriate number of cells.", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
 
   res <- runExpression(req, data)
 
@@ -111,7 +139,7 @@ test_that("Expression task returns appropriate number of cells.", {
 
 test_that("getStats works well", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
@@ -167,7 +195,7 @@ test_that("getStats works well", {
 
 test_that("Expression task does not return gene that does not exist", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   req$body$genes <- append(req$body$genes, "aaa")
 
   res <- runExpression(req, data)
@@ -193,7 +221,7 @@ test_that("Expression task does not return gene that does not exist", {
 
 test_that("Expression task works with one gene", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   req$body$genes <- list("MS4A1")
 
   res <- runExpression(req, data)
@@ -216,7 +244,7 @@ test_that("Expression task works with one gene", {
 
 test_that("If max truncated expression value is 0, finds a non-zero value", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
 
   data@assays$RNA@data["MS4A1", ] <- 0
   data@assays$RNA@data["MS4A1", 1] <- 5
@@ -227,7 +255,7 @@ test_that("If max truncated expression value is 0, finds a non-zero value", {
 
 test_that("runExpression throws an error if request only non existing genes", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   req$body$genes <- list("blah")
 
   expect_error(runExpression(req, data), "Gene\\(s\\): blah not found!")
@@ -236,7 +264,7 @@ test_that("runExpression throws an error if request only non existing genes", {
 
 test_that("truncateExpression truncates correctly", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
@@ -267,7 +295,7 @@ test_that("truncateExpression truncates correctly", {
 
 test_that("scaleExpression correctly calculates zScore", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
@@ -293,7 +321,7 @@ test_that("scaleExpression correctly calculates zScore", {
 
 test_that("raw expression values are the same as in the original data", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
@@ -321,7 +349,7 @@ test_that("order of cells in the completed matrix is correct", {
   cell_ids <- c(0, 5, 10, 30, 79)
   data <- subsetIds(data, cell_ids)
 
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
@@ -360,7 +388,7 @@ test_that("order of cells in the completed matrix is correct", {
 
 test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
@@ -389,7 +417,7 @@ test_that("toSparseJson returns single value arrays as lists", {
   # fixes this issue.
 
   data <- mock_scdata()
-  req <- mock_req(FALSE)
+  req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
 
   gene_subset <-
