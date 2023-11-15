@@ -51,7 +51,7 @@ test: ## Executes unit tests
 	@docker top biomage-worker-python > /dev/null 2>&1 || \
 	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
 	@docker exec -it biomage-worker-python bash -c \
-	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing"
+	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing $(extra_args)"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
