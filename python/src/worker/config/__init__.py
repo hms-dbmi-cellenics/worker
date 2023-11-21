@@ -2,20 +2,16 @@ import os
 import re
 import types
 from functools import cached_property
+from .domain_specific import get_domain_specific
 
 import boto3
 import redis
 from aws_xray_sdk import core, global_sdk_config
 
+
 kube_env = os.getenv("K8S_ENV")
 cluster_env = os.getenv("CLUSTER_ENV")
-
-timeout = int(
-    os.getenv(
-        "WORK_TIMEOUT",
-        default=str(60 * 10),
-    )
-)
+timeout = get_domain_specific().get(kube_env, {}).get('timeout', 10 * 60)
 
 ignore_timeout = os.getenv("IGNORE_TIMEOUT") == "true"
 aws_account_id = os.getenv("AWS_ACCOUNT_ID")

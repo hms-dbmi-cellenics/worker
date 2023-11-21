@@ -1,13 +1,12 @@
 # pull official base image
-FROM python:3.8-buster AS builder
+FROM python:3.8-slim-buster AS builder
 
 # set working directory
 WORKDIR /src
 
 # install app dependencies
 COPY requirements.txt ./
-RUN pip3 install -r requirements.txt
-
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

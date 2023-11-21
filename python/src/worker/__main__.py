@@ -23,6 +23,8 @@ basicConfig(format="%(asctime)s %(message)s", level=INFO)
 def main():
     if config.IGNORE_TIMEOUT:
         info("Worker configured to ignore timeout, will run forever...")
+    else:
+        info(f"Worker timeout is {config.TIMEOUT} (s)...")
 
     while not config.EXPERIMENT_ID:
         info("Experiment not yet assigned, waiting...")

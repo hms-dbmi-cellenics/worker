@@ -1,4 +1,4 @@
-{{- if (eq .Values.kubernetes.env "staging") }}
+{{- if or (eq .Values.kubernetes.env "staging") (eq .Values.myAccount.accountId "160782110667") }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
