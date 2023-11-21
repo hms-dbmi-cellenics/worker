@@ -18,8 +18,10 @@ DownloadAnnotSeuratObject <- function(req, data) {
   cell_sets <- req$body$cellSets
   embedding_data <- req$body$embedding
 
+  reduction <- ifelse(embedding_data[[1]] == c(0,0), "umap", ifelse(embedding_data[[1]] == c(1,1), "tsne", "umap"))[1]
+
   data <- add_cellsets(data, cell_sets)
-  data <- assignEmbedding(embedding_data, data)
+  data <- assignEmbedding(embedding_data, data, reduction)
 
   saveRDS(data, RDS_PATH)
 
@@ -38,10 +40,10 @@ add_cellsets <- function(scdata, cellsets) {
     children <- cellset$children
     if (!length(children)) next()
 
-  if (uuid::UUIDvalidate(cellset$key)) {
-        key <- cellset$name
+    if (uuid::UUIDvalidate(cellset$key)) {
+      key <- cellset$name
     } else {
-        key <- cellset$key
+      key <- cellset$key
     }
 
     scdata[[key]] <- NA_character_
