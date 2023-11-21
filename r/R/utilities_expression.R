@@ -96,7 +96,12 @@ getRawExpression <- function(data, genes) {
 #' @export
 #'
 completeExpression <- function(expression, cell_ids) {
+  if (length(cell_ids) == 0) {
+    return(expression)
+  }
+
   expression[, cell_ids := cell_ids]
+
   data.table::setorder(expression, cols = "cell_ids")
 
   # add back all filtered cells as empty rows.
