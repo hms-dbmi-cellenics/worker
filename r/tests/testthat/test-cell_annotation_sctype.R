@@ -207,7 +207,7 @@ test_that("run_sctype adds cluster annotations as a new metadata column", {
   scale_data <- get_formatted_data(data, active_assay)
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-  data <- add_clusters(data, parsed_cellsets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
   data[[active_assay]]@scale.data <- scale_data
 
   data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
@@ -228,7 +228,7 @@ test_that("run_sctype produces correct snapshots", {
   scale_data <- get_formatted_data(data, active_assay)
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-  data <- add_clusters(data, parsed_cellsets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
   data[[active_assay]]@scale.data <- scale_data
 
   data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
