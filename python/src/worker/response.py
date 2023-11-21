@@ -87,6 +87,7 @@ class Response:
     @xray_recorder.capture("Response._upload")
     def _upload(self, response_data, type):
         io = Emitter({"client": config.REDIS_CLIENT})
+
         send_status_update(
             io, self.request["experimentId"], UPLOADING_TASK_DATA, self.request
         )

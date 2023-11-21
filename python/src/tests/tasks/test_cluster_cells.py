@@ -16,7 +16,7 @@ class TestClusterCells:
                 "name": "ClusterCells",
                 "cellSetName": "Louvain clusters",
                 "type": "louvain",
-                "cellSetKey": "louvain",
+                "selectedCellSet": "louvain",
                 "config": {"resolution": 0.5},
             },
         }
