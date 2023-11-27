@@ -55,12 +55,6 @@ runEmbedding <- function(req, data) {
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
     dplyr::select(-cells_id)
 
-  # Add reduction method identifier
-  col_names <- colnames(df_embedding)
-  red_id <- ifelse(grepl("umap", col_names, ignore.case = T), 0, ifelse(grepl("tsne", col_names, ignore.case = T), 1, 2))
-  red_id <- setNames(red_id, col_names)
-  df_embedding <- dplyr::bind_rows(red_id, df_embedding)
-
   map2_fun <- function(x, y) {
     if (is.na(x)) {
       return(NULL)
@@ -114,9 +108,6 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
   cells_id <- data@meta.data$cells_id
   embedding <- do.call(rbind, embedding_data)
-
-  # First row is reduction method identifier
-  embedding <- embedding[-1, ]
 
   # Add 1 to cells_id because it's 0-index and embeddings is not.
   embedding <- embedding[cells_id + 1, ]
