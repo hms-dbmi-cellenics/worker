@@ -29,10 +29,12 @@ class DownloadAnnotSeuratObject(Task):
 
         embedding_etag = self.task_def["embeddingETag"]
         embedding = get_embedding(embedding_etag, format_for_r=True)
+        embedding_method = self.task_def["embeddingMethod"] 
 
         request = {
             "embedding": embedding,
             "cellSets": cell_sets_dict,
+            "embeddingMethod": embedding_method,
         }
 
         return request

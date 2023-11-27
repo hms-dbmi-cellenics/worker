@@ -17,11 +17,10 @@
 DownloadAnnotSeuratObject <- function(req, data) {
   cell_sets <- req$body$cellSets
   embedding_data <- req$body$embedding
-
-  reduction <- ifelse(embedding_data[[1]] == c(0,0), "umap", ifelse(embedding_data[[1]] == c(1,1), "tsne", "umap"))[1]
+  embedding_method <- req$body$embeddingMethod
 
   data <- add_cellsets(data, cell_sets)
-  data <- assignEmbedding(embedding_data, data, reduction)
+  data <- assignEmbedding(embedding_data, data, embedding_method)
 
   saveRDS(data, RDS_PATH)
 
