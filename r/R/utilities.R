@@ -155,62 +155,27 @@ complete_variable <- function(variable, cell_ids) {
 #'
 #' @param scdata Seurat object
 #' @param parsed_cellsets data.table cellsets object
+#' @param cell_sets list with the cell_sets meta data (like keys and type)
 #'
 #' @return Seurat object
 #' @export
 #'
-add_clusters <- function(scdata, parsed_cellsets) {
-  # seurat upload already has seurat_cluster column
-  # remove to prevent 'seurat_clusters.x', 'seurat_clusters.y' from join
-  scdata@meta.data$seurat_clusters <- NULL
-
-  seurat_clusters <- parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")]
-  data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
-  scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
-
-  if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
-    custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]
-    # create one column for each scratchpad cluster because one cell can be assigned to more than one scratchpad cluster
-    custom_clusters_list <- split(custom_clusters, custom_clusters[["name"]])
-    for (i in 1:length(custom_clusters_list)) {
-      scratchpad_colname <- paste0("custom_cluster-", names(custom_clusters_list)[i])
-      scdata@meta.data[[scratchpad_colname]] <- scdata@meta.data$cells_id %in% custom_clusters_list[[i]]$cell_id
-    }
-  }
-
-  parsed_cellsets_sctype <- parsed_cellsets[!(cellset_type %in% c("cluster", "scratchpad", "sample", "metadata")), ]
-  sctype_clusters <- parsed_cellsets_sctype[grep("^ScType-", parsed_cellsets_sctype[["cellset_type"]]), ]
-
-  if (nrow(sctype_clusters) > 0) {
-    # create one column for each combination of ScType tissue-species
-    sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
-    for (sctype_group in sctype_clusters_list) {
-      sctype_colname <- unique(sctype_group[, cellset_type])
-      sctype_dt <- sctype_group[, c("name", "cell_id")]
-      data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
-      scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
-    }
-  }
-
-  return(scdata)
-}
-
-# TODO: merge it back with add_clusters after checking that ScType works correctly
-add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
+add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
   # left_join function eliminates the row names from Seurat's metadata
   barcodes <- rownames(scdata@meta.data)
 
   # add sample names
   samples <- parsed_cellsets[cellset_type == "sample", c("name", "cell_id")]
-  data.table::setnames(samples, c("sample_name", "cells_id"))
+  data.table::setnames(samples, c("samples", "cells_id"))
   scdata@meta.data$samples <- NULL
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, samples, by = "cells_id")
 
-  # add seurat clusters
+  # add seurat clusters and set as active ident
   scdata@meta.data$seurat_clusters <- NULL
   seurat_clusters <- parsed_cellsets[cellset_type == "louvain", c("name", "cell_id")]
   data.table::setnames(seurat_clusters, c("seurat_clusters", "cells_id"))
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
+  scdata <- Seurat::SetIdent(scdata, value = 'seurat_clusters')
 
   # add custom clusters
   if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
@@ -223,8 +188,8 @@ add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
     }
   }
 
-  # add ScType clusters
-  sctype_clusters <- parsed_cellsets[
+  # add other clusters (ScType and others from projects with Seurat technology)
+  other_clusters <- parsed_cellsets[
     sapply(parsed_cellsets$cellset_type, function(cellset_type) {
       cell_sets[[cellset_type]]$type == "cellSets" &&
         cell_sets[[cellset_type]]$key != "louvain" &&
@@ -232,21 +197,21 @@ add_clusters_temp <- function(scdata, parsed_cellsets, cell_sets) {
     }),
   ]
 
-  if (nrow(sctype_clusters) > 0) {
-    # create one column for each combination of ScType tissue-species
-    sctype_clusters_list <- split(sctype_clusters, sctype_clusters[["cellset_type"]])
-    for (sctype_group in sctype_clusters_list) {
-      sctype_colname <- unique(sapply(sctype_group$cellset_type, function(x) {
+  if (nrow(other_clusters) > 0) {
+    # create one column for each clustering
+    other_clusters_list <- split(other_clusters, other_clusters[["cellset_type"]])
+    for (other_group in other_clusters_list) {
+      other_colname <- unique(sapply(other_group$cellset_type, function(x) {
         cell_sets[[x]]$name
       }))
-      sctype_dt <- sctype_group[, c("name", "cell_id")]
-      data.table::setnames(sctype_dt, c(sctype_colname, "cells_id"))
-      scdata@meta.data <- dplyr::left_join(scdata@meta.data, sctype_dt, by = "cells_id")
+      other_dt <- other_group[, c("name", "cell_id")]
+      data.table::setnames(other_dt, c(other_colname, "cells_id"))
+      scdata@meta.data[[other_colname]] <- NULL
+      scdata@meta.data <- dplyr::left_join(scdata@meta.data, other_dt, by = "cells_id")
     }
   }
 
   rownames(scdata@meta.data) <- barcodes
-
   return(scdata)
 }
 
@@ -267,30 +232,8 @@ parse_cellsets <- function(cellsets) {
   data.table::setDT(dt)
   dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
 
-  # change cellset type to more generic names
-  is_uuid <- function(x) {
-    uuid_regex <- "^\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b$"
-    return(grepl(uuid_regex, x))
-  }
-
-  dt[cellset_type %in% c("louvain", "leiden"), cellset_type := "cluster"]
-  dt[!(cellset_type %in% c("cluster", "scratchpad", "sample") | is_uuid(dt$key)), cellset_type := "metadata"]
-
-  return(dt)
+  return (dt)
 }
-
-# TODO: merge it back with parse_cellsets after checking that ScType works correctly
-parse_cellsets_temp <- function(cellsets) {
-  # filter out elements with length = 0 (e.g. if scratchpad doesn't exist)
-  cellsets <- cellsets[sapply(cellsets, length) > 0]
-
-  dt <- purrr::map2_df(cellsets, names(cellsets), ~ cbind(cellset_type = .y, rrapply::rrapply(.x, how = "bind")))
-  data.table::setDT(dt)
-  dt <- dt[, setNames(.(unlist(cellIds)), "cell_id"), by = .(key, name, cellset_type)]
-
-  return(dt)
-}
-
 
 #' Determine the type of features in the annot data frame
 #'

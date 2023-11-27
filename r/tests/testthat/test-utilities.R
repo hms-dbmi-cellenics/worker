@@ -1,3 +1,5 @@
+library('httptest')
+
 mock_scratchpad_cellset_object <- function(n) {
   # ensure cellIds is an int vector. same as when created by getExpressionCellSet
   list(
@@ -231,10 +233,10 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
 
   expect_true(data.table::is.data.table(parsed_cellsets))
   expect_equal(colnames(parsed_cellsets), expected_columns)
-  expect_equal(length(children_cell_sets$louvain), length(unique(parsed_cellsets[cellset_type == "cluster", name])))
+  expect_equal(length(children_cell_sets$louvain), length(unique(parsed_cellsets[cellset_type == "louvain", name])))
   expect_equal(sapply(children_cell_sets$louvain, function(x) {
     x$name
-  }), unique(parsed_cellsets[cellset_type == "cluster", name]))
+  }), unique(parsed_cellsets[cellset_type == "louvain", name]))
   expect_equal(length(children_cell_sets$scratchpad), length(unique(parsed_cellsets[cellset_type == "scratchpad", name])))
   expect_equal(sapply(children_cell_sets$scratchpad, function(x) {
     x$name
@@ -243,58 +245,23 @@ test_that("parse_cellsets converts the cellsets object in the expected format", 
   expect_equal(sapply(children_cell_sets$sample, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "sample", name]))
-  expect_equal(length(children_cell_sets$MISC_status), length(unique(parsed_cellsets[cellset_type == "metadata", name])))
+  expect_equal(length(children_cell_sets$MISC_status), length(unique(parsed_cellsets[cellset_type == "MISC_status", name])))
   expect_equal(sapply(children_cell_sets$MISC_status, function(x) {
     x$name
-  }), unique(parsed_cellsets[cellset_type == "metadata", name]))
+  }), unique(parsed_cellsets[cellset_type == "MISC_status", name]))
   expect_equal(length(children_cell_sets$`ScType-Spleen-human`), length(unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name])))
   expect_equal(sapply(children_cell_sets$`ScType-Spleen-human`, function(x) {
     x$name
   }), unique(parsed_cellsets[cellset_type == "ScType-Spleen-human", name]))
 })
 
-
 test_that("add_clusters adds cluster information as metadata columns to the seurat object", {
   data <- mock_scdata()
   cell_sets <- mock_cellset_from_python(data)
+
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-
-  data <- add_clusters(data, parsed_cellsets)
-  expect_true("seurat_clusters" %in% colnames(data@meta.data))
-  expect_equal(all(is.na(data@meta.data$seurat_clusters)), FALSE)
-
-  expect_equal(unique(data@meta.data$seurat_clusters), unique(parsed_cellsets[cellset_type == "cluster", name]))
-  expect_true(all.equal(parsed_cellsets[cellset_type == "cluster", c("name", "cell_id")],
-    data@meta.data[, c("seurat_clusters", "cells_id")],
-    check.attributes = FALSE
-  ))
-
-  scratchpad_clusters <- unique(parsed_cellsets[cellset_type == "scratchpad", name])
-  for (i in 1:length(scratchpad_clusters)) {
-    expected_cells <- which(data@meta.data$cells_id %in% parsed_cellsets[name == scratchpad_clusters[i], cell_id])
-    expect_true(all(data@meta.data[expected_cells, paste0("scratchpad-", scratchpad_clusters[i])]))
-  }
-
-  sctype_clusters <- unique(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), cellset_type])
-  for (i in 1:length(sctype_clusters)) {
-    expect_true(sctype_clusters[i] %in% colnames(data@meta.data))
-    expect_equal(unique(data@meta.data[,sctype_clusters[i]]), unique(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), name]))
-    expect_true(all.equal(parsed_cellsets[startsWith(parsed_cellsets$cellset_type,"ScType-"), c("name", "cell_id")],
-                          data@meta.data[, c(sctype_clusters[i], "cells_id")],
-                          check.attributes = FALSE
-    ))
-  }
-})
-
-
-test_that("add_clusters_temp adds cluster information as metadata columns to the seurat object", {
-  data <- mock_scdata()
-  cell_sets <- mock_cellset_from_python(data)
-
-  children_cell_sets <- sapply(cell_sets, `[[`, "children")
-  parsed_cellsets <- parse_cellsets_temp(children_cell_sets)
-  data <- add_clusters_temp(data, parsed_cellsets, cell_sets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
 
   sctype_clusters <- parsed_cellsets[
     sapply(parsed_cellsets$cellset_type, function(cellset_type) {
@@ -317,6 +284,21 @@ test_that("add_clusters_temp adds cluster information as metadata columns to the
   }
 })
 
+test_that("add_clusters uses conventions that support re-upload with technology Seurat", {
+  data <- mock_scdata()
+  cell_sets <- mock_cellset_from_python(data)
+
+  children_cell_sets <- sapply(cell_sets, `[[`, "children")
+  parsed_cellsets <- parse_cellsets(children_cell_sets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
+
+  # 'samples' column used for sample identity
+  expect_true("samples" %in% colnames(data@meta.data))
+
+  # active ident used as default louvain clusters
+  expect_identical(as.character(data$seurat_clusters), as.character(Seurat::Idents(data)))
+})
+
 
 test_that("format_sctype_cell_sets correctly format cellset to be sent to the API", {
   data <- mock_scdata()
@@ -330,7 +312,7 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
   scale_data <- get_formatted_data(data, active_assay)
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
-  data <- add_clusters(data, parsed_cellsets)
+  data <- add_clusters(data, parsed_cellsets, cell_sets)
   data[[active_assay]]@scale.data <- scale_data
 
   data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
