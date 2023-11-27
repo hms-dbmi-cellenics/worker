@@ -128,11 +128,12 @@ mock_embedding_data <- function(data) {
   return(embedding_data)
 }
 
-mock_req <- function(data) {
+mock_req <- function(data, reduction = "umap") {
   req <- list(
     body = list(
       cellSets = mock_cellset_from_python(data),
-      embedding = mock_embedding_data(data)
+      embedding = mock_embedding_data(data),
+      embeddingMethod = reduction
     )
   )
 
