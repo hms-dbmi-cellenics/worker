@@ -40,10 +40,11 @@ runEmbedding <- function(req, data) {
   message("Active numPCs --> ", pca_nPCs)
   message("Number of cells/sample:")
   table(data$samples)
-  
-  if (!use_saved)
+
+  if (!use_saved) {
     data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
-  
+  }
+
   df_embedding <- Seurat::Embeddings(data, reduction = method)
 
   # Order embedding by cells id in ascending form
@@ -94,7 +95,6 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
       seed.use = ULTIMATE_SEED
     )
   }
-
   return(data)
 }
 
@@ -113,12 +113,13 @@ assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
   embedding <- embedding[cells_id + 1, ]
   rownames(embedding) <- colnames(data)
 
-  embedding_key = "UMAP_"
-  if(reduction_method == "tsne") {
-    embedding_key = "tSNE_"
-  }
+  reduction_keys <- list(
+    "umap" = "UMAP_",
+    "tsne" = "tSNE_"
+  )
+  embedding_key <- unname(unlist(reduction_keys[reduction_method]))
 
-  colnames(embedding) <- c(paste0(embedding_key, "1"), paste0(embedding_key, "2"))
+  colnames(embedding) <- paste(embedding_key, 1:2, sep = "")
   data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key)
 
   return(data)

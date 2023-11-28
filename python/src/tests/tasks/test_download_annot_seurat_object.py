@@ -30,7 +30,8 @@ class TestDownloadAnnotSeuratObject:
             "Authorization" : "mock_authJwt",
             "body": {
                 "name": "DownloadAnnotSeuratObject",
-                "embeddingETag": mock_embedding_etag
+                "embeddingETag": mock_embedding_etag,
+                "embeddingMethod": "umap"
             }
         }
 
@@ -142,6 +143,7 @@ class TestDownloadAnnotSeuratObject:
             expected_keys = [
                 "embedding",
                 "cellSets",
+                "embeddingMethod",
                 ]
             assert all(key in request for key in expected_keys)
             stubber.assert_no_pending_responses()
