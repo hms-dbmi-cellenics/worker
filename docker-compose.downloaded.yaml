@@ -1,0 +1,36 @@
+version: "3.2"
+services:
+  r:
+    container_name: "biomage-worker-r"
+    image: worker_r:latest
+    entrypoint: [ "Rscript", "work.R" ]
+    build:
+      context: r/
+      target: dev
+      args:
+        - GITHUB_PAT=${GITHUB_API_TOKEN}
+    volumes:
+      - ./r/R:/src/worker/R:cached # for watcher
+      - ./data:/data:cached
+      - ./data/debug:/debug
+    expose:
+      - "4000"
+    ports:
+      - "4000:4000"
+    environment:
+      - EXPERIMENT_ID=${EXPERIMENT_ID-test}
+      - DEBUG_STEP=${DEBUG_STEP}
+  python:
+    container_name: "biomage-worker-python"
+    image: worker_python:latest
+    entrypoint: [ "python", "-m", "worker" ]
+    build:
+      context: python/
+      target: dev
+    volumes:
+      - ./python:/python:cached
+      - ./data:/data:cached
+    environment:
+      - EXPERIMENT_ID=${EXPERIMENT_ID-test}
+      - IGNORE_TIMEOUT=true
+      - PYTHONUNBUFFERED=1

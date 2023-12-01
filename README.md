@@ -14,7 +14,7 @@ More specific details about the Python or the R part of the worker can be found 
 
 The worker is deployed as a Helm chart to an AWS-managed Kubernetes cluster and runs on a Fargate-managed node. The Helm chart template for the worker is located in `chart-infra/` folder.
 
- The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/hms-dbmi-cellenics/worker/blob/master/.github/workflows/ci.yaml). 
+ The deployment of the worker is handled by the cluster Helm operator and the [worker Github Actions workflow](https://github.com/hms-dbmi-cellenics/worker/blob/master/.github/workflows/ci.yaml).
 
 During a deployment, the worker Github Actions workflow does the following:
 - It pushes new worker images to ECR.
@@ -91,10 +91,12 @@ produciton instances, as well as the necessary VS Code extensions required to de
 lint code.
 
 ## Running locally
-To run the worker locally, you will need to build it and then run it, passing
-the id of the processed experiment that you want to use the worker with.
+To run the worker locally you need to:
+1. Build the docker image locally (1.1) or Download the docker image directly from ECR (1.2)
+2. Run it, passing the id of the processed experiment that you want to use the worker with.
 
-### Step 1. Building the worker
+### 1. Obtaining worker image
+#### 1.1. Building an image locally
 While in the `worker/` root folder on the host, you can use `make build`.
 
 To build and run the R and python containers, you can do:
@@ -107,6 +109,12 @@ If you get an error, see the `Troubleshoooting` section for help.
 To get a development log stream of both containers running, you can use:
 
     make logs
+
+#### 1.2 Downloading the image from ECR
+While in the `worker/` root folder on the host, you can use:
+```
+AWS_REGION={Your AWS region} AWS_ACCOUNT_ID={Your account ID} LATEST_TAG={Latest release tag} make download-image make download-image.
+```
 
 ### Step 2. Running the worker
 Before running the worker, you need to have a folder named with the experiment id that you want to load. The folder should be saved under `worker/data` and it has to contain:
@@ -132,11 +140,21 @@ OR
 You can have one or more experiments under `worker/data`.
 
 To run the worker with the experiment id of your choice, do the following:
+
+**If the image is build locally**
 In a terminal, while in the `worker/` root folder, type the following:
 
     EXPERIMENT_ID=1234 make run
-    
+
 where `1234` is the experiment id of your choice.
+
+**If the image is downloaded from ECR**
+In a terminal, while in the `worker/` root folder, type the following:
+
+    EXPERIMENT_ID=1234 make run-downloaded
+
+where `1234` is the experiment id of your choice.
+
 
 ## Troubleshooting
 
@@ -167,7 +185,7 @@ where `1234` is the experiment id of your choice.
 
 5.  Error when attempting to start the worker saying something like:
 `botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "http://host.docker.internal:4566/biomage-source-development?...`
-   
+
 First, check inframock is running. If it isn't, start it and try again. Otherwise, see below.
 
 ##### For Linux users

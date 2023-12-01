@@ -11,52 +11,76 @@ mock_req <- function(apply_subset = TRUE) {
     body = list(
       subsetBy = subset_by,
       applySubset = apply_subset
-        )
-      )
+    )
+  )
 }
 
-string_to_df <- function(text_df) {
-  df <- read.table(text = text_df, sep =",", header=TRUE)
 
-  # This part to rollback: rownames_to_column
-  rownames(df) <- df[,1]
-  df[,1] <- NULL
-
-  return(df)
+stub_fwrite <- function(matrix, fpath, quote = FALSE, row.names = TRUE) {
+  # add '.' to path to point it to cwd instead of system root
+  fpath <- paste0(".", fpath)
+  if (!dir.exists(dirname(fpath))) {
+    dir.create(dirname(fpath), recursive = TRUE)
+  }
+  data.table::fwrite(matrix, fpath, quote = FALSE, row.names = TRUE)
+  return(fpath)
 }
 
-test_that("GetNormalizedExpression generates the expected string format", {
+
+
+stubbed_GetNormalizedExpression <- function(req, data) {
+  mockery::stub(
+    GetNormalizedExpression,
+    "data.table::fwrite",
+    stub_fwrite
+  )
+
+  res <- GetNormalizedExpression(req, data)
+  return(paste0(".", res))
+}
+
+
+test_that("GetNormalizedExpression saves the normalized matrix using the correct path", {
   data <- mock_scdata()
   req <- mock_req()
 
-  res <- GetNormalizedExpression(req, data)
+  res <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res), recursive = TRUE))
+
   expect_type(res, "character")
+  expect_equal(gsub("^\\.", "", res), TMP_RESULTS_PATH_GZ)
+})
+
+
+test_that("GetNormalizedExpression correctly subsets the data", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  original_ncol <- ncol(data)
+
+  res <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res), recursive = TRUE))
+
+  matrix <- data.table::fread(res, sep=",", quote = F, header = TRUE)
+
+  expect_equal(ncol(matrix) - 2, length(req$body$subsetBy)) # -1 because of the rownames and index columns
+  expect_false(ncol(data) == ncol(matrix))
 })
 
 test_that("subsetting is applied and changes GetNormalizedExpression output", {
   data <- mock_scdata()
   req <- mock_req()
 
-  res_filt <- GetNormalizedExpression(req, data)
+  res_filt <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res_filt), recursive = TRUE))
+  matrix_filt <- data.table::fread(res_filt, sep=",", quote = F, header = TRUE)
 
   req <- mock_req(apply_subset = FALSE)
-  res_unfilt <- GetNormalizedExpression(req, data)
+  res_unfilt <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res_unfilt), recursive = TRUE))
+  matrix_unfilt <- data.table::fread(res_unfilt, sep=",", quote = F, header = TRUE)
 
-  expect_false(identical(res_unfilt, res_filt))
-})
-
-test_that("GetNormalizedExpression correctly subsets the data", {
-  data <- mock_scdata()
-  req <- mock_req()
-
-  subset_ids <- req$body$subsetBy
-
-  res <- GetNormalizedExpression(req, data)
-
-  df <- string_to_df(res)
-
-  expect_false(ncol(data) == ncol(df))
-  expect_equal(ncol(df), length(subset_ids))
+  expect_false(identical(matrix_unfilt, matrix_filt))
 })
 
 
@@ -64,11 +88,17 @@ test_that("GetNormalizedExpression doesn't subset the data when applySubset is F
   data <- mock_scdata()
   req <- mock_req(apply_subset = FALSE)
 
-  res <- GetNormalizedExpression(req, data)
+  expect_message(
+    {
+      res <- stubbed_GetNormalizedExpression(req, data)
+      withr::defer(unlink(dirname(res), recursive = TRUE))
+    },
+    "No subsetting specified, sending the whole matrix"
+  )
 
-  df <- string_to_df(res)
+  matrix <-data.table::fread(res, sep=",", quote = F, header = TRUE)
 
-  expect_true(ncol(data) == ncol(df))
+  expect_true(ncol(data) == ncol(matrix) - 2)
 })
 
 

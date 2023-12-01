@@ -32,17 +32,26 @@ build: ## Builds the docker-compose environment
 	@echo "==> Building docker image..."
 	@docker-compose $(docker_files) build
 	@echo "    [✓]\n"
+
 hooks: ## Configures path to git hooks
 	@git config core.hooksPath .githooks
 run-only: ## Runs the docker environment
 	@docker-compose $(docker_files) up
 run: build run-only ## Runs & builds the docker environment
+download-image: ## Downloads a docker image
+	@aws ecr get-login-password --region '${AWS_REGION}' | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+	@docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-python
+	@docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-r
+	@docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-python worker_python
+	@docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-r worker_r
+run-downloaded: ## Runs a downloaded docker image
+	@docker-compose -f docker-compose.downloaded.yaml up
 test: ## Executes unit tests
 	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
 	@docker top biomage-worker-python > /dev/null 2>&1 || \
 	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
 	@docker exec -it biomage-worker-python bash -c \
-	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing"
+	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing $(extra_args)"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
@@ -55,4 +64,4 @@ clean: ## Cleans up temporary files
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: bootstrap fmt check build run-only run test logs kill clean help
+.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test logs kill clean help

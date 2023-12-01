@@ -26,22 +26,24 @@ class MarkerHeatmap(Task):
     def _format_request(self):
         request = {"nGenes": self.task_def["nGenes"]}
 
-        cellSetKey = self.task_def["cellSetKey"]
+        print("selftask_defDebug")
+        print(self.task_def)
+
+        downsample_settings = self.task_def["downsampleSettings"]
+
+        selected_cell_set = downsample_settings["selectedCellSet"]
+        grouped_tracks = downsample_settings["groupedTracks"]
+        selected_points = downsample_settings["selectedPoints"]
+        hidden_cell_set_keys = downsample_settings["hiddenCellSets"]
 
         cell_sets = get_cell_sets(self.experiment_id)
 
-        n_genes = self.task_def["nGenes"]
-        cell_set_key = self.task_def["cellSetKey"]
-        grouped_tracks = self.task_def["groupByClasses"]
-        selected_points = self.task_def["selectedPoints"]
-        hidden_cell_set_keys = self.task_def["hiddenCellSetKeys"]
-
         # There is no max_cells being sent right now, but this allows
         #  us to control this number in the future if we want to
-        max_cells = self.task_def.get("maxCells", 1000)
+        max_cells = downsample_settings.get("maxCells", 1000)
 
         cell_order = get_heatmap_cell_order(
-            cell_set_key,
+            selected_cell_set,
             grouped_tracks,
             selected_points,
             hidden_cell_set_keys,
@@ -49,7 +51,7 @@ class MarkerHeatmap(Task):
             cell_sets,
         )
 
-        selected_cell_sets = next(set for set in cell_sets if set["key"] == cellSetKey)
+        selected_cell_sets = next(set for set in cell_sets if set["key"] == selected_cell_set)
 
         request["cellSets"] = selected_cell_sets
         request["cellIds"] = cell_order
