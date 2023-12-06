@@ -42,52 +42,52 @@ load_data <- function(fpath) {
 }
 
 run_post <- function(req, post_fun, data) {
-    # over-ride manually to hot-reload
-    # debug_step <- "getClusters"
-    debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
+  # over-ride manually to hot-reload
+  # debug_step <- "getClusters"
+  debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
 
-    handle_debug(req, debug_step)
+  handle_debug(req, debug_step)
 
+  message(rep("✧",100))
+  message("➥ Starting ",sub("run","",basename(req$path)))
+  message("Input:")
+  message(str(req$body))
+
+  tryCatch({
+    message("\nSeurat logs:")
+    message("➡️ \n")
+    tstart <- Sys.time()
+    res <- post_fun(req, data)
+    message("\n⬅️")
+
+    message("\nResult length: ",length(res))
+    message("\nResult head: ")
+    message(str(head(res,10)))
+
+    ttask <- format(Sys.time()-tstart, digits = 2)
+    message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
+    message("✅ Finished ", req$body$name)
     message(rep("✧",100))
-    message("➥ Starting ",sub("run","",basename(req$path)))
-    message("Input:")
-    message(str(req$body))
 
-    tryCatch({
-            message("\nSeurat logs:")
-            message("➡️ \n")
-            tstart <- Sys.time()
-            res <- post_fun(req, data)
-            message("\n⬅️")
-
-            message("\nResult length: ",length(res))
-            message("\nResult head: ")
-            message(str(head(res,10)))
-
-            ttask <- format(Sys.time()-tstart, digits = 2)
-            message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
-            message("✅ Finished ", req$body$name)
-            message(rep("✧",100))
-
-            return(
-              formatResponse(
-                res,
-                NULL
-              )
-            )
-        },
-        error = function(e) {
-            message("🚩 --------- 🚩")
-            message("Error at worker task: ", e$message)
-
-            return(
-              formatResponse(
-                NULL,
-                extractErrorList(e$message)
-              )
-            )
-        }
+    return(
+      formatResponse(
+        res,
+        NULL
+      )
     )
+  },
+  error = function(e) {
+    message("🚩 --------- 🚩")
+    message("Error at worker task: ", e$message)
+
+    return(
+      formatResponse(
+        NULL,
+        extractErrorList(e$message)
+      )
+    )
+  }
+  )
 }
 
 handle_debug <- function(req, debug_step) {
@@ -182,7 +182,7 @@ create_app <- function(last_modified, data, fpath) {
       res$set_body(result)
     }
   )
-    app$add_post(
+  app$add_post(
     path = "/v0/getNGenes",
     FUN = function(req, res) {
       result <- run_post(req, getNGenes, data)
@@ -277,6 +277,13 @@ create_app <- function(last_modified, data, fpath) {
     path = "/v0/DownloadAnnotSeuratObject",
     FUN = function(req, res) {
       result <- run_post(req, DownloadAnnotSeuratObject, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
+    path = "/v0/CellCycleScoring",
+    FUN = function(req, res) {
+      result <- run_post(req, cellCycleScoring, data)
       res$set_body(result)
     }
   )
