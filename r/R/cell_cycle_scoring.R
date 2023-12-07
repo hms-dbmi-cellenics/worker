@@ -1,5 +1,14 @@
-cellCycleScoring <- function(req,data){
-  cellSets <- run_cycle_scoring(scdata)
+#' CellCyCleScoring
+#'
+#' @param req
+#' @param data
+#'
+#' @return Formatted cellsets
+#' @export
+#'
+#' @examples
+cellCycleScoring <- function(req, data) {
+  cellSets <- run_cell_cycle_scoring(scdata)
 
   message("formatting cellsets")
 
@@ -19,22 +28,55 @@ cellCycleScoring <- function(req,data){
   return(formatted_cell_sets)
 }
 
-run_cell_cycle_scoring <- function(scdata, req){
+#' run_cell_cycle_scoring
+#'
+#' @param scdata
+#' @param req
+#'
+#' @return
+#' @export
+#'
+#' @examples
+run_cell_cycle_scoring <- function(scdata, req) {
   message("Running Cell Cycle Scoring")
-  s.genes <- Seurat::cc.genes$s.genes
-  g2m.genes <- Seurat::cc.genes$g2m.genes
+
+  s.gene.names <- Seurat::cc.genes$s.genes
+  g2m.gene.names <- Seurat::cc.genes$g2m.genes
+
+  s.gene.ids <-
+    na.omit(scdata@misc$gene_annotations[match(scdata@misc$gene_annotations$name, s.gene.names), "input"])
+  g2m.gene.ids <-
+    na.omit(scdata@misc$gene_annotations[match(scdata@misc$gene_annotations$name, g2m.gene.names), "input"])
 
   phase <- tryCatch({
-    Seurat::CellCycleScoring(scdata, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)@meta.data$Phase
+    Seurat::CellCycleScoring(
+      scdata,
+      s.features = s.gene.ids,
+      g2m.features = g2m.gene.ids,
+      set.ident = TRUE
+    )@meta.data$Phase
   }, error = function(err) {
-    rep("Undetermined",ncol(scdata))
+    rep("Undetermined", ncol(scdata))
   })
 
-  cellSets <- data.frame(cluster = phase, cell_ids = scored_scdata@meta.data$cells_id)
+  cellSets <-
+    data.frame(cluster = phase,
+               cell_ids = scdata@meta.data$cells_id)
 
   return(cellSets)
 }
 
+#' format_cluster_cellsets
+#'
+#' @param cell_sets
+#' @param clustering_method
+#' @param color_pool
+#' @param name
+#'
+#' @return Formats cellsets dataframe into platform compatible object
+#' @export
+#'
+#' @examples
 format_cluster_cellsets <- function(cell_sets,
                                     clustering_method,
                                     color_pool,
@@ -70,6 +112,14 @@ format_cluster_cellsets <- function(cell_sets,
   return(cell_sets_object)
 }
 
+#' ensure_is_list_in_json
+#'
+#' @param vector
+#'
+#' @return
+#' @export
+#'
+#' @examples
 ensure_is_list_in_json <- function(vector) {
   if (length(vector) <= 1) {
     return(as.list(vector))
@@ -77,4 +127,3 @@ ensure_is_list_in_json <- function(vector) {
     return(vector)
   }
 }
-
