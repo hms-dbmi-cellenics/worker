@@ -59,7 +59,6 @@ run_cell_cycle_scoring <- function(scdata, req) {
       set.ident = TRUE
     )@meta.data$Phase
   }, error = function(err) {
-    message(err)
     rep("Undetermined", ncol(scdata))
   })
 
