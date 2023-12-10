@@ -7,7 +7,7 @@
 #' @export
 #'
 #' @examples
-cellCycleScoring <- function(req, data) {
+cellCycleScoring <- function(req, scdata) {
   cellSets <- run_cell_cycle_scoring(scdata)
 
   message("formatting cellsets")
@@ -44,18 +44,22 @@ run_cell_cycle_scoring <- function(scdata, req) {
   g2m.gene.names <- Seurat::cc.genes$g2m.genes
 
   s.gene.ids <-
-    na.omit(scdata@misc$gene_annotations[match(scdata@misc$gene_annotations$name, s.gene.names), "input"])
+    na.omit(scdata@misc$gene_annotations[match(tolower(s.gene.names), tolower(scdata@misc$gene_annotations$name)), "input"])
   g2m.gene.ids <-
-    na.omit(scdata@misc$gene_annotations[match(scdata@misc$gene_annotations$name, g2m.gene.names), "input"])
+    na.omit(scdata@misc$gene_annotations[match(tolower(g2m.gene.names), tolower(scdata@misc$gene_annotations$name)), "input"])
+
+  s.genes <- c(s.gene.names,s.gene.ids)
+  g2m.genes <- c(g2m.gene.names,g2m.gene.ids)
 
   phase <- tryCatch({
     Seurat::CellCycleScoring(
       scdata,
-      s.features = s.gene.ids,
-      g2m.features = g2m.gene.ids,
+      s.features = s.genes,
+      g2m.features = g2m.genes,
       set.ident = TRUE
     )@meta.data$Phase
   }, error = function(err) {
+    message(err)
     rep("Undetermined", ncol(scdata))
   })
 
