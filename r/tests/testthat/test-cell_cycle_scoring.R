@@ -8,9 +8,11 @@ stub_updateCellSetsThroughApi <- function(cell_sets_object,
 }
 
 stubbed_cellCycleScoring <- function(req, scdata) {
-  mockery::stub(cellCycleScoring,
-                "updateCellSetsThroughApi",
-                stub_updateCellSetsThroughApi)
+  mockery::stub(
+    cellCycleScoring,
+    "updateCellSetsThroughApi",
+    stub_updateCellSetsThroughApi
+  )
   suppressWarnings(cellCycleScoring(req, scdata))
 }
 
@@ -52,10 +54,11 @@ mock_scdata <- function(phase = "S",
 
   scdata <- SeuratObject::CreateSeuratObject(counts = counts)
 
+  # We are forcing expression numbers to return expected cell cycle phase.
   if (phase == "S") {
     scdata@assays$RNA@counts[1:40, ] <- 3
     scdata@assays$RNA@counts[41:90, ] <- 0
-  } else{
+  } else {
     scdata@assays$RNA@counts[41:90, ] <- 3
   }
 
@@ -66,8 +69,9 @@ mock_scdata <- function(phase = "S",
 
   scdata <-
     Seurat::NormalizeData(scdata,
-                          normalization.method = "LogNormalize",
-                          verbose = FALSE)
+      normalization.method = "LogNormalize",
+      verbose = FALSE
+    )
   scdata <-
     Seurat::FindVariableFeatures(scdata, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
@@ -95,18 +99,16 @@ test_that("Cell Cycle Scoring returns expected and formatted result", {
   expect_true(result$children[[1]]$name == "S")
 })
 
-# Start writing tests
-test_that("run_cell_cycle_scoring returns a data frame with correct columns",
-          {
-            scdata <- mock_scdata()
+test_that("run_cell_cycle_scoring returns a data frame with correct columns", {
+  scdata <- mock_scdata()
 
-            result <- suppressWarnings(run_cell_cycle_scoring(scdata))
+  result <- suppressWarnings(run_cell_cycle_scoring(scdata))
 
-            expect_s3_class(result, "data.frame")
+  expect_s3_class(result, "data.frame")
 
-            expect_true("cluster" %in% colnames(result))
-            expect_true("cell_ids" %in% colnames(result))
-          })
+  expect_true("cluster" %in% colnames(result))
+  expect_true("cell_ids" %in% colnames(result))
+})
 
 test_that("run_cell_cycle_scoring properly classifies S cells", {
   scdata <- mock_scdata("S")
@@ -128,60 +130,62 @@ test_that("run_cell_cycle_scoring properly classifies G2M cells", {
   expect_true(all(result$cluster == "G2M"))
 })
 
-test_that("run_cell_cycle_scoring returns 'Undetermined' cellset when no genes are detected.",
-          {
-            scdata <- mock_scdata(phase = "S", add_cycle_genes = FALSE)
+test_that("run_cell_cycle_scoring returns 'Undetermined' cellset when no genes are detected.", {
+  scdata <- mock_scdata(phase = "S", add_cycle_genes = FALSE)
 
-            result <- suppressWarnings(run_cell_cycle_scoring(scdata))
+  result <- suppressWarnings(run_cell_cycle_scoring(scdata))
 
-            expect_s3_class(result, "data.frame")
+  expect_s3_class(result, "data.frame")
 
-            expect_true(all(result$cluster == "Undetermined"))
-          })
+  expect_true(all(result$cluster == "Undetermined"))
+})
 
-test_that("format_phase_cellsets returns a list with the correct structure",
-          {
-            # Create a mock data frame for testing
-            mock_cell_sets <- data.frame(cluster = c("A", "A", "B", "C", "C"),
-                                         cell_ids = 1:5)
+test_that("format_phase_cellsets returns a list with the correct structure", {
+  # Create a mock data frame for testing
+  mock_cell_sets <- data.frame(
+    cluster = c("A", "A", "B", "C", "C"),
+    cell_ids = 1:5
+  )
 
-            # Call the function
-            result <-
-              format_cluster_cellsets(mock_cell_sets, c("red", "blue", "green"))
+  # Call the function
+  result <-
+    format_cluster_cellsets(mock_cell_sets, c("red", "blue", "green"))
 
-            # Check if the result is a list
-            expect_type(result, "list")
+  # Check if the result is a list
+  expect_type(result, "list")
 
-            # Check if the list has the correct elements
-            expect_true("key" %in% names(result))
-            expect_true("name" %in% names(result))
-            expect_true("rootNode" %in% names(result))
-            expect_true("type" %in% names(result))
-            expect_true("children" %in% names(result))
+  # Check if the list has the correct elements
+  expect_true("key" %in% names(result))
+  expect_true("name" %in% names(result))
+  expect_true("rootNode" %in% names(result))
+  expect_true("type" %in% names(result))
+  expect_true("children" %in% names(result))
 
-            # Check the rootNode value
-            expect_true(result$rootNode)
+  # Check the rootNode value
+  expect_true(result$rootNode)
 
-            # Check the type value
-            expect_equal(result$type, "cellSets")
+  # Check the type value
+  expect_equal(result$type, "cellSets")
 
-            # Check if the children element is a list
-            expect_type(result$children, "list")
+  # Check if the children element is a list
+  expect_type(result$children, "list")
 
-            # Check the structure of each child
-            for (child in result$children) {
-              expect_true("key" %in% names(child))
-              expect_true("name" %in% names(child))
-              expect_true("rootNode" %in% names(child))
-              expect_true("type" %in% names(child))
-              expect_true("color" %in% names(child))
-              expect_true("cellIds" %in% names(child))
-            }
-          })
+  # Check the structure of each child
+  for (child in result$children) {
+    expect_true("key" %in% names(child))
+    expect_true("name" %in% names(child))
+    expect_true("rootNode" %in% names(child))
+    expect_true("type" %in% names(child))
+    expect_true("color" %in% names(child))
+    expect_true("cellIds" %in% names(child))
+  }
+})
 
 test_that("format_phase_cellsets returns expected formatting", {
-  mock_cell_sets <- data.frame(cluster = c("A", "A", "B", "C", "C"),
-                               cell_ids = 1:5)
+  mock_cell_sets <- data.frame(
+    cluster = c("A", "A", "B", "C", "C"),
+    cell_ids = 1:5
+  )
 
   result <-
     format_phase_cellsets(mock_cell_sets, c("red", "blue", "green"))

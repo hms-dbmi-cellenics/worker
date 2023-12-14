@@ -43,22 +43,22 @@ cellCycleScoring <- function(req, scdata) {
 run_cell_cycle_scoring <- function(scdata) {
   message("Running Cell Cycle Scoring")
 
-  s.gene.names <- Seurat::cc.genes$s.genes
-  g2m.gene.names <- Seurat::cc.genes$g2m.genes
+  s_gene_names <- Seurat::cc.genes$s.genes
+  g2m_gene_names <- Seurat::cc.genes$g2m.genes
 
-  s.gene.ids <-
-    na.omit(scdata@misc$gene_annotations[match(tolower(s.gene.names), tolower(scdata@misc$gene_annotations$name)), "input"])
-  g2m.gene.ids <-
-    na.omit(scdata@misc$gene_annotations[match(tolower(g2m.gene.names), tolower(scdata@misc$gene_annotations$name)), "input"])
+  s_gene_ids <-
+    na.omit(scdata@misc$gene_annotations[match(tolower(s_gene_names), tolower(scdata@misc$gene_annotations$name)), "input"])
+  g2m_gene_ids <-
+    na.omit(scdata@misc$gene_annotations[match(tolower(g2m_gene_names), tolower(scdata@misc$gene_annotations$name)), "input"])
 
-  s.genes <- c(s.gene.names,s.gene.ids)
-  g2m.genes <- c(g2m.gene.names,g2m.gene.ids)
+  s_genes <- c(s_gene_names,s_gene_ids)
+  g2m_genes <- c(g2m_gene_names,g2m_gene_ids)
 
   phase <- tryCatch({
     Seurat::CellCycleScoring(
       scdata,
-      s.features = s.genes,
-      g2m.features = g2m.genes,
+      s.features = s_genes,
+      g2m.features = g2m_genes,
       set.ident = TRUE
     )@meta.data$Phase
   }, error = function(err) {
