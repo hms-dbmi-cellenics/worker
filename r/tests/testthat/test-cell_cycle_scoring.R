@@ -149,7 +149,7 @@ test_that("format_phase_cellsets returns a list with the correct structure", {
 
   # Call the function
   result <-
-    format_cluster_cellsets(mock_cell_sets, c("red", "blue", "green"))
+    format_phase_cellsets(mock_cell_sets, c("red", "blue", "green"))
 
   # Check if the result is a list
   expect_type(result, "list")
