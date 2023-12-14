@@ -1,19 +1,21 @@
-#' CellCyCleScoring
+#' Cell Cycle Scoring Function
 #'
-#' @param req
-#' @param data
+#' This function performs cell cycle scoring on scRNA-seq data. Uses the Seurat method as default.
 #'
-#' @return Formatted cellsets
+#' @param req The request object contains API URL, experiment ID, authentication JWT.
+#' @param scdata SeuratObject
+#'
+#' @return Formatted cell sets based on cell cycle scoring.
+#'
 #' @export
 #'
-#' @examples
 cellCycleScoring <- function(req, scdata) {
   cellSets <- run_cell_cycle_scoring(scdata)
 
   message("formatting cellsets")
 
   formatted_cell_sets <-
-    format_cluster_cellsets(cellSets, "Phase", scdata@misc$color_pool)
+    format_phase_cellsets(cellSets, scdata@misc$color_pool)
   message("updating through api")
 
   updateCellSetsThroughApi(
@@ -30,14 +32,15 @@ cellCycleScoring <- function(req, scdata) {
 
 #' run_cell_cycle_scoring
 #'
-#' @param scdata
-#' @param req
+#' Uses the Seurat method to calculate cell cycle scores.
 #'
-#' @return
+#' @param scdata SeuratObject
+#'
+#' @return Dataframe with cell ids and cycle stage prediction, or undetermined if there is an error.
 #' @export
 #'
 #' @examples
-run_cell_cycle_scoring <- function(scdata, req) {
+run_cell_cycle_scoring <- function(scdata) {
   message("Running Cell Cycle Scoring")
 
   s.gene.names <- Seurat::cc.genes$s.genes
@@ -69,40 +72,33 @@ run_cell_cycle_scoring <- function(scdata, req) {
   return(cellSets)
 }
 
-#' format_cluster_cellsets
+#' format_phase_cellsets
 #'
-#' @param cell_sets
-#' @param clustering_method
+#' @param cell_sets Data frame with cell id and Phase
 #' @param color_pool
 #' @param name
 #'
 #' @return Formats cellsets dataframe into platform compatible object
 #' @export
 #'
-#' @examples
-format_cluster_cellsets <- function(cell_sets,
-                                    clustering_method,
-                                    color_pool,
-                                    name = paste0(clustering_method)) {
+format_phase_cellsets <- function(cell_sets,
+                                    color_pool) {
   message("Formatting cluster cellsets.")
 
-  # careful with capital l on type for the key.
   cell_sets_object <-
     list(
-      key = clustering_method,
-      name = name,
+      key = "Phase",
+      name = "Phase",
       rootNode = TRUE,
       type = "cellSets",
       children = list()
     )
   for (cluster in unique(cell_sets$cluster)) {
     cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
-    is.num <- !is.na(as.numeric(cluster))
-    set_name <- ifelse(is.num, paste("Cluster", cluster), cluster)
 
     new_set <- list(
-      key = paste0(clustering_method, "-", cluster),
-      name = set_name,
+      key = paste0("Phase", "-", cluster),
+      name = cluster,
       rootNode = FALSE,
       type = "cellSets",
       color = color_pool[1],
@@ -113,20 +109,4 @@ format_cluster_cellsets <- function(cell_sets,
       append(cell_sets_object$children, list(new_set))
   }
   return(cell_sets_object)
-}
-
-#' ensure_is_list_in_json
-#'
-#' @param vector
-#'
-#' @return
-#' @export
-#'
-#' @examples
-ensure_is_list_in_json <- function(vector) {
-  if (length(vector) <= 1) {
-    return(as.list(vector))
-  } else {
-    return(vector)
-  }
 }
