@@ -81,7 +81,7 @@ run_cell_cycle_scoring <- function(scdata) {
 #' @export
 #'
 format_phase_cellsets <- function(cell_sets,
-                                    color_pool) {
+                                  color_pool) {
   message("Formatting cluster cellsets.")
 
   cell_sets_object <-
