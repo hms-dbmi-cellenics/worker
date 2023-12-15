@@ -36,7 +36,7 @@ cellCycleScoring <- function(req, scdata) {
 #'
 #' @param scdata SeuratObject
 #'
-#' @return Dataframe with cell ids and cycle stage prediction, or undetermined if there is an error.
+#' @return data.frame with cell ids and cycle stage prediction, or undetermined if there is an error.
 #' @export
 #'
 #' @examples
