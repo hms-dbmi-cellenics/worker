@@ -61,11 +61,11 @@ run_cell_cycle_scoring <- function(scdata) {
       set.ident = TRUE
     )@meta.data$Phase
   }, error = function(err) {
-    rep("Undetermined", ncol(scdata))
+    rep("Undetermined cycle phase", ncol(scdata))
   })
 
   cellSets <-
-    data.frame(cluster = phase,
+    data.frame(phase = phase,
                cell_ids = scdata@meta.data$cells_id)
 
   return(cellSets)
@@ -92,12 +92,12 @@ format_phase_cellsets <- function(cell_sets,
       type = "cellSets",
       children = list()
     )
-  for (cluster in unique(cell_sets$cluster)) {
-    cells <- cell_sets[cell_sets$cluster == cluster, "cell_ids"]
+  for (phase in unique(cell_sets$phase)) {
+    cells <- cell_sets[cell_sets$phase == phase, "cell_ids"]
 
     new_set <- list(
-      key = paste0("Phase", "-", cluster),
-      name = cluster,
+      key = paste0("Phase", "-", gsub(" ","_",phase)),
+      name = phase,
       rootNode = FALSE,
       type = "cellSets",
       color = color_pool[1],

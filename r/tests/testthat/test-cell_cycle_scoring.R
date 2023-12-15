@@ -106,7 +106,7 @@ test_that("run_cell_cycle_scoring returns a data frame with correct columns", {
 
   expect_s3_class(result, "data.frame")
 
-  expect_true("cluster" %in% colnames(result))
+  expect_true("phase" %in% colnames(result))
   expect_true("cell_ids" %in% colnames(result))
 })
 
@@ -117,7 +117,7 @@ test_that("run_cell_cycle_scoring properly classifies S cells", {
 
   expect_s3_class(result, "data.frame")
 
-  expect_true(all(result$cluster == "S"))
+  expect_true(all(result$phase == "S"))
 })
 
 test_that("run_cell_cycle_scoring properly classifies G2M cells", {
@@ -127,7 +127,7 @@ test_that("run_cell_cycle_scoring properly classifies G2M cells", {
 
   expect_s3_class(result, "data.frame")
 
-  expect_true(all(result$cluster == "G2M"))
+  expect_true(all(result$phase == "G2M"))
 })
 
 test_that("run_cell_cycle_scoring returns 'Undetermined' cellset when no genes are detected.", {
@@ -137,13 +137,13 @@ test_that("run_cell_cycle_scoring returns 'Undetermined' cellset when no genes a
 
   expect_s3_class(result, "data.frame")
 
-  expect_true(all(result$cluster == "Undetermined"))
+  expect_true(all(result$phase == "Undetermined cycle phase"))
 })
 
 test_that("format_phase_cellsets returns a list with the correct structure", {
   # Create a mock data frame for testing
   mock_cell_sets <- data.frame(
-    cluster = c("A", "A", "B", "C", "C"),
+    phase = c("A", "A", "B", "C", "C"),
     cell_ids = 1:5
   )
 
@@ -183,7 +183,7 @@ test_that("format_phase_cellsets returns a list with the correct structure", {
 
 test_that("format_phase_cellsets returns expected formatting", {
   mock_cell_sets <- data.frame(
-    cluster = c("A", "A", "B", "C", "C"),
+    phase = c("A", "A", "B", "C", "C"),
     cell_ids = 1:5
   )
 
