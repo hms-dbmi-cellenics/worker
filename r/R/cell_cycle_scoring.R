@@ -71,13 +71,13 @@ run_cell_cycle_scoring <- function(scdata) {
   return(cellSets)
 }
 
-#' format_phase_cellsets
+#' Format cell cycle phase cellsets
 #'
-#' @param cell_sets Data frame with cell id and Phase
-#' @param color_pool
-#' @param name
+#' @param cell_sets data.frame with cell ids and phase
+#' @param color_pool list
+#' @param name cell cycle phase name
 #'
-#' @return Formats cellsets dataframe into platform compatible object
+#' @return list of structured cellsets
 #' @export
 #'
 format_phase_cellsets <- function(cell_sets,
