@@ -39,7 +39,6 @@ cellCycleScoring <- function(req, scdata) {
 #' @return data.frame with cell ids and cycle stage prediction, or undetermined if there is an error.
 #' @export
 #'
-#' @examples
 run_cell_cycle_scoring <- function(scdata) {
   message("Running Cell Cycle Scoring")
 
