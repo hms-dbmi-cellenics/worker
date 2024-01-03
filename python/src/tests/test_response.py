@@ -1,6 +1,7 @@
+import base64
+
 import mock
 import pytest
-import base64
 
 from worker.response import Response
 from worker.result import Result
@@ -18,7 +19,8 @@ class TestResponse:
             "uuid": "random-uuid",
             "ETag": "random-etag",
             "socketId": "random-socketId",
-            "signedUrl": "mockSignedUrl"
+            "signedUrl": "mockSignedUrl",
+            "requestProps": {},
         }
 
     def test_throws_on_empty_response_init(self):
