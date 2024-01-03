@@ -6,11 +6,14 @@ from ..helpers.xray_log_exception import xray_log_exception
 from ..result import Result
 from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
+from .batch_differential_expression import BatchDifferentialExpression
+from .cell_annotation_sctype import ScTypeAnnotate
+from .cell_cycle_scoring import CellCycleScoring
 from .cluster_cells import ClusterCells
 from .differential_expression import DifferentialExpression
-from .batch_differential_expression import BatchDifferentialExpression
 from .dotplot import DotPlot
 from .doublet_score import GetDoubletScore
+from .download_annot_seurat_object import DownloadAnnotSeuratObject
 from .embedding import GetEmbedding
 from .expression_cellsets import GetExpressionCellSets
 from .gene_expression import GeneExpression
@@ -19,11 +22,10 @@ from .marker_heatmap import MarkerHeatmap
 from .mitochondrial_content import GetMitochondrialContent
 from .n_genes import GetNGenes
 from .n_umis import GetNUmis
-from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
-from .trajectory_analysis_starting_nodes import GetTrajectoryAnalysisStartingNodes
 from .normalized_matrix import GetNormalizedExpression
-from .cell_annotation_sctype import ScTypeAnnotate
-from .download_annot_seurat_object import DownloadAnnotSeuratObject
+from .trajectory_analysis_pseudotime import GetTrajectoryAnalysisPseudoTime
+from .trajectory_analysis_starting_nodes import \
+    GetTrajectoryAnalysisStartingNodes
 
 
 class TaskFactory:
@@ -48,6 +50,7 @@ class TaskFactory:
             GetExpressionCellSets,
             GetNormalizedExpression,
             ScTypeAnnotate,
+            CellCycleScoring,
             DownloadAnnotSeuratObject
         )
     }

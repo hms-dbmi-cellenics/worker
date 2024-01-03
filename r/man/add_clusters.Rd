@@ -10,6 +10,8 @@ add_clusters(scdata, parsed_cellsets, cell_sets)
 \item{scdata}{Seurat object}
 
 \item{parsed_cellsets}{data.table cellsets object}
+
+\item{cell_sets}{list with the cell_sets meta data (like keys and type)}
 }
 \value{
 Seurat object
