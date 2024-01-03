@@ -134,13 +134,15 @@ class Response:
     #' @export
     def _send_notification(self, socket_data=None):
         io = Emitter({"client": config.REDIS_CLIENT})
-        if self.request["requestProps"].get("broadcast"):
-            io.Emit(
-                f'ExperimentUpdates-{self.request["experimentId"]}',
-                self._construct_response_msg(),
-            )
+        print(self.request)
+        if self.request.get("requestProps"):
+            if self.request["requestProps"].get("broadcast"):
+                io.Emit(
+                    f'ExperimentUpdates-{self.request["experimentId"]}',
+                    self._construct_response_msg(),
+                )
 
-            info(f"Broadcast results to users viewing experiment {self.request['experimentId']}.")
+                info(f"Broadcast results to users viewing experiment {self.request['experimentId']}.")
 
         send_status_update(
             io, self.request["experimentId"], FINISHED_TASK, self.request
