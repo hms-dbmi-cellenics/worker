@@ -20,7 +20,7 @@ class TestResponse:
             "ETag": "random-etag",
             "socketId": "random-socketId",
             "signedUrl": "mockSignedUrl",
-            "requestProps": {},
+            "requestProps": {}
         }
 
     def test_throws_on_empty_response_init(self):
