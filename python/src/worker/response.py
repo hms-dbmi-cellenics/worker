@@ -134,7 +134,7 @@ class Response:
     #' @export
     def _send_notification(self, socket_data=None):
         io = Emitter({"client": config.REDIS_CLIENT})
-        if self.request.get("broadcast"):
+        if self.request["requestProps"].get("broadcast"):
             io.Emit(
                 f'ExperimentUpdates-{self.request["experimentId"]}',
                 self._construct_response_msg(),
