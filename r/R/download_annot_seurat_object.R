@@ -16,14 +16,16 @@
 #'
 DownloadAnnotSeuratObject <- function(req, data) {
   cell_sets <- req$body$cellSets
-  embedding_data <- req$body$embedding
-  embedding_method <- req$body$embeddingMethod
 
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
 
-  data <- assignEmbedding(embedding_data, data, embedding_method)
+  if (!req$body$isSeurat) {
+    embedding_data <- req$body$embedding
+    embedding_method <- req$body$embeddingMethod
+    data <- assignEmbedding(embedding_data, data, embedding_method)
+  }
 
   saveRDS(data, RDS_PATH)
   return(RDS_PATH)
