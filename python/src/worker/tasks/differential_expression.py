@@ -19,8 +19,8 @@ class DifferentialExpression(Task):
         self.experiment_id = config.EXPERIMENT_ID
         self.pagination = {}
 
-        if "pagination" in msg:
-            self.pagination = msg["pagination"]
+        if "pagination" in msg["requestProps"]:
+            self.pagination = msg["requestProps"]["pagination"]
 
     def _format_result(self, result):
         # Return a list of formatted results.
