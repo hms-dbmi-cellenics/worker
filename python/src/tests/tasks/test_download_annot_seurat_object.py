@@ -31,7 +31,8 @@ class TestDownloadAnnotSeuratObject:
             "body": {
                 "name": "DownloadAnnotSeuratObject",
                 "embeddingETag": mock_embedding_etag,
-                "embeddingMethod": "umap"
+                "embeddingMethod": "umap",
+                "useSaved": False
             }
         }
 
