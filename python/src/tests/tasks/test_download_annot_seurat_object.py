@@ -32,7 +32,7 @@ class TestDownloadAnnotSeuratObject:
                 "name": "DownloadAnnotSeuratObject",
                 "embeddingETag": mock_embedding_etag,
                 "embeddingMethod": "umap",
-                "useSaved": False
+                "isSeurat": False
             }
         }
 
