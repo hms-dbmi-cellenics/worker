@@ -27,14 +27,21 @@ class DownloadAnnotSeuratObject(Task):
         cell_sets = get_cell_sets(self.experiment_id)
         cell_sets_dict = get_cell_sets_dict_for_r(cell_sets)
 
-        embedding_etag = self.task_def["embeddingETag"]
-        embedding = get_embedding(embedding_etag, format_for_r=True)
         embedding_method = self.task_def["embeddingMethod"] 
+        is_seurat = self.task_def["isSeurat"]
+
+        # embedding is internal if downloading from project created by Seurat object upload
+        if is_seurat:
+            embedding = None
+        else:
+            embedding_etag = self.task_def["embeddingETag"]
+            embedding = get_embedding(embedding_etag, format_for_r=True)
 
         request = {
             "embedding": embedding,
             "cellSets": cell_sets_dict,
             "embeddingMethod": embedding_method,
+            "isSeurat": is_seurat,
         }
 
         return request

@@ -133,7 +133,8 @@ mock_req <- function(data, reduction = "umap") {
     body = list(
       cellSets = mock_cellset_from_python(data),
       embedding = mock_embedding_data(data),
-      embeddingMethod = reduction
+      embeddingMethod = reduction,
+      isSeurat = FALSE
     )
   )
 
@@ -160,6 +161,19 @@ stubbed_DownloadAnnotSeuratObject <- function(req, data) {
 test_that("DownloadAnnotSeuratObject saves the Seurat object using the correct path", {
   data <- mock_scdata()
   req <- mock_req(data)
+
+  res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
+
+  expect_type(res, "character")
+  expect_equal(res, RDS_PATH)
+})
+
+
+test_that("DownloadAnnotSeuratObject works with Seurat projects", {
+  data <- mock_scdata()
+  req <- mock_req(data)
+  req$isSeurat <- TRUE
+  req$embedding <- NULL
 
   res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
 
