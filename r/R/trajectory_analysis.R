@@ -175,7 +175,7 @@ generateTrajectoryGraph <- function(
   # Clustering resolution can only be used by monocle if the clustering method is leiden
   clustering_resolution <- NULL
   if (clustering_method == "leiden") {
-    clustering_resolution <- clustering_settings$methodSettings[[clustering_method]]$resolution
+    clustering_resolution <- clustering_settings$resolution
   }
 
   clustering_controls <- list()
