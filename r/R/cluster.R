@@ -39,7 +39,7 @@ runClusters <- function(req, data) {
     formatted_cell_sets,
     req$body$apiUrl,
     req$body$experimentId,
-    type,
+    "louvain",
     req$body$authJwt,
     append = FALSE
   )
@@ -157,7 +157,7 @@ format_cell_sets_object <-
     name <- paste0(clustering_method, " clusters")
     cell_sets_object <-
       list(
-        key = clustering_method,
+        key = "louvain",
         name = name,
         rootNode = TRUE,
         type = "cellSets",
