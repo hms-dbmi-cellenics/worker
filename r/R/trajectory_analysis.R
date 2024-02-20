@@ -173,10 +173,9 @@ generateTrajectoryGraph <- function(
   embedding_method <- embedding_settings$method
 
   # Clustering resolution can only be used by monocle if the clustering method is leiden
+  # The monocle clustering resolution is more sensitive than seurat, so we cant use the same values
+  # Keeping the resolution as NULL for monocle to automatically determine resolution value.
   clustering_resolution <- NULL
-  if (clustering_method == "leiden") {
-    clustering_resolution <- clustering_settings$resolution
-  }
 
   clustering_controls <- list()
   if(embedding_method == "umap") {
