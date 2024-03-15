@@ -1,5 +1,5 @@
 # Create builder step
-FROM rocker/r-ver:4.2.2 AS builder
+FROM rocker/r-ver:4.3.3 AS builder
 WORKDIR /src/worker
 
 # install required debian packages to install R packages
@@ -53,7 +53,7 @@ RUN Rscript check_package_licenses.R
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
-FROM rocker/r-ver:4.2.2 AS common
+FROM rocker/r-ver:4.3.3 AS common
 WORKDIR /src/worker
 
 # get source code and R packages
@@ -73,7 +73,7 @@ RUN echo "python3-pip python3-venv python3-dev" >> sysdeps_run.txt && \
 # install umap-learn for RunUMAP
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', 'umap-learn==0.5.3', pip_options='--no-cache-dir')" 
+    R -q -e "reticulate::virtualenv_install('r-reticulate', 'umap-learn==0.5.3', pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
