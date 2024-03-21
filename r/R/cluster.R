@@ -154,7 +154,7 @@ getSNNiGraph <- function(data, active.reduction) {
 #' @examples
 format_cell_sets_object <-
   function(cell_sets, clustering_method, color_pool) {
-    name <- paste0(clustering_method, " clusters")
+    name <- paste0("Louvain", " clusters")
     cell_sets_object <-
       list(
         key = "louvain",
