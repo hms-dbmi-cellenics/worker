@@ -189,12 +189,15 @@ run_sctype <- function(data, active_assay, tissue, species) {
   db <- "http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/ScTypeDB_full.xlsx"
   gs_list <- gene_sets_prepare(db, tissue)
 
-
   # get cell-type by cell matrix
-  cell_type_scores <- sctype_score(
-    scRNAseqData = data[[active_assay]]@scale.data, scaled = TRUE,
-    gs = gs_list$gs_positive, gs2 = gs_list$gs_negative
-  )
+  tryCatch({
+    cell_type_scores <- sctype_score(
+      scRNAseqData = data[[active_assay]]@scale.data, scaled = TRUE,
+      gs = gs_list$gs_positive, gs2 = gs_list$gs_negative
+    )
+  }, error = function(e) {
+    stop("Error in sctype_score: ", error_codes$SCTYPE_ERROR)
+  })
 
   # merge by cluster
   clusters <- "seurat_clusters"
