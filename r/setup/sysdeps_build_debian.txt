@@ -11,7 +11,7 @@ libxt-dev
 libcairo2-dev
 libfreetype6-dev
 libpng-dev
-libtiff5-dev
+libtiff-dev
 libjpeg-dev
 libgeos-dev
 procps
