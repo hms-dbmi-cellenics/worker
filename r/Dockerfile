@@ -72,7 +72,7 @@ RUN echo "python3-pip python3-venv python3-dev" >> sysdeps_run.txt && \
 
 # install umap-learn for RunUMAP
 ENV WORKON_HOME=/src/.virtualenvs
-RUN R -q -e "reticulate::virtualenv_create('r-reticulate')" && \
+RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
     R -q -e "reticulate::virtualenv_install('r-reticulate', 'umap-learn==0.5.3', pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
