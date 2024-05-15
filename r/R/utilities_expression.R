@@ -100,8 +100,7 @@ completeExpression <- function(expression, cell_ids) {
     return(expression)
   }
 
-  expression[, cell_ids := cell_ids]
-
+  expression$cell_ids <- cell_ids
   data.table::setorder(expression, cols = "cell_ids")
 
   # add back all filtered cells as empty rows.
@@ -113,7 +112,7 @@ completeExpression <- function(expression, cell_ids) {
     on = .(cell_ids)
     ]
 
-  expression[, cell_ids := NULL]
+  expression$cell_ids <- NULL
 
   return(expression)
 }
@@ -203,7 +202,7 @@ getStats <- function(data) {
 sparsify <- function(expression) {
   data.table::setnafill(expression, fill = 0)
   sparse_matrix <-
-    Matrix::Matrix(Matrix::as.matrix(expression), sparse = T)
+    as(as.matrix(expression), 'dgCMatrix')
 
   return(sparse_matrix)
 }

@@ -1,6 +1,8 @@
 library(Seurat)
 library(dplyr)
 
+options(Seurat.object.assay.version = "v3")
+
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 

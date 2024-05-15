@@ -117,6 +117,7 @@ mock_scdata <- function() {
   )
 
   row.names(pbmc_raw) <- enids
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
@@ -313,9 +314,8 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
-  data[[active_assay]]@scale.data <- scale_data
 
-  data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
+  data@meta.data <- suppressWarnings(run_sctype(scale_data, data@meta.data, active_assay, tissue, species))
 
   formatted_cell_class <- format_sctype_cell_sets(data, species, tissue)
 

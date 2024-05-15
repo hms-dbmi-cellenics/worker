@@ -12,7 +12,7 @@ mock_scdata <- function() {
   gene_annotations$original_name <- gene_annotations$name
   row.names(pbmc_raw) <- gene_annotations$input
 
-
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   pbmc_small <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)

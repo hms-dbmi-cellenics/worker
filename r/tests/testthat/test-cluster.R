@@ -123,7 +123,7 @@ test_that("runClusters uses active.reduction in misc slot", {
 
   for (algo in algos) {
     req <- mock_req(type = algo)
-    expect_error(stubbed_runClusters(req, data), "Cannot find 'pca'")
+    expect_error(stubbed_runClusters(req, data), "'pca' not found")
   }
 
   # will use active.reduction to get SNN graph
@@ -236,7 +236,7 @@ test_that("runClusters does not crash with less than 10 dimensions available", {
   expected_keys <- c("cluster", "cell_ids")
 
   # remove all pre-existing reductions and calculate low-PC PCA
-  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
+  scdata <- Seurat::DietSeurat(scdata)
   scdata <- suppressWarnings(Seurat::RunPCA(scdata, assay = "RNA", npcs = 2, verbose = F))
 
   for (algo in algos) {
@@ -253,7 +253,7 @@ test_that("getClusters uses the default value of 10 if there are enough PCs avai
   resolution <- 0.8
 
   # remove all pre-existing reductions and calculate low-PC PCA
-  scdata <- Seurat::DietSeurat(scdata, scale.data = T)
+  scdata <- Seurat::DietSeurat(scdata)
   scdata@commands <- list()
   scdata <- suppressWarnings(Seurat::RunPCA(scdata, assay = "RNA", npcs = 20, verbose = F))
 

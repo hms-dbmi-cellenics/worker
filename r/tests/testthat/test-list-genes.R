@@ -21,7 +21,7 @@ mock_scdata <- function() {
     row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
   )
 
-  vars <- Seurat::HVFInfo(object = pbmc_small, assay = "RNA", selection.method = "vst")
+  vars <- Seurat::HVFInfo(object = pbmc_small, assay = "RNA", method = "vst")
   annotations <- pbmc_small@misc[["gene_annotations"]]
   vars$SYMBOL <- rownames(vars)
   vars$ENSEMBL <- annotations$input[match(rownames(vars), annotations$name)]

@@ -120,7 +120,7 @@ assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
   embedding_key <- unname(unlist(reduction_keys[reduction_method]))
 
   colnames(embedding) <- paste(embedding_key, 1:2, sep = "")
-  data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key)
+  data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key, assay = "RNA")
 
   return(data)
 }

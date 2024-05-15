@@ -16,6 +16,7 @@ mock_scdata <- function() {
   )
 
   row.names(pbmc_raw) <- enids
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)

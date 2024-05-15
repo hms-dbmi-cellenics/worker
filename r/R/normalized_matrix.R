@@ -34,7 +34,7 @@ GetNormalizedExpression <- function(req, data) {
     message("No subsetting specified, sending the whole matrix")
   }
 
-  matrix <- as.data.frame(Seurat::GetAssayData(data, slot = "data", assay = "RNA"))
+  matrix <- as.data.frame(Seurat::GetAssayData(data, layer = "data", assay = "RNA"))
 
   message("Number of cells in matrix to return: ", ncol(matrix))
 
