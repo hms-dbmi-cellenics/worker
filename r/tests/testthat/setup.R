@@ -4,4 +4,4 @@ library(dplyr)
 library(data.table)
 library(Matrix)
 
-options('Seurat.object.assay.version' = 'v3')
+options('Seurat.object.assay.version' = 'v5')
