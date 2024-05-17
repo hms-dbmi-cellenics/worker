@@ -246,8 +246,8 @@ test_that("If max truncated expression value is 0, finds a non-zero value", {
   data <- mock_scdata()
   req <- mock_req()
 
-  data@assays$RNA@data["MS4A1", ] <- 0
-  data@assays$RNA@data["MS4A1", 1] <- 5
+  data@assays$RNA$data["MS4A1", ] <- 0
+  data@assays$RNA$data["MS4A1", 1] <- 5
 
   res <- runExpression(req, data)
   expect_false(all(res$truncatedExpression$values == 0))
@@ -331,7 +331,7 @@ test_that("raw expression values are the same as in the original data", {
     )
 
   # manually extract original data, and convert to data.table
-  original_data <- Matrix::t(data@assays$RNA@data[unlist(req$body$genes), , drop = FALSE])
+  original_data <- Matrix::t(data@assays$RNA$data[unlist(req$body$genes), , drop = FALSE])
   original_data <- as.data.table(original_data)
 
   res <- getExpressionValues(data, gene_subset)
@@ -358,7 +358,7 @@ test_that("order of cells in the completed matrix is correct", {
       toupper(gene_annotations$name) %in% toupper(req$body$genes)
     )
 
-  original_data <- Matrix::t(data@assays$RNA@data[unlist(req$body$genes), ,
+  original_data <- Matrix::t(data@assays$RNA$data[unlist(req$body$genes), ,
     drop = FALSE
   ])
   original_data <- data.table::as.data.table(original_data)

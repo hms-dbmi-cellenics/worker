@@ -56,10 +56,10 @@ mock_scdata <- function(phase = "S",
 
   # We are forcing expression numbers to return expected cell cycle phase.
   if (phase == "S") {
-    scdata@assays$RNA@counts[1:40, ] <- 3
-    scdata@assays$RNA@counts[41:90, ] <- 0
+    scdata@assays$RNA$counts[1:40, ] <- 3
+    scdata@assays$RNA$counts[41:90, ] <- 0
   } else {
-    scdata@assays$RNA@counts[41:90, ] <- 3
+    scdata@assays$RNA$counts[41:90, ] <- 3
   }
 
 

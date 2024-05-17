@@ -60,7 +60,7 @@ getExpressionCellSetIDs <- function(filters, data) {
   enids <- gene_annotations$input[name_match]
 
   # get expression matrix
-  expression_mat <- data[["RNA"]]@data
+  expression_mat <- data[["RNA"]]$data
 
   # subset cells for each filter
   keep.cells <- rep(TRUE, ncol(data))

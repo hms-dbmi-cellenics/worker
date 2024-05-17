@@ -70,7 +70,7 @@ getExpressionValues <- function(data, genes) {
 #'
 getRawExpression <- function(data, genes) {
   rawExpression <-
-    Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE])
+    Matrix::t(data@assays$RNA$data[unique(genes$input), , drop = FALSE])
 
   rawExpression <- data.table::as.data.table(rawExpression)
 

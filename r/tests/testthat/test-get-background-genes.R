@@ -46,7 +46,7 @@ test_that("All genes found in getBackgroundExpressedGenes have more than min.cou
 
   res_gene_ids <- gene_annotations[match(res$genes, gene_annotations$name), "input"]
 
-  res_gene_counts <- Matrix::rowSums(data@assays$RNA@counts)[res_gene_ids]
+  res_gene_counts <- Matrix::rowSums(data@assays$RNA$counts)[res_gene_ids]
 
   expect_true(all(res_gene_counts > min.total.count))
 })
@@ -60,7 +60,7 @@ test_that("No genes outside those found have more than min.count counts", {
 
   other_gene_ids <- gene_annotations[!match(res$genes, gene_annotations$name), "input"]
 
-  other_gene_counts <- Matrix::rowSums(data@assays$RNA@counts)[other_gene_ids]
+  other_gene_counts <- Matrix::rowSums(data@assays$RNA$counts)[other_gene_ids]
 
   expect_true(all(other_gene_counts <= min.total.count))
 })

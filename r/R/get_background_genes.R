@@ -19,7 +19,7 @@ getBackgroundExpressedGenes <- function(req, data) {
   data <- data[, !is.na(data$custom)]
 
   # get genes with > min.total.count
-  ntot <- Matrix::rowSums(data[["RNA"]]@counts)
+  ntot <- Matrix::rowSums(data[["RNA"]]$counts)
   keep <- ntot > min.total.count
 
   genes <- data@misc$gene_annotations$original_name[keep]

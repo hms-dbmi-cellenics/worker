@@ -76,11 +76,11 @@ test_that("makePseudobulkMatrix correctly aggregates counts", {
       rownames()
 
     # aggregate manually,
-    cell_counts <- scdata[["RNA"]]@counts[, sample_cells]
+    cell_counts <- scdata[["RNA"]]$counts[, sample_cells]
     expected_agg_counts <- Matrix::rowSums(cell_counts)
 
     res <- makePseudobulkMatrix(scdata)
-    res_agg_counts <- res[["RNA"]]@counts[, sample]
+    res_agg_counts <- res[["RNA"]]$counts[, sample]
 
     expect_equal(res_agg_counts, expected_agg_counts)
   }
