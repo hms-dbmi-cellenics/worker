@@ -69,8 +69,15 @@ getExpressionValues <- function(data, genes) {
 #' @export
 #'
 getRawExpression <- function(data, genes) {
+
+  mat <- data@assays$RNA$data
+
+  # if one cell mat is vector
+  if (methods::is(mat, 'numeric'))
+    mat <- as.matrix(mat)
+
   rawExpression <-
-    Matrix::t(data@assays$RNA$data[unique(genes$input), , drop = FALSE])
+    Matrix::t(mat[unique(genes$input), , drop = FALSE])
 
   rawExpression <- data.table::as.data.table(rawExpression)
 
