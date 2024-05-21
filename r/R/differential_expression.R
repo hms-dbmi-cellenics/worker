@@ -46,8 +46,8 @@ runDE <- function(req, data) {
 runWilcoxAUC <- function(data) {
 
   # get marker genes
-  X_matrix <- Seurat::GetAssayData(data, assay = "RNA", layer = "data")
-  y <- Seurat::FetchData(data, "custom") %>% unlist %>% as.character()
+  X_matrix <- data[['RNA']]$data
+  y <- data$custom
   result <- presto::wilcoxauc(X_matrix, y)
   result <- result[result$group == 'base', ]
 
