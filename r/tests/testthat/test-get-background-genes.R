@@ -12,7 +12,7 @@ mock_scdata <- function() {
   gene_annotations$original_name <- gene_annotations$name
   row.names(pbmc_raw) <- gene_annotations$input
 
-
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   pbmc_small <- Seurat::CreateSeuratObject(counts = pbmc_raw)
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
@@ -46,7 +46,7 @@ test_that("All genes found in getBackgroundExpressedGenes have more than min.cou
 
   res_gene_ids <- gene_annotations[match(res$genes, gene_annotations$name), "input"]
 
-  res_gene_counts <- Matrix::rowSums(data@assays$RNA@counts)[res_gene_ids]
+  res_gene_counts <- Matrix::rowSums(data@assays$RNA$counts)[res_gene_ids]
 
   expect_true(all(res_gene_counts > min.total.count))
 })
@@ -60,7 +60,7 @@ test_that("No genes outside those found have more than min.count counts", {
 
   other_gene_ids <- gene_annotations[!match(res$genes, gene_annotations$name), "input"]
 
-  other_gene_counts <- Matrix::rowSums(data@assays$RNA@counts)[other_gene_ids]
+  other_gene_counts <- Matrix::rowSums(data@assays$RNA$counts)[other_gene_ids]
 
   expect_true(all(other_gene_counts <= min.total.count))
 })

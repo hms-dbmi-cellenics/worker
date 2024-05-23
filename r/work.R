@@ -1,6 +1,9 @@
 library(Seurat)
 library(dplyr)
 
+# v5 is default but making explicit
+options(Seurat.object.assay.version = "v5")
+
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 

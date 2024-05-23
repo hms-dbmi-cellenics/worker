@@ -177,6 +177,9 @@ add_clusters <- function(scdata, parsed_cellsets, cell_sets) {
   scdata@meta.data <- dplyr::left_join(scdata@meta.data, seurat_clusters, by = "cells_id")
   scdata <- Seurat::SetIdent(scdata, value = 'seurat_clusters')
 
+  # active ident needs to have cells as names (not colnames)
+  names(scdata@active.ident) <- Seurat::Cells(scdata)
+
   # add custom clusters
   if ("scratchpad" %in% parsed_cellsets[["cellset_type"]]) {
     custom_clusters <- parsed_cellsets[cellset_type == "scratchpad", c("name", "cell_id")]

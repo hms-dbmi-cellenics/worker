@@ -20,7 +20,7 @@ makePseudobulkMatrix <- function(scdata) {
   scdata <- scdata[, keep]
   samples <- samples[keep]
 
-  counts <- scdata[["RNA"]]@counts
+  counts <- scdata[["RNA"]]$counts
   gene_annotations <- scdata@misc$gene_annotations
 
   # aggregate over samples

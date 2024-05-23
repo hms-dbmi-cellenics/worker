@@ -41,9 +41,7 @@ ScTypeAnnotate <- function(req, data) {
   parsed_cellsets <- parse_cellsets(children_cell_sets)
 
   data <- add_clusters(data, parsed_cellsets, cell_sets)
-
-  data[[active_assay]]@scale.data <- scale_data
-  data <- run_sctype(data, active_assay, tissue, species)
+  data@meta.data <- run_sctype(scale_data, data@meta.data, active_assay, tissue, species)
 
   formatted_cell_class <- format_sctype_cell_sets(data, species, tissue)
 
@@ -74,13 +72,13 @@ ScTypeAnnotate <- function(req, data) {
 #' @examples
 get_formatted_data <- function(scdata, active_assay) {
 
-  scale_data <- scdata[[active_assay]]@scale.data
+  scale_data <- scdata[[active_assay]]$scale.data
 
   # no hvgs or scale.data if seurat object was uploaded
   if (sum(dim(scale_data)) == 0) {
     scdata <- Seurat::FindVariableFeatures(scdata)
     scdata <- Seurat::ScaleData(scdata)
-    scale_data <- scdata[[active_assay]]@scale.data
+    scale_data <- scdata[[active_assay]]$scale.data
   }
 
   scale_data <- data.table::as.data.table(scale_data, keep.rownames = "input")
@@ -179,7 +177,7 @@ format_matrix <- function(scale_data) {
 #' @return Seurat object with ScType annotations in the metadata slot
 #' @export
 #'
-run_sctype <- function(data, active_assay, tissue, species) {
+run_sctype <- function(scale.data, meta.data, active_assay, tissue, species) {
   library(openxlsx)
   library(HGNChelper)
 
@@ -192,7 +190,7 @@ run_sctype <- function(data, active_assay, tissue, species) {
   # get cell-type by cell matrix
   tryCatch({
     cell_type_scores <- sctype_score(
-      scRNAseqData = data[[active_assay]]@scale.data, scaled = TRUE,
+      scRNAseqData = scale.data, scaled = TRUE,
       gs = gs_list$gs_positive, gs2 = gs_list$gs_negative
     )
   }, error = function(e) {
@@ -201,14 +199,14 @@ run_sctype <- function(data, active_assay, tissue, species) {
 
   # merge by cluster
   clusters <- "seurat_clusters"
-  metadata_clusters <- data@meta.data[[clusters]]
+  metadata_clusters <- meta.data[[clusters]]
 
   # Remove rownames that aren't numbers, as.integer won't work otherwise
-  rownames(data@meta.data) <- NULL
+  rownames(meta.data) <- NULL
 
   # from https://github.com/IanevskiAleksandr/sc-type/blob/master/README.md
   cluster_scores <- do.call("rbind", lapply(unique(metadata_clusters), function(cl) {
-    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(rownames(data@meta.data[metadata_clusters == cl, ]))]), decreasing = !0)
+    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(rownames(meta.data[metadata_clusters == cl, ]))]), decreasing = !0)
 
     head(data.frame(cluster = cl, type = names(cell_type_scores_cl), scores = cell_type_scores_cl, ncells = sum(metadata_clusters == cl)), 10)
 
@@ -222,11 +220,11 @@ run_sctype <- function(data, active_assay, tissue, species) {
   sctype_scores$type[as.numeric(as.character(sctype_scores$scores)) < sctype_scores$ncells / 4] <- "Unknown"
 
 
-  data@meta.data$customclassif <- ""
+  meta.data$customclassif <- ""
   for (j in unique(sctype_scores$cluster)) {
     cl_type <- sctype_scores[sctype_scores$cluster == j, ]
-    data@meta.data$customclassif[metadata_clusters == j] <- as.character(cl_type$type[1])
+    meta.data$customclassif[metadata_clusters == j] <- as.character(cl_type$type[1])
   }
 
-  return(data)
+  return(meta.data)
 }

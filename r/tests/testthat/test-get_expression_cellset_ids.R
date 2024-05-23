@@ -12,8 +12,8 @@ mock_scdata <- function() {
 
   row.names(pbmc_raw) <- gene_annotations$input
 
-
-  pbmc_small <- Seurat::CreateSeuratObject(counts = pbmc_raw)
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
+  pbmc_small <- Seurat::CreateSeuratObject(counts = pbmc_raw, data = pbmc_raw)
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
   pbmc_small@misc$gene_annotations <- gene_annotations
@@ -28,7 +28,7 @@ test_that("getExpressionCellSetIDs with a single expression filter returns corre
 
   annot <- data@misc$gene_annotations
   enid <- annot$input[annot$name == req[[1]]$geneName]
-  expected <- data$cells_id[data[["RNA"]]@data[enid, ] > 0.5]
+  expected <- data$cells_id[data[["RNA"]]$data[enid, ] > 0.5]
   expect_equal(res$keep_ids, expected)
 })
 
@@ -44,7 +44,7 @@ test_that("getExpressionCellSetIDs with two expression filters returns correct c
   annot <- data@misc$gene_annotations
   enid1 <- annot$input[annot$name == req[[1]]$geneName]
   enid2 <- annot$input[annot$name == req[[2]]$geneName]
-  expected <- data$cells_id[data[["RNA"]]@data[enid1, ] > 0.5 & data[["RNA"]]@data[enid2, ] > 0.5]
+  expected <- data$cells_id[data[["RNA"]]$data[enid1, ] > 0.5 & data[["RNA"]]$data[enid2, ] > 0.5]
 
   expect_equal(res$keep_ids, expected)
 

@@ -69,8 +69,15 @@ getExpressionValues <- function(data, genes) {
 #' @export
 #'
 getRawExpression <- function(data, genes) {
+
+  mat <- data@assays$RNA$data
+
+  # if one cell mat is vector
+  if (methods::is(mat, 'numeric'))
+    mat <- as.matrix(mat)
+
   rawExpression <-
-    Matrix::t(data@assays$RNA@data[unique(genes$input), , drop = FALSE])
+    Matrix::t(mat[unique(genes$input), , drop = FALSE])
 
   rawExpression <- data.table::as.data.table(rawExpression)
 
@@ -100,8 +107,7 @@ completeExpression <- function(expression, cell_ids) {
     return(expression)
   }
 
-  expression[, cell_ids := cell_ids]
-
+  expression$cell_ids <- cell_ids
   data.table::setorder(expression, cols = "cell_ids")
 
   # add back all filtered cells as empty rows.
@@ -113,7 +119,7 @@ completeExpression <- function(expression, cell_ids) {
     on = .(cell_ids)
     ]
 
-  expression[, cell_ids := NULL]
+  expression$cell_ids <- NULL
 
   return(expression)
 }
@@ -203,7 +209,7 @@ getStats <- function(data) {
 sparsify <- function(expression) {
   data.table::setnafill(expression, fill = 0)
   sparse_matrix <-
-    Matrix::Matrix(Matrix::as.matrix(expression), sparse = T)
+    as(as.matrix(expression), 'dgCMatrix')
 
   return(sparse_matrix)
 }

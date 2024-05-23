@@ -89,7 +89,7 @@ test_that("Dotplot returns the correct values", {
   correct_res <- data.frame()
 
   for (group in req$body$groupBy$children) {
-    group_counts <- data@assays$RNA@counts[req$body$customGenesList, intersect(group$cellIds, data$cells_id)]
+    group_counts <- data@assays$RNA$counts[req$body$customGenesList, intersect(group$cellIds, data$cells_id)]
     for (gene in rownames(group_counts)) {
       correct_res[group$name, gene] <- mean(expm1(group_counts[gene, ]))
     }

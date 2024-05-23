@@ -16,6 +16,7 @@ mock_scdata <- function() {
   )
 
   row.names(pbmc_raw) <- enids
+  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
   pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
 
   pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
@@ -139,7 +140,7 @@ test_that("add_gene_symbols adds gene symbols to the count matrix", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
   scale_data <- add_gene_symbols(scale_data, data)
 
   expect_equal(colnames(scale_data)[2], "original_name")
@@ -150,7 +151,7 @@ test_that("add_gene_symbols produces an error if there are no gene symbols in th
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
 
   annot <- data.table::as.data.table(data@misc$gene_annotations)
 
@@ -167,7 +168,7 @@ test_that("collapse_genes collapses duplicated gene symbols", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
   scale_data <- add_gene_symbols(scale_data, data)
 
   # duplicate first 5 rows
@@ -184,7 +185,7 @@ test_that("format_matrix produces a matrix in the expected format", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]@scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
   scale_data <- add_gene_symbols(scale_data, data)
   scale_data <- collapse_genes(scale_data)
 
@@ -208,9 +209,8 @@ test_that("run_sctype adds cluster annotations as a new metadata column", {
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
-  data[[active_assay]]@scale.data <- scale_data
 
-  data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
+  data@meta.data <- suppressWarnings(run_sctype(scale_data, data@meta.data, active_assay, tissue, species))
 
   expect_true("customclassif" %in% colnames(data@meta.data))
   expect_equal(all(is.na(data@meta.data$customclassif)), FALSE)
@@ -229,9 +229,8 @@ test_that("run_sctype produces correct snapshots", {
   children_cell_sets <- sapply(cell_sets, `[[`, "children")
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
-  data[[active_assay]]@scale.data <- scale_data
 
-  data <- suppressWarnings(run_sctype(data, active_assay, tissue, species))
+  data@meta.data <- suppressWarnings(run_sctype(scale_data, data@meta.data, active_assay, tissue, species))
 
   expect_snapshot(data@meta.data[c("cells_id","customclassif")])
 })
