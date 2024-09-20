@@ -21,7 +21,7 @@ DownloadAnnotSeuratObject <- function(req, data) {
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
 
-  if (!req$body$isSeurat) {
+  if (!req$body$isObj2s) {
     embedding_data <- req$body$embedding
     embedding_method <- req$body$embeddingMethod
     data <- assignEmbedding(embedding_data, data, embedding_method)
