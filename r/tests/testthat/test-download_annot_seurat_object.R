@@ -135,7 +135,7 @@ mock_req <- function(data, reduction = "umap") {
       cellSets = mock_cellset_from_python(data),
       embedding = mock_embedding_data(data),
       embeddingMethod = reduction,
-      isSeurat = FALSE
+      isObj2s = FALSE
     )
   )
 
@@ -173,7 +173,7 @@ test_that("DownloadAnnotSeuratObject saves the Seurat object using the correct p
 test_that("DownloadAnnotSeuratObject works with Seurat projects", {
   data <- mock_scdata()
   req <- mock_req(data)
-  req$isSeurat <- TRUE
+  req$isObj2s <- TRUE
   req$embedding <- NULL
 
   res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
