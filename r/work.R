@@ -7,6 +7,16 @@ options(Seurat.object.assay.version = "v5")
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
+readFlex <- function(fpath) {
+
+  if (tools::file_ext(fpath) == 'qs') {
+    data <- qs::qread(fpath)
+  } else {
+    data <- readRDS(fpath)
+  }
+  return(data)
+}
+
 load_data <- function(fpath) {
   loaded <- FALSE
   data <- NULL
@@ -18,7 +28,7 @@ load_data <- function(fpath) {
         print(getwd())
         print("Experiment folder status:")
         print(list.files(dirname(fpath), all.files = TRUE, full.names = TRUE))
-        f <- readRDS(fpath)
+        f <- readFlex(fpath)
         loaded <- TRUE
         length <- dim(f)
 
@@ -316,11 +326,33 @@ repeat {
 }
 
 backend <- RestRserve::BackendRserve$new()
-fpath <- file.path("/data", experiment_id, "r.rds")
+
+get_fpath <- function(experiment_id) {
+  data_dir <- file.path('/data', experiment_id)
+
+  fpath <- NULL
+
+  while (is.null(fpath)) {
+    fnames <- list.files(data_dir)
+
+    if ('r.qs' %in% fnames) {
+      fpath <- file.path(data_dir, 'r.qs')
+
+    } else if ('r.rds' %in% fnames) {
+      # fallback to rds for older experiments
+      fpath <- file.path(data_dir, 'r.rds')
+    }
+    Sys.sleep(1)
+  }
+
+  return(fpath)
+}
 
 repeat {
   # need to load here as can change e.g. integration method
   cleanupMarkersCache()
+
+  fpath <- get_fpath(experiment_id)
 
   data <- load_data(fpath)
   last_modified <- file.info(fpath)$mtime
