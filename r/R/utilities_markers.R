@@ -28,6 +28,16 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
     data$marker_groups[object_ids %in% filtered_cells] <- i
   }
 
+  # for speed: take at most 1000 cells per cluster
+  set.seed(0)
+  keep.ids <- data@meta.data |>
+    dplyr::group_by(marker_groups) |>
+    dplyr::slice_sample(n = 1000, replace = FALSE) |>
+    dplyr::ungroup() |>
+    dplyr::pull(cells_id)
+
+  data <- data[, object_ids %in% keep.ids]
+
   all_markers <- presto::wilcoxauc(data,
     group_by = "marker_groups",
     assay = "data",
