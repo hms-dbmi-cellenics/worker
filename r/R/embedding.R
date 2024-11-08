@@ -41,15 +41,21 @@ runEmbedding <- function(req, data) {
   message("Number of cells/sample:")
   table(data$samples)
 
-  if (!use_saved) {
-    data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
-  }
+  if (method == 'images') {
+    img_names <- Seurat::Images(data)
+    df_embeddings <- lapply(img_names, get_flipped_tissue_coords, data)
+    df_embedding <- do.call(rbind, df_embeddings)
 
-  df_embedding <- Seurat::Embeddings(data, reduction = method)
+  } else {
+    if (!use_saved)
+      data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
+
+    df_embedding <- Seurat::Embeddings(data, reduction = method)
+  }
 
   # Order embedding by cells id in ascending form
   df_embedding <- as.data.frame(df_embedding)
-  df_embedding$cells_id <- data@meta.data$cells_id
+  df_embedding$cells_id <- data@meta.data[row.names(df_embedding), 'cells_id']
   df_embedding <- df_embedding[order(df_embedding$cells_id), ]
   df_embedding <- df_embedding %>%
     tidyr::complete(cells_id = seq(0, max(data@meta.data$cells_id))) %>%
@@ -66,6 +72,17 @@ runEmbedding <- function(req, data) {
   return(res)
 }
 
+# at least in the case of Visium, data are flipped and rotated before SpatialDimPlot.
+# this function  return the rotated/flipped tissue Coordinates from a Seurat object.
+get_flipped_tissue_coords <- function(img_name, scdata) {
+  coord_spot <- SeuratObject::GetTissueCoordinates(scdata, img_name, scale = "lowres")[,2:1] # rotation
+  colnames(coord_spot) <- c("x", "y")
+  min_coord_y <- min(coord_spot$y)
+  max_coord_y <- max(coord_spot$y)
+  coord_spot$y <- -coord_spot$y + 2*min_coord_y + max_coord_y-min_coord_y
+  return(coord_spot)
+}
+
 
 # getEmbedding
 # Return embedding calculated for the seurat object.
@@ -79,20 +96,20 @@ runEmbedding <- function(req, data) {
 getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
   if (method == "tsne") {
     data <- Seurat::RunTSNE(data,
-      reduction = reduction_type,
-      dims = 1:num_pcs,
-      perplexity = config$perplexity,
-      learning.rate = config$learningRate
+                            reduction = reduction_type,
+                            dims = 1:num_pcs,
+                            perplexity = config$perplexity,
+                            learning.rate = config$learningRate
     )
   } else if (method == "umap") {
     data <- Seurat::RunUMAP(data,
-      reduction = reduction_type,
-      dims = 1:num_pcs,
-      verbose = FALSE,
-      min.dist = config$minimumDistance,
-      metric = config$distanceMetric,
-      umap.method = "umap-learn",
-      seed.use = ULTIMATE_SEED
+                            reduction = reduction_type,
+                            dims = 1:num_pcs,
+                            verbose = FALSE,
+                            min.dist = config$minimumDistance,
+                            metric = config$distanceMetric,
+                            umap.method = "umap-learn",
+                            seed.use = ULTIMATE_SEED
     )
   }
   return(data)
