@@ -2,6 +2,7 @@ version: "3.2"
 services:
   r:
     container_name: "biomage-worker-r"
+    platform: linux/amd64
     build:
       context: r/
       target: dev
@@ -20,6 +21,7 @@ services:
       - DEBUG_STEP=${DEBUG_STEP}
   python:
     container_name: "biomage-worker-python"
+    platform: linux/amd64
     build:
       context: python/
       target: dev
