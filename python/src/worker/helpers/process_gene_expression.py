@@ -29,11 +29,6 @@ def process_gene_expression(data):
                 "stdev": stdev,
                 "expression": raw_gene_expr,
             },
-            "truncatedExpression": {
-                "min": minimum,
-                "max": maximum,
-                "expression": truncated_gene_expr,
-            },
         }
 
     return result

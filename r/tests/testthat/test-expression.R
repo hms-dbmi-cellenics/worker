@@ -27,7 +27,7 @@ test_that("Expression task returns appropriate number and names of genes.", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
+    c("orderedGeneNames", "stats", "rawExpression")
   )
   expect_equal(length(res$orderedGeneNames), 2)
   expect_equal(length(res$stats$rawMean), 2)
@@ -57,7 +57,7 @@ test_that("Expression task works correctly with downsampled = TRUE.", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
+    c("orderedGeneNames", "stats", "rawExpression")
   )
 
   expect_equal(res$orderedGeneNames, c("MS4A1", "CD79B"))
@@ -80,7 +80,7 @@ test_that("Expression task keeps order regardless of the request received.", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
+    c("orderedGeneNames", "stats", "rawExpression")
   )
 
   expect_equal(res$orderedGeneNames, c("MS4A1", "CD79B"))
@@ -97,14 +97,12 @@ test_that("Expression matrices are correctly formatted for mathJS", {
   res <- runExpression(req, data)
 
   exp <- list(
-    raw = res$rawExpression,
-    trunc = res$truncatedExpression,
-    z = res$zScore
+    raw = res$rawExpression
   )
-  # expression matrices contain 4 attributes
+  # expression matrix contains 4 attributes
   expect_equal(unlist(unique(lapply(exp, length))), 4)
 
-  # expression matrices contain correctly named attributes
+  # expression matrix contains correctly named attributes
   expect_equal(
     unlist(unique(lapply(exp, names))),
     c("values", "index", "ptr", "size")
@@ -112,8 +110,6 @@ test_that("Expression matrices are correctly formatted for mathJS", {
 
   # no NA values
   expect_true(!all(unlist(lapply(res$rawExpression, is.na))))
-  expect_true(!all(unlist(lapply(res$truncatedExpression, is.na))))
-  expect_true(!all(unlist(lapply(res$zScore, is.na))))
 })
 
 
@@ -124,14 +120,12 @@ test_that("Expression task returns appropriate number of cells.", {
   res <- runExpression(req, data)
 
   exp <- list(
-    raw = res$rawExpression,
-    trunc = res$truncatedExpression,
-    z = res$zScore
+    raw = res$rawExpression
   )
 
   expected_cells <- max(data$cells_id) + 1
 
-  # assuming all matrices have to be the same size (they have to be)
+  # assuming expression matrix has to be the correct size
   result_size <- unique(unlist(lapply(exp, function(x) x$size[[1]])))
 
   expect_equal(result_size, expected_cells)
@@ -201,9 +195,7 @@ test_that("Expression task does not return gene that does not exist", {
   res <- runExpression(req, data)
 
   exp <- list(
-    raw = res$rawExpression,
-    trunc = res$truncatedExpression,
-    z = res$zScore
+    raw = res$rawExpression
   )
 
   # non-existent gene is not present in the result
@@ -227,9 +219,7 @@ test_that("Expression task works with one gene", {
   res <- runExpression(req, data)
 
   exp <- list(
-    raw = res$rawExpression,
-    trunc = res$truncatedExpression,
-    z = res$zScore
+    raw = res$rawExpression
   )
   expect_equal(res$orderedGeneNames, req$body$genes)
   expect_equal(length(res$orderedGeneNames), 1)
@@ -240,17 +230,6 @@ test_that("Expression task works with one gene", {
 
 
   expect_equal(unique(unlist(lapply(exp, function(x) x$size[[2]]))), 1)
-})
-
-test_that("If max truncated expression value is 0, finds a non-zero value", {
-  data <- mock_scdata()
-  req <- mock_req()
-
-  data@assays$RNA$data["MS4A1", ] <- 0
-  data@assays$RNA$data["MS4A1", 1] <- 5
-
-  res <- runExpression(req, data)
-  expect_false(all(res$truncatedExpression$values == 0))
 })
 
 test_that("runExpression throws an error if request only non existing genes", {

@@ -34,9 +34,7 @@ getGeneExpression <- function(data, genes, downsample_cell_ids) {
   return(list(
     orderedGeneNames = ordered_gene_names,
     stats = stats,
-    rawExpression = expression_values$rawExpression,
-    truncatedExpression = expression_values$truncatedExpression,
-    zScore = expression_values$zScore
+    rawExpression = expression_values$rawExpression
   ))
 }
 
