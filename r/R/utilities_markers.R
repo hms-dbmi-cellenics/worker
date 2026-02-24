@@ -18,31 +18,40 @@
 #' @export
 #'
 getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
-  data$marker_groups <- NA
+  object_ids <- data$cells_id
+  marker_groups <- rep(NA, length(object_ids))
 
   message("Running getTopMarkerGenes")
 
-  object_ids <- data$cells_id
   for (i in seq_along(cellSetsIds)) {
     filtered_cells <- intersect(cellSetsIds[[i]], object_ids)
-    data$marker_groups[object_ids %in% filtered_cells] <- i
+    marker_groups[object_ids %in% filtered_cells] <- i
   }
 
   # for speed: take at most 1000 cells per cluster
   set.seed(0)
-  keep.ids <- data@meta.data |>
+  
+  # Create temp data frame for sampling
+  temp_meta <- data@meta.data |>
+    dplyr::mutate(marker_groups = marker_groups)
+  
+  keep_cell_ids <- temp_meta |>
     dplyr::group_by(marker_groups) |>
     dplyr::slice_sample(n = 1000, replace = FALSE) |>
     dplyr::ungroup() |>
     dplyr::pull(cells_id)
+  
+  # Extract and subset matrix
+  mat <- data@assays$RNA$data
+  keep_indices <- match(keep_cell_ids, object_ids)
+  mat_subset <- mat[, keep_indices]
+  marker_groups_subset <- marker_groups[keep_indices]
 
-  data <- data[, object_ids %in% keep.ids]
-
-  all_markers <- presto::wilcoxauc(data,
-    group_by = "marker_groups",
-    assay = "data",
-    seurat_assay = "RNA"
+  all_markers <- presto::wilcoxauc(
+    mat_subset,
+    y = marker_groups_subset
   )
+  
   all_markers$group <- as.numeric(all_markers$group)
 
   # may not return nFeatures markers per cluster if values are too stringent
@@ -51,15 +60,17 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
       auc >= aucMin &
       pct_in >= pctInMin &
       pct_out <= pctOutMax) %>%
-    dplyr::group_by(feature) %>%
-    dplyr::slice(which.min(pval))
+    dplyr::arrange(pval) %>%
+    dplyr::distinct(feature, .keep_all = TRUE) %>%
+    dplyr::arrange(-logFC)
 
+  # Get top nFeatures per group without additional sorting
   top_markers <- filtered_markers %>%
     dplyr::group_by(group) %>%
-    dplyr::arrange(dplyr::desc(logFC)) %>%
     dplyr::slice_head(n = nFeatures) %>%
+    dplyr::ungroup() %>%
     dplyr::arrange(group)
-
+  
   message(sprintf("%d markers selected", nrow(top_markers)))
   return(top_markers)
 }

@@ -10,184 +10,74 @@
 getGeneExpression <- function(data, genes, downsample_cell_ids) {
   expression_values <- getExpressionValues(data, genes)
 
-  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values$rawExpression))
+  ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values))
 
-  # getStats needs to use the real expresionValues (not downsampled) to extract correct stats
+  # getStats needs to use the real expression values (not downsampled) to extract correct stats
   stats <- getStats(expression_values)
 
-  # The cell ids that will have their real expression returned
-  # (the rest are set to expression 0 to optimize space)
-  cell_ids_to_return <- data@meta.data$cells_id
-
-  # If downsample_cell_ids exist, replace expression_values with the downsample subset of expressions
-  # This includes rawExpression, truncatedExpression and zScore inside expression_values
+  # If downsample_cell_ids exist, zero out cells not in the downsample set
   if (!missing(downsample_cell_ids)) {
-    matched_cell_ids <- match(downsample_cell_ids, data@meta.data$cells_id)
-
-    expression_values <- lapply(expression_values, \(dt) dt[matched_cell_ids, ])
-
-    cell_ids_to_return <- downsample_cell_ids
+    # Zero out all rows not in downsample_cell_ids
+    all_cells <- data@meta.data$cells_id
+    cells_to_zero <- setdiff(all_cells, downsample_cell_ids)
+    zero_indices <- match(cells_to_zero, all_cells)
+    expression_values[zero_indices, ] <- 0
   }
 
-  expression_values <- lapply(expression_values, formatExpression, cell_ids_to_return)
+  # Format sparse matrix directly to JSON
+  rawExpression <- toSparseJson(expression_values)
 
   return(list(
     orderedGeneNames = ordered_gene_names,
     stats = stats,
-    rawExpression = expression_values$rawExpression
+    rawExpression = rawExpression
   ))
 }
 
 
-#' Get raw, truncated and scaled gene expression values
+#' Get raw gene expression values as sparse matrix
 #'
 #' @inheritParams getGeneExpression
 #'
-#' @return list of expression values
+#' @return sparse matrix of expression values (cells x genes)
 #' @export
 #'
 getExpressionValues <- function(data, genes) {
-  rawExpression <- getRawExpression(data, genes)
-
-  return(list(
-    rawExpression = rawExpression,
-    truncatedExpression = truncateExpression(rawExpression),
-    zScore = scaleExpression(rawExpression)
-  ))
-}
-
-#' Extract raw expression values for a list of genes
-#'
-#' The expression matrix is transposed to accommodate the CSC sparse matrix
-#' format used in the UI.
-#'
-#' @inheritParams getGeneExpression
-#'
-#' @return data.table of raw expression values
-#' @export
-#'
-getRawExpression <- function(data, genes) {
-
   mat <- data@assays$RNA$data
 
-  # if one cell mat is vector
-  if (methods::is(mat, 'numeric'))
-    mat <- as.matrix(mat)
+  # Subset to genes of interest and transpose (cells x genes)
+  rawExpression <- Matrix::t(mat[unique(genes$input), , drop = FALSE])
 
-  rawExpression <-
-    Matrix::t(mat[unique(genes$input), , drop = FALSE])
-
-  rawExpression <- data.table::as.data.table(rawExpression)
-
+  # Rename columns to display names
   symbol_idx <- match(colnames(rawExpression), genes$input)
   colnames(rawExpression) <- genes$name[symbol_idx]
 
   return(rawExpression)
 }
 
-#' Adds an empty row for every filtered cell
+#' Calculate the quantile truncation threshold for a vector
 #'
-#' The UI infers cell_id by the index of the cell in the matrix, which means
-#' that filtered cells have to be added back to the table as empty rows. When
-#' converted to sparse format, they do not take up space. We use the max of the
-#' cell_ids that were filtered, which means this table will not contain cells
-#' above that. But it does not change the index of the cells below, and the UI
-#' does not care.
-#'
-#' @param expression data.table
-#' @param cell_ids integer vector
-#'
-#' @return row complete expression data.table
-#' @export
-#'
-completeExpression <- function(expression, cell_ids) {
-  if (length(cell_ids) == 0) {
-    return(expression)
-  }
-
-  expression$cell_ids <- cell_ids
-  data.table::setorder(expression, cols = "cell_ids")
-
-  # add back all filtered cells as empty rows.
-  expression <-
-    expression[data.table::CJ(
-      cell_ids = seq(0, max(cell_ids)),
-      unique = TRUE
-    ),
-    on = .(cell_ids)
-    ]
-
-  expression$cell_ids <- NULL
-
-  return(expression)
-}
-
-
-#' Truncates expression values for all genes in data.table
-#'
-#' @param rawExpression data.table
-#'
-#' @return data.table of truncated gene expression values
-#' @export
-#'
-truncateExpression <- function(rawExpression) {
-  truncatedExpression <-
-    rawExpression[, lapply(.SD, quantileTruncate, QUANTILE_THRESHOLD),
-      .SDcols = colnames(rawExpression)
-    ]
-
-  return(truncatedExpression)
-}
-
-
-#' Truncate expression values after quantile threshold
-#'
-#' Basically returns x > a => a else x. But takes into account the special case
-#' when more than quantile_threshold percent of the data is 0. extending
-#' the threshold bit by bit until it differs from 0. Therefore preserving some
-#' dynamic range in the adjusted expression values.
-#'
-#' @param x numeric vector of raw expression values
+#' @param x numeric vector
 #' @param quantile_threshold numeric
 #'
-#' @return numeric vector of truncated expression values
-#' @export
+#' @return numeric truncation threshold
 #'
-quantileTruncate <- function(x, quantile_threshold) {
+getQuantileCap <- function(x, quantile_threshold) {
   lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
   i <- 0.01
   while (lim == 0 && i + quantile_threshold <= 1) {
     lim <- as.numeric(quantile(x, quantile_threshold + i, na.rm = TRUE))
     i <- i + 0.01
   }
-  return(pmin(x, lim))
+  return(lim)
 }
 
-
-#' Calculate z-score of gene expression values
-#'
-#' Centers values to the mean and scales to the standard deviation.
-#'
-#' @param rawExpression data.table
-#'
-#' @return data.table of scaled expression values
-#' @export
-#'
-scaleExpression <- function(rawExpression) {
-  scaledExpression <-
-    rawExpression[, lapply(.SD, \(x) (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)),
-      .SDcols = colnames(rawExpression)
-    ]
-  return(scaledExpression)
-}
-
-
-getStats <- function(data) {
+getStats <- function(expression) {
   stats_unsafe <- list(
-    rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)),
-    rawStdev = unname(apply(data$rawExpression, 2,  sd, na.rm = TRUE)),
-    truncatedMin = unname(apply(data$truncatedExpression, 2,  min, na.rm = TRUE)),
-    truncatedMax = unname(apply(data$truncatedExpression, 2,  max, na.rm = TRUE))
+    rawMean = unname(colMeans(expression, na.rm = TRUE)),
+    rawStdev = unname(apply(expression, 2, sd, na.rm = TRUE)),
+    truncatedMin = unname(apply(expression, 2, min, na.rm = TRUE)),
+    truncatedMax = unname(apply(expression, 2, getQuantileCap, QUANTILE_THRESHOLD))
   )
 
   stats <- lapply(stats_unsafe, ensure_is_list_in_json)
@@ -195,30 +85,11 @@ getStats <- function(data) {
   return(stats)
 }
 
-#' Convert data.table to CSC sparse matrix
+#' Extract sparse matrix attributes to mathJS-like sparse matrix format
 #'
-#' NAs are replaced by zeroes by reference. Then coerced to sparse matrix.
-#'
-#' @param expression data.table
-#'
-#' @return dgCmatrix
-#' @export
-#'
-sparsify <- function(expression) {
-  data.table::setnafill(expression, fill = 0)
-  sparse_matrix <-
-    as(as.matrix(expression), 'dgCMatrix')
-
-  return(sparse_matrix)
-}
-
-
-#' extract sparse matrix attributes to mathJS-like sparse matrix format
-#'
-#' @param matrix
+#' @param matrix sparse matrix
 #'
 #' @return list with sparse matrix attributes
-#' @export
 #'
 toSparseJson <- function(matrix) {
   response_unsafe <- list(
@@ -231,21 +102,4 @@ toSparseJson <- function(matrix) {
   response <- lapply(response_unsafe, ensure_is_list_in_json)
 
   return(response)
-}
-
-
-#' Format expression data.table as mathJS json
-#'
-#' @param expression data.table with expression values
-#' @param cell_ids int vector with filtered cell_ids
-#'
-#' @return list of formatted expression table
-#' @export
-#'
-formatExpression <- function(expression, cell_ids) {
-  expression <- completeExpression(expression, cell_ids)
-  expression <- sparsify(expression)
-  expression <- toSparseJson(expression)
-
-  return(expression)
 }

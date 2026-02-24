@@ -26,9 +26,6 @@ class MarkerHeatmap(Task):
     def _format_request(self):
         request = {"nGenes": self.task_def["nGenes"]}
 
-        print("selftask_defDebug")
-        print(self.task_def)
-
         downsample_settings = self.task_def["downsampleSettings"]
 
         selected_cell_set = downsample_settings["selectedCellSet"]
