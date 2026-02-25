@@ -94,6 +94,39 @@ getExpressionValues <- function(data, genes) {
   return(rawExpression)
 }
 
+# Fixed vectorized version
+getQuantileCap_vectorized <- function(x, quantile_threshold) {
+  
+  # Calculate quantiles for all columns at once
+  lims <- sparseMatrixStats::colQuantiles(x, probs = quantile_threshold, na.rm = TRUE, drop = TRUE)
+  
+  # Find columns where quantile is 0 and needs adjustment
+  zero_cols <- which(lims == 0)
+  
+  if (length(zero_cols) > 0) {
+    # Iterate through quantile thresholds for zero columns only
+    q_threshold <- quantile_threshold + 0.01
+    
+    while (q_threshold <= 1 && length(zero_cols) > 0) {
+      # Calculate new quantiles only for columns that are still 0
+      new_lims <- sparseMatrixStats::colQuantiles(x[, zero_cols, drop = FALSE], 
+                                                   probs = q_threshold, 
+                                                   na.rm = TRUE, 
+                                                   drop = TRUE)
+      
+      # Update the limits
+      lims[zero_cols] <- new_lims
+      
+      # Update which columns are still 0
+      zero_cols <- zero_cols[new_lims == 0]
+      
+      q_threshold <- q_threshold + 0.01
+    }
+  }
+  
+  return(as.numeric(lims))
+}
+
 #' Calculate the quantile truncation threshold for a vector
 #'
 #' @param x numeric vector
@@ -139,7 +172,7 @@ getStats <- function(expression) {
   message(sprintf("  📉 min: %.2fs", difftime(Sys.time(), t_min_start, units = "secs")))
   
   t_max_start <- Sys.time()
-  max_vals <- unname(apply(expression, 2, getQuantileCap, QUANTILE_THRESHOLD))
+  max_vals <- getQuantileCap_vectorized(expression, QUANTILE_THRESHOLD)
   message(sprintf("  📈 max (quantile): %.2fs", difftime(Sys.time(), t_max_start, units = "secs")))
   
   stats_unsafe <- list(
