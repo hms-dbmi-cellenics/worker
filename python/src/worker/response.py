@@ -1,9 +1,15 @@
 import gzip
+import orjson
 import ujson
+import zstandard as zstd
 from logging import info
 import base64
 import sys
 import os
+
+import time
+from datetime import datetime
+
 
 import aws_xray_sdk as xray
 import boto3
@@ -28,8 +34,6 @@ def _format_bytes(num_bytes):
         num_bytes /= 1000
     return f"{num_bytes:.1f} TB"
 
-from datetime import datetime
-
 class Response:
     def __init__(self, request, result):
         self.request = request
@@ -44,37 +48,145 @@ class Response:
     #'
     #' @return gzipped_body to upload to s3 and the compressed bytes 
     #' object to send over redis if the work result is small enough
+    def _construct_data_for_upload_OLD(self):
+        """Old version for comparison"""
+        overall_start = time.time()
+        
+        info("Starting compression before upload to s3 (OLD METHOD)")
+        
+        serialize_start = time.time()
+        gzipped_body = BytesIO()
+        with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
+            if isinstance(self.result.data, str):
+                zipfile.write(self.result.data)
+            else:
+                ujson.dump(self.result.data, zipfile)
+        
+        serialize_compress_time = time.time() - serialize_start
+        compressed_size = gzipped_body.tell()
+        info(f"⏱️  OLD: Serialize + Compress: {serialize_compress_time:.3f}s ({_format_bytes(compressed_size)})")
+
+        gz_body_bytes = None
+        kb = 1000
+        body_size = sys.getsizeof(gzipped_body)
+        
+        if body_size <= 250 * kb:
+            gzipped_body.seek(0)
+            gz_body_bytes = gzipped_body.read()
+
+        gzipped_body.seek(0)
+        
+        overall_time = time.time() - overall_start
+        info(f"⏱️  OLD: Total: {overall_time:.3f}s")
+        
+        return gzipped_body, gz_body_bytes
+    
     def _construct_data_for_upload(self):
+        overall_start = datetime.now()
+        
         info("Starting compression before upload to s3")
         io = Emitter({"client": config.REDIS_CLIENT})
         send_status_update(
             io, self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
         )
 
-        gzipped_body = BytesIO()
-        with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            if isinstance(self.result.data, str):
-                info("Compressing string work result")
-                zipfile.write(self.result.data)
-            else:
-                info('Encoding and compressing json work result')
-                ujson.dump(self.result.data, zipfile)
-
+        # Serialization timing
+        serialize_start = datetime.now()
+        if isinstance(self.result.data, str):
+            info("Compressing string work result")
+            data_bytes = self.result.data.encode('utf-8')
+        else:
+            info('Encoding and compressing json work result')
+            data_bytes = orjson.dumps(self.result.data)
+        
+        serialize_time = (datetime.now() - serialize_start).total_seconds()
+        uncompressed_size = len(data_bytes)
+        info(f"⏱️  Serialization: {serialize_time:.3f}s ({_format_bytes(uncompressed_size)})")
+        
+        # Compression timing (zstd)
+        compress_start = datetime.now()
+        cctx = zstd.ZstdCompressor(level=3)
+        compressed = cctx.compress(data_bytes)
+        
+        compress_time = (datetime.now() - compress_start).total_seconds()
+        compressed_size = len(compressed)
+        compression_ratio = (1 - compressed_size / uncompressed_size) * 100 if uncompressed_size > 0 else 0
+        info(f"⏱️  Compression (zstd level 3): {compress_time:.3f}s ({_format_bytes(compressed_size)}, {compression_ratio:.1f}% reduction)")
+        
+        compressed_body = BytesIO(compressed)
+        
+        # Check if small enough to send over socket
         gz_body_bytes = None
-        # If size is less than 250 kb, then send it over notification too
-        # Needs to be done here because upload_fileobj closes the file:
-        # https://github.com/boto/boto3/issues/929
         kb = 1000
-        body_size = sys.getsizeof(gzipped_body)
-        info(f"Body size is {_format_bytes(body_size)}")
-        if (body_size <= 250 * kb):
+        body_size = len(compressed)
+        
+        if body_size <= 250 * kb:
             info("Data is smaller than 250 kb, sending over socket")
+            socket_start = datetime.now()
+            gz_body_bytes = compressed
+            socket_time = (datetime.now() - socket_start).total_seconds()
+            info(f"⏱️  Socket read: {socket_time:.3f}s")
+
+        compressed_body.seek(0)
+        
+        overall_time = (datetime.now() - overall_start).total_seconds()
+        info(f"⏱️  Total compression (zstd): {overall_time:.3f}s")
+        info("Compression finished")
+        
+        return compressed_body, gz_body_bytes
+
+    def _construct_data_for_upload_NEW(self):
+        overall_start = time.time()
+        
+        info("Starting compression before upload to s3")
+        io = Emitter({"client": config.REDIS_CLIENT})
+        send_status_update(
+            io, self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
+        )
+
+        # Serialization timing
+        serialize_start = time.time()
+        if isinstance(self.result.data, str):
+            info("Compressing string work result")
+            data_bytes = self.result.data.encode('utf-8')
+        else:
+            info('Encoding and compressing json work result')
+            data_bytes = orjson.dumps(self.result.data)
+        
+        serialize_time = time.time() - serialize_start
+        uncompressed_size = len(data_bytes)
+        info(f"⏱️  Serialization: {serialize_time:.3f}s ({_format_bytes(uncompressed_size)})")
+        
+        # Compression timing
+        compress_start = time.time()
+        gzipped_body = BytesIO()
+        with gzip.open(gzipped_body, "wb", compresslevel=6) as zipfile:
+            zipfile.write(data_bytes)
+        
+        compress_time = time.time() - compress_start
+        compressed_size = gzipped_body.tell()
+        compression_ratio = (1 - compressed_size / uncompressed_size) * 100 if uncompressed_size > 0 else 0
+        info(f"⏱️  Compression: {compress_time:.3f}s ({_format_bytes(compressed_size)}, {compression_ratio:.1f}% reduction)")
+
+        # Check if small enough to send over socket
+        gz_body_bytes = None
+        kb = 1000
+        body_size = gzipped_body.tell()
+        
+        if body_size <= 250 * kb:
+            info("Data is smaller than 250 kb, sending over socket")
+            socket_start = time.time()
             gzipped_body.seek(0)
             gz_body_bytes = gzipped_body.read()
+            socket_time = time.time() - socket_start
+            info(f"⏱️  Socket read: {socket_time:.3f}s")
 
         gzipped_body.seek(0)
-
+        
+        overall_time = time.time() - overall_start
+        info(f"⏱️  Total compression: {overall_time:.3f}s")
         info("Compression finished")
+        
         return gzipped_body, gz_body_bytes
 
     def _construct_response_msg(self, socket_data = None):
