@@ -19,6 +19,15 @@ from worker_status_codes import (
 )
 from worker.helpers.send_status_updates import send_status_update
 
+
+def _format_bytes(num_bytes):
+    """Convert bytes to human-readable format (B, KB, MB, GB)"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if num_bytes < 1000:
+            return f"{num_bytes:.1f} {unit}"
+        num_bytes /= 1000
+    return f"{num_bytes:.1f} TB"
+
 from datetime import datetime
 
 class Response:
@@ -57,7 +66,7 @@ class Response:
         # https://github.com/boto/boto3/issues/929
         kb = 1000
         body_size = sys.getsizeof(gzipped_body)
-        info(f"Body size is {body_size}")
+        info(f"Body size is {_format_bytes(body_size)}")
         if (body_size <= 250 * kb):
             info("Data is smaller than 250 kb, sending over socket")
             gzipped_body.seek(0)
