@@ -2,12 +2,11 @@
 #'
 #' @param data Seurat object
 #' @param genes data.frame of genes of interest, with columns "input" and "name"
-#' @param downsample_cell_ids vector. optional. If defined, only the expression is downsampled into these cells (every other cell is covered with 0's)
 #'
 #' @return list to send to the UI
 #' @export
 #'
-getGeneExpression <- function(data, genes, downsample_cell_ids) {
+getGeneExpression <- function(data, genes) {
   t_start <- Sys.time()
   message("getGeneExpression: Starting")
   
@@ -19,41 +18,28 @@ getGeneExpression <- function(data, genes, downsample_cell_ids) {
   ordered_gene_names <- ensure_is_list_in_json(colnames(expression_values))
   message(sprintf("  ⏱️  Ordered gene names: %.2fs", difftime(Sys.time(), t_names_start, units = "secs")))
 
-  # getStats needs to use the real expression values (not downsampled) to extract correct stats
+  # getStats uses the expression values for all cells
   t_stats_start <- Sys.time()
   stats <- getStats(expression_values)
   message(sprintf("  ⏱️  getStats: %.2fs", difftime(Sys.time(), t_stats_start, units = "secs")))
 
-  # Always expand matrix to full dimensions based on cell_ids
-  # This handles both downsampling and filtered cells in the data
+  # Expand matrix to full dimensions based on cell_ids
+  # This ensures row indices correspond to cell_id positions in the full dataset
   t_expand_start <- Sys.time()
   all_cell_ids <- data@meta.data$cells_id
   max_cell_id <- max(all_cell_ids)
   n_full_cells <- max_cell_id + 1
   n_genes <- ncol(expression_values)
   
-  # Convert to triplet BEFORE any subsetting so we keep original cell mappings
+  # Convert to triplet format
   trip <- as(expression_values, "TsparseMatrix")
   
-  # If downsampling, filter triplet to keep only those cells
-  if (!missing(downsample_cell_ids)) {
-    message(sprintf("  ⚠️  Starting downsampling (total cells: %d, keeping: %d)", nrow(expression_values), length(downsample_cell_ids)))
-    keep_indices_r <- na.omit(match(downsample_cell_ids, all_cell_ids))
-    
-    # Filter triplet entries to keep only rows in keep_indices_r
-    # trip@i is 0-based, so trip@i + 1 gives 1-based row position
-    mask <- (trip@i + 1) %in% keep_indices_r
-    trip@i <- trip@i[mask]
-    trip@j <- trip@j[mask]
-    trip@x <- trip@x[mask]
-  }
-  
   # Map row indices to their actual cell_ids
-  # trip@i is 0-based row position in original matrix, all_cell_ids gives the cell_id for that row
+  # trip@i is 0-based row position in current matrix, all_cell_ids gives the cell_id for that row
   new_i <- all_cell_ids[trip@i + 1] + 1  # cell_ids are 0-based, convert to 1-based for sparseMatrix
   new_j <- trip@j + 1  # Convert to 1-based for sparseMatrix
   
-  # Create new sparse matrix with full dimensions
+  # Create new sparse matrix with full dimensions (all cells, no downsampling)
   expression_values <- Matrix::sparseMatrix(
     i = new_i,
     j = new_j,

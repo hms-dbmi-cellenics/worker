@@ -28,10 +28,10 @@ test_that("Marker heatmap returns same sized matrices", {
   data <- mock_scdata()
   req <- mock_req()
 
-  # dims of returned expression data includes all the downsampled
+  # dims of returned expression data now includes ALL cells (downsampling moved to UI)
   expected_sizes <-
     c(
-      max(req$body$cellIds) + 1,
+      max(data$cells_id) + 1,
       req$body$nGenes * length(req$body$cellSets$children)
     )
 
@@ -64,14 +64,14 @@ test_that("Marker Heatmap returns appropiate format", {
     c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
   )
 
-  # number of rows in sparse matrix equals number of cells
+  # number of rows in sparse matrix equals full dataset cell count (no more downsampling on worker)
   expect_equal(
     unlist(res$rawExpression$size)[1],
-    max(req$body$cellIds) + 1
+    max(data$cells_id) + 1
   )
   expect_equal(
     unlist(res$truncatedExpression$size)[1],
-    max(req$body$cellIds) + 1
+    max(data$cells_id) + 1
   )
 
 
@@ -91,10 +91,10 @@ test_that("Marker Heatmap nFeatures works appropiately", {
   res <- runMarkerHeatmap(req, data)
   withr::defer(cleanupMarkersCache())
 
-  # number of rows is number of cells
+  # number of rows is full cell count
   expect_equal(
     unlist(res$rawExpression$size[1]),
-    max(req$body$cellIds) + 1
+    max(data$cells_id) + 1
   )
 
   # returning only at most limit number of genes per cellset

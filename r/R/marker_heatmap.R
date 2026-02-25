@@ -26,7 +26,7 @@ runMarkerHeatmap <- function(req, data) {
 
   t_gene_expr_start <- Sys.time()
   message("  → Calling getGeneExpression")
-  geneExpression <- getGeneExpression(data, top_markers, cell_ids)
+  geneExpression <- getGeneExpression(data, top_markers)
   message(sprintf("  ⏱️  After getGeneExpression: %.2fs", difftime(Sys.time(), t_gene_expr_start, units = "secs")))
 
   message(sprintf("✅ runMarkerHeatmap completed in %.2fs total", difftime(Sys.time(), t_total_start, units = "secs")))
