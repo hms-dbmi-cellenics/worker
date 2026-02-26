@@ -116,5 +116,5 @@ def consume():
         )
         return None
 
-    info(json.dumps(mssg_body, indent=2, sort_keys=True))
+    # info(json.dumps(mssg_body, indent=2, sort_keys=True))
     return mssg_body
