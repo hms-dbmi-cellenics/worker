@@ -24,12 +24,10 @@ runMarkerHeatmap <- function(req, data) {
   top_markers <- getMarkerNames(data, top_markers)
   message(sprintf("  ⏱️  After getMarkerNames: %.2fs", difftime(Sys.time(), t_marker_names_start, units = "secs")))
 
-  # Format response to match getGeneExpression structure, but with only markers
-  message("  → Formatting response")
+  # Format response with only gene names
   ordered_gene_names <- ensure_is_list_in_json(unique(top_markers$name))
-  response <- list(
-    orderedGeneNames = ordered_gene_names
-  )
+  response <- list(orderedGeneNames = ordered_gene_names)
+
   message(sprintf("✅ runMarkerHeatmap completed in %.2fs total", difftime(Sys.time(), t_total_start, units = "secs")))
   return(response)
 }
