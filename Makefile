@@ -54,6 +54,8 @@ test: ## Executes unit tests
 	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing $(extra_args)"
 test-r: build ## Executes R unit tests
 	@docker run worker-r R -e "testthat::test_local()"
+test-file: build ## Tests a specific R test file (usage: make test-file FILE=tests/testthat/test-expression.R)
+	@docker run worker-r R -e "pkgload::load_all(); testthat::test_file('$(FILE)')"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
@@ -66,4 +68,4 @@ clean: ## Cleans up temporary files
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test test-r logs kill clean help
+.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test test-r test-file logs kill clean help
