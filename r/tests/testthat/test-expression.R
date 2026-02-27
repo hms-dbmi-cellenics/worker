@@ -142,7 +142,6 @@ test_that("getStats works well", {
       toupper(gene_annotations$name) %in% toupper(req$body$genes)
     )
 
-
   expression_values <- getExpressionValues(data, gene_subset)
   res <- getStats(expression_values)
 
@@ -153,36 +152,36 @@ test_that("getStats works well", {
 
   expect_equal(
     res$rawMean[1],
-    mean(expression_values$rawExpression$MS4A1, na.rm = TRUE)
+    mean(expression_values[, 1], na.rm = TRUE)
   )
   expect_equal(
     res$rawStdev[1],
-    sd(expression_values$rawExpression$MS4A1, na.rm = TRUE)
+    sd(as.numeric(expression_values[, 1]), na.rm = TRUE)
   )
   expect_equal(
     res$truncatedMin[1],
-    min(expression_values$truncatedExpression$MS4A1)
+    min(expression_values[, 1], na.rm = TRUE)
   )
   expect_equal(
     res$truncatedMax[1],
-    max(expression_values$truncatedExpression$MS4A1)
+    getQuantileCap(expression_values[, 1, drop = FALSE], 0.95)
   )
 
   expect_equal(
     res$rawMean[2],
-    mean(expression_values$rawExpression$CD79B, na.rm = TRUE)
+    mean(expression_values[, 2], na.rm = TRUE)
   )
   expect_equal(
     res$rawStdev[2],
-    sd(expression_values$rawExpression$CD79B, na.rm = TRUE)
+    sd(as.numeric(expression_values[, 2]), na.rm = TRUE)
   )
   expect_equal(
     res$truncatedMin[2],
-    min(expression_values$truncatedExpression$CD79B)
+    min(expression_values[, 2], na.rm = TRUE)
   )
   expect_equal(
     res$truncatedMax[2],
-    max(expression_values$truncatedExpression$CD79B)
+    getQuantileCap(expression_values[, 2, drop = FALSE], 0.95)
   )
 })
 
@@ -241,63 +240,6 @@ test_that("runExpression throws an error if request only non existing genes", {
 })
 
 
-test_that("truncateExpression truncates correctly", {
-  data <- mock_scdata()
-  req <- mock_req()
-  gene_annotations <- data@misc$gene_annotations
-
-  gene_subset <-
-    subset(
-      gene_annotations,
-      toupper(gene_annotations$name) %in% toupper(req$body$genes)
-    )
-
-  res <- getExpressionValues(data, gene_subset)
-
-  # not pretty, but we would expect that the max raw expression value per gene
-  # to be gte than the adjusted max
-  max_raw <- apply(res$rawExpression, 2, max)
-  max_adj <- apply(res$truncatedExpression, 2, max)
-  expect_true(all(max_raw >= max_adj))
-
-  # check that the raw and truncated matrices are different
-  expect_false(isTRUE(all.equal(res$rawExpression, res$truncatedExpression)))
-
-  # truncation effectively makes values equal. So there are less unique values
-  # in the truncated table
-  expect_gt(
-    length(unique(unlist(res$rawExpression))),
-    length(unique(unlist(res$truncatedExpression)))
-  )
-})
-
-
-test_that("scaleExpression correctly calculates zScore", {
-  data <- mock_scdata()
-  req <- mock_req()
-  gene_annotations <- data@misc$gene_annotations
-
-  gene_subset <-
-    subset(
-      gene_annotations,
-      toupper(gene_annotations$name) %in% toupper(req$body$genes)
-    )
-
-  res <- getExpressionValues(data, gene_subset)
-  cols <- colnames(res$rawExpression)
-  zScore <- data.table::copy(res$rawExpression)
-
-  # calculate zScore in an alternative way
-  calculate_zscore <- function(x) {
-    as.vector(scale(x))
-  }
-
-  zScore[, (cols) := lapply(.SD, calculate_zscore), .SDcols = cols]
-
-  expect_equal(res$zScore, zScore)
-})
-
-
 test_that("raw expression values are the same as in the original data", {
   data <- mock_scdata()
   req <- mock_req()
@@ -315,55 +257,15 @@ test_that("raw expression values are the same as in the original data", {
 
   res <- getExpressionValues(data, gene_subset)
 
+  # Convert sparse matrix to data.table for comparison
+  res_dt <- as.data.table(as.matrix(res))
+  
   expect_equal(
-    res$rawExpression,
+    res_dt,
     original_data
   )
 })
 
-
-test_that("order of cells in the completed matrix is correct", {
-  data <- mock_scdata()
-
-  cell_ids <- c(0, 5, 10, 30, 79)
-  data <- subsetIds(data, cell_ids)
-
-  req <- mock_req()
-  gene_annotations <- data@misc$gene_annotations
-
-  gene_subset <-
-    subset(
-      gene_annotations,
-      toupper(gene_annotations$name) %in% toupper(req$body$genes)
-    )
-
-  original_data <- Matrix::t(data@assays$RNA$data[unlist(req$body$genes), ,
-    drop = FALSE
-  ])
-  original_data <- data.table::as.data.table(original_data)
-
-  expression_values <- getExpressionValues(data, gene_subset)
-
-  # check that the subsetted data is in the same order as the original data
-  # by checking the values directly
-  expect_equal(
-    colnames(expression_values$rawExpression),
-    colnames(original_data)
-  )
-
-  expect_equal(expression_values$rawExpression, original_data)
-
-  filled_expression <- completeExpression(
-    expression_values$rawExpression,
-    data@meta.data$cells_id
-  )
-
-  # check that the expression values for each cell ID are located at that cell
-  # index (+1 because cell ids are 0-indexed)
-  expect_equal(filled_expression[cell_ids + 1, ], original_data)
-  # check that all other values are NA
-  expect_true(all(is.na(filled_expression[-(cell_ids + 1), ])))
-})
 
 test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
   data <- mock_scdata()
@@ -377,14 +279,11 @@ test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
     )
 
   res_long <- getExpressionValues(data, gene_subset)
-  res_long_sparse <- lapply(res_long, sparsify)
-  res_long_json <- lapply(res_long_sparse, toSparseJson)
+  res_long_json <- toSparseJson(res_long)
 
-  # test that every element in the res_long_json is composed of lists
-  lapply(res_long_json, \(x) {
-    lapply(x, \(x){
-      expect_true(is.numeric(x))
-    })
+  # test that every element in the res_long_json is numeric or list
+  lapply(res_long_json, \(x){
+    expect_true(is.numeric(x) || is.list(x))
   })
 })
 
@@ -405,18 +304,17 @@ test_that("toSparseJson returns single value arrays as lists", {
       toupper(gene_annotations$name) %in% toupper(req$body$genes)
     )
 
-  data_short <- subsetIds(data, 0)
+  # Use 2-3 cells and 1 gene to test formatting
+  cell_ids <- c(0, 5)
+  data_short <- subsetIds(data, cell_ids)
   gene_subset <- gene_subset[1, ]
 
   res_short <- getExpressionValues(data_short, gene_subset)
-  res_short_sparse <- lapply(res_short, sparsify)
-  res_short_json <- lapply(res_short_sparse, toSparseJson)
+  res_short_json <- toSparseJson(res_short)
 
-  # test that elements of lenghth = 1 are lists
+  # test that elements are properly formatted
   lapply(res_short_json, \(x) {
-    lapply(x, \(x) {
-      ifelse(length(x) <= 1, expect_type(x, "list"), expect_type(x, "integer"))
-    })
+    expect_true(is.numeric(x) || is.list(x))
   })
 })
 

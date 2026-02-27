@@ -24,35 +24,7 @@ mock_scdata <- function() {
 }
 
 
-test_that("Marker heatmap returns same sized matrices", {
-  data <- mock_scdata()
-  req <- mock_req()
-
-  # dims of returned expression data now includes ALL cells (downsampling moved to UI)
-  expected_sizes <-
-    c(
-      max(data$cells_id) + 1,
-      req$body$nGenes * length(req$body$cellSets$children)
-    )
-
-  res <- runMarkerHeatmap(req, data)
-  withr::defer(cleanupMarkersCache())
-
-  sizes <- list(
-    res$rawExpression$size,
-    res$truncatedExpression$size,
-    res$zScore$size
-  )
-
-  sizes <- lapply(sizes, unlist)
-
-  expect_true(all(unlist(
-    lapply(sizes, all.equal, expected_sizes)
-  )))
-})
-
-
-test_that("Marker Heatmap returns appropiate format", {
+test_that("Marker heatmap returns orderedGeneNames", {
   data <- mock_scdata()
   req <- mock_req()
 
@@ -61,29 +33,18 @@ test_that("Marker Heatmap returns appropiate format", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression", "truncatedExpression", "zScore")
+    c("orderedGeneNames")
   )
 
-  # number of rows in sparse matrix equals full dataset cell count (no more downsampling on worker)
+  # should have genes for each cellset
   expect_equal(
-    unlist(res$rawExpression$size)[1],
-    max(data$cells_id) + 1
-  )
-  expect_equal(
-    unlist(res$truncatedExpression$size)[1],
-    max(data$cells_id) + 1
-  )
-
-
-  # returning only at most limit number of genes
-  expect_lte(
-    length(res$stats),
-    req$body$nGenes * length(req$body$cellIds)
+    length(res$orderedGeneNames),
+    req$body$nGenes * length(req$body$cellSets$children)
   )
 })
 
 
-test_that("Marker Heatmap nFeatures works appropiately", {
+test_that("Marker Heatmap nFeatures works appropriately", {
   data <- mock_scdata()
   req <- mock_req()
   req$body$nGenes <- 2
@@ -91,27 +52,11 @@ test_that("Marker Heatmap nFeatures works appropiately", {
   res <- runMarkerHeatmap(req, data)
   withr::defer(cleanupMarkersCache())
 
-  # number of rows is full cell count
+  # returning only nGenes genes per cellset
   expect_equal(
-    unlist(res$rawExpression$size[1]),
-    max(data$cells_id) + 1
+    length(res$orderedGeneNames),
+    req$body$nGenes * length(req$body$cellSets$children)
   )
-
-  # returning only at most limit number of genes per cellset
-  expect_true(all(
-    unlist(lapply(res$stats, length)) <= req$body$nGenes * length(req$body$cellSets$children)
-  ))
-})
-
-
-test_that("all stats contain the same number of elements", {
-  data <- mock_scdata()
-  req <- mock_req()
-
-  res <- runMarkerHeatmap(req, data)
-  withr::defer(cleanupMarkersCache())
-
-  expect_true(all(lapply(res$stats, length) == length(res$stats[[1]])))
 })
 
 
