@@ -318,3 +318,45 @@ test_that("toSparseJson returns single value arrays as lists", {
   })
 })
 
+
+test_that("getStats produces consistent results with master version", {
+  # Define the old getStats from master for comparison
+  getStatsOld <- function(data) {
+    stats_unsafe <- list(
+      rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)),
+      rawStdev = unname(apply(data$rawExpression, 2, sd, na.rm = TRUE)),
+      truncatedMin = unname(apply(data$truncatedExpression, 2, min, na.rm = TRUE)),
+      truncatedMax = unname(apply(data$truncatedExpression, 2, max, na.rm = TRUE))
+    )
+    return(stats_unsafe)
+  }
+
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <-
+    subset(
+      gene_annotations,
+      toupper(gene_annotations$name) %in% toupper(req$body$genes)
+    )
+
+  expression_values <- getExpressionValues(data, gene_subset)
+  
+  # Create old-style data structure with truncatedExpression for comparison
+  old_style_data <- list(
+    rawExpression = as.data.table(as.matrix(expression_values)),
+    truncatedExpression = as.data.table(as.matrix(expression_values))
+  )
+  
+  new_results <- getStats(expression_values)
+  old_results <- getStatsOld(old_style_data)
+  
+  # Compare rawMean and rawStdev (should match)
+  expect_equal(new_results$rawMean, old_results$rawMean, tolerance = 1e-10)
+  expect_equal(new_results$rawStdev, old_results$rawStdev, tolerance = 1e-10)
+  
+  # truncatedMin should match (both use min of expression values)
+  expect_equal(new_results$truncatedMin, old_results$truncatedMin, tolerance = 1e-10)
+})
+
