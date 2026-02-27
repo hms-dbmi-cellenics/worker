@@ -47,7 +47,11 @@ download-image: ## Downloads a docker image
 run-downloaded: ## Runs a downloaded docker image
 	@docker-compose -f docker-compose.downloaded.yaml up
 test-py: build ## Executes Python unit tests
-	@docker run -v $(pwd)/python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
+	@PLATFORM_FLAG=""; \
+	if [ "$$(uname)" = "Darwin" ]; then \
+		PLATFORM_FLAG="--platform linux/amd64"; \
+	fi; \
+	docker run $$PLATFORM_FLAG -v ./python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
 test-r: build ## Executes R unit tests
 	@docker run worker-r R -e "testthat::test_local()"
 test-r-file: build ## Tests a specific R test file (usage: make test-r-file FILE=tests/testthat/test-expression.R)
