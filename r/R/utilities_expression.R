@@ -1,3 +1,39 @@
+#' Expand sparse matrix to full cell dimensions using cell IDs
+#'
+#' Converts sparse matrix to triplet format and remaps row indices to actual
+#' cell IDs, creating a new sparse matrix with dimensions covering all cells.
+#'
+#' @param expression_values sparse matrix (subset of cells x genes)
+#' @param all_cell_ids vector of cell IDs (0-based) corresponding to rows in expression_values
+#'
+#' @return sparse matrix with full dimensions (n_full_cells x genes)
+#'
+expandMatrixToCellIDs <- function(expression_values, all_cell_ids) {
+  # Convert to triplet format
+  trip <- as(expression_values, "TsparseMatrix")
+  
+  # Map row indices to their actual cell_ids
+  # trip@i is 0-based row position in current matrix, all_cell_ids gives the cell_id for that row
+  new_i <- all_cell_ids[trip@i + 1] + 1  # cell_ids are 0-based, convert to 1-based for sparseMatrix
+  new_j <- trip@j + 1  # Convert to 1-based for sparseMatrix
+  
+  # Calculate full dimensions based on cell_ids
+  max_cell_id <- max(all_cell_ids)
+  n_full_cells <- max_cell_id + 1
+  n_genes <- ncol(expression_values)
+  
+  # Create new sparse matrix with full dimensions (all cells, no downsampling)
+  expanded_matrix <- Matrix::sparseMatrix(
+    i = new_i,
+    j = new_j,
+    x = trip@x,
+    dims = c(n_full_cells, n_genes),
+    giveCsparse = TRUE
+  )
+  
+  return(expanded_matrix)
+}
+
 #' Extract expression values from Seurat object, add stats and format for UI
 #'
 #' @param data Seurat object
@@ -17,26 +53,7 @@ getGeneExpression <- function(data, genes) {
   # Expand matrix to full dimensions based on cell_ids
   # This ensures row indices correspond to cell_id positions in the full dataset
   all_cell_ids <- data@meta.data$cells_id
-  max_cell_id <- max(all_cell_ids)
-  n_full_cells <- max_cell_id + 1
-  n_genes <- ncol(expression_values)
-  
-  # Convert to triplet format
-  trip <- as(expression_values, "TsparseMatrix")
-  
-  # Map row indices to their actual cell_ids
-  # trip@i is 0-based row position in current matrix, all_cell_ids gives the cell_id for that row
-  new_i <- all_cell_ids[trip@i + 1] + 1  # cell_ids are 0-based, convert to 1-based for sparseMatrix
-  new_j <- trip@j + 1  # Convert to 1-based for sparseMatrix
-  
-  # Create new sparse matrix with full dimensions (all cells, no downsampling)
-  expression_values <- Matrix::sparseMatrix(
-    i = new_i,
-    j = new_j,
-    x = trip@x,
-    dims = c(n_full_cells, n_genes),
-    giveCsparse = TRUE
-  )
+  expression_values <- expandMatrixToCellIDs(expression_values, all_cell_ids)
 
   # Format sparse matrix directly to JSON
   rawExpression <- toSparseJson(expression_values)
@@ -90,10 +107,11 @@ getQuantileCap <- function(x, quantile_threshold) {
     
     while (q_threshold <= 1 && length(zero_cols) > 0) {
       # Calculate new quantiles only for columns that are still 0
-      new_lims <- sparseMatrixStats::colQuantiles(x[, zero_cols, drop = FALSE], 
-                                                   probs = q_threshold, 
-                                                   na.rm = TRUE, 
-                                                   drop = TRUE)
+      new_lims <- sparseMatrixStats::colQuantiles(
+        x[, zero_cols, drop = FALSE], 
+        probs = q_threshold, 
+        na.rm = TRUE, 
+        drop = TRUE)
       
       # Update the limits
       lims[zero_cols] <- new_lims
