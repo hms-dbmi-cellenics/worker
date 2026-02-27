@@ -52,6 +52,8 @@ test: ## Executes unit tests
 	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
 	@docker exec -it biomage-worker-python bash -c \
 	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing $(extra_args)"
+test-r: build ## Executes R unit tests
+	@docker run worker-r R -e "testthat::test_local()"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
@@ -64,4 +66,4 @@ clean: ## Cleans up temporary files
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test logs kill clean help
+.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test test-r logs kill clean help
