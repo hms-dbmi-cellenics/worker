@@ -360,3 +360,116 @@ test_that("getStats produces consistent results with master version", {
   expect_equal(new_results$truncatedMin, old_results$truncatedMin, tolerance = 1e-10)
 })
 
+test_that("expandMatrixToCellIDs creates correct dimensions and zero rows", {
+  # Create a small sparse matrix with known values (4 rows, 2 columns)
+  i <- c(1, 2, 3, 4)  # 1-based row indices
+  j <- c(1, 2, 1, 2)  # 1-based column indices
+  x <- c(1.0, 2.0, 3.0, 4.0)  # values
+  
+  mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(4, 2))
+  
+  # Cell IDs: 0, 1, 3, 100 (gaps and large index)
+  all_cell_ids <- c(0, 1, 3, 100)
+  
+  result <- expandMatrixToCellIDs(mat, all_cell_ids)
+  
+  # Should have 101 rows (0-indexed to 100) and 2 columns
+  expect_equal(nrow(result), 101)
+  expect_equal(ncol(result), 2)
+})
+
+test_that("expandMatrixToCellIDs maps values to correct cell_id rows", {
+  # Create a sparse matrix with known values
+  # Row 1: [1.0, 0]
+  # Row 2: [0, 2.0]
+  # Row 3: [3.0, 0]
+  # Row 4: [0, 4.0]
+  i <- c(1, 2, 3, 4)
+  j <- c(1, 2, 1, 2)
+  x <- c(1.0, 2.0, 3.0, 4.0)
+  
+  mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(4, 2))
+  
+  # cell_ids: 0, 1, 3, 100
+  # Result should be:
+  # Row 0 (cell_id 0, from expr row 1): [1.0, 0]
+  # Row 1 (cell_id 1, from expr row 2): [0, 2.0]
+  # Row 2 (cell_id 2, no expr): [0, 0] (implicit in sparse matrix)
+  # Row 3 (cell_id 3, from expr row 3): [3.0, 0]
+  # Rows 4-99 (cell_ids 4-99, no expr): [0, 0]
+  # Row 100 (cell_id 100, from expr row 4): [0, 4.0]
+  
+  all_cell_ids <- c(0, 1, 3, 100)
+  result <- expandMatrixToCellIDs(mat, all_cell_ids)
+  
+  # Convert to dense for easier testing of specific rows
+  result_dense <- as.matrix(result)
+  
+  # Check row 0 (cell_id 0, from expression row 1)
+  expect_equal(result_dense[1, ], c(1.0, 0))
+  
+  # Check row 1 (cell_id 1, from expression row 2)
+  expect_equal(result_dense[2, ], c(0, 2.0))
+  
+  # Check row 2 (cell_id 2, should be all zeros)
+  expect_equal(result_dense[3, ], c(0, 0))
+  
+  # Check row 3 (cell_id 3, from expression row 3)
+  expect_equal(result_dense[4, ], c(3.0, 0))
+  
+  # Check rows 4-99 are all zero
+  expect_equal(sum(result_dense[5:100, ]), 0)
+  
+  # Check row 100 (cell_id 100, from expression row 4)
+  expect_equal(result_dense[101, ], c(0, 4.0))
+})
+
+test_that("expandMatrixToCellIDs preserves sparsity", {
+  # Create a sparse matrix with only a few entries
+  i <- c(1, 3)
+  j <- c(1, 2)
+  x <- c(5.0, 6.0)
+  
+  mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(3, 2))
+  
+  # Cell IDs with large gaps
+  all_cell_ids <- c(0, 10, 1000)
+  
+  result <- expandMatrixToCellIDs(mat, all_cell_ids)
+  
+  # Should be 1001 x 2 sparse matrix
+  expect_equal(nrow(result), 1001)
+  expect_equal(ncol(result), 2)
+  
+  # Should only have 2 non-zero entries
+  expect_equal(length(result@x), 2)
+  
+  # Verify the values are still correct
+  result_dense <- as.matrix(result)
+  expect_equal(result_dense[1, 1], 5.0)  # cell_id 0, from expr row 1
+  expect_equal(result_dense[1001, 2], 6.0)  # cell_id 1000, from expr row 3
+})
+
+test_that("expandMatrixToCellIDs sequential cell_ids works as identity mapping plus padding", {
+  # Create a simple sparse matrix
+  i <- c(1, 2)
+  j <- c(1, 2)
+  x <- c(1.0, 2.0)
+  
+  mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(2, 2))
+  
+  # Sequential cell_ids starting from 0
+  all_cell_ids <- c(0, 1)
+  
+  result <- expandMatrixToCellIDs(mat, all_cell_ids)
+  
+  # Should have 2 rows (max cell_id is 1, so 0-1)
+  expect_equal(nrow(result), 2)
+  expect_equal(ncol(result), 2)
+  
+  # Values should be in correct positions
+  result_dense <- as.matrix(result)
+  expect_equal(result_dense[1, 1], 1.0)
+  expect_equal(result_dense[2, 2], 2.0)
+})
+
