@@ -94,8 +94,14 @@ getExpressionValues <- function(data, genes) {
   return(rawExpression)
 }
 
-# Fixed vectorized version
-getQuantileCap_vectorized <- function(x, quantile_threshold) {
+#' Calculate the quantile truncation threshold for sparse matrix columns
+#'
+#' @param x sparse matrix
+#' @param quantile_threshold numeric
+#'
+#' @return numeric vector of truncation thresholds, one per column
+#'
+getQuantileCap <- function(x, quantile_threshold) {
   
   # Calculate quantiles for all columns at once
   lims <- sparseMatrixStats::colQuantiles(x, probs = quantile_threshold, na.rm = TRUE, drop = TRUE)
@@ -127,23 +133,6 @@ getQuantileCap_vectorized <- function(x, quantile_threshold) {
   return(as.numeric(lims))
 }
 
-#' Calculate the quantile truncation threshold for a vector
-#'
-#' @param x numeric vector
-#' @param quantile_threshold numeric
-#'
-#' @return numeric truncation threshold
-#'
-getQuantileCap <- function(x, quantile_threshold) {
-  lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
-  i <- 0.01
-  while (lim == 0 && i + quantile_threshold <= 1) {
-    lim <- as.numeric(quantile(x, quantile_threshold + i, na.rm = TRUE))
-    i <- i + 0.01
-  }
-  return(lim)
-}
-
 getStats <- function(expression) {
   t_start <- Sys.time()
   
@@ -172,7 +161,7 @@ getStats <- function(expression) {
   message(sprintf("  📉 min: %.2fs", difftime(Sys.time(), t_min_start, units = "secs")))
   
   t_max_start <- Sys.time()
-  max_vals <- getQuantileCap_vectorized(expression, QUANTILE_THRESHOLD)
+  max_vals <- getQuantileCap(expression, QUANTILE_THRESHOLD)
   message(sprintf("  📈 max (quantile): %.2fs", difftime(Sys.time(), t_max_start, units = "secs")))
   
   stats_unsafe <- list(
