@@ -46,12 +46,8 @@ download-image: ## Downloads a docker image
 	@docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-r worker_r
 run-downloaded: ## Runs a downloaded docker image
 	@docker-compose -f docker-compose.downloaded.yaml up
-test-py: ## Executes Python unit tests
-	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
-	@docker top biomage-worker-python > /dev/null 2>&1 || \
-	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
-	@docker exec -it biomage-worker-python bash -c \
-	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing $(extra_args)"
+test-py: build ## Executes Python unit tests
+	@docker run -v $(pwd)/python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
 test-r: build ## Executes R unit tests
 	@docker run worker-r R -e "testthat::test_local()"
 test-r-file: build ## Tests a specific R test file (usage: make test-r-file FILE=tests/testthat/test-expression.R)
