@@ -141,7 +141,7 @@ getStats <- function(expression) {
   # Standard deviation = sqrt(variance)
   stdev_vals <- unname(sqrt(var_vals))
   
-  min_vals <- unname(apply(expression, 2, min, na.rm = TRUE))
+  min_vals <- unname(sparseMatrixStats::colMins(expression, na.rm = TRUE))
   
   max_vals <- getQuantileCap(expression, QUANTILE_THRESHOLD)
   
