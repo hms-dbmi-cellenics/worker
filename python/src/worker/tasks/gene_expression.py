@@ -1,13 +1,11 @@
 import json
 
 import backoff
-import numpy as np
 import requests
 from aws_xray_sdk.core import xray_recorder
 from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.process_gene_expression import process_gene_expression
 from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
