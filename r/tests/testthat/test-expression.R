@@ -37,28 +37,11 @@ test_that("Expression task returns appropriate number and names of genes.", {
   expect_equal(as.list(res$orderedGeneNames), req$body$genes)
 })
 
-test_that("Expression task works correctly with downsampled = TRUE.", {
+test_that("Expression task returns correct values.", {
   data <- mock_scdata()
   req <- mock_req()
 
-  req$body$downsampled = TRUE
-  req$body$downsampleSettings = list(
-    selectedCellSet = "louvain",
-    groupedTracks = list(
-      "louvain",
-      "sample"
-    ),
-    selectedPoints = "All",
-    hiddenCellSets = list()
-  )
-  req$body$cellIds <- c(1,2,3,4,5)
-
   res <- runExpression(req, data)
-
-  expect_equal(
-    names(res),
-    c("orderedGeneNames", "stats", "rawExpression")
-  )
 
   expect_equal(res$orderedGeneNames, c("MS4A1", "CD79B"))
   expect_equal(res$stats$rawMean, c(0.7890259, 1.3545382))

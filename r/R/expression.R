@@ -28,7 +28,7 @@ runExpression <- function(req, data) {
 
   gene_subset <- gene_subset[, c("input", "name")]
 
-  # Always return full expression data (downsampling is now handled by UI)
+  # Always return full expression data
   return(getGeneExpression(data, gene_subset))
 
 }

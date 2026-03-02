@@ -22,7 +22,7 @@ expandMatrixToCellIDs <- function(expression_values, all_cell_ids) {
   n_full_cells <- max_cell_id + 1
   n_genes <- ncol(expression_values)
   
-  # Create new sparse matrix with full dimensions (all cells, no downsampling)
+  # Create new sparse matrix with full dimensions (all cells)
   expanded_matrix <- Matrix::sparseMatrix(
     i = new_i,
     j = new_j,

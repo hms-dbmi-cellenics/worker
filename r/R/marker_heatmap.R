@@ -9,12 +9,10 @@
 runMarkerHeatmap <- function(req, data) {
   nFeatures <- req$body$nGenes
   cellSets <- req$body$cellSets$children
-  cell_ids <- req$body$cellIds
 
   cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
 
   top_markers <- memoisedGetTopMarkerGenes(nFeatures, data, cell_sets_ids)
-  
   top_markers <- getMarkerNames(data, top_markers)
 
   # Format response with only gene names
