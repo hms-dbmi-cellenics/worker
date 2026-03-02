@@ -27,7 +27,6 @@ class MarkerHeatmap(Task):
 
         cell_sets = get_cell_sets(self.experiment_id)
         selected_cell_set_key = self.task_def["selectedCellSet"]
-        print('Selected cell set key:', selected_cell_set_key)
         selected_cell_sets = next(set for set in cell_sets if set["key"] == selected_cell_set_key)
         request["cellSets"] = selected_cell_sets
 
