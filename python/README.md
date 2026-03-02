@@ -63,20 +63,7 @@ You should be prompted to run the code in a container. If not, hit `Cmd+Shift+P`
 reopen in a container for development.
 
 ### Tests
-Typically, you will be able to run `make test-py` in the root directory to execute the unit tests. If you need
-to run the tests manually, for instance if you only want to run a specific test, do the following:
-
-Either:
-- open a terminal in VS Code while the workspace is open in the container (see the previous section) 
-- shell into the docker container manually (`docker exec -it worker-python bash`)
-
-Then run these commands:
-
-    export CLUSTER_ENV="development"
-    python -m pytest --cov=. --cov-report=term-missing
-
-You can append specific test files (e.g. `tests/tasks/test_cluster_cells.py`) to the pytest command to only
-run those tests.
+Typically, you will be able to run `make test-py` in the root directory to execute the unit tests. 
 
 ### Task formatting
 Task definitions are stored in the `api` project as an OpenAPI schema.
