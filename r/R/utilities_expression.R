@@ -131,17 +131,15 @@ getStats <- function(expression) {
   mean_vals <- unname(Matrix::colMeans(expression, na.rm = TRUE))
   
   # Optimize stdev calculation for sparse matrices
-  # Formula: sqrt(sum((x - mean)^2) / (n - 1))
-  # Vectorized approach is much faster than apply(sd)
+  # Use variance identity: Var = (sum(x^2) - n * mean^2) / (n - 1)
+  # This avoids constructing a dense (n x p) matrix of repeated means.
   n <- nrow(expression)
-  # Center the matrix by subtracting column means
-  centered <- expression - Matrix::Matrix(rep(mean_vals, n), nrow = n, byrow = TRUE)
-  # Square the centered values
-  centered_sq <- centered^2
-  # Sum of squares per column
-  sum_sq <- Matrix::colSums(centered_sq, na.rm = TRUE)
-  # Standard deviation = sqrt(sum_sq / (n - 1))
-  stdev_vals <- unname(sqrt(sum_sq / (n - 1)))
+  # Sum of squares per column (sparse-safe)
+  sum_sq <- Matrix::colSums(expression^2, na.rm = TRUE)
+  # Sample variance per column
+  var_vals <- (sum_sq - n * (mean_vals^2)) / (n - 1)
+  # Standard deviation = sqrt(variance)
+  stdev_vals <- unname(sqrt(var_vals))
   
   min_vals <- unname(apply(expression, 2, min, na.rm = TRUE))
   
