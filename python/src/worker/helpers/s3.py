@@ -1,4 +1,3 @@
-import gzip
 import json
 import os
 from logging import info
@@ -6,6 +5,7 @@ from pathlib import Path
 
 import aws_xray_sdk as xray
 import boto3
+import zstandard as zstd
 
 from ..config import config
 
@@ -72,7 +72,8 @@ def get_embedding(etag, format_for_r):
 
         f.seek(0)
 
-        embedding_string = gzip.decompress(f.read())
+        dctx = zstd.ZstdDecompressor()
+        embedding_string = dctx.decompress(f.read())
         embedding = json.loads(embedding_string)
 
         if(format_for_r):

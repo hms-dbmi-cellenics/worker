@@ -1,10 +1,10 @@
-import gzip
 import io
 import json
 from unittest import TestCase
 
 import boto3
 import mock
+import zstandard as zstd
 from botocore.stub import Stubber
 from tests.data.embedding import mock_embedding
 from worker.config import config
@@ -32,14 +32,15 @@ class TestS3:
 
         # Get object
         content_string = json.dumps(mock_embedding).encode("utf-8")
-        content_bytes = gzip.compress(content_string)
+        cctx = zstd.ZstdCompressor(level=3)
+        content_bytes = cctx.compress(content_string)
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
 
         response = {
             "ContentLength": len(content_bytes),
-            "ContentType": "application/gzip",
+            "ContentType": "application/zstd",
             "Body": data,
             "ResponseMetadata": {
                 "Bucket": config.RESULTS_BUCKET,
