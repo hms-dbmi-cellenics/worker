@@ -1,9 +1,9 @@
-import gzip
-import ujson
+import orjson
+import zstandard as zstd
 from logging import info
 import base64
-import sys
 import os
+
 
 import aws_xray_sdk as xray
 import boto3
@@ -19,7 +19,15 @@ from worker_status_codes import (
 )
 from worker.helpers.send_status_updates import send_status_update
 
-from datetime import datetime
+
+def _format_bytes(num_bytes):
+    """Convert bytes to human-readable format (B, KB, MB, GB)"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if num_bytes < 1000:
+            return f"{num_bytes:.1f} {unit}"
+        num_bytes /= 1000
+    return f"{num_bytes:.1f} TB"
+
 
 class Response:
     def __init__(self, request, result):
@@ -31,9 +39,9 @@ class Response:
 
         self.s3_bucket = config.RESULTS_BUCKET
 
-    #' Returns the compressed work result to be sent
+    #' Returns the zstd-compressed work result to be sent
     #'
-    #' @return gzipped_body to upload to s3 and the compressed bytes 
+    #' @return compressed_body to upload to s3 and the compressed bytes 
     #' object to send over redis if the work result is small enough
     def _construct_data_for_upload(self):
         info("Starting compression before upload to s3")
@@ -42,31 +50,31 @@ class Response:
             io, self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
         )
 
-        gzipped_body = BytesIO()
-        with gzip.open(gzipped_body, "wt", encoding="utf-8") as zipfile:
-            if isinstance(self.result.data, str):
-                info("Compressing string work result")
-                zipfile.write(self.result.data)
-            else:
-                info('Encoding and compressing json work result')
-                ujson.dump(self.result.data, zipfile)
-
-        gz_body_bytes = None
-        # If size is less than 250 kb, then send it over notification too
-        # Needs to be done here because upload_fileobj closes the file:
-        # https://github.com/boto/boto3/issues/929
+        if isinstance(self.result.data, str):
+            info("Compressing string work result")
+            data_bytes = self.result.data.encode('utf-8')
+        else:
+            info('Encoding and compressing json work result')
+            data_bytes = orjson.dumps(self.result.data)
+        
+        cctx = zstd.ZstdCompressor(level=3)
+        compressed = cctx.compress(data_bytes)
+        
+        compressed_body = BytesIO(compressed)
+        
+        # Check if small enough to send over socket
+        compressed_body_bytes = None
         kb = 1000
-        body_size = sys.getsizeof(gzipped_body)
-        info(f"Body size is {body_size}")
-        if (body_size <= 250 * kb):
+        body_size = len(compressed)
+        
+        if body_size <= 250 * kb:
             info("Data is smaller than 250 kb, sending over socket")
-            gzipped_body.seek(0)
-            gz_body_bytes = gzipped_body.read()
+            compressed_body_bytes = compressed
 
-        gzipped_body.seek(0)
-
+        compressed_body.seek(0)
         info("Compression finished")
-        return gzipped_body, gz_body_bytes
+        
+        return compressed_body, compressed_body_bytes
 
     def _construct_response_msg(self, socket_data = None):
         if socket_data:

@@ -1,10 +1,11 @@
-import gzip
 import io
 import json
 from unittest import TestCase
 
 import boto3
+import gzip
 import mock
+import zstandard as zstd
 from botocore.stub import Stubber
 from tests.data.embedding import mock_embedding
 from worker.config import config
@@ -32,14 +33,15 @@ class TestS3:
 
         # Get object
         content_string = json.dumps(mock_embedding).encode("utf-8")
-        content_bytes = gzip.compress(content_string)
+        cctx = zstd.ZstdCompressor(level=3)
+        content_bytes = cctx.compress(content_string)
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
 
         response = {
             "ContentLength": len(content_bytes),
-            "ContentType": "application/gzip",
+            "ContentType": "application/zstd",
             "Body": data,
             "ResponseMetadata": {
                 "Bucket": config.RESULTS_BUCKET,
@@ -69,6 +71,82 @@ class TestS3:
 
     def test_get_embedding_should_replace_nulls_if_formatted_for_r(self):
       stubber, s3 = self.get_s3_stub()
+
+      na_positions = []
+      for idx, val in enumerate(mock_embedding):
+        if val is None:
+          na_positions.append(idx)
+
+      with mock.patch("boto3.client") as n, stubber:
+          n.return_value = s3
+
+          request = get_embedding(mock_embedding_etag, format_for_r=True)
+
+          for idx, val in enumerate(request):
+            if idx in na_positions:
+              assert val == ['NA', 'NA']
+            else:
+              assert val is not None
+
+    def get_s3_stub_gzip(self):
+        """Create S3 stub with gzip-compressed embedding for backwards compatibility testing"""
+        s3 = boto3.client("s3", **config.BOTO_RESOURCE_KWARGS)
+        response = {
+            "ContentLength": 10,
+            "ContentType": "utf-8",
+            "ResponseMetadata": {
+                "Bucket": config.RESULTS_BUCKET,
+            },
+        }
+
+        expected_params = {
+            "Bucket": config.RESULTS_BUCKET,
+            "Key": mock_embedding_etag,
+        }
+        stubber = Stubber(s3)
+        stubber.add_response("head_object", response, expected_params)
+
+        # Get object - use gzip compression
+        content_string = json.dumps(mock_embedding).encode("utf-8")
+        content_bytes = gzip.compress(content_string)
+        data = io.BytesIO()
+        data.write(content_bytes)
+        data.seek(0)
+
+        response = {
+            "ContentLength": len(content_bytes),
+            "ContentType": "application/gzip",
+            "Body": data,
+            "ResponseMetadata": {
+                "Bucket": config.RESULTS_BUCKET,
+            },
+        }
+        stubber.add_response("get_object", response, expected_params)
+        return (stubber, s3)
+
+    def test_get_embedding_should_decompress_gzip_for_backwards_compatibility(self):
+      """Test that gzip-compressed embeddings (from older versions) can still be decompressed"""
+      stubber, s3 = self.get_s3_stub_gzip()
+
+      na_positions = []
+      for idx, val in enumerate(mock_embedding):
+        if val is None:
+          na_positions.append(idx)
+
+      with mock.patch("boto3.client") as n, stubber:
+          n.return_value = s3
+
+          request = get_embedding(mock_embedding_etag, format_for_r=False)
+
+          for idx, val in enumerate(request):
+            if idx in na_positions:
+              assert val is None
+            else:
+              assert val is not None
+
+    def test_get_embedding_should_decompress_gzip_and_replace_nulls_if_formatted_for_r(self):
+      """Test that gzip-compressed embeddings work with null replacement"""
+      stubber, s3 = self.get_s3_stub_gzip()
 
       na_positions = []
       for idx, val in enumerate(mock_embedding):

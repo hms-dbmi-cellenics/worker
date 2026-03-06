@@ -53,7 +53,14 @@ To make sure everything works, try to access http://localhost:4000/health from y
 
 ### Running R worker Tests
 
-_With R Studio_
+**Using Make (recommended)**
+
+From the root `worker/` directory, you can run:
+
+- `make test-r` - Run all R unit tests
+- `make test-r-file FILE=test-expression.R` - Run a specific test file
+
+**With R Studio**
 
 Install the worker R package by running the following command in RStudio:
 
@@ -65,7 +72,7 @@ Once the worker package is installed, run
 
 from the RStudio terminal or press `cmd+shift+T`
 
-_Via CLI_
+**Via CLI**
 
 - Go to worker/r folder
 - Start an R session (enter `R` in the terminal)

@@ -9,7 +9,6 @@ flake8==3.8.4
 mock==4.0.2
 numpy==1.22.0
 pandas==1.1.4
-ujson==5.5.0
 pytest==6.1.2
 pytz==2020.4
 PyYAML==5.4
@@ -22,3 +21,5 @@ socket_io_emitter==0.1.5.1
 redis==2.10.5
 pytest-cov==2.10.1
 pytest-mock==3.7.0
+orjson==3.10.15
+zstandard==0.23.0

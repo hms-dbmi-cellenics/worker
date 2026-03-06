@@ -335,6 +335,8 @@ test_that("getMarkerNames returns input if there's no gene name", {
 test_that("getSNNigraph returns an igraph object with correct dimensions", {
   data <- mock_scdata()
   g <- getSNNiGraph(data)
+
+  expect_s3_class(g, "igraph")
 })
 
 test_that("generateErrorMessage concatenates error code and user message with :|:", {

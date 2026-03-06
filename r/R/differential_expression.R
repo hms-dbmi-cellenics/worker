@@ -45,10 +45,25 @@ runDE <- function(req, data) {
 
 runWilcoxAUC <- function(data) {
 
-  # get marker genes
+  # for speed: take at most 10000 cells per group
+  set.seed(0)
+  max_cells <- 10000
+
   X_matrix <- data[['RNA']]$data
   y <- data$custom
-  result <- presto::wilcoxauc(X_matrix, y)
+
+  keep_cell_ids <- data@meta.data |>
+    dplyr::group_by(custom) |>
+    dplyr::slice_sample(n = max_cells, replace = FALSE) |>
+    dplyr::ungroup() |>
+    dplyr::pull(cells_id)
+
+  object_ids <- data$cells_id
+  keep_indices <- match(keep_cell_ids, object_ids)
+  mat_subset <- X_matrix[, keep_indices]
+  group_subset <- y[keep_indices]
+
+  result <- presto::wilcoxauc(mat_subset, y = group_subset)
   result <- result[result$group == 'base', ]
 
   rownames(result) <- result$feature

@@ -46,12 +46,16 @@ download-image: ## Downloads a docker image
 	@docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/worker:refs-tags-${LATEST_TAG}-r worker_r
 run-downloaded: ## Runs a downloaded docker image
 	@docker-compose -f docker-compose.downloaded.yaml up
-test: ## Executes unit tests
-	@[[ -e data/test/r.rds ]] || gunzip -k data/test/r.rds.gz
-	@docker top biomage-worker-python > /dev/null 2>&1 || \
-	(echo "The containers are not running. Run 'make run' and try again."; exit 1)
-	@docker exec -it biomage-worker-python bash -c \
-	"CLUSTER_ENV='development' python -m pytest --cov=. --cov-report term-missing $(extra_args)"
+test-py: build ## Executes Python unit tests
+	@PLATFORM_FLAG=""; \
+	if [ "$$(uname)" = "Darwin" ]; then \
+		PLATFORM_FLAG="--platform linux/amd64"; \
+	fi; \
+	docker run $$PLATFORM_FLAG -v ./python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
+test-r: build ## Executes R unit tests
+	@docker run worker-r R -e "testthat::test_local()"
+test-r-file: build ## Tests a specific R test file (usage: make test-r-file FILE=test-expression.R)
+	@docker run worker-r R -e "pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')"
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment
@@ -64,4 +68,4 @@ clean: ## Cleans up temporary files
 help: ## Shows available targets
 	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test logs kill clean help
+.PHONY: bootstrap fmt check build run-only run download-image run-downloaded test-py test-r test-r-file logs kill clean help

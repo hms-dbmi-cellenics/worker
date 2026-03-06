@@ -6,6 +6,7 @@ from pathlib import Path
 
 import aws_xray_sdk as xray
 import boto3
+import zstandard as zstd
 
 from ..config import config
 
@@ -72,7 +73,16 @@ def get_embedding(etag, format_for_r):
 
         f.seek(0)
 
-        embedding_string = gzip.decompress(f.read())
+        # Try zstd decompression first, fall back to gzip for backwards compatibility
+        compressed_data = f.read()
+        try:
+            dctx = zstd.ZstdDecompressor()
+            embedding_string = dctx.decompress(compressed_data)
+            info("Decompressed embedding with zstd")
+        except zstd.ZstdError:
+            info("Failed to decompress with zstd, trying gzip")
+            embedding_string = gzip.decompress(compressed_data)
+        
         embedding = json.loads(embedding_string)
 
         if(format_for_r):

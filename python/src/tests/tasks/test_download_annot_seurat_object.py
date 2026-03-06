@@ -1,13 +1,13 @@
 import io
 import json
 import os
-import gzip
 
 import boto3
 import mock
 import pandas as pd
 import pytest
 import responses
+import zstandard as zstd
 from botocore.stub import Stubber
 from exceptions import RWorkerException
 from tests.data.cell_set_types import cell_set_types
@@ -101,7 +101,8 @@ class TestDownloadAnnotSeuratObject:
 
         # Stubbing response for embedding get object
         content_string = json.dumps(mock_embedding).encode("utf-8")
-        content_bytes = gzip.compress(content_string)
+        cctx = zstd.ZstdCompressor(level=3)
+        content_bytes = cctx.compress(content_string)
         data = io.BytesIO()
         data.write(content_bytes)
         data.seek(0)
@@ -113,7 +114,7 @@ class TestDownloadAnnotSeuratObject:
           },
           "response": {
             "ContentLength": len(content_bytes),
-            "ContentType": "application/gzip",
+            "ContentType": "application/zstd",
             "Body": data,
             "ResponseMetadata": {
                 "Bucket": config.RESULTS_BUCKET,
