@@ -30,5 +30,4 @@ runExpression <- function(req, data) {
 
   # Always return full expression data
   return(getGeneExpression(data, gene_subset))
-
 }
