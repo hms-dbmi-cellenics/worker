@@ -8,13 +8,107 @@ for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
 load('R/sysdata.rda') # constants
 
 readFlex <- function(fpath) {
+  data_dir <- dirname(fpath)
 
   if (tools::file_ext(fpath) == 'qs') {
     data <- qs::qread(fpath)
   } else {
     data <- readRDS(fpath)
   }
+
+  is.bpcells <- is(data[['RNA']]$counts, 'IterableMatrix')
+  if (is.bpcells) {
+    data <- load_bpcells(data, data_dir)
+  }
+
   return(data)
+}
+
+load_bpcells <- function(data, data_dir) {
+  # untar tarfiles
+  tarfile <- list.files(data_dir, pattern = 'matrix_dir[.]tar[.]zst', full.names = TRUE)
+  if (!dir.exists(file.path(data_dir, "matrix_dir"))) {
+    message("Extracting BPCells matrix tarfile...")
+    untar_zstd(tarfile, exdir = data_dir)
+  }
+
+  old_dir <- get_matrix_dirs(data)
+  new_dir <- file.path(data_dir, basename(old_dir))
+  data <- update_matrix_dir(data, old_dir, new_dir)
+
+  return(data)
+}
+
+# TODO: newer R utils::tar supports zstd
+tar_zstd <- function(tarfile, files) {
+  system(paste("tar --zstd -cf", tarfile, files))
+}
+
+untar_zstd <- function(tarfile, exdir) {
+  system(paste("tar --zstd -xf", tarfile, "-C", exdir))
+}
+
+update_matrix_dir <- function(data, old_dir, new_dir) {
+
+  assays <- names(data@assays)
+  for (assay.update in assays) {
+    data@assays[[assay.update]]@layers <- lapply(
+      data@assays[[assay.update]]@layers,
+      replace_matrix_dir_paths,
+      old_dir = old_dir,
+      new_dir = new_dir
+    )
+  }
+  return(data)
+}
+
+# Update BPCells matrix paths after extraction
+replace_matrix_dir_paths <- function(obj, old_dir, new_dir) {
+  new_dir <- normalizePath(new_dir)
+  if (!dir.exists(new_dir))
+    stop(new_dir, " doesn't exist. Please move BPcells folder first.")
+
+  if (inherits(obj, "MatrixDir") && obj@dir == old_dir) {
+    message("Updating MatrixDir: ", obj@dir, " --> ", new_dir)
+    obj@dir <- new_dir
+    return(obj)
+  }
+  if (is.list(obj)) {
+    return(lapply(obj, replace_matrix_dir_paths, old_dir, new_dir))
+  }
+  for (sn in slotNames(obj)) {
+    slot(obj, sn) <- replace_matrix_dir_paths(slot(obj, sn), old_dir, new_dir)
+  }
+  return(obj)
+}
+
+
+find_matrix_dir_paths <- function(obj) {
+  matrix_dir_paths <- c()
+  if (inherits(obj, "MatrixDir")) {
+    return(obj@dir)
+  }
+  if (is.list(obj)) {
+    res <- lapply(obj, find_matrix_dir_paths)
+    return(unlist(res))
+  }
+  for (sn in slotNames(obj)) {
+    matrix_dir_paths <- c(
+      matrix_dir_paths,
+      find_matrix_dir_paths(slot(obj, sn)))
+  }
+  return(matrix_dir_paths)
+}
+
+get_matrix_dirs <- function(scdata) {
+
+  matrix_dirs <- lapply(
+    scdata@assays$RNA@layers,
+    find_matrix_dir_paths
+  )
+
+  matrix_dirs <- unique(unlist(matrix_dirs))
+  return(matrix_dirs)
 }
 
 load_data <- function(fpath) {
@@ -33,8 +127,8 @@ load_data <- function(fpath) {
         length <- dim(f)
 
         message(
-          "Data successfully loaded, dimensions",
-          length[1], "x", length[2]
+          "Data successfully loaded, dimensions: ",
+          length[1], " x ", length[2]
         )
 
         print(sessionInfo())
@@ -148,11 +242,18 @@ create_app <- function(last_modified, data, fpath) {
   encode_decode_middleware <- RestRserve::EncodeDecodeMiddleware$new()
 
   # the json encoder by default is not precise enough so we set a custom one without precision limit (digits=NA)
+  # yyjsonr is 2-10x faster than jsonlite
   encode_decode_middleware$ContentHandlers$set_encode(
     "application/json",
     function(x, unbox = TRUE)  {
-      res = jsonlite::toJSON(x, dataframe = 'columns', auto_unbox = unbox, null = 'null', na = 'null', digits=I(4))
-      unclass(res)
+      res = yyjsonr::write_json_str(
+        x,
+        opts = list(
+          dataframe = 'columns',
+          digits = 4,
+          auto_unbox = unbox
+        )
+      )
     }
   )
 
@@ -213,7 +314,7 @@ create_app <- function(last_modified, data, fpath) {
     path = "/v0/runExpression",
     FUN = function(req, res) {
       result <- run_post(req, runExpression, data)
-      res$set_body(result)
+      res$set_body(result$data)
     }
   )
   app$add_post(
