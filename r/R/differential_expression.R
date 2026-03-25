@@ -61,6 +61,7 @@ runWilcoxAUC <- function(data) {
   object_ids <- data$cells_id
   keep_indices <- match(keep_cell_ids, object_ids)
   mat_subset <- X_matrix[, keep_indices]
+  mat_subset <- as(mat_subset, "dgCMatrix")
   group_subset <- y[keep_indices]
 
   result <- presto::wilcoxauc(mat_subset, y = group_subset)
