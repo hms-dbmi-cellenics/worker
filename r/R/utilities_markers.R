@@ -28,54 +28,54 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
 
   # for speed: take at most 1000 cells per cluster
   set.seed(0)
-  
+
   # Create temp data frame for sampling
-  temp_meta <- data@meta.data |>
-    dplyr::mutate(marker_groups = marker_groups)
-  
-  keep_cell_ids <- temp_meta |>
+  keep_cell_ids <- data@meta.data |>
+    dplyr::mutate(marker_groups = marker_groups) |>
     dplyr::group_by(marker_groups) |>
     dplyr::slice_sample(n = 1000, replace = FALSE) |>
     dplyr::ungroup() |>
     dplyr::pull(cells_id)
-  
+
   # Extract and subset matrix
   mat <- data@assays$RNA$data
   keep_indices <- match(keep_cell_ids, object_ids)
   mat_subset <- mat[, keep_indices]
+  mat_subset <- as(mat_subset, "dgCMatrix")
   marker_groups_subset <- marker_groups[keep_indices]
 
   all_markers <- presto::wilcoxauc(
     mat_subset,
     y = marker_groups_subset
   )
-  
+
   all_markers$group <- as.numeric(all_markers$group)
 
   # may not return nFeatures markers per cluster if values are too stringent
-  filtered_markers <- all_markers %>%
+  filtered_markers <- all_markers |>
     dplyr::filter(logFC > 0 &
-      auc >= aucMin &
-      pct_in >= pctInMin &
-      pct_out <= pctOutMax) %>%
-    dplyr::arrange(pval) %>%
-    dplyr::distinct(feature, .keep_all = TRUE) %>%
+        auc >= aucMin &
+        pct_in >= pctInMin &
+        pct_out <= pctOutMax
+    ) |>
+    dplyr::arrange(pval) |>
+    dplyr::distinct(feature, .keep_all = TRUE) |>
     dplyr::arrange(-logFC)
 
   # Get top nFeatures per group without additional sorting
-  top_markers <- filtered_markers %>%
-    dplyr::group_by(group) %>%
-    dplyr::slice_head(n = nFeatures) %>%
-    dplyr::ungroup() %>%
+  top_markers <- filtered_markers |>
+    dplyr::group_by(group) |>
+    dplyr::slice_head(n = nFeatures) |>
+    dplyr::ungroup() |>
     dplyr::arrange(group)
-  
+
   return(top_markers)
 }
 
 getMarkerNames <- function(data, all_markers) {
   all_markers$name <- data@misc$gene_annotations[all_markers$feature, "name"]
-  all_markers <- all_markers %>% dplyr::transmute(group = group, input = feature, name = name)
-  
+  all_markers <- all_markers |> dplyr::transmute(group = group, input = feature, name = name)
+
   rownames(all_markers) <- c()
   return(all_markers)
 }
