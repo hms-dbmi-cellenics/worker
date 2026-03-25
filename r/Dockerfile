@@ -50,6 +50,9 @@ RUN Rscript create_ghost_packages.R
 COPY setup/check_package_licenses.R .
 RUN Rscript check_package_licenses.R
 
+RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
+RUN R -q -e "install.packages('yyjsonr')"
+
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
 # ---------------------------------------------------
@@ -66,11 +69,10 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 # install runtime system deps
 # python3-dev prevents 'reticulate can only bind to copies of Python built with --enable-shared'
 # cleanup setup files
-RUN echo "python3-pip python3-venv python3-dev" >> sysdeps_run.txt && \
+RUN echo "python3-pip python3-venv python3-dev zstd" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-# install umap-learn for RunUMAP
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
     R -q -e "reticulate::virtualenv_install('r-reticulate', c('setuptools==68.2.2', 'umap-learn==0.5.3', 'numpy<2'), pip_options='--no-cache-dir --upgrade')"
