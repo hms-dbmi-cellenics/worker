@@ -4,7 +4,6 @@ from logging import info
 import base64
 import os
 
-
 import aws_xray_sdk as xray
 import boto3
 from aws_xray_sdk.core import xray_recorder
@@ -50,7 +49,10 @@ class Response:
             io, self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
         )
 
-        if isinstance(self.result.data, str):
+        if isinstance(self.result.data, bytes):
+            info("Compressing bytes data directly (from R response)")
+            data_bytes = self.result.data
+        elif isinstance(self.result.data, str):
             info("Compressing string work result")
             data_bytes = self.result.data.encode('utf-8')
         else:
@@ -72,7 +74,8 @@ class Response:
             compressed_body_bytes = compressed
 
         compressed_body.seek(0)
-        info("Compression finished")
+        info(f"Compression finished")
+        info(f"Compressed from: {_format_bytes(len(data_bytes))} to {_format_bytes(body_size)}")
         
         return compressed_body, compressed_body_bytes
 
