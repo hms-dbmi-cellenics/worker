@@ -162,16 +162,6 @@ runSketchUMAP <- function(object, reduction.model, reduction, config, num_pcs) {
   # set rownames to match cell identifiers from sketch data
   rownames(sketch_embedding) <- rownames(sketch_data)
 
-  # store sketch embedding in umap.sketch reduction
-  reduction.sketch <- paste0(reduction.model, ".sketch")
-  sketch_umap_reduction <- Seurat::CreateDimReducObject(
-    embeddings = sketch_embedding,
-    key = "UMAP.sketch_",
-    assay = Seurat::DefaultAssay(object[[reduction]]),
-    global = TRUE
-  )
-  object[[reduction.sketch]] <- sketch_umap_reduction
-
   # Get full data for projection
   # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
   full_reduction <- gsub("[.]sketch$", "", reduction)
@@ -197,45 +187,6 @@ runSketchUMAP <- function(object, reduction.model, reduction, config, num_pcs) {
   return(object)
 }
 
-# Fallback: needed because ProjectData doesn't support umap-learn
-# uwot segfaults on Docker
-ProjectSketchedUMAP <- function(object, reduction.model, reduction) {
-  library(Seurat)
-
-  full_sketch.nn <- Tool(object = object, slot = "TransferSketchLabels")$full_sketch.nn
-  full_sketch.weight <- Tool(object = object, slot = "TransferSketchLabels")$full_sketch.weight
-
-  umap.model <- Misc(object = object[[reduction.model]], slot = "model")
-
-  if (ncol(full_sketch.nn) > umap.model$n_neighbors) {
-    full_sketch.nn@nn.idx <-
-      full_sketch.nn@nn.idx[, 1:umap.model$n_neighbors]
-
-    full_sketch.nn@nn.dist <-
-      full_sketch.nn@nn.dist[, 1:umap.model$n_neighbors]
-  }
-
-  message("Running UMAP projection from sketch to full dataset")
-
-  proj.umap <- RunUMAP(
-    object = full_sketch.nn,
-    reduction.model = object[[reduction.model]],
-    verbose = TRUE,
-    assay = slot(object = object[[reduction]], name = "assay.used"),
-    umap.method = "umap-learn"
-  )
-
-  # move sketched umap to umap.sketch reduction
-  reduction.sketch <- paste0(reduction.model, ".sketch")
-  umap.sketch <- object[[reduction.model]]
-  Key(umap.sketch) <- Key(reduction.sketch)
-  object[[reduction.sketch]] <- umap.sketch
-
-  # set projected umap to umap reduction
-  object[[reduction.model]] <- proj.umap
-  return(object)
-}
-
 
 # assignEmbedding
 # Assigns embedding from embedding json to the Seurat object.
@@ -258,7 +209,12 @@ assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
   embedding_key <- unname(unlist(reduction_keys[reduction_method]))
 
   colnames(embedding) <- paste(embedding_key, 1:2, sep = "")
-  data[[reduction_method]] <- Seurat::CreateDimReducObject(embeddings = embedding, key = embedding_key, assay = "RNA")
 
+  reduction <- Seurat::CreateDimReducObject(
+    embeddings = embedding,
+    key = embedding_key,
+    assay = "RNA"
+  )
+  data[[reduction_method]] <- reduction
   return(data)
 }
