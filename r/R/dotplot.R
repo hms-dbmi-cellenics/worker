@@ -63,7 +63,7 @@ runDotPlot <- function(req, data) {
     group_by_cell_sets_cell_ids <- lapply(group_by_cell_sets, function(x) x[["cellIds"]])
 
     num_features <- req$body$numberOfMarkers
-    all_markers <- getTopMarkerGenes(num_features, data, group_by_cell_sets_cell_ids)
+    all_markers <- memoisedGetTopMarkerGenes(num_features, data, group_by_cell_sets_cell_ids)
     features <- as.data.frame(getMarkerNames(data, all_markers))
     rownames(features) <- features$input
   } else {
@@ -78,7 +78,7 @@ runDotPlot <- function(req, data) {
   # features.plot has the ensemble ids: get gene symbols
   dotplot_data$name <- features[dotplot_data$features.plot, "name"]
   dotplot_data <- dotplot_data[order(as.numeric(dotplot_data$id)), ]
-  dotplot_data <- dotplot_data %>%
+  dotplot_data <- dotplot_data |>
     dplyr::transmute(
       cellSetsIdx = id,
       geneNameIdx = factor(name),
