@@ -26,9 +26,9 @@ runEmbedding <- function(req, data) {
 
   # To run embedding, we need to set the reduction.
   if ("active.reduction" %in% names(data@misc)) {
-    active.reduction <- data@misc[["active.reduction"]]
+    active_reduction <- data@misc[["active.reduction"]]
   } else {
-    active.reduction <- "pca"
+    active_reduction <- "pca"
   }
 
   # The slot numPCs is set in dataIntegration with the selected PCA by the user.
@@ -36,7 +36,7 @@ runEmbedding <- function(req, data) {
     pca_nPCs <- data@misc[["numPCs"]]
   }
 
-  message("Active reduction --> ", active.reduction)
+  message("Active reduction --> ", active_reduction)
   message("Active numPCs --> ", pca_nPCs)
   message("Number of cells/sample:")
   print(table(data$samples))
@@ -47,8 +47,16 @@ runEmbedding <- function(req, data) {
     df_embedding <- do.call(rbind, df_embeddings)
 
   } else {
-    if (!use_saved)
-      data <- getEmbedding(config, method, active.reduction, pca_nPCs, data)
+
+    if (!use_saved) {
+      data <- getEmbedding(
+        config,
+        method,
+        active_reduction,
+        pca_nPCs,
+        data
+      )
+    }
 
     df_embedding <- Seurat::Embeddings(data, reduction = method)
   }

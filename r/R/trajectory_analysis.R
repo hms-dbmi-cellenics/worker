@@ -164,6 +164,7 @@ generateTrajectoryGraph <- function(
   cell_ids,
   data
 ) {
+  # TODO: consider using py-monocle3 for large datasets
 
   set.seed(ULTIMATE_SEED)
 
