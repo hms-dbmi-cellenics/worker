@@ -43,7 +43,7 @@ class Response:
     #' @return compressed_body to upload to s3 and the compressed bytes 
     #' object to send over redis if the work result is small enough
     def _construct_data_for_upload(self):
-        info("Starting compression before upload to s3")
+        info("Starting compression before upload to S3")
         io = Emitter({"client": config.REDIS_CLIENT})
         send_status_update(
             io, self.request["experimentId"], COMPRESSING_TASK_DATA, self.request
@@ -74,7 +74,6 @@ class Response:
             compressed_body_bytes = compressed
 
         compressed_body.seek(0)
-        info(f"Compression finished")
         info(f"Compressed from: {_format_bytes(len(data_bytes))} to {_format_bytes(body_size)}")
         
         return compressed_body, compressed_body_bytes
@@ -130,7 +129,8 @@ class Response:
             },
         )
 
-        info(f"Response was uploaded in bucket {self.s3_bucket} at key {ETag}.")
+        info(f"Response uploaded to bucket: {self.s3_bucket}")
+        info(f"Response uploaded with key: {ETag}")
 
         if was_enabled:
             xray.global_sdk_config.set_sdk_enabled(True)
@@ -163,7 +163,7 @@ class Response:
 
     @xray_recorder.capture("Response.publish")
     def publish(self):
-        info(f"Request {self.request['ETag']} processed, response:")
+        info(f"Request {self.request['ETag']} processed.")
 
         socket_data = None
 
