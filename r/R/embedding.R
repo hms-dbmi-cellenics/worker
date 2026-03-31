@@ -33,15 +33,10 @@ runEmbedding <- function(req, data) {
 
   # The slot numPCs is set in dataIntegration with the selected PCA by the user.
   if ("numPCs" %in% names(data@misc)) {
-    pca_nPCs <- data@misc[["numPCs"]]
+    pca_npcs <- data@misc[["numPCs"]]
   }
 
-  message("Active reduction --> ", active_reduction)
-  message("Active numPCs --> ", pca_nPCs)
-  message("Number of cells/sample:")
-  print(table(data$samples))
-
-  if (method == 'images') {
+  if (method == "images") {
     img_names <- Seurat::Images(data)
     df_embeddings <- lapply(img_names, get_rotated_tissue_coords, data)
     df_embedding <- do.call(rbind, df_embeddings)
@@ -53,7 +48,7 @@ runEmbedding <- function(req, data) {
         config,
         method,
         active_reduction,
-        pca_nPCs,
+        pca_npcs,
         data
       )
     }
@@ -68,23 +63,27 @@ runEmbedding <- function(req, data) {
   df_embedding <- df_embedding[order(df_embedding$cells_id), ]
   df_embedding <- df_embedding |>
     tidyr::complete(cells_id = seq(0, max(meta$cells_id))) |>
-    dplyr::select(-cells_id)
+    dplyr::select(-"cells_id")
 
   map2_fun <- function(x, y) {
     if (is.na(x)) {
-      return(NULL)
+      NULL
     } else {
-      return(c(x, y))
+      c(x, y)
     }
   }
   res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], map2_fun)
   return(res)
 }
 
-# at least in the case of Visium, data are flipped and rotated before SpatialDimPlot.
-# this function  return the rotated/flipped tissue Coordinates from a Seurat object.
+# for Visium, data are flipped and rotated before SpatialDimPlot.
+# returns the rotated/flipped tissue Coordinates from a Seurat object.
 get_rotated_tissue_coords <- function(img_name, scdata) {
-  coord_spot <- SeuratObject::GetTissueCoordinates(scdata, img_name, scale = "lowres")[,2:1] # rotation
+  coord_spot <- SeuratObject::GetTissueCoordinates(
+    scdata,
+    img_name,
+    scale = "lowres"
+  )[, 2:1] # rotation
   colnames(coord_spot) <- c("x", "y")
   return(coord_spot)
 }
@@ -101,7 +100,25 @@ get_rotated_tissue_coords <- function(img_name, scdata) {
 #' @export
 getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 
+  has_sketch <- "sketch" %in% names(data@assays)
+
+  message("Calculating embedding: ",
+    "\n- method: ", method,
+    "\n- reduction to use: ", reduction_type,
+    "\n- number of PCs: ", num_pcs, "\n"
+  )
+
   if (method == "tsne") {
+
+    # TSNE doesn't support projecting to full data,
+    # so we run on full data even if sketch is available
+    if (has_sketch) {
+      reduction_type <- gsub("[.]sketch$", "", reduction_type)
+      warning(
+        "TSNE doesn't support sketch projection.",
+        "\n- reduction switched to: ", reduction_type, "\n"
+      )
+    }
 
     data <- Seurat::RunTSNE(
       data,
@@ -113,18 +130,17 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 
   } else if (method == "umap") {
 
-    has_sketch <- "sketch" %in% names(data@assays)
     if (has_sketch) {
-      # Use Python umap directly to avoid uwot Docker segfault
-      data <- runSketchUMAP(
+      # use Python umap directly to avoid uwot Docker segfault
+      data <- run_sketch_umap(
         data,
-        reduction.model = "umap",
+        reduction_model = "umap",
         reduction = reduction_type,
         config = config,
         num_pcs = num_pcs
       )
     } else {
-      # Standard UMAP for non-sketch data
+      # standard UMAP for non-sketch data
       data <- Seurat::RunUMAP(
         data,
         reduction = reduction_type,
@@ -142,7 +158,9 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 
 # use umap-learn via reticulate to fit sketch and project to full
 # avoids uwot Docker segfault (Seurat forces uwot if return.model=TRUE)
-runSketchUMAP <- function(object, reduction.model, reduction, config, num_pcs) {
+run_sketch_umap <- function(
+  object, reduction_model, reduction, config, num_pcs
+) {
 
   # get the sketch data (PCA, harmony, etc)
   # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
@@ -160,11 +178,11 @@ runSketchUMAP <- function(object, reduction.model, reduction, config, num_pcs) {
     metric = config$distanceMetric,
     min_dist = config$minimumDistance,
     random_state = random_state,
-    verbose = TRUE
+    verbose = FALSE
   )
 
   # fit on sketch and get embedding
-  message("Fitting UMAP on sketch assay")
+  message("Fitting UMAP on downsampled reduction: ", reduction)
   sketch_embedding <- umap_model$fit_transform(as.matrix(sketch_data))
 
   # set rownames to match cell identifiers from sketch data
@@ -176,7 +194,7 @@ runSketchUMAP <- function(object, reduction.model, reduction, config, num_pcs) {
   full_data <- Seurat::Embeddings(object, reduction = full_reduction)
   full_data <- full_data[, 1:num_pcs]
 
-  message("Projecting UMAP embedding from sketch to full dataset")
+  message("Projecting UMAP to full reduction: ", full_reduction)
   full_embedding <- umap_model$transform(as.matrix(full_data))
 
   # set rownames to match cell identifiers from full data
@@ -189,9 +207,8 @@ runSketchUMAP <- function(object, reduction.model, reduction, config, num_pcs) {
     assay = Seurat::DefaultAssay(object),
     global = TRUE
   )
-  object[[reduction.model]] <- full_umap_reduction
+  object[[reduction_model]] <- full_umap_reduction
 
-  message("Done projecting UMAP embedding from sketch to full dataset")
   return(object)
 }
 
