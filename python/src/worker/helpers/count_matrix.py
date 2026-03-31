@@ -53,21 +53,21 @@ class CountMatrix:
 
         if self.last_fetch and last_modified < self.last_fetch:
             info(
-                f"Did not fetch as last modified (remote) of {last_modified}"
-                f" was before last fetch time of {self.last_fetch}"
+                f"Did not fetch as last modified of remote"
+                f" was before last fetch time"
             )
 
             return False
         elif last_mod_local and last_modified < last_mod_local:
             info(
-                f"Did not fetch as last modified (remote) of {last_modified}"
-                f" was before last modified (local) of {last_mod_local}"
+                f"Did not fetch as last modified of remote"
+                f" was before last modified of local."
             )
 
             return False
         else:
             info(
-                f"Fetching as last modified date of {last_modified}"
+                f"Fetching as last modified date of remote"
                 f" is more recent than {self.last_fetch or 'Never'}"
             )
 
