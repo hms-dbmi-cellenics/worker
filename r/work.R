@@ -1,23 +1,26 @@
-library(Seurat)
-library(dplyr)
+
+suppressPackageStartupMessages( {
+  library(Seurat)
+  library(dplyr)
+})
 
 # v5 is default but making explicit
 options(Seurat.object.assay.version = "v5")
 
 for (f in list.files("R", ".R$", full.names = TRUE)) source(f)
-load('R/sysdata.rda') # constants
+load("R/sysdata.rda") # constants
 
-readFlex <- function(fpath) {
+read_flex <- function(fpath) {
   data_dir <- dirname(fpath)
 
-  if (tools::file_ext(fpath) == 'qs') {
+  if (tools::file_ext(fpath) == "qs") {
     data <- qs::qread(fpath)
   } else {
     data <- readRDS(fpath)
   }
 
-  is.bpcells <- is(data[['RNA']]$counts, 'IterableMatrix')
-  if (is.bpcells) {
+  is_bpcells <- is(data[["RNA"]]$counts, "IterableMatrix")
+  if (is_bpcells) {
     data <- load_bpcells(data, data_dir)
   }
 
@@ -31,20 +34,27 @@ load_data <- function(fpath) {
   while (!loaded) {
     data <- tryCatch(
       {
-        print("Current working directory:")
-        print(getwd())
-        print("Experiment folder status:")
-        print(list.files(dirname(fpath), all.files = TRUE, full.names = TRUE))
-        f <- readFlex(fpath)
+        message(
+          "\nCurrent working directory: ", getwd(),
+          "\nExperiment folder status:\n",
+          paste(
+            list.files(dirname(fpath), all.files = TRUE, full.names = TRUE),
+            collapse = "\n"
+          )
+        )
+
+        f <- read_flex(fpath)
         loaded <- TRUE
         length <- dim(f)
 
         message(
-          "Data successfully loaded, dimensions: ",
+          "\nData successfully loaded, dimensions: ",
           length[1], " x ", length[2]
         )
 
-        print(sessionInfo())
+        message("\nSession info:")
+        print(sessionInfo(),  locale = FALSE)
+        message("\n")
 
         return(f)
       },
@@ -62,32 +72,28 @@ load_data <- function(fpath) {
 }
 
 run_post <- function(req, post_fun, data) {
-  # over-ride manually to hot-reload
-  # debug_step <- "getClusters"
-  debug_step <- Sys.getenv("DEBUG_STEP", unset = "")
-
-  handle_debug(req, debug_step)
 
   message(rep("✧",100))
   message("➥ Starting ",sub("run","",basename(req$path)))
   message("Input:")
-  message(str(req$body))
+  str(req$body, list.len = 6)
+  message("\n")
 
   tryCatch({
-    message("\nSeurat logs:")
-    message("➡️ \n")
     tstart <- Sys.time()
     res <- post_fun(req, data)
-    message("\n⬅️")
 
     message("\nResult length: ",length(res))
     message("\nResult head: ")
-    message(str(head(res,10)))
+    str(head(res, 10))
 
-    ttask <- format(Sys.time()-tstart, digits = 2)
-    message("\n⏱️ Time to complete ", req$body$name, " for experiment ", experiment_id, ": ", ttask, '\n')
+    ttask <- format(Sys.time() - tstart, digits = 2)
+    message(
+      "\n⏱️ Time to complete ", req$body$name,
+      " for experiment ", experiment_id, ": ", ttask, "\n"
+    )
     message("✅ Finished ", req$body$name)
-    message(rep("✧",100))
+    message(rep("✧", 100))
 
     return(
       formatResponse(
@@ -110,39 +116,17 @@ run_post <- function(req, post_fun, data) {
   )
 }
 
-handle_debug <- function(req, debug_step) {
-  task_name <- basename(req$path)
-  is_debug <- debug_step == task_name | debug_step == "all"
-
-  if (is_debug) {
-    message(sprintf("⚠ DEBUG_STEP = %s. Saving `req` object.", task_name))
-    req_fname <- sprintf("%s_%s_req.rds", experiment_id, task_name)
-    saveRDS(req, file.path("/debug", req_fname))
-
-    req_host <- file.path("./data/debug", req_fname)
-    message(sprintf("⚠ RUN req  <- readRDS('%s') to restore 'req' object.", req_host))
-
-    # copy data to /debug if doesn't exist
-    data_fname <- sprintf("%s_data.rds", experiment_id)
-    data_cont <- file.path("/debug", data_fname)
-
-    if (!file.exists(data_cont)) {
-      data_path <- file.path("/data", experiment_id, "r.rds")
-      file.copy(data_path, data_cont)
-    }
-
-    data_host <- file.path("./data/debug", data_fname)
-    message(sprintf("⚠ RUN data <- readRDS('%s') to restore 'data' object.", data_host))
-  }
-}
-
 create_app <- function(last_modified, data, fpath) {
   last_modified_mw <- RestRserve::Middleware$new(
     process_request = function(request, response) {
       if (!file.info(fpath)$mtime == last_modified) {
         RestRserve::raise(
           RestRserve::HTTPError$conflict(
-            body = RJSONIO::toJSON(list(error = "The file is out of date and is currently being updated."))
+            body = RJSONIO::toJSON(
+              list(
+                error = "The file is out of date and is currently being updated."
+              )
+            )
           )
         )
       }
