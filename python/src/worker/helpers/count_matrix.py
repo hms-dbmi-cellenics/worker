@@ -54,21 +54,21 @@ class CountMatrix:
         if self.last_fetch and last_modified < self.last_fetch:
             info(
                 f"Did not fetch as last modified of remote"
-                f" was before last fetch time"
+                f" was before last fetch time."
             )
-
             return False
+        
         elif last_mod_local and last_modified < last_mod_local:
             info(
                 f"Did not fetch as last modified of remote"
                 f" was before last modified of local."
             )
-
             return False
+        
         else:
             info(
                 f"Fetching as last modified date of remote"
-                f" is more recent than {self.last_fetch or 'Never'}"
+                f" is more recent than last fetch time."
             )
 
         # Disabled X-Ray to fix a botocore bug where the context
@@ -90,7 +90,6 @@ class CountMatrix:
 
             send_status_update(io, self.config.EXPERIMENT_ID, LOAD_EXPERIMENT)
 
-            self.last_fetch = last_modified
             f.seek(0)
 
         if was_enabled:

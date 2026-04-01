@@ -159,11 +159,11 @@ class Response:
 
         io.Emit(f'WorkResponse-{self.request["ETag"]}', self._construct_response_msg(socket_data))
 
-        info(f"Notified users waiting for request with ETag {self.request['ETag']}.")
+        info(f"Notified users waiting for request with ETag {self.request['ETag']}")
 
     @xray_recorder.capture("Response.publish")
     def publish(self):
-        info(f"Request {self.request['ETag']} processed.")
+        info(f"Request {self.request['ETag']} processed")
 
         socket_data = None
 

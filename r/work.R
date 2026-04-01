@@ -54,7 +54,7 @@ load_data <- function(fpath) {
 
         message("\nSession info:")
         print(sessionInfo(),  locale = FALSE)
-        message("\n")
+        cat("\n")
 
         return(f)
       },
@@ -77,14 +77,14 @@ run_post <- function(req, post_fun, data) {
   message("➥ Starting ",sub("run","",basename(req$path)))
   message("Input:")
   str(req$body, list.len = 6)
-  message("\n")
+  cat("\n")
 
   tryCatch({
     tstart <- Sys.time()
     res <- post_fun(req, data)
 
     message("\nResult length: ",length(res))
-    message("\nResult head: ")
+    message("Result head: ")
     str(head(res, 10))
 
     ttask <- format(Sys.time() - tstart, digits = 2)

@@ -105,7 +105,7 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
   message("Calculating embedding: ",
     "\n- method: ", method,
     "\n- reduction to use: ", reduction_type,
-    "\n- number of PCs: ", num_pcs, "\n"
+    "\n- number of PCs: ", num_pcs
   )
 
   if (method == "tsne") {

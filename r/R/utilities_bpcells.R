@@ -45,7 +45,6 @@ replace_matrix_dir_paths <- function(obj, old_dir, new_dir) {
     stop(new_dir, " doesn't exist. Please move BPcells folder first.")
 
   if (inherits(obj, "MatrixDir") && obj@dir == old_dir) {
-    message("Updating MatrixDir: ", obj@dir, " --> ", new_dir)
     obj@dir <- new_dir
     return(obj)
   }
