@@ -124,7 +124,10 @@ create_app <- function(last_modified, data, fpath) {
           RestRserve::HTTPError$conflict(
             body = RJSONIO::toJSON(
               list(
-                error = "The file is out of date and is currently being updated."
+                error = paste0(
+                  "The file is out of date and is currently ",
+                  "being updated."
+                )
               )
             )
           )
