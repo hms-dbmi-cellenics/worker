@@ -163,7 +163,7 @@ test_that("assignEmbedding assigns embedding correctly for UMAP", {
   old_embedding <- Seurat::Embeddings(mock_seurat_object)
 
   # cells_id 0 corresponds to embedding[[1]]
-  mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
+  mock_seurat_object$cells_id <- seq((num_cells * 2) - 2, 0, -2)
 
   # assigning embedding
   mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object)
@@ -205,7 +205,7 @@ test_that("assignEmbedding assigns embedding correctly for tSNE", {
   old_embedding <- Seurat::Embeddings(mock_seurat_object)
 
   # cells_id 0 corresponds to embedding[[1]]
-  mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
+  mock_seurat_object$cells_id <- seq((num_cells * 2) - 2, 0, -2)
 
   # assigning embedding
   mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object, reduction_method = "tsne")
@@ -237,10 +237,55 @@ test_that("can request saved embedding result", {
 
   expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
 
-  expected_res <- expected_res %>%
-    as.data.frame() %>%
-    dplyr::rowwise() %>%
+  expected_res <- expected_res |>
+    as.data.frame() |>
+    dplyr::rowwise() |>
     dplyr::mutate(PCS = list(c(PC_1, PC_2)))
 
   expect_equal(res,expected_res$PCS)
+})
+
+test_that("empty named list encodes consistently across JSON encoders", {
+  # Test that empty named list (structure(list(), names = character(0)))
+  # encodes identically in both jsonlite and yyjsonr for backward compatibility
+
+  empty_named_list <- structure(list(), names = character(0))
+  coordinate_pair <- c(1.5, 2.5)
+
+  # Create test data with mixed content (coordinates and empty lists)
+  test_data <- list(
+    empty_named_list,  # Missing embedding
+    coordinate_pair,   # Present embedding
+    empty_named_list,  # Missing embedding
+    c(3.1, 4.2)       # Present embedding
+  )
+
+  # Encode with jsonlite
+  json_jsonlite <- as.character(jsonlite::toJSON(test_data, auto_unbox = TRUE))
+
+  # Encode with yyjsonr
+  json_yyjsonr <- yyjsonr::write_json_str(test_data, opts = list(
+    dataframe = "columns",
+    digits = 4,
+    auto_unbox = TRUE
+  ))
+
+  # Both should produce identical JSON output
+  expect_equal(json_jsonlite, json_yyjsonr)
+
+  # Both should parse back identically
+  parsed_jsonlite <- jsonlite::fromJSON(json_jsonlite)
+  parsed_yyjsonr <- jsonlite::fromJSON(json_yyjsonr)
+
+  expect_equal(parsed_jsonlite, parsed_yyjsonr)
+
+  # Verify structure: empty entries should be empty lists, not NULL
+  expect_equal(length(parsed_jsonlite[[1]]), 0)
+  expect_equal(length(parsed_jsonlite[[3]]), 0)
+  expect_true(is.list(parsed_jsonlite[[1]]))
+  expect_true(is.list(parsed_jsonlite[[3]]))
+
+  # Verify coordinates are preserved
+  expect_equal(unname(parsed_jsonlite[[2]]), c(1.5, 2.5))
+  expect_equal(unname(parsed_jsonlite[[4]]), c(3.1, 4.2))
 })

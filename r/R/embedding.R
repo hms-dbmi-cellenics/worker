@@ -20,7 +20,7 @@ runEmbedding <- function(req, data) {
   method <- req$body$type
   use_saved <- req$body$use_saved
   config <- req$body$config
-  pca_nPCs <- 30
+  pca_npcs <- 30
 
   set.seed(ULTIMATE_SEED)
 
@@ -65,15 +65,24 @@ runEmbedding <- function(req, data) {
     tidyr::complete(cells_id = seq(0, max(meta$cells_id))) |>
     dplyr::select(-"cells_id")
 
-  map2_fun <- function(x, y) {
+  map2_fun <- function(x, y, na_map2_res) {
     if (is.na(x)) {
-      NULL
+      na_map2_res
     } else {
       c(x, y)
     }
   }
-  res <- purrr::map2(df_embedding[[1]], df_embedding[[2]], map2_fun)
-  return(res)
+
+  # Return empty named list instead of NULL
+  # This ensures consistent JSON encoding
+  # for migration from jsonlite to yyjsonr
+  na_map2_res <- setNames(list(), character(0))
+  purrr::map2(
+    df_embedding[[1]],
+    df_embedding[[2]],
+    map2_fun,
+    na_map2_res
+  )
 }
 
 # for Visium, data are flipped and rotated before SpatialDimPlot.
