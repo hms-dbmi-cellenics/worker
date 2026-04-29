@@ -85,3 +85,49 @@ find_matrix_dir_paths <- function(obj) {
   }
   return(matrix_dir_paths)
 }
+
+# Convert disk-backed IterableMatrix to dgCMatrix
+#
+# Materializes BPCells disk-backed matrices to in-memory dgCMatrix format.
+# This is necessary before saving/downloading a Seurat object since the
+# disk directories won't be available in the downloaded file.
+#
+# @param data Seurat object with potential IterableMatrix layers
+#
+# @return Seurat object with all IterableMatrix converted to dgCMatrix
+#
+# @export
+materialize_bpcells_matrix <- function(data) {
+  for (assay_name in names(data@assays)) {
+    cat("Processing assay:", assay_name, "\n")
+    assay <- data@assays[[assay_name]]
+
+    # Convert matrix slots in v5 assays
+    if (inherits(assay, "Assay5")) {
+      # Handle layers (counts, data, scale.data, etc.)
+      for (layer_name in names(assay@layers)) {
+        layer <- assay@layers[[layer_name]]
+        if (is(layer, "IterableMatrix")) {
+          data@assays[[assay_name]]@layers[[layer_name]] <-
+            as(layer, "dgCMatrix")
+        }
+      }
+    } else {
+      # Handle older Assay format (v3)
+      if (is(assay@counts, "IterableMatrix")) {
+        data@assays[[assay_name]]@counts <-
+          as(assay@counts, "dgCMatrix")
+      }
+      if (is(assay@data, "IterableMatrix")) {
+        data@assays[[assay_name]]@data <-
+          as(assay@data, "dgCMatrix")
+      }
+      if (is(assay@scale.data, "IterableMatrix")) {
+        data@assays[[assay_name]]@scale.data <-
+          as(assay@scale.data, "dgCMatrix")
+      }
+    }
+  }
+
+  return(data)
+}

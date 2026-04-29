@@ -141,7 +141,8 @@ create_app <- function(last_modified, data, fpath) {
 
   encode_decode_middleware <- RestRserve::EncodeDecodeMiddleware$new()
 
-  # the json encoder by default is not precise enough so we set a custom one without precision limit (digits=NA)
+  # the json encoder by default is not precise enough
+  # so we set a custom one without precision limit (digits=NA)
   # yyjsonr is 2-10x faster than jsonlite
   encode_decode_middleware$ContentHandlers$set_encode(
     "application/json",
@@ -149,7 +150,7 @@ create_app <- function(last_modified, data, fpath) {
       res = yyjsonr::write_json_str(
         x,
         opts = list(
-          dataframe = 'columns',
+          dataframe = "columns",
           digits = 4,
           auto_unbox = unbox
         )

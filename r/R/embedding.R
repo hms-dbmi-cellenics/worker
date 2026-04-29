@@ -65,23 +65,18 @@ runEmbedding <- function(req, data) {
     tidyr::complete(cells_id = seq(0, max(meta$cells_id))) |>
     dplyr::select(-"cells_id")
 
-  map2_fun <- function(x, y, na_map2_res) {
+  map2_fun <- function(x, y) {
     if (is.na(x)) {
-      na_map2_res
+      NULL
     } else {
       c(x, y)
     }
   }
 
-  # Return empty named list instead of NULL
-  # This ensures consistent JSON encoding
-  # for migration from jsonlite to yyjsonr
-  na_map2_res <- setNames(list(), character(0))
   purrr::map2(
     df_embedding[[1]],
     df_embedding[[2]],
-    map2_fun,
-    na_map2_res
+    map2_fun
   )
 }
 
@@ -230,10 +225,11 @@ run_sketch_umap <- function(
 #' @export
 assignEmbedding <- function(embedding_data, data, reduction_method = "umap") {
   cells_id <- data@meta.data$cells_id
-  embedding <- do.call(rbind, embedding_data)
 
   # Add 1 to cells_id because it's 0-index and embeddings is not.
-  embedding <- embedding[cells_id + 1, ]
+  embedding_data <- embedding_data[cells_id + 1]
+  embedding <- do.call(rbind, embedding_data)
+
   rownames(embedding) <- colnames(data)
 
   reduction_keys <- list(
