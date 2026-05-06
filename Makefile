@@ -53,9 +53,21 @@ test-py: build ## Executes Python unit tests
 	fi; \
 	docker run $$PLATFORM_FLAG -v ./python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
 test-r: build ## Executes R unit tests
-	@docker run worker-r R -e "testthat::test_local()"
+	@docker run \
+		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
+		worker-r \
+		R -e "testthat::test_local()"
 test-r-file: build ## Tests a specific R test file (usage: make test-r-file FILE=test-expression.R)
-	@docker run worker-r R -e "pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')"
+	@docker run \
+		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
+		worker-r \
+		R -e "pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')"
+snap-accept: build ## Accept updated snaps (usage: make snap-accept)
+	@docker run \
+		--entrypoint /bin/bash \
+		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
+		worker-r \
+		-c "R -e \"testthat::snapshot_accept()\""
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment

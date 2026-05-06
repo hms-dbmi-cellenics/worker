@@ -23,22 +23,35 @@ mock_scdata <- function() {
   pbmc_small@misc$gene_annotations <- gene_annotations
   pbmc_small@misc$color_pool <- mock_color_pool(20)
 
-  pbmc_small <- Seurat::NormalizeData(pbmc_small, normalization.method = "LogNormalize", verbose = FALSE)
+  pbmc_small <- Seurat::NormalizeData(
+    pbmc_small,
+    normalization.method = "LogNormalize",
+    verbose = FALSE
+  )
   pbmc_small <- Seurat::FindVariableFeatures(pbmc_small, verbose = FALSE)
   pbmc_small <- Seurat::ScaleData(pbmc_small, verbose = FALSE)
 
   # scale and PCA
-  pbmc_small <- Seurat::NormalizeData(pbmc_small, normalization.method = "LogNormalize", verbose = FALSE)
+  pbmc_small <- Seurat::NormalizeData(
+    pbmc_small,
+    normalization.method = "LogNormalize",
+    verbose = FALSE
+  )
   pbmc_small <- Seurat::FindVariableFeatures(pbmc_small, verbose = FALSE)
   pbmc_small <- Seurat::ScaleData(pbmc_small, verbose = FALSE)
   pbmc_small <- Seurat::RunPCA(pbmc_small, verbose = FALSE, npcs = 10)
   pbmc_small@misc[["active.reduction"]] <- "pca"
 
   # run UMAP
-  pbmc_small <- suppressWarnings(Seurat::RunUMAP(pbmc_small, dims = 1:10, verbose = FALSE))
+  pbmc_small <- suppressWarnings(
+    Seurat::RunUMAP(pbmc_small, dims = 1:10, verbose = FALSE)
+  )
 
   # add sample metadata
-  pbmc_small@meta.data$samples <- rep("0000-0000-0000-0000-0000", nrow(pbmc_small@meta.data))
+  pbmc_small@meta.data$samples <- rep(
+    "0000-0000-0000-0000-0000",
+    nrow(pbmc_small@meta.data)
+  )
 
   return(pbmc_small)
 }
@@ -52,16 +65,38 @@ mock_cellset_from_python <- function(data) {
       "type" = "cellSets",
       "children" = list(
         list(
-          "key" = "louvain-0", "name" = "Cluster 0", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id) / 3)])
+          "key" = "louvain-0",
+          "name" = "Cluster 0",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#77aadd",
+          "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id)/3)])
         ),
         list(
-          "key" = "louvain-1", "name" = "Cluster 1", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 + 1)):(ceiling(length(data$cells_id) / 3 * 2))])
+          "key" = "louvain-1",
+          "name" = "Cluster 1",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#77aadd",
+          "cellIds" = unname(
+            data$cells_id[
+              (ceiling(length(data$cells_id) / 3 + 1)):
+                (ceiling(length(data$cells_id) / 3 * 2))
+            ]
+          )
         ),
         list(
-          "key" = "louvain-2", "name" = "Cluster 2", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 * 2 + 1)):(length(data$cells_id))])
+          "key" = "louvain-2",
+          "name" = "Cluster 2",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#ee8866",
+          "cellIds" = unname(
+            data$cells_id[
+              (ceiling(length(data$cells_id) / 3 * 2 + 1)):
+                (length(data$cells_id))
+            ]
+          )
         )
       )
     ),
@@ -72,12 +107,20 @@ mock_cellset_from_python <- function(data) {
       "type" = "cellSets",
       "children" = list(
         list(
-          "key" = "scratchpad-0", "name" = "Custom 0", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(sample(data$cells_id, 5))
+          "key" = "scratchpad-0",
+          "name" = "Custom 0",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#77aadd",
+          "cellIds" = unname(sample(data$cells_id, 5))
         ),
         list(
-          "key" = "scratchpad-1", "name" = "Custom 1", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(sample(data$cells_id, 10))
+          "key" = "scratchpad-1",
+          "name" = "Custom 1",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#ee8866",
+          "cellIds" = unname(sample(data$cells_id, 10))
         )
       )
     ),
@@ -88,12 +131,20 @@ mock_cellset_from_python <- function(data) {
       "type" = "metadataCategorical",
       "children" = list(
         list(
-          "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
-          "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+          "key" = "a636ec18-4ba3-475b-989d-0a5b2",
+          "name" = "P13 Acute MISC",
+          "color" = "#77aadd",
+          "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
         ),
         list(
-          "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
-          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+          "key" = "eec701f2-5762-4b4f-953d-6aba8",
+          "name" = "P13 Convalescent MISC",
+          "color" = "#ee8866",
+          "cellIds" = unname(
+            data$cells_id[
+              (length(data$cells_id) / 2 + 1):(length(data$cells_id))
+            ]
+          )
         )
       )
     ),
@@ -104,12 +155,20 @@ mock_cellset_from_python <- function(data) {
       "type" = "metadataCategorical",
       "children" = list(
         list(
-          "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
+          "key" = "MISC_status-Acute",
+          "name" = "Acute",
+          "color" = "#77aadd",
           "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
         ),
         list(
-          "key" = "MISC_status-Convalescent", "name" = "Convalescent",
-          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+          "key" = "MISC_status-Convalescent",
+          "name" = "Convalescent",
+          "color" = "#ee8866",
+          "cellIds" = unname(
+            data$cells_id[
+              (length(data$cells_id) / 2 + 1):(length(data$cells_id))
+            ]
+          )
         )
       )
     )
