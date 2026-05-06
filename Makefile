@@ -68,6 +68,12 @@ snap-accept: build ## Accept updated snaps (usage: make snap-accept)
 		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
 		worker-r \
 		-c "R -e \"testthat::snapshot_accept()\""
+add-package: build ## Adds a new package (usage: make add-package PACKAGE=package_name)
+	@docker run \
+		--entrypoint /bin/bash \
+		-v $(PWD)/r/renv.lock:/src/worker/renv.lock \
+		worker-r \
+		-c "R -e \"renv::record('$(PACKAGE)')\""
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment

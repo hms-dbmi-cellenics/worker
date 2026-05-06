@@ -51,7 +51,6 @@ COPY setup/check_package_licenses.R .
 RUN Rscript check_package_licenses.R
 
 RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
-RUN R -q -e "install.packages('yyjsonr')"
 
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
@@ -104,6 +103,6 @@ RUN pip install -U jedi PyYAML watchdog[watchmedo]
 # add R package and runner
 ADD R ./R
 ADD tests ./tests
-COPY DESCRIPTION NAMESPACE work.R ./
+COPY DESCRIPTION NAMESPACE work.R renv.lock ./
 
 CMD ["Rscript", "work.R"]

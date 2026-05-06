@@ -3962,6 +3962,11 @@
       "Repository": "CRAN",
       "Hash": "29240487a071f535f5e5d5a323b7afbd"
     },
+    "yyjsonr": {
+      "Package": "yyjsonr",
+      "Version": "0.1.20",
+      "Source": "Repository"
+    },
     "zip": {
       "Package": "zip",
       "Version": "2.3.1",
