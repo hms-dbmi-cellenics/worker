@@ -12,20 +12,21 @@ mock_req <- function() {
 }
 
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- c(0:30, 40:70, 100:117)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = row.names(pbmc_small),
-    name = row.names(pbmc_small),
-    row.names = row.names(pbmc_small)
-  )
-  return(pbmc_small)
+mock_scdata_marker_heatmap <- function(use_bpcells = FALSE) {
+  scdata <- mock_scdata(use_bpcells = use_bpcells)
+  scdata$cells_id <- c(0:30, 40:70, 100:117)
+  return(scdata)
 }
 
+test_that("Marker heatmap works with bpcells", {
+  data <- mock_scdata_marker_heatmap(use_bpcells = TRUE)
+  req <- mock_req()
+
+  expect_no_error(runMarkerHeatmap(req, data))
+})
 
 test_that("Marker heatmap returns orderedGeneNames", {
-  data <- mock_scdata()
+  data <- mock_scdata_marker_heatmap()
   req <- mock_req()
 
   res <- runMarkerHeatmap(req, data)
@@ -45,7 +46,7 @@ test_that("Marker heatmap returns orderedGeneNames", {
 
 
 test_that("Marker Heatmap nFeatures works appropriately", {
-  data <- mock_scdata()
+  data <- mock_scdata_marker_heatmap()
   req <- mock_req()
   req$body$nGenes <- 2
 
@@ -61,7 +62,7 @@ test_that("Marker Heatmap nFeatures works appropriately", {
 
 
 test_that("Only one group throws error", {
-  data <- mock_scdata()
+  data <- mock_scdata_marker_heatmap()
   req <- mock_req()
   req$body$nGenes <- 5
   req$body$cellSets$children <- req$body$cellSets$children[1]

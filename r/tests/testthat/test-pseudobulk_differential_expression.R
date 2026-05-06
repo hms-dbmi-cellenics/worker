@@ -6,7 +6,6 @@ mock_pbulk <- function() {
     as.is = TRUE
   )
 
-
   pbmc_raw <- Matrix::Matrix(as.matrix(pbmc_raw), sparse = TRUE)
   row.names(pbmc_raw) <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
 

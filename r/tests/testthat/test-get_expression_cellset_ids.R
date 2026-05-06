@@ -1,26 +1,3 @@
-mock_scdata <- function() {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-
-  gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_raw))),
-    name = row.names(pbmc_raw),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_raw)))
-  )
-
-  row.names(pbmc_raw) <- gene_annotations$input
-
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  pbmc_small <- Seurat::CreateSeuratObject(counts = pbmc_raw, data = pbmc_raw)
-
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- gene_annotations
-  pbmc_small@misc$color_pool <- list("#e377c2", "#8c564b", "#d62728", "#2ca02c", "#ff7f0e")
-  return(pbmc_small)
-}
-
 test_that("getExpressionCellSetIDs with a single expression filter returns correct cell ids", {
   data <- mock_scdata()
   req <- list(list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5))
@@ -29,6 +6,18 @@ test_that("getExpressionCellSetIDs with a single expression filter returns corre
   annot <- data@misc$gene_annotations
   enid <- annot$input[annot$name == req[[1]]$geneName]
   expected <- data$cells_id[data[["RNA"]]$data[enid, ] > 0.5]
+  expect_equal(res$keep_ids, expected)
+})
+
+test_that("getExpressionCellSetIDs runs with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- list(list(geneName = "MS4A1", comparisonType = "greaterThan", thresholdValue = 0.5))
+  res <- getExpressionCellSetIDs(req, data)
+
+  annot <- data@misc$gene_annotations
+  enid <- annot$input[annot$name == req[[1]]$geneName]
+  data_mat <- as(data[["RNA"]]$data, "dgCMatrix")
+  expected <- data$cells_id[data_mat[enid, ] > 0.5]
   expect_equal(res$keep_ids, expected)
 })
 

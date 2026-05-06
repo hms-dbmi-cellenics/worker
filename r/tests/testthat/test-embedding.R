@@ -1,4 +1,4 @@
-library('mockery')
+library("mockery")
 
 mock_req <- function() {
   req <- list(
@@ -10,20 +10,18 @@ mock_req <- function() {
   )
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
+mock_sketch <- function(scdata) {
+  set.seed(123)
+  sampled_cells <- sample(Seurat::Cells(scdata), size = 100)
+  sketch_assay <- subset(
+    scdata[[Seurat::DefaultAssay(scdata)]],
+    cells = sampled_cells
   )
-
-  pbmc_small <- Seurat::RunPCA(pbmc_small, npcs = 5)
-  pbmc_small$samples <- rep("Sample1", 80)
-  pbmc_small@misc$numPCs <- 5
-  return(pbmc_small)
+  scdata[["sketch"]] <- sketch_assay
+  Seurat::DefaultAssay(scdata) <- "sketch"
+  return(scdata)
 }
+
 
 test_that("TSNE embedding works", {
 
@@ -68,11 +66,11 @@ test_that("UMAP embedding works", {
     )
   }
 
-  stub(runEmbedding, 'getEmbedding', mock_RunUMAP)
+  stub(runEmbedding, "getEmbedding", mock_RunUMAP)
 
   reduction_method <- "umap"
 
-  data <- suppressWarnings(mock_scdata())
+  data <- mock_scdata(with_umap = TRUE)
   req <- list(
     body = list(
       type = reduction_method,
@@ -89,11 +87,41 @@ test_that("UMAP embedding works", {
   expect_equal(length(res), length(expected_res$PC_1))
 })
 
+test_that("UMAP embedding works with bpcells", {
+
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- list(
+    body = list(
+      type = "umap",
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
+    )
+  )
+
+  expect_no_error(runEmbedding(req, data))
+})
+
+test_that("Projection onto sketched embedding works", {
+
+  data <- mock_scdata(use_bpcells = TRUE, nreps = 10)
+  data <- mock_sketch(data)  
+
+  req <- list(
+    body = list(
+      type = "umap",
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
+    )
+  )
+
+  expect_no_error(runEmbedding(req, data))
+})
+
 test_that("RunTSNE uses the correct params", {
 
   mock_RunTSNE <- mock(TRUE)
 
-  stub(getEmbedding, 'Seurat::RunTSNE', mock_RunTSNE)
+  stub(getEmbedding, "Seurat::RunTSNE", mock_RunTSNE)
 
   data <- suppressWarnings(mock_scdata())
   config <- list(perplexity = 10, learningRate = 100)
@@ -107,11 +135,16 @@ test_that("RunTSNE uses the correct params", {
   expect_equal(length(mock_RunTSNE), 1)
   args <- mock_args(mock_RunTSNE)
 
-  expect_equal(args[[1]], list(data,
-                               reduction = reduction_type,
-                               dims = 1:num_pcs,
-                               perplexity = config$perplexity,
-                               learning.rate = config$learningRate))
+  expect_equal(
+    args[[1]],
+    list(
+      data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      perplexity = config$perplexity,
+      learning.rate = config$learningRate
+    )
+  )
 
 })
 
@@ -119,7 +152,7 @@ test_that("RunUMAP uses umap-learn with seed.use", {
 
   mock_RunUMAP <- mock(TRUE)
 
-  stub(getEmbedding, 'Seurat::RunUMAP', mock_RunUMAP)
+  stub(getEmbedding, "Seurat::RunUMAP", mock_RunUMAP)
 
   data <- suppressWarnings(mock_scdata())
   config <- list(minimumDistance = 0.1, distanceMetric = "cosine")
@@ -133,14 +166,19 @@ test_that("RunUMAP uses umap-learn with seed.use", {
   expect_equal(length(mock_RunUMAP), 1)
   args <- mock_args(mock_RunUMAP)
 
-  expect_equal(args[[1]], list(data,
-   reduction = reduction_type,
-   dims = 1:num_pcs,
-   verbose = FALSE,
-   min.dist = config$minimumDistance,
-   metric = config$distanceMetric,
-   umap.method = "umap-learn",
-   seed.use = ULTIMATE_SEED))
+  expect_equal(
+    args[[1]], 
+    list(
+      data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      verbose = FALSE,
+      min.dist = config$minimumDistance,
+      metric = config$distanceMetric,
+      umap.method = "umap-learn",
+      seed.use = ULTIMATE_SEED
+    )
+  )
 
 })
 
@@ -182,7 +220,10 @@ test_that("assignEmbedding assigns embedding correctly for UMAP", {
   resulting_embedding <- new_embedding[barcode, ]
 
   # Add 1 to test_cell_id because cell_id 0 corresponds to embedding [[1]]
-  expect_equal(unname(resulting_embedding), mock_embedding[[test_cell_id + 1]])
+  expect_equal(
+    unname(resulting_embedding),
+    mock_embedding[[test_cell_id + 1]]
+  )
 })
 
 

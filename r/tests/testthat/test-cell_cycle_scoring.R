@@ -16,12 +16,8 @@ stubbed_cellCycleScoring <- function(req, scdata) {
   suppressWarnings(cellCycleScoring(req, scdata))
 }
 
-mock_color_pool <- function(n) {
-  paste0("color_", 1:n)
-}
 
-mock_scdata <- function(phase = "S",
-                        add_cycle_genes = TRUE) {
+mock_scdata_cell_cycle_scoring <- function(phase = "S", add_cycle_genes = TRUE) {
   enids <- paste0("ENSG", 1:3000)
   cell_names <- paste0("cell_", 1:500)
 
@@ -85,7 +81,7 @@ mock_req <- function(data) {
 }
 
 test_that("Cell Cycle Scoring returns expected and formatted result", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_cell_cycle_scoring()
   req <- mock_req()
 
   result <- stubbed_cellCycleScoring(req, scdata)
@@ -100,7 +96,7 @@ test_that("Cell Cycle Scoring returns expected and formatted result", {
 })
 
 test_that("run_cell_cycle_scoring returns a data frame with correct columns", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_cell_cycle_scoring()
 
   result <- suppressWarnings(run_cell_cycle_scoring(scdata))
 
@@ -111,7 +107,7 @@ test_that("run_cell_cycle_scoring returns a data frame with correct columns", {
 })
 
 test_that("run_cell_cycle_scoring properly classifies S cells", {
-  scdata <- mock_scdata("S")
+  scdata <- mock_scdata_cell_cycle_scoring("S")
 
   result <- suppressWarnings(run_cell_cycle_scoring(scdata))
 
@@ -121,7 +117,7 @@ test_that("run_cell_cycle_scoring properly classifies S cells", {
 })
 
 test_that("run_cell_cycle_scoring properly classifies G2M cells", {
-  scdata <- mock_scdata("G2M")
+  scdata <- mock_scdata_cell_cycle_scoring("G2M")
 
   result <- suppressWarnings(run_cell_cycle_scoring(scdata))
 
@@ -131,7 +127,7 @@ test_that("run_cell_cycle_scoring properly classifies G2M cells", {
 })
 
 test_that("run_cell_cycle_scoring returns 'Undetermined' cellset when no genes are detected.", {
-  scdata <- mock_scdata(phase = "S", add_cycle_genes = FALSE)
+  scdata <- mock_scdata_cell_cycle_scoring(phase = "S", add_cycle_genes = FALSE)
 
   result <- suppressWarnings(run_cell_cycle_scoring(scdata))
 

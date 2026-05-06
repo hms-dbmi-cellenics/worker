@@ -1,4 +1,4 @@
-library('httptest')
+library("httptest")
 
 mock_scratchpad_cellset_object <- function(n) {
   # ensure cellIds is an int vector. same as when created by getExpressionCellSet
@@ -103,42 +103,11 @@ mock_cellset_from_python <- function(data) {
 }
 
 
-mock_scdata <- function() {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-  enids <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
-  gene_annotations <- data.frame(
-    input = enids,
-    name = row.names(pbmc_raw),
-    original_name = row.names(pbmc_raw),
-    row.names = enids
-  )
-
-  row.names(pbmc_raw) <- enids
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
-
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- gene_annotations
-
-  pbmc_small <- Seurat::NormalizeData(pbmc_small, normalization.method = "LogNormalize", verbose = FALSE)
-  pbmc_small <- Seurat::FindVariableFeatures(pbmc_small, verbose = FALSE)
-  pbmc_small <- Seurat::ScaleData(pbmc_small, verbose = FALSE)
-
-  pbmc_small@misc$color_pool <- mock_color_pool(500)
-  return(pbmc_small)
-}
-
 with_fake_http(test_that("sendCellSetToApi sends patch request", {
   scr_cellset_object <- mock_scratchpad_cellset_object(5)
   expect_PATCH(sendCellsetToApi(scr_cellset_object, "api_url", "experiment_id", "cell_set_key", "auth"))
 }))
 
-mock_color_pool <- function(n) {
-  paste0("color_", 1:n)
-}
 
 with_fake_http(test_that(
   "sendCellSetToApi sends the cellIds as an array, when there are >1 cells",

@@ -13,25 +13,6 @@ mock_gene_results <- function() {
   return(result)
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = row.names(pbmc_small),
-    name = row.names(pbmc_small),
-    row.names = row.names(pbmc_small)
-  )
-
-  # change a few names, to ease testing getMarkerNames
-
-  ngenes <- nrow(pbmc_small)
-  sampled_genes <- seq(1, ngenes, by = 5)
-  new_names <- paste0("name_", sampled_genes)
-  pbmc_small@misc$gene_annotations$name[sampled_genes] <- new_names
-
-  return(pbmc_small)
-}
-
 mock_cellSets <- function() {
   cellSets <- list(
     children = list(
@@ -292,8 +273,8 @@ test_that("getMarkerNames correct gene names", {
 
   res <- getMarkerNames(data, all_markers)
 
-  expected_names <- data@misc$gene_annotations %>%
-    dplyr::filter(input %in% all_markers$feature) %>%
+  expected_names <- data@misc$gene_annotations |>
+    dplyr::filter(input %in% all_markers$feature) |>
     dplyr::pull(name)
 
   # getTopMarkerGenes orders them by group
@@ -302,6 +283,13 @@ test_that("getMarkerNames correct gene names", {
 
 test_that("getMarkerNames returns input if there's no gene name", {
   data <- mock_scdata()
+  ngenes <- nrow(data)
+  sampled_genes <- seq(1, ngenes, by = 5)
+  new_names <- paste0("name_", sampled_genes)
+  data@misc$gene_annotations$name[sampled_genes] <- new_names
+
+
+
   cellSets <- mock_cellSets()$children
   nFeatures <- 42
   cell_sets_ids <- lapply(cellSets, function(x) x[["cellIds"]])
@@ -315,13 +303,13 @@ test_that("getMarkerNames returns input if there's no gene name", {
 
   res <- getMarkerNames(data, all_markers)
 
-  expected_noname_genes <- data@misc$gene_annotations %>%
+  expected_noname_genes <- data@misc$gene_annotations |>
     dplyr::filter(!grepl("^name_", name))
 
-  named_genes <- res %>%
+  named_genes <- res |>
     dplyr::filter(grepl("^name_", name))
 
-  noname_genes <- res %>%
+  noname_genes <- res |>
     dplyr::filter(!grepl("^name_", name))
 
   expect_true(all(noname_genes$input %in% expected_noname_genes$input))
@@ -334,7 +322,8 @@ test_that("getMarkerNames returns input if there's no gene name", {
 # not sure how to test this
 test_that("getSNNigraph returns an igraph object with correct dimensions", {
   data <- mock_scdata()
-  g <- getSNNiGraph(data)
+  active_reduction <- data@misc[["active.reduction"]]
+  g <- getSNNiGraph(data, active_reduction)
 
   expect_s3_class(g, "igraph")
 })

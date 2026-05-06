@@ -12,26 +12,15 @@ mock_req <- function(orderBy = "dispersions", orderDirection = "DESC", offset = 
   )
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
-  )
+test_that("List of genes works with bpcells", {
+  data <- mock_scdata(use_enids = FALSE, use_bpcells = TRUE)
+  req <- mock_req()
 
-  vars <- Seurat::HVFInfo(object = pbmc_small, assay = "RNA", method = "vst")
-  annotations <- pbmc_small@misc[["gene_annotations"]]
-  vars$SYMBOL <- rownames(vars)
-  vars$ENSEMBL <- annotations$input[match(rownames(vars), annotations$name)]
-  pbmc_small@misc[["gene_dispersion"]] <- vars
-
-  return(pbmc_small)
-}
+  expect_no_error(getList(req, data))
+})
 
 test_that("List of genes generates the expected return format", {
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req()
 
   res <- getList(req, data)
@@ -51,7 +40,7 @@ test_that("List of genes generates the expected return format", {
 })
 
 test_that("Order direction works properly", {
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req(orderBy = "dispersions", orderDirection = "DESC", offset = 0, limit = 20)
 
   res <- getList(req, data)
@@ -68,7 +57,7 @@ test_that("Order direction works properly", {
 })
 
 test_that("Order by works properly", {
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req(orderBy = "gene_names", orderDirection = "DESC", offset = 0, limit = 20)
 
   res <- getList(req, data)
@@ -85,7 +74,7 @@ test_that("Order by works properly", {
 })
 
 test_that("Pagination works", {
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req(orderBy = "gene_names", orderDirection = "DESC", offset = 20, limit = 40)
 
   res <- getList(req, data)
@@ -105,7 +94,7 @@ test_that("Pagination works", {
 
 test_that("Start with pattern is applied", {
   pat <- "^GZ"
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req(
     orderBy = "gene_names",
     orderDirection = "DESC",
@@ -125,7 +114,7 @@ test_that("Start with pattern is applied", {
 
 test_that("Ends with pattern is applied", {
   pat <- "1$"
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req(
     orderBy = "gene_names",
     orderDirection = "DESC",
@@ -146,7 +135,7 @@ test_that("Ends with pattern is applied", {
 
 test_that("Contains pattern is applied", {
   pat <- "CR"
-  data <- mock_scdata()
+  data <- mock_scdata(use_enids = FALSE)
   req <- mock_req(
     orderBy = "gene_names",
     orderDirection = "DESC",

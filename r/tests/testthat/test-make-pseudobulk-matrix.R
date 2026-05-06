@@ -1,16 +1,8 @@
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  scdata <- pbmc_small
+mock_scdata_pseudobulk <- function(use_bpcells = FALSE) {
+  scdata <- mock_scdata(use_bpcells = use_bpcells)
 
   scdata$samples <-
     rep(c("s1", "s2", "s3", "s4"), each = nrow(scdata@meta.data) / 4)
-
-  # add annotations
-  scdata@misc$gene_annotations <- data.frame(
-    input = row.names(scdata),
-    name = paste0("ENS", seq_len(nrow(scdata))),
-    row.names = row.names(scdata)
-  )
 
   # add custom sets
   sample <- scdata$samples
@@ -29,8 +21,13 @@ mock_scdata <- function() {
 }
 
 
+test_that("makePseudobulkMatrix works with bpcells", {
+  scdata <- mock_scdata_pseudobulk(use_bpcells = TRUE)
+  expect_no_error(makePseudobulkMatrix(scdata))
+})
+
 test_that("makePseudobulkMatrix returns object of correct type and dims", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_pseudobulk()
   res <- makePseudobulkMatrix(scdata)
 
   expected_rows <- nrow(scdata)
@@ -44,7 +41,7 @@ test_that("makePseudobulkMatrix returns object of correct type and dims", {
 
 
 test_that("makePseudobulkMatrix returns correct gene annotations", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_pseudobulk()
   res <- makePseudobulkMatrix(scdata)
 
   expected_gene_annot <- scdata@misc$gene_annotations
@@ -54,7 +51,7 @@ test_that("makePseudobulkMatrix returns correct gene annotations", {
 
 
 test_that("makePseudobulkMatrix returns correct custom and samples slots", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_pseudobulk()
   res <- makePseudobulkMatrix(scdata)
 
   expected_metadata <- scdata@meta.data %>%
@@ -68,7 +65,7 @@ test_that("makePseudobulkMatrix returns correct custom and samples slots", {
 
 
 test_that("makePseudobulkMatrix correctly aggregates counts", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_pseudobulk()
 
   for (sample in unique(scdata$samples)) {
     sample_cells <- scdata@meta.data %>%
@@ -87,7 +84,7 @@ test_that("makePseudobulkMatrix correctly aggregates counts", {
 })
 
 test_that("makePseudobulkMatrix removes samples with fewer than 10 cells", {
-  scdata <- mock_scdata()
+  scdata <- mock_scdata_pseudobulk()
 
   # doesn't filter samples with 10 or more cells
   res <- makePseudobulkMatrix(scdata)
