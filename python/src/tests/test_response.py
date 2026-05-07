@@ -121,13 +121,15 @@ class TestResponse:
 
         resp = Response(self.request, result)
 
-        # should not raise an error
-        compressed_body, compressed_bytes = resp._construct_data_for_upload()
+        # mock the Emitter to prevent Redis connection
+        with mock.patch("worker.response.Emitter"):
+            # should not raise an error
+            compressed_body, compressed_bytes = resp._construct_data_for_upload()
 
-        # verify compression was performed
-        assert compressed_body is not None
-        assert compressed_bytes is not None
-        assert len(compressed_bytes) > 0
+            # verify compression was performed
+            assert compressed_body is not None
+            assert compressed_bytes is not None
+            assert len(compressed_bytes) > 0
 
     @mock.patch("boto3.client")
     def test_construct_data_for_upload_prefers_bytes_over_string(
@@ -155,13 +157,15 @@ class TestResponse:
                 f.write(data if isinstance(data, bytes) else data.encode())
             return buf
 
-        with mock.patch("gzip.GzipFile"):
-            compressed_body, compressed_bytes = (
-                resp._construct_data_for_upload()
-            )
+        # mock the Emitter to prevent Redis connection
+        with mock.patch("worker.response.Emitter"):
+            with mock.patch("gzip.GzipFile"):
+                compressed_body, compressed_bytes = (
+                    resp._construct_data_for_upload()
+                )
 
-        # verify bytes data was used (not string)
-        assert compressed_body is not None
+            # verify bytes data was used (not string)
+            assert compressed_body is not None
 
     @mock.patch("boto3.client")
     def test_construct_data_for_upload_handles_string_data(self, mocked_client):
@@ -171,12 +175,14 @@ class TestResponse:
 
         resp = Response(self.request, result)
 
-        compressed_body, compressed_bytes = resp._construct_data_for_upload()
+        # mock the Emitter to prevent Redis connection
+        with mock.patch("worker.response.Emitter"):
+            compressed_body, compressed_bytes = resp._construct_data_for_upload()
 
-        # verify compression was performed
-        assert compressed_body is not None
-        assert compressed_bytes is not None
-        assert len(compressed_bytes) > 0
+            # verify compression was performed
+            assert compressed_body is not None
+            assert compressed_bytes is not None
+            assert len(compressed_bytes) > 0
 
     @mock.patch("boto3.client")
     def test_construct_data_for_upload_logs_compression_stats(
@@ -191,11 +197,13 @@ class TestResponse:
         # mock the logger to verify it was called
         mock_logger = mocker.patch("worker.response.info")
 
-        compressed_body, compressed_bytes = resp._construct_data_for_upload()
+        # mock the Emitter to prevent Redis connection
+        with mock.patch("worker.response.Emitter"):
+            compressed_body, compressed_bytes = resp._construct_data_for_upload()
 
-        # verify that compression statistics were logged
-        # should have at least one call about compression
-        assert mock_logger.call_count >= 2
-        # find the call with compression size info
-        log_calls = [str(call) for call in mock_logger.call_args_list]
-        assert any("Compressed from" in str(call) for call in log_calls)
+            # verify that compression statistics were logged
+            # should have at least one call about compression
+            assert mock_logger.call_count >= 2
+            # find the call with compression size info
+            log_calls = [str(call) for call in mock_logger.call_args_list]
+            assert any("Compressed from" in str(call) for call in log_calls)
