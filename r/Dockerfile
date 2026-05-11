@@ -31,12 +31,13 @@ RUN Rscript restore_fast.R
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
 
-# deactivate so that above .libPaths used
-RUN R -q -e "renv::deactivate()"
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
+
+# deactivate so that above .libPaths used
+RUN R -q -e "renv::deactivate()"
+RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -49,8 +50,6 @@ RUN Rscript create_ghost_packages.R
 # check for any potentially problematic licenses
 COPY setup/check_package_licenses.R .
 RUN Rscript check_package_licenses.R
-
-RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
 
 # ---------------------------------------------------
 # COMMON MINIMAL BUILD
