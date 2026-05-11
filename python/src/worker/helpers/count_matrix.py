@@ -89,7 +89,6 @@ class CountMatrix:
             )
 
             send_status_update(io, self.config.EXPERIMENT_ID, LOAD_EXPERIMENT)
-
             f.seek(0)
 
         if was_enabled:
@@ -125,3 +124,5 @@ class CountMatrix:
 
         if True in synced.values():
             self.check_if_received()
+
+        self.last_fetch = datetime.datetime.now(tz=timezone.utc)

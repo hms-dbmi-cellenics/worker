@@ -119,7 +119,7 @@ run_post <- function(req, post_fun, data) {
 create_app <- function(last_modified, data, fpath) {
   last_modified_mw <- RestRserve::Middleware$new(
     process_request = function(request, response) {
-      if (!file.info(fpath)$mtime == last_modified) {
+      if (file.info(fpath)$mtime != last_modified) {
         RestRserve::raise(
           RestRserve::HTTPError$conflict(
             body = RJSONIO::toJSON(
@@ -147,11 +147,11 @@ create_app <- function(last_modified, data, fpath) {
   encode_decode_middleware$ContentHandlers$set_encode(
     "application/json",
     function(x, unbox = TRUE)  {
-      res = yyjsonr::write_json_str(
+      yyjsonr::write_json_str(
         x,
         opts = list(
           dataframe = "columns",
-          digits = 4,
+          digits_signif = 4,
           auto_unbox = unbox
         )
       )

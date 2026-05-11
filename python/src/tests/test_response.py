@@ -144,7 +144,6 @@ class TestResponse:
         resp = Response(self.request, result)
 
         # mock the compression to track what data is compressed
-        original_compress = None
         compressed_data = None
 
         def mock_compress(data):
@@ -159,13 +158,13 @@ class TestResponse:
 
         # mock the Emitter to prevent Redis connection
         with mock.patch("worker.response.Emitter"):
-            with mock.patch("gzip.GzipFile"):
+            with mock.patch("gzip.compress", side_effect=mock_compress):
                 compressed_body, compressed_bytes = (
                     resp._construct_data_for_upload()
                 )
 
             # verify bytes data was used (not string)
-            assert compressed_body is not None
+            assert compressed_data == bytes_data
 
     @mock.patch("boto3.client")
     def test_construct_data_for_upload_handles_string_data(self, mocked_client):
