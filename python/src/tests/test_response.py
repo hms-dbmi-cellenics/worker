@@ -149,16 +149,17 @@ class TestResponse:
         def mock_compress(data):
             nonlocal compressed_data
             compressed_data = data
-            import io
-            import gzip
-            buf = io.BytesIO()
-            with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-                f.write(data if isinstance(data, bytes) else data.encode())
-            return buf
+            return data  # return compressed data for test
 
         # mock the Emitter to prevent Redis connection
         with mock.patch("worker.response.Emitter"):
-            with mock.patch("gzip.compress", side_effect=mock_compress):
+            with mock.patch(
+                "worker.response.zstd.ZstdCompressor"
+            ) as mock_compressor:
+                mock_instance = mock.Mock()
+                mock_instance.compress = mock_compress
+                mock_compressor.return_value = mock_instance
+
                 compressed_body, compressed_bytes = (
                     resp._construct_data_for_upload()
                 )
