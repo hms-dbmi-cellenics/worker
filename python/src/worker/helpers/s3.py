@@ -1,5 +1,5 @@
 import gzip
-import orjson
+import json
 import os
 from logging import info
 from pathlib import Path
@@ -40,7 +40,7 @@ def get_cell_sets(experiment_id):
         f.seek(0)
 
         cell_sets_string = f.read()
-        cell_sets = orjson.loads(cell_sets_string)
+        cell_sets = json.loads(cell_sets_string)
 
         return cell_sets["cellSets"]
 
@@ -83,7 +83,7 @@ def get_embedding(etag, format_for_r):
             info("Failed to decompress with zstd, trying gzip")
             embedding_string = gzip.decompress(compressed_data)
         
-        embedding = orjson.loads(embedding_string)
+        embedding = json.loads(embedding_string)
 
         if(format_for_r):
           # NULL values are deleted in R objects whereas NAs are an indicator of a missing value

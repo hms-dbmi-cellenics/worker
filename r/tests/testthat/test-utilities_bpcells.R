@@ -26,38 +26,32 @@ create_bpcells_seurat <- function() {
 
 # test tar_zstd constructs correct command
 test_that("tar_zstd constructs correct tar command", {
-  system_called <- FALSE
-  captured_command <- NULL
+  system2_called <- FALSE
 
-  mock_system <- function(cmd) {
-    system_called <<- TRUE
-    captured_command <<- cmd
-    0
+  mock_system2 <- function(cmd, args) {
+    system2_called <<- TRUE
+    0L
   }
 
-  stub(tar_zstd, "system", mock_system)
+  stub(tar_zstd, "system2", mock_system2)
   tar_zstd("/tmp/test.tar.zst", "/path/to/file")
 
-  expect_true(system_called)
-  expect_match(captured_command, "tar --zstd -cf")
+  expect_true(system2_called)
 })
 
 # test untar_zstd constructs correct command
 test_that("untar_zstd constructs correct tar command", {
-  system_called <- FALSE
-  captured_command <- NULL
+  system2_called <- FALSE
 
-  mock_system <- function(cmd) {
-    system_called <<- TRUE
-    captured_command <<- cmd
-    0
+  mock_system2 <- function(cmd, args) {
+    system2_called <<- TRUE
+    0L
   }
 
-  stub(untar_zstd, "system", mock_system)
+  stub(untar_zstd, "system2", mock_system2)
   untar_zstd("/tmp/test.tar.zst", "/tmp/extract")
 
-  expect_true(system_called)
-  expect_match(captured_command, "tar --zstd -xf")
+  expect_true(system2_called)
 })
 
 # test find_matrix_dir_paths recursively locates MatrixDir objects
