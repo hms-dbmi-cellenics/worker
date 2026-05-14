@@ -1,7 +1,16 @@
 load_bpcells <- function(data, data_dir) {
   # untar tarfiles
-  tarfile <- list.files(data_dir, pattern = 'matrix_dir[.]tar[.]zst', full.names = TRUE)
+  tarfile <- list.files(
+    data_dir,
+    pattern = "matrix_dir[.]tar[.]zst",
+    full.names = TRUE
+  )
+
   if (!dir.exists(file.path(data_dir, "matrix_dir"))) {
+    # need to throw error otherwise worker will report success
+    # but the data won't be usable since the matrix_dir won't be extracted
+    if (!length(tarfile)) stop("matrix_dir.tar.zst not found")
+
     message("Extracting BPCells matrix tarfile...")
     untar_zstd(tarfile, exdir = data_dir)
   }

@@ -10,19 +10,6 @@ mock_req <- function() {
   )
 }
 
-mock_sketch <- function(scdata) {
-  set.seed(123)
-  sampled_cells <- sample(Seurat::Cells(scdata), size = 100)
-  sketch_assay <- subset(
-    scdata[[Seurat::DefaultAssay(scdata)]],
-    cells = sampled_cells
-  )
-  scdata[["sketch"]] <- sketch_assay
-  Seurat::DefaultAssay(scdata) <- "sketch"
-  return(scdata)
-}
-
-
 test_that("TSNE embedding works", {
 
   mock_RunTSNE <- function(config, method, reduction_type, num_pcs, data) {
@@ -104,8 +91,7 @@ test_that("UMAP embedding works with bpcells", {
 test_that("Projection onto sketched embedding works", {
 
   data <- mock_scdata(use_bpcells = TRUE, nreps = 10)
-  data <- mock_sketch(data)  
-
+  data <- suppressWarnings(mock_sketch(data))
   req <- list(
     body = list(
       type = "umap",

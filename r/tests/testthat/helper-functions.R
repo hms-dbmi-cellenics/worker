@@ -9,7 +9,7 @@ mock_scdata <- function(
   use_enids = TRUE,
   nreps = 1
 ) {
-  
+
   if (is.null(counts)) {
     counts <- read.table(
       file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
@@ -54,7 +54,11 @@ mock_scdata <- function(
   scdata@misc$gene_annotations <- gene_annotations
   scdata@misc$color_pool <- mock_color_pool(20)
 
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
+  scdata <- Seurat::NormalizeData(
+    scdata,
+    normalization.method = "LogNormalize",
+    verbose = FALSE
+  )
   scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
   scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
 
@@ -63,9 +67,9 @@ mock_scdata <- function(
   scdata@misc[["numPCs"]] <- 10
 
   if (with_umap) {
-      scdata <- suppressWarnings(
-          Seurat::RunUMAP(scdata, dims = 1:10, verbose = FALSE)
-      )
+    scdata <- suppressWarnings(
+      Seurat::RunUMAP(scdata, dims = 1:10, verbose = FALSE)
+    )
   }
 
   # add gene dispersions
@@ -83,5 +87,17 @@ mock_scdata <- function(
   scdata[["percent.mt"]] <- rnorm(ncol(scdata), 5, 1)
   scdata[["doublet_scores"]] <- rnorm(ncol(scdata), 0.5, 0.1)
 
+  return(scdata)
+}
+
+mock_sketch <- function(scdata, ncells = 100) {
+  set.seed(123)
+  sampled_cells <- sample(Seurat::Cells(scdata), size = ncells)
+  sketch_assay <- subset(
+    scdata[[Seurat::DefaultAssay(scdata)]],
+    cells = sampled_cells
+  )
+  scdata[["sketch"]] <- sketch_assay
+  Seurat::DefaultAssay(scdata) <- "sketch"
   return(scdata)
 }

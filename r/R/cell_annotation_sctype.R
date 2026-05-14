@@ -25,10 +25,11 @@ ScTypeAnnotate <- function(req, data) {
   species <- req$body$species
   tissue <- req$body$tissue
 
-
-
+  # check "integrated" first for legacy reasons
   if ("integrated" %in% names(data@assays)) {
     active_assay <- "integrated"
+  } else if ("sketch" %in% names(data@assays)) {
+    active_assay <- "sketch"
   } else if ("SCT" %in% names(data@assays)) {
     active_assay <- "SCT"
   } else {
@@ -41,7 +42,7 @@ ScTypeAnnotate <- function(req, data) {
   parsed_cellsets <- parse_cellsets(children_cell_sets)
 
   data <- add_clusters(data, parsed_cellsets, cell_sets)
-  data@meta.data <- run_sctype(scale_data, data@meta.data, active_assay, tissue, species)
+  data@meta.data <- run_sctype(scale_data, data@meta.data, tissue)
 
   formatted_cell_class <- format_sctype_cell_sets(data, species, tissue)
 
@@ -81,6 +82,7 @@ get_formatted_data <- function(scdata, active_assay) {
     scale_data <- scdata[[active_assay]]$scale.data
   }
 
+  scale_data <- as(scale_data, "dgCMatrix")
   scale_data <- data.table::as.data.table(scale_data, keep.rownames = "input")
 
   scale_data <- add_gene_symbols(scale_data, scdata)
@@ -165,66 +167,106 @@ format_matrix <- function(scale_data) {
 #'
 #' This function runs ScType on the scale.data slot of a Seurat object
 #' producing cell-level annotations that are then merged by cluster.
-#' For more information about ScType see [this link](https://github.com/IanevskiAleksandr/sc-type).
-#' It adds the resulting annotations as a new column named "customclassif" to the
-#' metadata slot of the Seurat object.
+#' For more information about ScType see
+#' [this link](https://github.com/IanevskiAleksandr/sc-type).
+#' It adds the resulting annotations as a new column named 
+#' "customclassif" to the metadata slot of the Seurat object.
 #'
 #' @param data Seurat object
-#' @param active_assay string. One of: RNA, SCT, integrated. It's to extract scale.data.
-#' @param tissue string. Tissue information coming from the config. It's used to extract marker genes from the database
-#' @param species string. Species information. Either "human" or "mouse"
+#' @param tissue string. Tissue information coming from the config.
+#' It's used to extract marker genes from the database
 #'
 #' @return Seurat object with ScType annotations in the metadata slot
 #' @export
 #'
-run_sctype <- function(scale.data, meta.data, active_assay, tissue, species) {
-  library(openxlsx)
-  library(HGNChelper)
+run_sctype <- function(scale_data, meta_data, tissue) {
+  # some functions not referenced with namespace
+  library("HGNChelper")
 
-  source("http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/gene_sets_prepare.R")
-  source("http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/sctype_score_.R")
+  # ensure stable commit
+  sctype_commit <- "630e15cf1e51f2612eda4ad0406dfb17503fa8c9"
 
-  db <- "http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/ScTypeDB_full.xlsx"
+  source(paste0(
+    "http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/",
+    sctype_commit, "/R/gene_sets_prepare.R"
+  ))
+  source(paste0(
+    "https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/",
+    sctype_commit, "/R/sctype_score_.R"
+  ))
+
+  db <- paste0(
+    "http://raw.githubusercontent.com/IanevskiAleksandr/sc-type/",
+    sctype_commit, "/ScTypeDB_full.xlsx"
+  )
   gs_list <- gene_sets_prepare(db, tissue)
 
-  # get cell-type by cell matrix
+  # get cell-type by cell id matrix
   tryCatch({
     cell_type_scores <- sctype_score(
-      scRNAseqData = scale.data, scaled = TRUE,
-      gs = gs_list$gs_positive, gs2 = gs_list$gs_negative
+      scRNAseqData = scale_data,
+      scaled = TRUE,
+      gs = gs_list$gs_positive,
+      gs2 = gs_list$gs_negative
     )
   }, error = function(e) {
     stop("Error in sctype_score: ", error_codes$SCTYPE_ERROR)
   })
 
+  # sketch will have fewer cells in scale.data
+  meta_selected <- meta_data[colnames(scale_data), ]
+
   # merge by cluster
   clusters <- "seurat_clusters"
-  metadata_clusters <- meta.data[[clusters]]
+  metadata_clusters <- meta_selected[[clusters]]
 
   # Remove rownames that aren't numbers, as.integer won't work otherwise
-  rownames(meta.data) <- NULL
+  rownames(meta_selected) <- NULL
 
   # from https://github.com/IanevskiAleksandr/sc-type/blob/master/README.md
-  cluster_scores <- do.call("rbind", lapply(unique(metadata_clusters), function(cl) {
-    cell_type_scores_cl <- sort(rowSums(cell_type_scores[, as.integer(rownames(meta.data[metadata_clusters == cl, ]))]), decreasing = !0)
+  cluster_scores <- do.call(
+    "rbind",
+    lapply(
+      unique(metadata_clusters),
+      function(cluster) {
+        cell_idx <- as.integer(rownames(
+          meta_selected[metadata_clusters == cluster, ]
+        ))
+        cell_type_scores_cl <- sort(
+          rowSums(cell_type_scores[, cell_idx]),
+          decreasing = TRUE
+        )
 
-    head(data.frame(cluster = cl, type = names(cell_type_scores_cl), scores = cell_type_scores_cl, ncells = sum(metadata_clusters == cl)), 10)
-
-  }))
+        head(data.frame(
+          cluster = cluster,
+          type = names(cell_type_scores_cl),
+          scores = cell_type_scores_cl,
+          ncells = sum(metadata_clusters == cluster)
+        ), 10)
+      }
+    )
+  )
 
   sctype_scores <- cluster_scores |>
     dplyr::group_by(cluster) |>
     dplyr::top_n(n = 1, wt = scores)
 
-  # set low-confident (low ScType score) clusters to "unknown" (threshold defined by ScType authors)
-  sctype_scores$type[as.numeric(as.character(sctype_scores$scores)) < sctype_scores$ncells / 4] <- "Unknown"
+  # set low-confident (low ScType score) clusters to "unknown"
+  # (threshold defined by ScType authors)
+  sctype_scores$type[
+    as.numeric(as.character(sctype_scores$scores)) <
+      sctype_scores$ncells / 4
+  ] <- "Unknown"
 
+  metadata_clusters_full <- meta_data[[clusters]]
+  meta_data$customclassif <- ""
 
-  meta.data$customclassif <- ""
   for (j in unique(sctype_scores$cluster)) {
     cl_type <- sctype_scores[sctype_scores$cluster == j, ]
-    meta.data$customclassif[metadata_clusters == j] <- as.character(cl_type$type[1])
+
+    meta_data$customclassif[metadata_clusters_full == j] <-
+      as.character(cl_type$type[1])
   }
 
-  return(meta.data)
+  return(meta_data)
 }
