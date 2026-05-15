@@ -59,7 +59,10 @@ test_that("find_matrix_dir_paths finds MatrixDir in nested layers", {
   bpcells_data <- create_bpcells_seurat()
 
   # extract from the counts layer (wrapped in RenameDims)
-  counts_layer <- SeuratObject::LayerData(bpcells_data$scdata[["RNA"]], "counts")
+  counts_layer <- SeuratObject::LayerData(
+    bpcells_data$scdata[["RNA"]],
+    "counts"
+  )
 
   # find_matrix_dir_paths should recursively find any MatrixDir objects
   paths <- find_matrix_dir_paths(counts_layer)
@@ -149,6 +152,7 @@ test_that("load_bpcells works", {
   matrix_dir <- bpcells_data$matrix_dir
 
   tarfile <- file.path(tempdir(), "matrix_dir.tar.zst")
+  withr::defer(unlink(tarfile))
   # move to parent of matrix_dir and tar it
   data_dir <- dirname(matrix_dir)
 
@@ -168,4 +172,16 @@ test_that("load_bpcells works", {
   # verify it's a IterableMatrix and can be accessed
   expect_s4_class(scdata[["RNA"]]$counts, "IterableMatrix")
   expect_no_error(as.matrix(scdata[["RNA"]]$counts))
+})
+
+test_that("load_bpcells throws error if matrix_dir and tarfile missing", {
+  bpcells_data <- create_bpcells_seurat()
+  scdata <- bpcells_data$scdata
+  matrix_dir <- bpcells_data$matrix_dir
+  data_dir <- dirname(matrix_dir)
+
+  # remove the matrix directory to simulate missing data
+  unlink(matrix_dir, recursive = TRUE)
+
+  expect_error(load_bpcells(scdata, data_dir))
 })
