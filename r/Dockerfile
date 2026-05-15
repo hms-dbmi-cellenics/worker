@@ -31,12 +31,13 @@ RUN Rscript restore_fast.R
 COPY setup/restore_renv.R .
 RUN Rscript restore_renv.R
 
-# deactivate so that above .libPaths used
-RUN R -q -e "renv::deactivate()"
-
 # use renv::snapshot() while R dependency updates are quick to build
 COPY ./renv.lock .
 RUN Rscript restore_renv.R
+
+# deactivate so that above .libPaths used
+RUN R -q -e "renv::deactivate()"
+RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -66,11 +67,10 @@ RUN echo ".libPaths(c('$RENV_LIB', .libPaths()))" >> $(R RHOME)/etc/Rprofile.sit
 # install runtime system deps
 # python3-dev prevents 'reticulate can only bind to copies of Python built with --enable-shared'
 # cleanup setup files
-RUN echo "python3-pip python3-venv python3-dev" >> sysdeps_run.txt && \
+RUN echo "python3-pip python3-venv python3-dev zstd" >> sysdeps_run.txt && \
     cat sysdeps_run.txt | xargs ./install_debian_packages.sh && \
     rm -rf *
 
-# install umap-learn for RunUMAP
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
     R -q -e "reticulate::virtualenv_install('r-reticulate', c('setuptools==68.2.2', 'umap-learn==0.5.3', 'numpy<2'), pip_options='--no-cache-dir --upgrade')"
@@ -102,6 +102,6 @@ RUN pip install -U jedi PyYAML watchdog[watchmedo]
 # add R package and runner
 ADD R ./R
 ADD tests ./tests
-COPY DESCRIPTION NAMESPACE work.R ./
+COPY DESCRIPTION NAMESPACE work.R renv.lock ./
 
 CMD ["Rscript", "work.R"]

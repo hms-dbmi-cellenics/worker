@@ -26,13 +26,18 @@ makePseudobulkMatrix <- function(scdata) {
   # aggregate over samples
   samples <- factor(samples, levels = unique(samples))
 
-  agg <- presto::sumGroups(counts, samples, MARGIN = 1)
-  agg <- Matrix::Matrix(agg, sparse = TRUE)
-  agg <- Matrix::t(agg)
+  if (is(counts, "IterableMatrix")) {
+    agg <- BPCells::pseudobulk_matrix(counts, samples)
 
-  # row/colnames are lost in aggregation
-  rownames(agg) <- rownames(counts)
-  colnames(agg) <- levels(samples)
+  } else {
+    agg <- presto::sumGroups(counts, samples, MARGIN = 1)
+    agg <- Matrix::Matrix(agg, sparse = TRUE)
+    agg <- Matrix::t(agg)
+
+    # row/colnames are lost in aggregation
+    rownames(agg) <- rownames(counts)
+    colnames(agg) <- levels(samples)
+  }
 
   # recover original metadata
   metadata <- data.frame(

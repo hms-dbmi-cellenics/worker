@@ -2,30 +2,6 @@ mock_req <- function() {
   req <- list()
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  # create randomized cell ids (as done in the pipeline)
-  set.seed(1)
-  pbmc_small$cells_id <- sample(0:(ncol(pbmc_small) - 1))
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
-  )
-
-  vars <- Seurat::HVFInfo(object = pbmc_small, assay = "RNA", method = "vst")
-  annotations <- pbmc_small@misc[["gene_annotations"]]
-  vars$SYMBOL <- rownames(vars)
-  vars$ENSEMBL <- annotations$input[match(rownames(vars), annotations$name)]
-  pbmc_small@misc[["gene_dispersion"]] <- vars
-
-  set.seed(0)
-  pbmc_small[["percent.mt"]] <- rnorm(ncol(pbmc_small), 5, 1)
-  pbmc_small[["doublet_scores"]] <- rnorm(ncol(pbmc_small), 0.5, 0.1)
-
-  return(pbmc_small)
-}
-
 test_that("GetMitochondrialContent generates the expected return format", {
   data <- mock_scdata()
   req <- mock_req()
@@ -150,4 +126,14 @@ test_that("getNUmis returns the same snapshot", {
 
   res <- getNUmis(req, data)
   expect_snapshot(res)
+})
+
+
+test_that("metadata information functions works with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- mock_req()
+  expect_no_error(getMitochondrialContent(req, data))
+  expect_no_error(getDoubletScore(req, data))
+  expect_no_error(getNGenes(req, data))
+  expect_no_error(getNUmis(req, data))
 })

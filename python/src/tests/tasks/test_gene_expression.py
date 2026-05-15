@@ -82,8 +82,9 @@ class TestGeneExpression:
         GeneExpression(self.correct_request)
 
     @responses.activate
-    def test_should_throw_exception_on_r_worker_error(self):
-
+    def test_should_not_parse_json_error_in_200_response(self):
+        # GeneExpression intentionally doesn't parse the full JSON response
+        # to avoid parsing very large response bodies
         error_code = "MOCK_R_WORKER_ERROR"
         user_message = "Some worker error"
 
@@ -96,8 +97,19 @@ class TestGeneExpression:
             status=200,
         )
 
-        with pytest.raises(RWorkerException) as exception_info:
-            GeneExpression(self.correct_request).compute()
+        # Should not raise an exception since we don't parse the JSON
+        result = GeneExpression(self.correct_request).compute()
+        assert result is not None
 
-        assert exception_info.value.args[0] == error_code
-        assert exception_info.value.args[1] == user_message
+    @responses.activate
+    def test_should_throw_exception_on_error_status(self):
+        # Verify that HTTP error status codes raise an exception
+        responses.add(
+            responses.POST,
+            f"{config.R_WORKER_URL}/v0/runExpression",
+            json={"error": "Server error"},
+            status=500,
+        )
+
+        with pytest.raises(Exception):  # raise_for_status raises HTTPError
+            GeneExpression(self.correct_request).compute()

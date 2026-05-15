@@ -13,18 +13,6 @@ mock_req <- function(type = "louvain") {
                 ))
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
-  )
-  # we have ~500 colors in the color pool
-  pbmc_small@misc$color_pool <- mock_color_pool(500)
-  return(pbmc_small)
-}
 
 mock_cellset_object <- function(n_cells, n_clusters) {
   # cellset objects are data.frames. They are formatted to lists by
@@ -37,10 +25,6 @@ mock_cellset_object <- function(n_cells, n_clusters) {
   # cell_ids with no replacement to avoid repeated cell_ids
   data.frame(cluster = sample(1:n_clusters, size = n_cells, replace = T),
              cell_ids = sample(1:(2*n_cells), size = n_cells))
-}
-
-mock_color_pool <- function(n) {
-  paste0("color_", 1:n)
 }
 
 
@@ -60,6 +44,18 @@ stubbed_runClusters <- function(req, data) {
                 stub_updateCellSetsThroughApi)
   runClusters(req, data)
 }
+
+test_that("runClusters works with bpcells", {
+  algos <- c("louvain", "leiden")
+  data <- mock_scdata(use_bpcells = TRUE)
+  expected_keys <- c("cluster", "cell_ids")
+
+  for (algo in algos) {
+    req <- mock_req(type = algo)
+    res <- stubbed_runClusters(req, data)
+    expect_equal(names(res), expected_keys)
+  }
+})
 
 test_that("runClusters returns correct keys", {
   algos <- c("louvain", "leiden")

@@ -1,4 +1,4 @@
-library('mockery')
+library("mockery")
 
 mock_req <- function() {
   req <- list(
@@ -8,21 +8,6 @@ mock_req <- function() {
       use_saved = FALSE
     )
   )
-}
-
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_small))),
-    name = row.names(pbmc_small),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_small)))
-  )
-
-  pbmc_small <- Seurat::RunPCA(pbmc_small, npcs = 5)
-  pbmc_small$samples <- rep("Sample1", 80)
-  pbmc_small@misc$numPCs <- 5
-  return(pbmc_small)
 }
 
 test_that("TSNE embedding works", {
@@ -68,11 +53,11 @@ test_that("UMAP embedding works", {
     )
   }
 
-  stub(runEmbedding, 'getEmbedding', mock_RunUMAP)
+  stub(runEmbedding, "getEmbedding", mock_RunUMAP)
 
   reduction_method <- "umap"
 
-  data <- suppressWarnings(mock_scdata())
+  data <- mock_scdata(with_umap = TRUE)
   req <- list(
     body = list(
       type = reduction_method,
@@ -89,11 +74,40 @@ test_that("UMAP embedding works", {
   expect_equal(length(res), length(expected_res$PC_1))
 })
 
+test_that("UMAP embedding works with bpcells", {
+
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- list(
+    body = list(
+      type = "umap",
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
+    )
+  )
+
+  expect_no_error(runEmbedding(req, data))
+})
+
+test_that("Projection onto sketched embedding works", {
+
+  data <- mock_scdata(use_bpcells = TRUE, nreps = 10)
+  data <- suppressWarnings(mock_sketch(data))
+  req <- list(
+    body = list(
+      type = "umap",
+      config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
+      use_saved = FALSE
+    )
+  )
+
+  expect_no_error(runEmbedding(req, data))
+})
+
 test_that("RunTSNE uses the correct params", {
 
   mock_RunTSNE <- mock(TRUE)
 
-  stub(getEmbedding, 'Seurat::RunTSNE', mock_RunTSNE)
+  stub(getEmbedding, "Seurat::RunTSNE", mock_RunTSNE)
 
   data <- suppressWarnings(mock_scdata())
   config <- list(perplexity = 10, learningRate = 100)
@@ -107,11 +121,16 @@ test_that("RunTSNE uses the correct params", {
   expect_equal(length(mock_RunTSNE), 1)
   args <- mock_args(mock_RunTSNE)
 
-  expect_equal(args[[1]], list(data,
-                               reduction = reduction_type,
-                               dims = 1:num_pcs,
-                               perplexity = config$perplexity,
-                               learning.rate = config$learningRate))
+  expect_equal(
+    args[[1]],
+    list(
+      data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      perplexity = config$perplexity,
+      learning.rate = config$learningRate
+    )
+  )
 
 })
 
@@ -119,7 +138,7 @@ test_that("RunUMAP uses umap-learn with seed.use", {
 
   mock_RunUMAP <- mock(TRUE)
 
-  stub(getEmbedding, 'Seurat::RunUMAP', mock_RunUMAP)
+  stub(getEmbedding, "Seurat::RunUMAP", mock_RunUMAP)
 
   data <- suppressWarnings(mock_scdata())
   config <- list(minimumDistance = 0.1, distanceMetric = "cosine")
@@ -133,14 +152,19 @@ test_that("RunUMAP uses umap-learn with seed.use", {
   expect_equal(length(mock_RunUMAP), 1)
   args <- mock_args(mock_RunUMAP)
 
-  expect_equal(args[[1]], list(data,
-   reduction = reduction_type,
-   dims = 1:num_pcs,
-   verbose = FALSE,
-   min.dist = config$minimumDistance,
-   metric = config$distanceMetric,
-   umap.method = "umap-learn",
-   seed.use = ULTIMATE_SEED))
+  expect_equal(
+    args[[1]], 
+    list(
+      data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      verbose = FALSE,
+      min.dist = config$minimumDistance,
+      metric = config$distanceMetric,
+      umap.method = "umap-learn",
+      seed.use = ULTIMATE_SEED
+    )
+  )
 
 })
 
@@ -163,7 +187,7 @@ test_that("assignEmbedding assigns embedding correctly for UMAP", {
   old_embedding <- Seurat::Embeddings(mock_seurat_object)
 
   # cells_id 0 corresponds to embedding[[1]]
-  mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
+  mock_seurat_object$cells_id <- seq((num_cells * 2) - 2, 0, -2)
 
   # assigning embedding
   mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object)
@@ -182,7 +206,10 @@ test_that("assignEmbedding assigns embedding correctly for UMAP", {
   resulting_embedding <- new_embedding[barcode, ]
 
   # Add 1 to test_cell_id because cell_id 0 corresponds to embedding [[1]]
-  expect_equal(unname(resulting_embedding), mock_embedding[[test_cell_id + 1]])
+  expect_equal(
+    unname(resulting_embedding),
+    mock_embedding[[test_cell_id + 1]]
+  )
 })
 
 
@@ -205,7 +232,7 @@ test_that("assignEmbedding assigns embedding correctly for tSNE", {
   old_embedding <- Seurat::Embeddings(mock_seurat_object)
 
   # cells_id 0 corresponds to embedding[[1]]
-  mock_seurat_object$cells_id <- seq((num_cells*2) - 2, 0 ,-2)
+  mock_seurat_object$cells_id <- seq((num_cells * 2) - 2, 0, -2)
 
   # assigning embedding
   mock_seurat_object <- assignEmbedding(mock_embedding, mock_seurat_object, reduction_method = "tsne")
@@ -237,10 +264,55 @@ test_that("can request saved embedding result", {
 
   expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
 
-  expected_res <- expected_res %>%
-    as.data.frame() %>%
-    dplyr::rowwise() %>%
+  expected_res <- expected_res |>
+    as.data.frame() |>
+    dplyr::rowwise() |>
     dplyr::mutate(PCS = list(c(PC_1, PC_2)))
 
   expect_equal(res,expected_res$PCS)
+})
+
+test_that("empty named list encodes consistently across JSON encoders", {
+  # Test that empty named list (structure(list(), names = character(0)))
+  # encodes identically in both jsonlite and yyjsonr for backward compatibility
+
+  empty_named_list <- structure(list(), names = character(0))
+  coordinate_pair <- c(1.5, 2.5)
+
+  # Create test data with mixed content (coordinates and empty lists)
+  test_data <- list(
+    empty_named_list,  # Missing embedding
+    coordinate_pair,   # Present embedding
+    empty_named_list,  # Missing embedding
+    c(3.1, 4.2)       # Present embedding
+  )
+
+  # Encode with jsonlite
+  json_jsonlite <- as.character(jsonlite::toJSON(test_data, auto_unbox = TRUE))
+
+  # Encode with yyjsonr
+  json_yyjsonr <- yyjsonr::write_json_str(test_data, opts = list(
+    dataframe = "columns",
+    digits = 4,
+    auto_unbox = TRUE
+  ))
+
+  # Both should produce identical JSON output
+  expect_equal(json_jsonlite, json_yyjsonr)
+
+  # Both should parse back identically
+  parsed_jsonlite <- jsonlite::fromJSON(json_jsonlite)
+  parsed_yyjsonr <- jsonlite::fromJSON(json_yyjsonr)
+
+  expect_equal(parsed_jsonlite, parsed_yyjsonr)
+
+  # Verify structure: empty entries should be empty lists, not NULL
+  expect_equal(length(parsed_jsonlite[[1]]), 0)
+  expect_equal(length(parsed_jsonlite[[3]]), 0)
+  expect_true(is.list(parsed_jsonlite[[1]]))
+  expect_true(is.list(parsed_jsonlite[[3]]))
+
+  # Verify coordinates are preserved
+  expect_equal(unname(parsed_jsonlite[[2]]), c(1.5, 2.5))
+  expect_equal(unname(parsed_jsonlite[[4]]), c(3.1, 4.2))
 })

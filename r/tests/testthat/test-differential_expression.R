@@ -27,26 +27,13 @@ mock_req_genes_only <- function() {
   ))
 }
 
-mock_scdata <- function() {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-  enids <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
-  gene_annotations <- data.frame(
-    input = enids,
-    name = row.names(pbmc_raw),
-    row.names = enids
-  )
+test_that("runDE works with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- mock_req()
 
-  row.names(pbmc_raw) <- enids
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw, data = pbmc_raw)
+  expect_no_error(runDE(req, data))
+})
 
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- gene_annotations
-  return(pbmc_small)
-}
 
 test_that("runDE generates the expected return format for comparisons within samples/groups", {
   data <- mock_scdata()

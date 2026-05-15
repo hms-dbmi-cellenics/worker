@@ -1,25 +1,3 @@
-mock_scdata <- function() {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-
-  gene_annotations <- data.frame(
-    input = paste0("ENSG", seq_len(nrow(pbmc_raw))),
-    name = row.names(pbmc_raw),
-    row.names = paste0("ENSG", seq_len(nrow(pbmc_raw)))
-  )
-  gene_annotations$original_name <- gene_annotations$name
-  row.names(pbmc_raw) <- gene_annotations$input
-
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  pbmc_small <- Seurat::CreateSeuratObject(counts = pbmc_raw)
-
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- gene_annotations
-  return(pbmc_small)
-}
-
 mock_req <- function() {
   backgroundCells <- 0:39
   baseCells <- 40:79
@@ -53,6 +31,20 @@ test_that("All genes found in getBackgroundExpressedGenes have more than min.cou
 
 test_that("No genes outside those found have more than min.count counts", {
   data <- mock_scdata()
+  req <- mock_req()
+  min.total.count <- 15
+  res <- getBackgroundExpressedGenes(req, data)
+  gene_annotations <- data@misc$gene_annotations
+
+  other_gene_ids <- gene_annotations[!match(res$genes, gene_annotations$name), "input"]
+
+  other_gene_counts <- Matrix::rowSums(data@assays$RNA$counts)[other_gene_ids]
+
+  expect_true(all(other_gene_counts <= min.total.count))
+})
+
+test_that("getBackgroundExpressedGenes works with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
   req <- mock_req()
   min.total.count <- 15
   res <- getBackgroundExpressedGenes(req, data)

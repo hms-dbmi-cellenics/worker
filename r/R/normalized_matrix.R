@@ -34,14 +34,21 @@ GetNormalizedExpression <- function(req, data) {
     message("No subsetting specified, sending the whole matrix")
   }
 
-  matrix <- as.data.frame(Seurat::GetAssayData(data, layer = "data", assay = "RNA"))
+  logcounts <- Seurat::GetAssayData(data, layer = "data", assay = "RNA")
+  logcounts <- as(logcounts, "dgCMatrix")
+  logcounts <- as.data.frame(logcounts)
 
-  message("Number of cells in matrix to return: ", ncol(matrix))
+  message("Number of cells in matrix to return: ", ncol(logcounts))
 
-  matrix <- tibble::rownames_to_column(matrix, var = " ")
+  logcounts <- tibble::rownames_to_column(logcounts, var = " ")
 
   # fwrite compresses the file based on filename extension
-  data.table::fwrite(matrix, TMP_RESULTS_PATH_GZ, quote = F, row.names = T)
+  data.table::fwrite(
+    logcounts,
+    TMP_RESULTS_PATH_GZ,
+    quote = FALSE,
+    row.names = TRUE
+  )
 
   return(TMP_RESULTS_PATH_GZ)
 }

@@ -1,8 +1,3 @@
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  return(pbmc_small)
-}
 
 mock_req <- function(apply_subset = TRUE) {
   subset_by <- c(2:10, 30:36, 60:70)
@@ -42,6 +37,17 @@ stubbed_GetNormalizedExpression <- function(req, data) {
 
 test_that("GetNormalizedExpression saves the normalized matrix using the correct path", {
   data <- mock_scdata()
+  req <- mock_req()
+
+  res <- stubbed_GetNormalizedExpression(req, data)
+  withr::defer(unlink(dirname(res), recursive = TRUE))
+
+  expect_type(res, "character")
+  expect_equal(gsub("^\\.", "", res), TMP_RESULTS_PATH_GZ)
+})
+
+test_that("GetNormalizedExpression works with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
   req <- mock_req()
 
   res <- stubbed_GetNormalizedExpression(req, data)

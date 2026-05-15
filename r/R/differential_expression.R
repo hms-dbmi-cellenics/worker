@@ -21,22 +21,24 @@ runDE <- function(req, data) {
   }
 
   # replace name with gene names and add Ensembl IDs
-  result$gene_names <- data@misc$gene_annotations[row.names(result), "name"]
-  result$Gene <- rownames(result)
+  annot <- data@misc$gene_annotations[row.names(result),]
+  result$gene_names <- annot$name
+  result$Gene <- annot$input
 
   # replace NA gene symbols with ensembl ids
-  na.genes <- is.na(result$gene_names)
-  result$gene_names[na.genes] <- result$Gene[na.genes]
+  na_genes <- is.na(result$gene_names)
+  result$gene_names[na_genes] <- result$Gene[na_genes]
 
   # replace 0 in p_val_adj with the smallest floating-point value
-  # this is required to correctly plot log(p_val_adj) in the volcano plot, because log(0)=Inf
-  if("p_val_adj" %in% names(result)) {
+  # this is required to correctly plot log(p_val_adj)
+  # in the volcano plot, because log(0)=Inf
+  if ("p_val_adj" %in% names(result)) {
     result["p_val_adj"][result["p_val_adj"] == 0] <- .Machine$double.xmin
   }
 
   if ("pagination" %in% names(req$body)) {
     result <- paginateDE(result, req)
-  } else{
+  } else {
     result <- list(gene_results = result, full_count = nrow(result))
   }
 
@@ -49,7 +51,7 @@ runWilcoxAUC <- function(data) {
   set.seed(0)
   max_cells <- 10000
 
-  X_matrix <- data[['RNA']]$data
+  X_matrix <- data[["RNA"]]$data
   y <- data$custom
 
   keep_cell_ids <- data@meta.data |>
@@ -58,13 +60,20 @@ runWilcoxAUC <- function(data) {
     dplyr::ungroup() |>
     dplyr::pull(cells_id)
 
+  if (length(keep_cell_ids) < length(y))
+    message(
+      "Using at most 10,000 cells per group for marker gene testing.",
+      " Total cells used: ", length(keep_cell_ids), "."
+    )
+
   object_ids <- data$cells_id
   keep_indices <- match(keep_cell_ids, object_ids)
   mat_subset <- X_matrix[, keep_indices]
+  mat_subset <- as(mat_subset, "dgCMatrix")
   group_subset <- y[keep_indices]
 
   result <- presto::wilcoxauc(mat_subset, y = group_subset)
-  result <- result[result$group == 'base', ]
+  result <- result[result$group == "base", ]
 
   rownames(result) <- result$feature
   result <- result[, c("pval", "logFC", "pct_in", "pct_out", "padj", "auc")]

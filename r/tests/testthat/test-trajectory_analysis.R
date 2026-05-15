@@ -1,27 +1,12 @@
-mock_scdata <- function(){
+mock_scdata_trajectory_analysis <- function(use_bpcells = FALSE) {
   cds <- monocle3::load_a549()
-  scdata <- Seurat::CreateSeuratObject(cds@assays@data$counts)
-
-  scdata$cells_id <- 0:(ncol(scdata) - 1)
-  scdata@misc$gene_annotations <- data.frame(
-    input = row.names(scdata),
-    name = row.names(scdata),
-    row.names = row.names(scdata)
+  counts <- cds@assays@data$counts
+  scdata <- mock_scdata(
+    counts = counts,
+    with_umap = TRUE,
+    use_bpcells = use_bpcells
   )
-
-  # scale and PCA
-  scdata <- Seurat::NormalizeData(scdata, normalization.method = "LogNormalize", verbose = FALSE)
-  scdata <- Seurat::FindVariableFeatures(scdata, verbose = FALSE)
-  scdata <- Seurat::ScaleData(scdata, verbose = FALSE)
-  scdata <- Seurat::RunPCA(scdata, verbose = FALSE, npcs = 10)
-  scdata@misc[["active.reduction"]] <- "pca"
-
-  # run UMAP
-  npcs <- get_npcs(scdata)
-  scdata <- suppressWarnings(Seurat::RunUMAP(scdata, dims = 1:npcs, verbose = FALSE))
-
-  scdata
-
+  return(scdata)
 }
 
 get_explained_variance <- function(scdata) {
@@ -111,7 +96,7 @@ get_mock_cell_ids <- function(data) {
 }
 
 test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_set object", {
-  data <- mock_scdata()
+  data <- mock_scdata_trajectory_analysis()
 
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
@@ -133,7 +118,18 @@ test_that("generateTrajectoryGraph converts Seurat object to Monocle3 cell_data_
 
 
 test_that("runTrajectoryAnalysisStartingNodesTask output has the expected format", {
-  data <- mock_scdata()
+  data <- mock_scdata_trajectory_analysis()
+  req <- mock_starting_nodes_req(data)
+
+  root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
+
+  expect_named(root_nodes, c("connectedNodes", "x", "y"))
+  expect_type(root_nodes$x[[1]], "double")
+  expect_type(root_nodes$y[[1]], "double")
+})
+
+test_that("runTrajectoryAnalysisStartingNodesTask works with bpcells", {
+  data <- mock_scdata_trajectory_analysis(use_bpcells = TRUE)
   req <- mock_starting_nodes_req(data)
 
   root_nodes <- suppressWarnings(runTrajectoryAnalysisStartingNodesTask(req, data))
@@ -145,7 +141,7 @@ test_that("runTrajectoryAnalysisStartingNodesTask output has the expected format
 
 
 test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of nodes", {
-  data <- mock_scdata()
+  data <- mock_scdata_trajectory_analysis()
   mock_embedding_data <- get_mock_embedding_data(data)
   mock_embedding_settings <- get_mock_embedding_settings()
   mock_clustering_settings <- get_mock_clustering_settings()
@@ -173,7 +169,19 @@ test_that("runTrajectoryAnalysisStartingNodesTask outputs the correct number of 
 
 
 test_that("runTrajectoryAnalysisPseudoTimeTask works", {
-  data <- mock_scdata()
+  data <- mock_scdata_trajectory_analysis()
+  mock_cell_ids = get_mock_cell_ids(data)
+
+  req <- mock_pseudotime_req(data)
+
+  result <- suppressWarnings(runTrajectoryAnalysisPseudoTimeTask(req, data))
+
+  expect_equal(length(mock_cell_ids), length(result$pseudotime))
+  expect_true(is.numeric(result$pseudotime))
+})
+
+test_that("runTrajectoryAnalysisPseudoTimeTask works with bpcells", {
+  data <- mock_scdata_trajectory_analysis(use_bpcells = TRUE)
   mock_cell_ids = get_mock_cell_ids(data)
 
   req <- mock_pseudotime_req(data)
@@ -185,7 +193,7 @@ test_that("runTrajectoryAnalysisPseudoTimeTask works", {
 })
 
 test_that('runTrajectoryAnalysisPseudoTimeTask fails if root_node is empty', {
-  data <- mock_scdata()
+  data <- mock_scdata_trajectory_analysis()
   req <- mock_pseudotime_req(data)
 
   # Set root nodes to empty vector

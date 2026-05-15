@@ -71,10 +71,16 @@ getExpressionCellSetIDs <- function(filters, data) {
   for (i in seq_along(filters)) {
     filter <- filters[[i]]
     enid <- enids[i]
-
+    
+    # materialize for bpcells if needed
+    expression_enid <- expression_mat[enid, ]
+    if (methods::is(expression_enid, "IterableMatrix")) {
+      expression_enid <- as.matrix(expression_enid)[1, ]
+    }
+    
     # using comparison as functions e.g. `<`(x, y)
     comparison <- comparisons[[filter$comparisonType]]
-    pass.filter <- comparison(expression_mat[enid, ], filter$thresholdValue)
+    pass.filter <- comparison(expression_enid, filter$thresholdValue)
 
     cell_set_name_vector <- c(
       cell_set_name_vector,

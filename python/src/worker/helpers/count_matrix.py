@@ -53,22 +53,22 @@ class CountMatrix:
 
         if self.last_fetch and last_modified < self.last_fetch:
             info(
-                f"Did not fetch as last modified (remote) of {last_modified}"
-                f" was before last fetch time of {self.last_fetch}"
+                f"Did not fetch as last modified of remote"
+                f" was before last fetch time."
             )
-
             return False
+        
         elif last_mod_local and last_modified < last_mod_local:
             info(
-                f"Did not fetch as last modified (remote) of {last_modified}"
-                f" was before last modified (local) of {last_mod_local}"
+                f"Did not fetch as last modified of remote"
+                f" was before last modified of local."
             )
-
             return False
+        
         else:
             info(
-                f"Fetching as last modified date of {last_modified}"
-                f" is more recent than {self.last_fetch or 'Never'}"
+                f"Fetching as last modified date of remote"
+                f" is more recent than last fetch time."
             )
 
         # Disabled X-Ray to fix a botocore bug where the context
@@ -89,8 +89,6 @@ class CountMatrix:
             )
 
             send_status_update(io, self.config.EXPERIMENT_ID, LOAD_EXPERIMENT)
-
-            self.last_fetch = last_modified
             f.seek(0)
 
         if was_enabled:
@@ -126,3 +124,5 @@ class CountMatrix:
 
         if True in synced.values():
             self.check_if_received()
+
+        self.last_fetch = datetime.datetime.now(tz=timezone.utc)

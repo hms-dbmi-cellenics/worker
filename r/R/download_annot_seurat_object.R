@@ -27,6 +27,9 @@ DownloadAnnotSeuratObject <- function(req, data) {
     data <- assignEmbedding(embedding_data, data, embedding_method)
   }
 
+  # Convert any disk-backed IterableMatrix to dgCMatrix before saving
+  data <- materialize_bpcells_matrix(data)
+
   saveRDS(data, RDS_PATH)
   return(RDS_PATH)
 }

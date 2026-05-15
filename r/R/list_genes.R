@@ -24,8 +24,16 @@ getList <- function(req, data) {
   # Gene dispersion slot generated in data ingest script with the same info as the meta.features slot but with the annotated genes
   gene_results <- data@misc$gene_dispersion
 
-  colnames(gene_results)[colnames(gene_results) == "SYMBOL"] <- "gene_names"
-  colnames(gene_results)[colnames(gene_results) == "variance.standardized"] <- "dispersions"
+  # for "sct" dispersion are residual_variance
+  # for "vst" dispersion are variance.standardized
+  lookup_names <- c(
+    gene_names = "SYMBOL",
+    dispersions = "residual_variance",
+    dispersions = "variance.standardized"
+  )
+  gene_results <- gene_results |>
+    dplyr::rename(dplyr::any_of(lookup_names)) |>
+    dplyr::select(dplyr::any_of(c("gene_names", "dispersions")))
 
   # apply gene name filter
   gene_pattern <- req$body$geneNamesFilter
@@ -36,10 +44,6 @@ getList <- function(req, data) {
 
   paginated_results <- handlePagination(gene_results, offset, limit, order_by, order_decreasing)
   gene_results <- paginated_results$gene_results
-
-  columns <- c("gene_names", "dispersions")
-
-  gene_results <- gene_results[, columns]
 
   return(list(gene_results = gene_results, full_count = paginated_results$full_count))
 }

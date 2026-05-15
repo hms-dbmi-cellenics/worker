@@ -1,34 +1,3 @@
-mock_color_pool <- function(n) {
-  paste0("color_", 1:n)
-}
-
-mock_scdata <- function() {
-  pbmc_raw <- read.table(
-    file = system.file("extdata", "pbmc_raw.txt", package = "Seurat"),
-    as.is = TRUE
-  )
-  enids <- paste0("ENSG", seq_len(nrow(pbmc_raw)))
-  gene_annotations <- data.frame(
-    input = enids,
-    name = row.names(pbmc_raw),
-    original_name = row.names(pbmc_raw),
-    row.names = enids
-  )
-
-  row.names(pbmc_raw) <- enids
-  pbmc_raw <- as(as.matrix(pbmc_raw), 'dgCMatrix')
-  pbmc_small <- SeuratObject::CreateSeuratObject(counts = pbmc_raw)
-
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- gene_annotations
-  pbmc_small@misc$color_pool <- mock_color_pool(20)
-
-  pbmc_small <- Seurat::NormalizeData(pbmc_small, normalization.method = "LogNormalize", verbose = FALSE)
-  pbmc_small <- Seurat::FindVariableFeatures(pbmc_small, verbose = FALSE)
-  pbmc_small <- Seurat::ScaleData(pbmc_small, verbose = FALSE)
-  return(pbmc_small)
-}
-
 mock_cellset_from_python <- function(data) {
   cell_sets <- list(
     "louvain" = list(
@@ -38,16 +7,40 @@ mock_cellset_from_python <- function(data) {
       "type" = "cellSets",
       "children" = list(
         list(
-          "key" = "louvain-0", "name" = "Cluster 0", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:ceiling(length(data$cells_id) / 3)])
+          "key" = "louvain-0",
+          "name" = "Cluster 0",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#77aadd",
+          "cellIds" = unname(
+            data$cells_id[1:ceiling(length(data$cells_id) / 3)]
+          )
         ),
         list(
-          "key" = "louvain-1", "name" = "Cluster 1", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 + 1)):(ceiling(length(data$cells_id) / 3 * 2))])
+          "key" = "louvain-1",
+          "name" = "Cluster 1",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#77aadd",
+          "cellIds" = unname(
+            data$cells_id[
+              (ceiling(length(data$cells_id) / 3 + 1)):
+                (ceiling(length(data$cells_id) / 3 * 2))
+            ]
+          )
         ),
         list(
-          "key" = "louvain-2", "name" = "Cluster 2", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(data$cells_id[(ceiling(length(data$cells_id) / 3 * 2 + 1)):(length(data$cells_id))])
+          "key" = "louvain-2",
+          "name" = "Cluster 2",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#ee8866",
+          "cellIds" = unname(
+            data$cells_id[
+              (ceiling(length(data$cells_id) / 3 * 2 + 1)):
+                (length(data$cells_id))
+              ]
+            )
         )
       )
     ),
@@ -58,12 +51,20 @@ mock_cellset_from_python <- function(data) {
       "type" = "cellSets",
       "children" = list(
         list(
-          "key" = "scratchpad-0", "name" = "Custom 0", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#77aadd", "cellIds" = unname(sample(data$cells_id, 5))
+          "key" = "scratchpad-0",
+          "name" = "Custom 0",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#77aadd",
+          "cellIds" = unname(sample(data$cells_id, 5))
         ),
         list(
-          "key" = "scratchpad-1", "name" = "Custom 1", "rootNode" = FALSE,
-          "type" = "cellSets", "color" = "#ee8866", "cellIds" = unname(sample(data$cells_id, 10))
+          "key" = "scratchpad-1",
+          "name" = "Custom 1",
+          "rootNode" = FALSE,
+          "type" = "cellSets",
+          "color" = "#ee8866",
+          "cellIds" = unname(sample(data$cells_id, 10))
         )
       )
     ),
@@ -74,12 +75,20 @@ mock_cellset_from_python <- function(data) {
       "type" = "metadataCategorical",
       "children" = list(
         list(
-          "key" = "a636ec18-4ba3-475b-989d-0a5b2", "name" = "P13 Acute MISC",
-          "color" = "#77aadd", "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
+          "key" = "a636ec18-4ba3-475b-989d-0a5b2",
+          "name" = "P13 Acute MISC",
+          "color" = "#77aadd",
+          "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
         ),
         list(
-          "key" = "eec701f2-5762-4b4f-953d-6aba8", "name" = "P13 Convalescent MISC",
-          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+          "key" = "eec701f2-5762-4b4f-953d-6aba8",
+          "name" = "P13 Convalescent MISC",
+          "color" = "#ee8866",
+          "cellIds" = unname(
+            data$cells_id[
+              (length(data$cells_id) / 2 + 1):(length(data$cells_id))
+            ]
+          )
         )
       )
     ),
@@ -90,12 +99,20 @@ mock_cellset_from_python <- function(data) {
       "type" = "metadataCategorical",
       "children" = list(
         list(
-          "key" = "MISC_status-Acute", "name" = "Acute", "color" = "#77aadd",
+          "key" = "MISC_status-Acute",
+          "name" = "Acute",
+          "color" = "#77aadd",
           "cellIds" = unname(data$cells_id[1:(length(data$cells_id) / 2)])
         ),
         list(
-          "key" = "MISC_status-Convalescent", "name" = "Convalescent",
-          "color" = "#ee8866", "cellIds" = unname(data$cells_id[(length(data$cells_id) / 2 + 1):(length(data$cells_id))])
+          "key" = "MISC_status-Convalescent",
+          "name" = "Convalescent",
+          "color" = "#ee8866",
+          "cellIds" = unname(
+            data$cells_id[
+              (length(data$cells_id) / 2 + 1):(length(data$cells_id))
+            ]
+          )
         )
       )
     )
@@ -117,12 +134,14 @@ mock_req <- function(data) {
 }
 
 
-stub_updateCellSetsThroughApi <- function(cell_sets_object,
-                                          api_url,
-                                          experiment_id,
-                                          cell_set_key,
-                                          auth_JWT,
-                                          append = TRUE) {
+stub_updateCellSetsThroughApi <- function(
+  cell_sets_object,
+  api_url,
+  experiment_id,
+  cell_set_key,
+  auth_JWT,
+  append = TRUE
+) {
 
   # empty function to simplify mocking. we test patching independently.
 }
@@ -140,7 +159,10 @@ test_that("add_gene_symbols adds gene symbols to the count matrix", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(
+    data[[active_assay]]$scale.data,
+    keep.rownames = "input"
+  )
   scale_data <- add_gene_symbols(scale_data, data)
 
   expect_equal(colnames(scale_data)[2], "original_name")
@@ -151,7 +173,10 @@ test_that("add_gene_symbols produces an error if there are no gene symbols in th
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(
+    data[[active_assay]]$scale.data,
+    keep.rownames = "input"
+  )
 
   annot <- data.table::as.data.table(data@misc$gene_annotations)
 
@@ -160,7 +185,10 @@ test_that("add_gene_symbols produces an error if there are no gene symbols in th
   annot_mod$original_name <- annot_mod$input
   data@misc$gene_annotations <- annot_mod
 
-  expect_error(add_gene_symbols(scale_data, data), "Features file doesn't contain gene symbols.")
+  expect_error(
+    add_gene_symbols(scale_data, data),
+    "Features file doesn't contain gene symbols."
+  )
 })
 
 
@@ -168,7 +196,10 @@ test_that("collapse_genes collapses duplicated gene symbols", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(
+    data[[active_assay]]$scale.data,
+    keep.rownames = "input"
+  )
   scale_data <- add_gene_symbols(scale_data, data)
 
   # duplicate first 5 rows
@@ -185,7 +216,10 @@ test_that("format_matrix produces a matrix in the expected format", {
   data <- mock_scdata()
   active_assay <- "RNA"
 
-  scale_data <- data.table::as.data.table(data[[active_assay]]$scale.data, keep.rownames = "input")
+  scale_data <- data.table::as.data.table(
+    data[[active_assay]]$scale.data,
+    keep.rownames = "input"
+  )
   scale_data <- add_gene_symbols(scale_data, data)
   scale_data <- collapse_genes(scale_data)
 
@@ -210,7 +244,9 @@ test_that("run_sctype adds cluster annotations as a new metadata column", {
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
 
-  data@meta.data <- suppressWarnings(run_sctype(scale_data, data@meta.data, active_assay, tissue, species))
+  data@meta.data <- suppressWarnings(
+    run_sctype(scale_data, data@meta.data, tissue)
+  )
 
   expect_true("customclassif" %in% colnames(data@meta.data))
   expect_equal(all(is.na(data@meta.data$customclassif)), FALSE)
@@ -230,7 +266,9 @@ test_that("run_sctype produces correct snapshots", {
   parsed_cellsets <- parse_cellsets(children_cell_sets)
   data <- add_clusters(data, parsed_cellsets, cell_sets)
 
-  data@meta.data <- suppressWarnings(run_sctype(scale_data, data@meta.data, active_assay, tissue, species))
+  data@meta.data <- suppressWarnings(
+    run_sctype(scale_data, data@meta.data, tissue)
+  )
 
   expect_snapshot(data@meta.data[c("cells_id","customclassif")])
 })
@@ -253,4 +291,29 @@ test_that("ScTypeAnnotate produces correct annotations", {
   }
 
   expect_snapshot(res)
+})
+
+test_that("ScTypeAnnotate works with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
+  active_assay <- "RNA"
+  req <- mock_req(data)
+
+  # fix sampled colors
+  expect_no_error(suppressWarnings(
+    stubbed_ScTypeAnnotate(req, data)
+  ))
+})
+
+
+test_that("ScTypeAnnotate works with sketch assay", {
+  data <- mock_scdata(use_bpcells = TRUE, nreps = 10)
+  data <- suppressWarnings(mock_sketch(data))
+  active_assay <- "RNA"
+  req <- mock_req(data)
+
+  # fix sampled colors
+  set.seed(1)
+  res <- expect_no_error(suppressWarnings(
+    stubbed_ScTypeAnnotate(req, data)
+  ))
 })

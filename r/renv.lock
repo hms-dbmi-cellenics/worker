@@ -702,7 +702,7 @@
     },
     "Seurat": {
       "Package": "Seurat",
-      "Version": "5.1.0",
+      "Version": "5.4.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3961,6 +3961,11 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "29240487a071f535f5e5d5a323b7afbd"
+    },
+    "yyjsonr": {
+      "Package": "yyjsonr",
+      "Version": "0.1.20",
+      "Source": "Repository"
     },
     "zip": {
       "Package": "zip",

@@ -1,4 +1,4 @@
-# Expression task works correctly with downsampled = TRUE.
+# Expression task returns correct values.
 
     Code
       res

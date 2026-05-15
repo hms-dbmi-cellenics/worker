@@ -8,16 +8,23 @@ mock_req <- function() {
   return(req)
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = row.names(pbmc_small),
-    name = row.names(pbmc_small),
-    row.names = row.names(pbmc_small)
+test_that("Expression task works with bpcells.", {
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- mock_req()
+
+  res <- runExpression(req, data)
+
+  expect_equal(
+    names(res),
+    c("orderedGeneNames", "stats", "rawExpression")
   )
-  return(pbmc_small)
-}
+  expect_equal(length(res$orderedGeneNames), 2)
+  expect_equal(length(res$stats$rawMean), 2)
+  expect_equal(length(res$stats$rawStdev), 2)
+  expect_equal(length(res$stats$truncatedMin), 2)
+  expect_equal(length(res$stats$truncatedMax), 2)
+  expect_equal(as.list(res$orderedGeneNames), req$body$genes)
+})
 
 test_that("Expression task returns appropriate number and names of genes.", {
   data <- mock_scdata()
@@ -235,7 +242,10 @@ test_that("raw expression values are the same as in the original data", {
     )
 
   # manually extract original data, and convert to data.table
-  original_data <- Matrix::t(data@assays$RNA$data[unlist(req$body$genes), , drop = FALSE])
+  original_data <- Matrix::t(
+    data@assays$RNA$data[gene_subset$input, , drop = FALSE]
+  )
+  colnames(original_data) <- gene_subset$name
   original_data <- as.data.table(original_data)
 
   res <- getExpressionValues(data, gene_subset)

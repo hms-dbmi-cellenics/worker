@@ -24,17 +24,6 @@ mock_req <- function() {
   )
 }
 
-mock_scdata <- function() {
-  data("pbmc_small", package = "SeuratObject", envir = environment())
-  pbmc_small$cells_id <- 0:(ncol(pbmc_small) - 1)
-  pbmc_small@misc$gene_annotations <- data.frame(
-    input = row.names(pbmc_small),
-    name = row.names(pbmc_small),
-    row.names = row.names(pbmc_small)
-  )
-  return(pbmc_small)
-}
-
 test_that("dotplot generates the expected list format", {
   data <- mock_scdata()
   req <- mock_req()
@@ -55,6 +44,13 @@ test_that("useMarkerGenes works", {
 
   res <- runDotPlot(req, data)
   expect_snapshot(res)
+})
+
+test_that("runDotPlot works with bpcells", {
+  data <- mock_scdata(use_bpcells = TRUE)
+  req <- mock_req()
+
+  expect_no_error(runDotPlot(req, data))
 })
 
 test_that("customGenesList is used if useMarkerGenes is FALSE", {
@@ -83,13 +79,21 @@ test_that("subsetting is applied and changes dotpot output", {
 test_that("Dotplot returns the correct values", {
   data <- mock_scdata()
   req <- mock_req()
+  gene_idx <- match(
+    req$body$customGenesList,
+    data@misc$gene_annotations$name
+  )
   req$body$useMarkerGenes <- FALSE
 
   dotPlot_res <- runDotPlot(req, data)
   correct_res <- data.frame()
 
   for (group in req$body$groupBy$children) {
-    group_counts <- data@assays$RNA$counts[req$body$customGenesList, intersect(group$cellIds, data$cells_id)]
+    group_counts <- data@assays$RNA$counts[
+      gene_idx,
+      intersect(group$cellIds, data$cells_id)
+    ]
+
     for (gene in rownames(group_counts)) {
       correct_res[group$name, gene] <- mean(expm1(group_counts[gene, ]))
     }

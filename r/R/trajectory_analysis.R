@@ -164,6 +164,7 @@ generateTrajectoryGraph <- function(
   cell_ids,
   data
 ) {
+  # TODO: consider using py-monocle3 for large datasets
 
   set.seed(ULTIMATE_SEED)
 
@@ -186,6 +187,12 @@ generateTrajectoryGraph <- function(
 
   data <- subsetIds(data, cell_ids)
   data <- assignEmbedding(embedding_data, data)
+
+  # as.cell_data_set fails if sketch reductions present
+  sketch_reductions <- grep("sketch", names(data@reductions), value = TRUE)
+  for (sketch_reduction in sketch_reductions) {
+    data[[sketch_reduction]] <- NULL
+  }
 
   cell_data <- SeuratWrappers::as.cell_data_set(data)
 
@@ -223,8 +230,8 @@ fillNullForFilteredCells <- function(df, data) {
   max_value <- max(data@meta.data$cells_id)
   df <- df[order(df$cells_id), ]
 
-  df <- df %>%
-    tidyr::complete(cells_id = seq(0, max_value)) %>%
+  df <- df |>
+    tidyr::complete(cells_id = seq(0, max_value)) |>
     dplyr::select(-cells_id)
 
   return(df)

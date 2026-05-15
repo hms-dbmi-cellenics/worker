@@ -51,11 +51,29 @@ test-py: build ## Executes Python unit tests
 	if [ "$$(uname)" = "Darwin" ]; then \
 		PLATFORM_FLAG="--platform linux/amd64"; \
 	fi; \
-	docker run $$PLATFORM_FLAG -v ./python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
+	docker run --rm $$PLATFORM_FLAG -v ./python:/python:rw --env CLUSTER_ENV=development --net="host" --entrypoint /usr/bin/env worker-python python3 -m pytest .
 test-r: build ## Executes R unit tests
-	@docker run worker-r R -e "testthat::test_local()"
+	@docker run --rm \
+		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
+		worker-r \
+		R -e "testthat::test_local()"
 test-r-file: build ## Tests a specific R test file (usage: make test-r-file FILE=test-expression.R)
-	@docker run worker-r R -e "pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')"
+	@docker run --rm \
+		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
+		worker-r \
+		R -e "pkgload::load_all(); testthat::test_file('tests/testthat/$(FILE)')"
+snap-accept: build ## Accept updated snaps (usage: make snap-accept)
+	@docker run --rm \
+		--entrypoint /bin/bash \
+		-v $(PWD)/r/tests/testthat/_snaps:/src/worker/tests/testthat/_snaps \
+		worker-r \
+		-c "R -e \"testthat::snapshot_accept()\""
+add-package: build ## Adds a new package (usage: make add-package PACKAGE=package_name)
+	@docker run --rm \
+		--entrypoint /bin/bash \
+		-v $(PWD)/r/renv.lock:/src/worker/renv.lock \
+		worker-r \
+		-c "R -e \"renv::record('$(PACKAGE)')\""
 logs: ## Shows live logs if the workers are running or logs from last running worker if they are not.
 	@docker-compose $(docker_files) logs -f
 kill: ## Kills the currently running environment

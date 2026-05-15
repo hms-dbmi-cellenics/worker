@@ -3,10 +3,8 @@ import json
 import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
-from exceptions import raise_if_error
 
 from ..config import config
-from ..helpers.s3 import get_cell_sets
 from ..result import Result
 from ..tasks import Task
 
@@ -31,8 +29,6 @@ class GeneExpression(Task):
     def compute(self):
         request = self._format_request()
         
-        cell_order = request.get("cellIds")
-
         response = requests.post(
             f"{config.R_WORKER_URL}/v0/runExpression",
             headers={"content-type": "application/json"},
@@ -40,11 +36,7 @@ class GeneExpression(Task):
         )
 
         response.raise_for_status()
-        result = response.json()
-        raise_if_error(result)
-        result = result.get("data")
-
-        if cell_order != None:
-            result["cellOrder"] = cell_order
-
+        
+        # Response body is already the data as bytes (JSON encoded)
+        result = response.content
         return self._format_result(result)
