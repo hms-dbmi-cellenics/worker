@@ -113,36 +113,18 @@ find_matrix_dir_paths <- function(obj) {
 #
 # @export
 materialize_bpcells_matrix <- function(data) {
-  for (assay_name in names(data@assays)) {
-    cat("Processing assay:", assay_name, "\n")
-    assay <- data@assays[[assay_name]]
+  for (assay_name in Seurat::Assays(data)) {
+    assay <- data[[assay_name]]
 
-    # Convert matrix slots in v5 assays
-    if (inherits(assay, "Assay5")) {
-      # Handle layers (counts, data, scale.data, etc.)
-      for (layer_name in names(assay@layers)) {
-        layer <- assay@layers[[layer_name]]
-        if (is(layer, "IterableMatrix")) {
-          data@assays[[assay_name]]@layers[[layer_name]] <-
-            as(layer, "dgCMatrix")
-        }
-      }
-    } else {
-      # Handle older Assay format (v3)
-      if (is(assay@counts, "IterableMatrix")) {
-        data@assays[[assay_name]]@counts <-
-          as(assay@counts, "dgCMatrix")
-      }
-      if (is(assay@data, "IterableMatrix")) {
-        data@assays[[assay_name]]@data <-
-          as(assay@data, "dgCMatrix")
-      }
-      if (is(assay@scale.data, "IterableMatrix")) {
-        data@assays[[assay_name]]@scale.data <-
-          as(assay@scale.data, "dgCMatrix")
+    # Convert matrix slots
+    # Handle layers (counts, data, scale.data, etc.)
+    for (layer_name in SeuratObject::Layers(assay)) {
+      layer <- SeuratObject::LayerData(assay, layer_name)
+      if (is(layer, "IterableMatrix")) {
+        SeuratObject::LayerData(data[[assay_name]], layer_name) <-
+          as(layer, "dgCMatrix")
       }
     }
   }
-
   return(data)
 }

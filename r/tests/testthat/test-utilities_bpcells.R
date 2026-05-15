@@ -9,19 +9,19 @@ create_bpcells_seurat <- function() {
   pbmc_raw <- as(as.matrix(pbmc_raw), "dgCMatrix")
 
   # write to temporary BPCells directory
-  temp_bpcells_dir <- file.path(tempdir(), "matrix_dir")
-  if (dir.exists(temp_bpcells_dir)) {
-    unlink(temp_bpcells_dir, recursive = TRUE)
+  matrix_dir <- file.path(tempdir(), "matrix_dir")
+  if (dir.exists(matrix_dir)) {
+    unlink(matrix_dir, recursive = TRUE)
   }
-  counts <- BPCells::write_matrix_dir(pbmc_raw, temp_bpcells_dir)
+  counts <- BPCells::write_matrix_dir(pbmc_raw, matrix_dir)
 
   # create Seurat object with BPCells matrix
   # (CreateSeuratObject converts the MatrixDir to a RenameDims layer)
-  seurat_obj <- SeuratObject::CreateSeuratObject(
+  scdata <- SeuratObject::CreateSeuratObject(
     counts = counts
   )
 
-  list(obj = seurat_obj, bpcells_dir = temp_bpcells_dir)
+  list(scdata = scdata, matrix_dir = matrix_dir)
 }
 
 # test tar_zstd constructs correct command
@@ -59,7 +59,7 @@ test_that("find_matrix_dir_paths finds MatrixDir in nested layers", {
   bpcells_data <- create_bpcells_seurat()
 
   # extract from the counts layer (wrapped in RenameDims)
-  counts_layer <- bpcells_data$obj@assays$RNA@layers[["counts"]]
+  counts_layer <- SeuratObject::LayerData(bpcells_data$scdata[["RNA"]], "counts")
 
   # find_matrix_dir_paths should recursively find any MatrixDir objects
   paths <- find_matrix_dir_paths(counts_layer)
@@ -73,8 +73,8 @@ test_that("find_matrix_dir_paths finds MatrixDir in nested layers", {
 # test update_matrix_dir updates paths in all assay layers
 test_that("update_matrix_dir updates paths across assays", {
   bpcells_data <- create_bpcells_seurat()
-  seurat_obj <- bpcells_data$obj
-  old_dir <- bpcells_data$bpcells_dir
+  seurat_obj <- bpcells_data$scdata
+  old_dir <- bpcells_data$matrix_dir
   new_dir <- file.path(tempdir(), "new_matrix_dir")
   dir.create(new_dir, showWarnings = FALSE)
 
@@ -98,7 +98,7 @@ test_that("update_matrix_dir updates paths across assays", {
 # test replace_matrix_dir_paths handles MatrixDir updates correctly
 test_that("replace_matrix_dir_paths updates MatrixDir path", {
   bpcells_data <- create_bpcells_seurat()
-  old_dir <- bpcells_data$bpcells_dir
+  old_dir <- bpcells_data$matrix_dir
   new_dir <- file.path(tempdir(), "new_matrix_dir")
   dir.create(new_dir, showWarnings = FALSE)
 
@@ -111,9 +111,61 @@ test_that("replace_matrix_dir_paths updates MatrixDir path", {
   )
 
   # test direct replacement on a layer
-  counts_layer <- bpcells_data$obj@assays$RNA@layers[["counts"]]
+  counts_layer <- SeuratObject::LayerData(bpcells_data$scdata[["RNA"]], "counts")
   updated_layer <- replace_matrix_dir_paths(counts_layer, old_dir, new_dir)
 
   # verify we can still work with the layer after path update
   expect_s4_class(updated_layer, "RenameDims")
+})
+
+test_that("materialize_bpcells_matrix converts IterableMatrix to dgCMatrix", {
+  bpcells_data <- create_bpcells_seurat()
+  scdata <- bpcells_data$scdata
+
+  # typical Seurat workflow
+  scdata <- Seurat::NormalizeData(scdata)
+  scdata <- Seurat::FindVariableFeatures(scdata)
+  scdata <- Seurat::ScaleData(scdata)
+
+  # check that layers are IterableMatrix
+  for (layer_name in SeuratObject::Layers(scdata[["RNA"]])) {
+    layer <- SeuratObject::LayerData(scdata[["RNA"]], layer_name)
+    expect_true(is(layer, "IterableMatrix"))
+  }
+
+  # materialize the object
+  scdata <- materialize_bpcells_matrix(scdata)
+
+  # should all be dgCMatrix now
+  for (layer_name in SeuratObject::Layers(scdata[["RNA"]])) {
+    layer <- SeuratObject::LayerData(scdata[["RNA"]], layer_name)
+    expect_s4_class(layer, "dgCMatrix")
+  }
+})
+
+test_that("load_bpcells works", {
+  bpcells_data <- create_bpcells_seurat()
+  scdata <- bpcells_data$scdata
+  matrix_dir <- bpcells_data$matrix_dir
+
+  tarfile <- file.path(tempdir(), "matrix_dir.tar.zst")
+  # move to parent of matrix_dir and tar it
+  data_dir <- dirname(matrix_dir)
+
+  current_dir <- getwd()
+  setwd(data_dir)
+  tar_zstd(tarfile, files = basename(matrix_dir))
+  setwd(current_dir)
+
+  # scdata shouldn't work because matrix_dir removed
+  unlink(matrix_dir, recursive = TRUE)
+  expect_error(as.matrix(scdata[["RNA"]]$counts))
+
+
+  # load the matrix from the directory
+  scdata <- load_bpcells(scdata, data_dir)
+
+  # verify it's a IterableMatrix and can be accessed
+  expect_s4_class(scdata[["RNA"]]$counts, "IterableMatrix")
+  expect_no_error(as.matrix(scdata[["RNA"]]$counts))
 })
