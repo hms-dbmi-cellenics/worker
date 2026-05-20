@@ -38,7 +38,7 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
     dplyr::pull(cells_id)
 
   # Extract and subset matrix
-  mat <- data@assays$RNA$data
+  mat <- data[["RNA"]]$data
   keep_indices <- match(keep_cell_ids, object_ids)
   mat_subset <- mat[, keep_indices]
   mat_subset <- as(mat_subset, "dgCMatrix")

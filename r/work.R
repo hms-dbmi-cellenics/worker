@@ -330,19 +330,19 @@ repeat {
 backend <- RestRserve::BackendRserve$new()
 
 get_fpath <- function(experiment_id) {
-  data_dir <- file.path('/data', experiment_id)
+  data_dir <- file.path("/data", experiment_id)
 
   fpath <- NULL
 
   while (is.null(fpath)) {
     fnames <- list.files(data_dir)
 
-    if ('r.qs' %in% fnames) {
-      fpath <- file.path(data_dir, 'r.qs')
+    if ("r.qs" %in% fnames) {
+      fpath <- file.path(data_dir, "r.qs")
 
-    } else if ('r.rds' %in% fnames) {
+    } else if ("r.rds" %in% fnames) {
       # fallback to rds for older experiments
-      fpath <- file.path(data_dir, 'r.rds')
+      fpath <- file.path(data_dir, "r.rds")
     }
     Sys.sleep(1)
   }

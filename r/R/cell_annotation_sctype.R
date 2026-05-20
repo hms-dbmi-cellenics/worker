@@ -25,7 +25,7 @@ ScTypeAnnotate <- function(req, data) {
   species <- req$body$species
   tissue <- req$body$tissue
 
-  # check "integrated" first for legacy reasons
+  # check "integrated" first for legacy datasets
   if ("integrated" %in% names(data@assays)) {
     active_assay <- "integrated"
   } else if ("sketch" %in% names(data@assays)) {

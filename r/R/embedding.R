@@ -134,41 +134,29 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 
   } else if (method == "umap") {
 
-    if (has_sketch) {
-      # use Python umap directly to avoid uwot Docker segfault
-      data <- run_sketch_umap(
-        data,
-        reduction_model = "umap",
-        reduction = reduction_type,
-        config = config,
-        num_pcs = num_pcs
-      )
-    } else {
-      # standard UMAP for non-sketch data
-      data <- Seurat::RunUMAP(
-        data,
-        reduction = reduction_type,
-        dims = 1:num_pcs,
-        verbose = FALSE,
-        min.dist = config$minimumDistance,
-        metric = config$distanceMetric,
-        umap.method = "umap-learn",
-        seed.use = ULTIMATE_SEED
-      )
-    }
+    # use Python umap directly to avoid uwot Docker segfault
+    data <- run_umap(
+      data,
+      reduction_model = "umap",
+      reduction = reduction_type,
+      config = config,
+      num_pcs = num_pcs,
+      has_sketch = has_sketch
+    )
+
   }
   return(data)
 }
 
 # use umap-learn via reticulate to fit sketch and project to full
 # avoids uwot Docker segfault (Seurat forces uwot if return.model=TRUE)
-run_sketch_umap <- function(
-  object, reduction_model, reduction, config, num_pcs
+run_umap <- function(
+  object, reduction_model, reduction, config, num_pcs, has_sketch
 ) {
 
-  # get the sketch data (PCA, harmony, etc)
+  # get the reduction data (PCA, harmony, etc)
   # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
-  sketch_data <- Seurat::Embeddings(object, reduction = reduction)[, 1:num_pcs]
+  data <- Seurat::Embeddings(object, reduction = reduction)[, 1:num_pcs]
 
   # import python umap
   umap <- reticulate::import("umap")
@@ -186,32 +174,31 @@ run_sketch_umap <- function(
   )
 
   # fit on sketch and get embedding
-  message("Fitting UMAP on downsampled reduction: ", reduction)
-  sketch_embedding <- umap_model$fit_transform(as.matrix(sketch_data))
+  message("Fitting UMAP on reduction: ", reduction)
+  embedding <- umap_model$fit_transform(as.matrix(data))
 
-  # set rownames to match cell identifiers from sketch data
-  rownames(sketch_embedding) <- rownames(sketch_data)
+  if (has_sketch) {
+    # Get full data for projection
+    # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
+    full_reduction <- gsub("[.]sketch$", "", reduction)
+    data <- Seurat::Embeddings(object, reduction = full_reduction)
+    data <- data[, 1:num_pcs]
 
-  # Get full data for projection
-  # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
-  full_reduction <- gsub("[.]sketch$", "", reduction)
-  full_data <- Seurat::Embeddings(object, reduction = full_reduction)
-  full_data <- full_data[, 1:num_pcs]
+    message("Projecting UMAP to full reduction: ", full_reduction)
+    embedding <- umap_model$transform(as.matrix(data))
+  }
 
-  message("Projecting UMAP to full reduction: ", full_reduction)
-  full_embedding <- umap_model$transform(as.matrix(full_data))
-
-  # set rownames to match cell identifiers from full data
-  rownames(full_embedding) <- rownames(full_data)
+  # set rownames to match cell identifiers from data
+  rownames(embedding) <- rownames(data)
 
   # store full embedding in main umap reduction
-  full_umap_reduction <- Seurat::CreateDimReducObject(
-    embeddings = full_embedding,
+  umap_reduction <- Seurat::CreateDimReducObject(
+    embeddings = embedding,
     key = "UMAP_",
     assay = Seurat::DefaultAssay(object),
     global = TRUE
   )
-  object[[reduction_model]] <- full_umap_reduction
+  object[[reduction_model]] <- umap_reduction
 
   return(object)
 }
