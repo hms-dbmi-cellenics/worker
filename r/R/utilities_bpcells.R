@@ -76,7 +76,7 @@ replace_matrix_dir_paths <- function(obj, old_dir, new_dir) {
 get_matrix_dirs <- function(scdata) {
 
   matrix_dirs <- lapply(
-    scdata@assays$RNA@layers,
+    scdata[["RNA"]]@layers,
     find_matrix_dir_paths
   )
 

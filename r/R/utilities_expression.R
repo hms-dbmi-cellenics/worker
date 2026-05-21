@@ -74,7 +74,7 @@ getGeneExpression <- function(data, genes) {
 #'
 getExpressionValues <- function(data, genes) {
   # subset to genes of interest and materialize (bpcells)
-  mat <- data@assays$RNA$data
+  mat <- data[["RNA"]]$data
   mat <- mat[unique(genes$input), , drop = FALSE]
   mat <- as(mat, "dgCMatrix")
 
