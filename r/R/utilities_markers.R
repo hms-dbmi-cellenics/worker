@@ -1,30 +1,41 @@
 #' getTopMarkerGenes
 #'
 #' Uses presto::wilcoxauc to find the marker genes that distinguish the
-#' cellsets. It then filters the list of genes up to nFeatures using reasonable
+#' cellsets. It then filters the list of genes up to nfeatures using reasonable
 #' defaults.
 #'
-#' @param nFeatures int number of marker genes to get
+#' @param nfeatures int number of marker genes to get
 #' @param data SeuratObject
-#' @param cellSets list of cellsets to split for marker gene selection
-#' @param aucMin min area under the wilcoxon test's ROC for a gene to be
+#' @param cell_sets_ids list of cell sets to split for marker gene selection
+#' @param auc_min min area under the wilcoxon test's ROC for a gene to be
 #'  considered a marker
-#' @param pctInMin min percentage of cells in cellset that have to express a
+#' @param pct_in_min min percentage of cells in cellset that have to express a
 #'  gene for it to be considered a marker
-#' @param pctOutMax max percentage of cells outside cellset that can express a
+#' @param pct_out_max max percentage of cells outside cellset that can express a
 #'  gene for it to be considered a marker
 #'
 #' @return data.frame of top marker genes
 #' @export
 #'
-getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInMin = 20, pctOutMax = 70) {
+getTopMarkerGenes <- function(
+  nfeatures, data, cell_sets_ids, auc_min = 0.3, pct_in_min = 20, pct_out_max = 70
+) {
   object_ids <- data$cells_id
-  marker_groups <- rep(NA, length(object_ids))
 
-  for (i in seq_along(cellSetsIds)) {
-    filtered_cells <- intersect(cellSetsIds[[i]], object_ids)
-    marker_groups[object_ids %in% filtered_cells] <- i
-  }
+  # build cell-to-group mapping using data.table for speed
+  cell_group_map <- data.table::rbindlist(
+    lapply(seq_along(cell_sets_ids), function(i) {
+      data.table::data.table(
+        cell_id = unlist(cell_sets_ids[[i]]),
+        group = i
+      )
+    })
+  )
+
+  # join to assign marker groups to all cells
+  dt <- data.table::data.table(cell_id = object_ids)
+  dt <- cell_group_map[dt, on = "cell_id"]
+  marker_groups <- dt$group
 
   # for speed: take at most 1000 cells per cluster
   set.seed(0)
@@ -38,11 +49,11 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
     dplyr::pull(cells_id)
 
   # Extract and subset matrix
-  mat <- data@assays$RNA$data
+  mat <- data[["RNA"]]$data
   keep_indices <- match(keep_cell_ids, object_ids)
+  marker_groups_subset <- marker_groups[keep_indices]
   mat_subset <- mat[, keep_indices]
   mat_subset <- as(mat_subset, "dgCMatrix")
-  marker_groups_subset <- marker_groups[keep_indices]
 
   all_markers <- presto::wilcoxauc(
     mat_subset,
@@ -51,21 +62,21 @@ getTopMarkerGenes <- function(nFeatures, data, cellSetsIds, aucMin = 0.3, pctInM
 
   all_markers$group <- as.numeric(all_markers$group)
 
-  # may not return nFeatures markers per cluster if values are too stringent
+  # may not return nfeatures markers per cluster if values are too stringent
   filtered_markers <- all_markers |>
     dplyr::filter(logFC > 0 &
-        auc >= aucMin &
-        pct_in >= pctInMin &
-        pct_out <= pctOutMax
+        auc >= auc_min &
+        pct_in >= pct_in_min &
+        pct_out <= pct_out_max
     ) |>
     dplyr::arrange(pval) |>
     dplyr::distinct(feature, .keep_all = TRUE) |>
     dplyr::arrange(-logFC)
 
-  # Get top nFeatures per group without additional sorting
+  # Get top nfeatures per group without additional sorting
   top_markers <- filtered_markers |>
     dplyr::group_by(group) |>
-    dplyr::slice_head(n = nFeatures) |>
+    dplyr::slice_head(n = nfeatures) |>
     dplyr::ungroup() |>
     dplyr::arrange(group)
 
