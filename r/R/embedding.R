@@ -134,75 +134,77 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
 
   } else if (method == "umap") {
 
-    if (has_sketch) {
-      # use Python umap directly to avoid uwot Docker segfault
-      data <- run_sketch_umap(
-        data,
-        reduction_model = "umap",
-        reduction = reduction_type,
-        config = config,
-        num_pcs = num_pcs
-      )
-    } else {
-      # standard UMAP for non-sketch data
-      data <- Seurat::RunUMAP(
-        data,
-        reduction = reduction_type,
-        dims = 1:num_pcs,
-        verbose = FALSE,
-        min.dist = config$minimumDistance,
-        metric = config$distanceMetric,
-        umap.method = "umap-learn",
-        seed.use = ULTIMATE_SEED
-      )
-    }
+    data <- run_umap(
+      data,
+      reduction_model = "umap",
+      reduction = reduction_type,
+      config = config,
+      num_pcs = num_pcs,
+      has_sketch = has_sketch
+    )
   }
+
   return(data)
 }
 
 # use umap-learn via reticulate to fit sketch and project to full
 # avoids uwot Docker segfault (Seurat forces uwot if return.model=TRUE)
-run_sketch_umap <- function(
-  object, reduction_model, reduction, config, num_pcs
+run_umap <- function(
+  object, reduction_model, reduction, config, num_pcs, has_sketch = FALSE
 ) {
 
-  # get the sketch data (PCA, harmony, etc)
-  # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
-  sketch_data <- Seurat::Embeddings(object, reduction = reduction)[, 1:num_pcs]
+  red_data <- Seurat::Embeddings(object, reduction = reduction)[, 1:num_pcs]
 
-  # import python umap
-  umap <- reticulate::import("umap")
-  sklearn <- reticulate::import("sklearn.utils")
+  tstart_umap <- Sys.time()
+  message("Fitting UMAP on ", reduction, " data via uwot...")
 
-  # create UMAP model matching Seurat's RunUMAP defaults for umap-learn
-  random_state <- sklearn$check_random_state(as.integer(ULTIMATE_SEED))
-  umap_model <- umap$UMAP(
-    n_neighbors = 15L,
-    n_components = 2L,
-    metric = config$distanceMetric,
+  # NOTE: uwot::umap2 with RcppHNSW installed used as faster and
+  # avoids segfaults seen from RcppAnnoy with n_threads != 0
+  set.seed(ULTIMATE_SEED)
+  umap_res <- uwot::umap2(
+    X = as.matrix(red_data),
+    n_neighbors = 30L,
     min_dist = config$minimumDistance,
-    random_state = random_state,
-    verbose = FALSE
+    metric = config$distanceMetric,
+    ret_model = has_sketch,
+    n_threads = parallel::detectCores(),
+    n_sgd_threads = "auto",
+    batch = TRUE,
+    seed = as.integer(ULTIMATE_SEED)
   )
 
-  # fit on sketch and get embedding
-  message("Fitting UMAP on downsampled reduction: ", reduction)
-  sketch_embedding <- umap_model$fit_transform(as.matrix(sketch_data))
+  message(
+    "UMAP fit time: ",
+    round(difftime(Sys.time(), tstart_umap, units = "secs"), 2), " seconds"
+  )
 
-  # set rownames to match cell identifiers from sketch data
-  rownames(sketch_embedding) <- rownames(sketch_data)
+  if (!has_sketch) {
+    full_embedding <- umap_res
 
-  # Get full data for projection
-  # use only num_pcs dimensions to match Seurat's RunUMAP dims=1:num_pcs
-  full_reduction <- gsub("[.]sketch$", "", reduction)
-  full_data <- Seurat::Embeddings(object, reduction = full_reduction)
-  full_data <- full_data[, 1:num_pcs]
+  } else {
+    full_data <- Seurat::Embeddings(
+      object,
+      reduction = gsub("[.]sketch$", "", reduction)
+    )[, 1:num_pcs]
 
-  message("Projecting UMAP to full reduction: ", full_reduction)
-  full_embedding <- umap_model$transform(as.matrix(full_data))
+    message("Projecting full dataset...")
+    tstart_project <- Sys.time()
 
-  # set rownames to match cell identifiers from full data
-  rownames(full_embedding) <- rownames(full_data)
+    full_embedding <- uwot::umap_transform(
+      X = as.matrix(full_data),
+      model = umap_res,
+      n_threads = parallel::detectCores(),
+      n_sgd_threads = "auto",
+      batch = TRUE,
+      seed = as.integer(ULTIMATE_SEED)
+    )
+    message(
+      "UMAP projection time: ",
+      round(difftime(Sys.time(), tstart_project, units = "secs"), 2), " seconds"
+    )
+  }
+
+  colnames(full_embedding) <- paste0("UMAP_", 1:2)
 
   # store full embedding in main umap reduction
   full_umap_reduction <- Seurat::CreateDimReducObject(

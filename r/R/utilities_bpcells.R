@@ -5,15 +5,13 @@ load_bpcells <- function(data, data_dir) {
     pattern = "matrix_dir[.]tar[.]zst",
     full.names = TRUE
   )
+  if (!length(tarfile)) stop("matrix_dir.tar.zst not found")
 
-  if (!dir.exists(file.path(data_dir, "matrix_dir"))) {
-    # need to throw error otherwise worker will report success
-    # but the data won't be usable since the matrix_dir won't be extracted
-    if (!length(tarfile)) stop("matrix_dir.tar.zst not found")
+  # remove any existing matrix_dir to avoid stale data
+  unlink(file.path(data_dir, "matrix_dir"), recursive = TRUE)
 
-    message("Extracting BPCells matrix tarfile...")
-    untar_zstd(tarfile, exdir = data_dir)
-  }
+  message("Extracting BPCells matrix tarfile...")
+  untar_zstd(tarfile, exdir = data_dir)
 
   old_dir <- get_matrix_dirs(data)
   new_dir <- file.path(data_dir, basename(old_dir))
