@@ -204,6 +204,8 @@ run_umap <- function(
     )
   }
 
+  colnames(full_embedding) <- paste0("UMAP_", 1:2)
+
   # store full embedding in main umap reduction
   full_umap_reduction <- Seurat::CreateDimReducObject(
     embeddings = full_embedding,

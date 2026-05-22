@@ -13,12 +13,13 @@ mock_req <- function() {
 test_that("TSNE embedding works", {
 
   mock_RunTSNE <- function(config, method, reduction_type, num_pcs, data) {
-    Seurat::RunTSNE(data,
-     reduction = reduction_type,
-     dims = 1:num_pcs,
-     perplexity = config$perplexity,
-     learning.rate = config$learningRate,
-     check_duplicates = FALSE
+    Seurat::RunTSNE(
+      data,
+      reduction = reduction_type,
+      dims = 1:num_pcs,
+      perplexity = config$perplexity,
+      learning.rate = config$learningRate,
+      check_duplicates = FALSE
     )
   }
 
@@ -42,33 +43,18 @@ test_that("TSNE embedding works", {
 })
 
 test_that("UMAP embedding works", {
-  mock_RunUMAP <- function(config, method, reduction_type, num_pcs, data) {
-    Seurat::RunUMAP(data,
-      reduction = reduction_type,
-      dims = 1:num_pcs,
-      verbose = FALSE,
-      min.dist = config$minimumDistance,
-      metric = config$distanceMetric,
-      seed.use = ULTIMATE_SEED
-    )
-  }
-
-  stub(runEmbedding, "getEmbedding", mock_RunUMAP)
-
-  reduction_method <- "umap"
 
   data <- mock_scdata(with_umap = TRUE)
   req <- list(
     body = list(
-      type = reduction_method,
+      type = "umap",
       config = list(minimumDistance = 0.1, distanceMetric = "cosine"),
       use_saved = FALSE
     )
   )
 
   res <- runEmbedding(req, data)
-
-  expected_res <- as.data.frame(Seurat::Embeddings(data)[,1:2])
+  expected_res <- as.data.frame(Seurat::Embeddings(data)[, 1:2])
 
   # Expect all cells to be in embedding
   expect_equal(length(res), length(expected_res$PC_1))
@@ -129,40 +115,6 @@ test_that("RunTSNE uses the correct params", {
       dims = 1:num_pcs,
       perplexity = config$perplexity,
       learning.rate = config$learningRate
-    )
-  )
-
-})
-
-test_that("RunUMAP uses umap-learn with seed.use", {
-
-  mock_RunUMAP <- mock(TRUE)
-
-  stub(getEmbedding, "Seurat::RunUMAP", mock_RunUMAP)
-
-  data <- suppressWarnings(mock_scdata())
-  config <- list(minimumDistance = 0.1, distanceMetric = "cosine")
-  reduction_type <- "pca"
-  method <- "umap"
-  num_pcs <- 1
-
-  res <- getEmbedding(config, method, reduction_type, num_pcs, data)
-
-  # Check that umap is called using the correct parameters
-  expect_equal(length(mock_RunUMAP), 1)
-  args <- mock_args(mock_RunUMAP)
-
-  expect_equal(
-    args[[1]], 
-    list(
-      data,
-      reduction = reduction_type,
-      dims = 1:num_pcs,
-      verbose = FALSE,
-      min.dist = config$minimumDistance,
-      metric = config$distanceMetric,
-      umap.method = "umap-learn",
-      seed.use = ULTIMATE_SEED
     )
   )
 
