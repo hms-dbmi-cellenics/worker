@@ -16,7 +16,7 @@ test_that("Expression task works with bpcells.", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression")
+    c("orderedGeneNames", "stats", "rawExpression", "cellIds")
   )
   expect_equal(length(res$orderedGeneNames), 2)
   expect_equal(length(res$stats$rawMean), 2)
@@ -34,7 +34,7 @@ test_that("Expression task returns appropriate number and names of genes.", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression")
+    c("orderedGeneNames", "stats", "rawExpression", "cellIds")
   )
   expect_equal(length(res$orderedGeneNames), 2)
   expect_equal(length(res$stats$rawMean), 2)
@@ -61,7 +61,7 @@ test_that("Expression task keeps order regardless of the request received.", {
 
   # Change order so that we can make sure this doesnt affect order
   rev_req <- req
-  rev_req$body_genes<- rev(req$body$genes)
+  rev_req$body_genes <- rev(req$body$genes)
 
   res <- runExpression(req, data)
   rev_res <- runExpression(rev_req, data)
@@ -70,14 +70,15 @@ test_that("Expression task keeps order regardless of the request received.", {
 
   expect_equal(
     names(res),
-    c("orderedGeneNames", "stats", "rawExpression")
+    c("orderedGeneNames", "stats", "rawExpression", "cellIds")
   )
 
   expect_equal(res$orderedGeneNames, c("MS4A1", "CD79B"))
   expect_equal(res$stats$rawMean, c(0.7890259, 1.3545382))
   expect_snapshot({
     res
-    rev_res})
+    rev_res
+  })
 })
 
 test_that("Expression matrices are correctly formatted for mathJS", {
@@ -121,7 +122,7 @@ test_that("Expression task returns appropriate number of cells.", {
   expect_equal(result_size, expected_cells)
 })
 
-test_that("getStats works well", {
+test_that("get_stats works well", {
   data <- mock_scdata()
   req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
@@ -132,8 +133,8 @@ test_that("getStats works well", {
       toupper(gene_annotations$name) %in% toupper(req$body$genes)
     )
 
-  expression_values <- getExpressionValues(data, gene_subset)
-  res <- getStats(expression_values)
+  expression_values <- get_expression_values(data, gene_subset)
+  res <- get_stats(expression_values)
 
   expect_equal(
     names(res),
@@ -154,7 +155,7 @@ test_that("getStats works well", {
   )
   expect_equal(
     res$truncatedMax[1],
-    getQuantileCap(expression_values[, 1, drop = FALSE], 0.95)
+    get_quantile_cap(expression_values[, 1, drop = FALSE], 0.95)
   )
 
   expect_equal(
@@ -171,7 +172,7 @@ test_that("getStats works well", {
   )
   expect_equal(
     res$truncatedMax[2],
-    getQuantileCap(expression_values[, 2, drop = FALSE], 0.95)
+    get_quantile_cap(expression_values[, 2, drop = FALSE], 0.95)
   )
 })
 
@@ -248,11 +249,11 @@ test_that("raw expression values are the same as in the original data", {
   colnames(original_data) <- gene_subset$name
   original_data <- as.data.table(original_data)
 
-  res <- getExpressionValues(data, gene_subset)
+  res <- get_expression_values(data, gene_subset)
 
   # Convert sparse matrix to data.table for comparison
   res_dt <- as.data.table(as.matrix(res))
-  
+
   expect_equal(
     res_dt,
     original_data
@@ -260,7 +261,7 @@ test_that("raw expression values are the same as in the original data", {
 })
 
 
-test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
+test_that("to_sparse_json returns vectors of lenght > 1 as vectors", {
   data <- mock_scdata()
   req <- mock_req()
   gene_annotations <- data@misc$gene_annotations
@@ -271,8 +272,8 @@ test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
       toupper(gene_annotations$name) %in% toupper(req$body$genes)
     )
 
-  res_long <- getExpressionValues(data, gene_subset)
-  res_long_json <- toSparseJson(res_long)
+  res_long <- get_expression_values(data, gene_subset)
+  res_long_json <- to_sparse_json(res_long)
 
   # test that every element in the res_long_json is numeric or list
   lapply(res_long_json, \(x){
@@ -281,8 +282,7 @@ test_that("toSparseJson returns vectors of lenght > 1 as vectors", {
 })
 
 
-test_that("toSparseJson returns single value arrays as lists", {
-
+test_that("to_sparse_json returns single value arrays as lists", {
   # RJSONIO::toJSON converts single values to JS scalars. Which breaks when the
   # UI expects single value arrays. Converting all vectors to list using as.list
   # fixes this issue.
@@ -302,8 +302,8 @@ test_that("toSparseJson returns single value arrays as lists", {
   data_short <- subsetIds(data, cell_ids)
   gene_subset <- gene_subset[1, ]
 
-  res_short <- getExpressionValues(data_short, gene_subset)
-  res_short_json <- toSparseJson(res_short)
+  res_short <- get_expression_values(data_short, gene_subset)
+  res_short_json <- to_sparse_json(res_short)
 
   # test that elements are properly formatted
   lapply(res_short_json, \(x) {
@@ -312,14 +312,18 @@ test_that("toSparseJson returns single value arrays as lists", {
 })
 
 
-test_that("getStats produces consistent results with master version", {
-  # Define the old getStats from master for comparison
+test_that("get_stats produces consistent results with previous version", {
+  # Define the previously used getStats for comparison
   getStatsOld <- function(data) {
     stats_unsafe <- list(
       rawMean = unname(colMeans(data$rawExpression, na.rm = TRUE)),
       rawStdev = unname(apply(data$rawExpression, 2, sd, na.rm = TRUE)),
-      truncatedMin = unname(apply(data$truncatedExpression, 2, min, na.rm = TRUE)),
-      truncatedMax = unname(apply(data$truncatedExpression, 2, max, na.rm = TRUE))
+      truncatedMin = unname(
+        apply(data$truncatedExpression, 2, min, na.rm = TRUE)
+      ),
+      truncatedMax = unname(
+        apply(data$truncatedExpression, 2, max, na.rm = TRUE)
+      )
     )
     return(stats_unsafe)
   }
@@ -334,44 +338,44 @@ test_that("getStats produces consistent results with master version", {
       toupper(gene_annotations$name) %in% toupper(req$body$genes)
     )
 
-  expression_values <- getExpressionValues(data, gene_subset)
-  
+  expression_values <- get_expression_values(data, gene_subset)
+
   # Create old-style data structure with truncatedExpression for comparison
   old_style_data <- list(
     rawExpression = as.data.table(as.matrix(expression_values)),
     truncatedExpression = as.data.table(as.matrix(expression_values))
   )
-  
-  new_results <- getStats(expression_values)
+
+  new_results <- get_stats(expression_values)
   old_results <- getStatsOld(old_style_data)
-  
+
   # Compare rawMean and rawStdev (should match)
   expect_equal(new_results$rawMean, old_results$rawMean, tolerance = 1e-10)
   expect_equal(new_results$rawStdev, old_results$rawStdev, tolerance = 1e-10)
-  
+
   # truncatedMin should match (both use min of expression values)
   expect_equal(new_results$truncatedMin, old_results$truncatedMin, tolerance = 1e-10)
 })
 
-test_that("expandMatrixToCellIDs creates correct dimensions and zero rows", {
+test_that("expand_matrix_to_cell_ids creates correct dimensions and zero rows", {
   # Create a small sparse matrix with known values (4 rows, 2 columns)
-  i <- c(1, 2, 3, 4)  # 1-based row indices
-  j <- c(1, 2, 1, 2)  # 1-based column indices
-  x <- c(1.0, 2.0, 3.0, 4.0)  # values
-  
+  i <- c(1, 2, 3, 4) # 1-based row indices
+  j <- c(1, 2, 1, 2) # 1-based column indices
+  x <- c(1.0, 2.0, 3.0, 4.0) # values
+
   mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(4, 2))
-  
+
   # Cell IDs: 0, 1, 3, 100 (gaps and large index)
   all_cell_ids <- c(0, 1, 3, 100)
-  
-  result <- expandMatrixToCellIDs(mat, all_cell_ids)
-  
+
+  result <- expand_matrix_to_cell_ids(mat, all_cell_ids)
+
   # Should have 101 rows (0-indexed to 100) and 2 columns
   expect_equal(nrow(result), 101)
   expect_equal(ncol(result), 2)
 })
 
-test_that("expandMatrixToCellIDs maps values to correct cell_id rows", {
+test_that("expand_matrix_to_cell_ids maps values to correct cell_id rows", {
   # Create a sparse matrix with known values
   # Row 1: [1.0, 0]
   # Row 2: [0, 2.0]
@@ -380,9 +384,9 @@ test_that("expandMatrixToCellIDs maps values to correct cell_id rows", {
   i <- c(1, 2, 3, 4)
   j <- c(1, 2, 1, 2)
   x <- c(1.0, 2.0, 3.0, 4.0)
-  
+
   mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(4, 2))
-  
+
   # cell_ids: 0, 1, 3, 100
   # Result should be:
   # Row 0 (cell_id 0, from expr row 1): [1.0, 0]
@@ -391,78 +395,136 @@ test_that("expandMatrixToCellIDs maps values to correct cell_id rows", {
   # Row 3 (cell_id 3, from expr row 3): [3.0, 0]
   # Rows 4-99 (cell_ids 4-99, no expr): [0, 0]
   # Row 100 (cell_id 100, from expr row 4): [0, 4.0]
-  
+
   all_cell_ids <- c(0, 1, 3, 100)
-  result <- expandMatrixToCellIDs(mat, all_cell_ids)
-  
+  result <- expand_matrix_to_cell_ids(mat, all_cell_ids)
+
   # Convert to dense for easier testing of specific rows
   result_dense <- as.matrix(result)
-  
+
   # Check row 0 (cell_id 0, from expression row 1)
   expect_equal(result_dense[1, ], c(1.0, 0))
-  
+
   # Check row 1 (cell_id 1, from expression row 2)
   expect_equal(result_dense[2, ], c(0, 2.0))
-  
+
   # Check row 2 (cell_id 2, should be all zeros)
   expect_equal(result_dense[3, ], c(0, 0))
-  
+
   # Check row 3 (cell_id 3, from expression row 3)
   expect_equal(result_dense[4, ], c(3.0, 0))
-  
+
   # Check rows 4-99 are all zero
   expect_equal(sum(result_dense[5:100, ]), 0)
-  
+
   # Check row 100 (cell_id 100, from expression row 4)
   expect_equal(result_dense[101, ], c(0, 4.0))
 })
 
-test_that("expandMatrixToCellIDs preserves sparsity", {
+test_that("expand_matrix_to_cell_ids preserves sparsity", {
   # Create a sparse matrix with only a few entries
   i <- c(1, 3)
   j <- c(1, 2)
   x <- c(5.0, 6.0)
-  
+
   mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(3, 2))
-  
+
   # Cell IDs with large gaps
   all_cell_ids <- c(0, 10, 1000)
-  
-  result <- expandMatrixToCellIDs(mat, all_cell_ids)
-  
+
+  result <- expand_matrix_to_cell_ids(mat, all_cell_ids)
+
   # Should be 1001 x 2 sparse matrix
   expect_equal(nrow(result), 1001)
   expect_equal(ncol(result), 2)
-  
+
   # Should only have 2 non-zero entries
   expect_equal(length(result@x), 2)
-  
+
   # Verify the values are still correct
   result_dense <- as.matrix(result)
-  expect_equal(result_dense[1, 1], 5.0)  # cell_id 0, from expr row 1
-  expect_equal(result_dense[1001, 2], 6.0)  # cell_id 1000, from expr row 3
+  expect_equal(result_dense[1, 1], 5.0) # cell_id 0, from expr row 1
+  expect_equal(result_dense[1001, 2], 6.0) # cell_id 1000, from expr row 3
 })
 
-test_that("expandMatrixToCellIDs sequential cell_ids works as identity mapping plus padding", {
+test_that("expand_matrix_to_cell_ids sequential cell_ids works as identity mapping plus padding", {
   # Create a simple sparse matrix
   i <- c(1, 2)
   j <- c(1, 2)
   x <- c(1.0, 2.0)
-  
+
   mat <- Matrix::sparseMatrix(i = i, j = j, x = x, dims = c(2, 2))
-  
+
   # Sequential cell_ids starting from 0
   all_cell_ids <- c(0, 1)
-  
-  result <- expandMatrixToCellIDs(mat, all_cell_ids)
-  
+
+  result <- expand_matrix_to_cell_ids(mat, all_cell_ids)
+
   # Should have 2 rows (max cell_id is 1, so 0-1)
   expect_equal(nrow(result), 2)
   expect_equal(ncol(result), 2)
-  
+
   # Values should be in correct positions
   result_dense <- as.matrix(result)
   expect_equal(result_dense[1, 1], 1.0)
   expect_equal(result_dense[2, 2], 2.0)
 })
 
+test_that("get_gene_expression with cell_ids subsets expression to requested cells", {
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <- subset(
+    gene_annotations,
+    toupper(gene_annotations$name) %in% toupper(req$body$genes)
+  )
+  gene_subset <- gene_subset[, c("input", "name")]
+
+  # Use first 5 cell IDs from the dataset
+  all_cell_ids <- data@meta.data$cells_id
+  cell_ids <- all_cell_ids[1:5]
+
+  res <- get_gene_expression(data, gene_subset, cell_ids)
+
+  # Result should include cellIds field set to what was requested
+  expect_equal(res$cellIds, cell_ids)
+
+  # rawExpression size should reflect number of requested cells, not full dataset
+  expect_equal(res$rawExpression$size[[1]], length(cell_ids))
+})
+
+test_that("get_gene_expression with null cell_ids returns full expanded matrix", {
+  data <- mock_scdata()
+  req <- mock_req()
+  gene_annotations <- data@misc$gene_annotations
+
+  gene_subset <- subset(
+    gene_annotations,
+    toupper(gene_annotations$name) %in% toupper(req$body$genes)
+  )
+  gene_subset <- gene_subset[, c("input", "name")]
+
+  res <- get_gene_expression(data, gene_subset, NULL)
+
+  # cellIds should be NULL
+  expect_null(res$cellIds)
+
+  # rawExpression size should cover the full cell range (max cell_id + 1)
+  expected_cells <- max(data@meta.data$cells_id) + 1
+  expect_equal(res$rawExpression$size[[1]], expected_cells)
+})
+
+test_that("runExpression with cellIds in request subsets expression correctly", {
+  data <- mock_scdata()
+  req <- mock_req()
+
+  # Pick a small subset of valid cell IDs
+  all_cell_ids <- data@meta.data$cells_id
+  req$body$cellIds <- all_cell_ids[1:10]
+
+  res <- runExpression(req, data)
+
+  expect_equal(res$cellIds, req$body$cellIds)
+  expect_equal(res$rawExpression$size[[1]], 10)
+})
