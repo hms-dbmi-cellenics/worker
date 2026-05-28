@@ -4,9 +4,12 @@ import backoff
 import requests
 from aws_xray_sdk.core import xray_recorder
 
+from ..helpers.get_bucketed_heatmap_cells import get_bucketed_heatmap_cells
+
 from ..config import config
 from ..result import Result
 from ..tasks import Task
+from ..helpers.s3 import get_cell_sets
 
 
 class GeneExpression(Task):
@@ -20,6 +23,18 @@ class GeneExpression(Task):
 
     def _format_request(self):
         request = self.task_def
+        cell_ids = request.get("downsampleSettings", {}).get("cellIds")
+        downsample_settings = request.get("downsampleSettings")
+
+        if cell_ids is None and downsample_settings:
+            cell_sets = get_cell_sets(self.experiment_id)
+            cell_ids = get_bucketed_heatmap_cells(
+                downsample_settings["selectedCellSet"],
+                downsample_settings["groupedTracks"],
+                cell_sets
+            )
+
+        request["cellIds"] = cell_ids
         return request
 
     @xray_recorder.capture("GeneExpression.compute")
