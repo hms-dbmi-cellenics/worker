@@ -415,7 +415,7 @@ with_fake_http(test_that(
   }
 ))
 
-test_that("getQuantileCap (vectorized) produces same results as getQuantileCap_old for each column", {
+test_that("get_quantile_cap (vectorized) produces same results as getQuantileCapOld for each column", {
   # Define the original non-vectorized implementation for comparison
   getQuantilCapOld <- function(x, quantile_threshold) {
     lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
@@ -449,7 +449,7 @@ test_that("getQuantileCap (vectorized) produces same results as getQuantileCap_o
   
   for (threshold in quantile_thresholds) {
     # Get vectorized results (all columns at once)
-    vectorized_caps <- getQuantileCap(test_matrix, threshold)
+    vectorized_caps <- get_quantile_cap(test_matrix, threshold)
     
     # Get non-vectorized results (column by column)
     old_caps <- sapply(
@@ -467,7 +467,7 @@ test_that("getQuantileCap (vectorized) produces same results as getQuantileCap_o
   }
 })
 
-test_that("getQuantileCap (vectorized) handles edge cases like old implementation", {
+test_that("get_quantile_cap (vectorized) handles edge cases like old implementation", {
   # Define the original non-vectorized implementation for comparison
   getQuantilCapOld <- function(x, quantile_threshold) {
     lim <- as.numeric(quantile(x, quantile_threshold, na.rm = TRUE))
@@ -482,7 +482,7 @@ test_that("getQuantileCap (vectorized) handles edge cases like old implementatio
   # Test with all zeros
   zero_matrix <- Matrix::Matrix(rep(0, 12), nrow = 6, ncol = 2, sparse = TRUE)
   
-  vectorized_result <- getQuantileCap(zero_matrix, 0.75)
+  vectorized_result <- get_quantile_cap(zero_matrix, 0.75)
   old_result <- c(
     getQuantilCapOld(zero_matrix[, 1], 0.75),
     getQuantilCapOld(zero_matrix[, 2], 0.75)
@@ -498,7 +498,7 @@ test_that("getQuantileCap (vectorized) handles edge cases like old implementatio
     sparse = TRUE
   )
   
-  vectorized_result <- getQuantileCap(na_matrix, 0.75)
+  vectorized_result <- get_quantile_cap(na_matrix, 0.75)
   old_result <- c(
     getQuantilCapOld(na_matrix[, 1], 0.75),
     getQuantilCapOld(na_matrix[, 2], 0.75),
@@ -508,7 +508,7 @@ test_that("getQuantileCap (vectorized) handles edge cases like old implementatio
   expect_equal(vectorized_result, as.numeric(old_result))
 })
 
-test_that("getQuantileCap increments threshold when initial quantile is zero", {
+test_that("get_quantile_cap increments threshold when initial quantile is zero", {
   # Create a matrix where high quantiles are zero but low values exist
   # High quantile thresholds on sparse data can return 0
   test_matrix <- Matrix::Matrix(
@@ -523,7 +523,7 @@ test_that("getQuantileCap increments threshold when initial quantile is zero", {
   )
   
   # At 0.95 quantile, all columns would return 0 initially
-  result <- getQuantileCap(test_matrix, 0.95)
+  result <- get_quantile_cap(test_matrix, 0.95)
   
   # Should not return 0 for columns with non-zero values
   expect_true(all(result != 0))
@@ -534,17 +534,17 @@ test_that("getQuantileCap increments threshold when initial quantile is zero", {
   expect_true(result[3] > 0 && result[3] <= 2)
 })
 
-test_that("getQuantileCap returns 0 when all values are zero", {
+test_that("get_quantile_cap returns 0 when all values are zero", {
   # Create a matrix with all zeros
   zero_matrix <- Matrix::Matrix(rep(0, 20), nrow = 5, ncol = 4, sparse = TRUE)
   
-  result <- getQuantileCap(zero_matrix, 0.75)
+  result <- get_quantile_cap(zero_matrix, 0.75)
   
   # Should return 0 for all columns when all values are zero
   expect_equal(result, rep(0, ncol(zero_matrix)))
 })
 
-test_that("getQuantileCap handles high quantiles correctly", {
+test_that("get_quantile_cap handles high quantiles correctly", {
   # Create a test matrix with a range of values
   test_matrix <- Matrix::Matrix(
     c(
@@ -557,9 +557,9 @@ test_that("getQuantileCap handles high quantiles correctly", {
   )
   
   # Get quantiles at different thresholds
-  result_75 <- getQuantileCap(test_matrix, 0.75)
-  result_90 <- getQuantileCap(test_matrix, 0.90)
-  result_99 <- getQuantileCap(test_matrix, 0.99)
+  result_75 <- get_quantile_cap(test_matrix, 0.75)
+  result_90 <- get_quantile_cap(test_matrix, 0.90)
+  result_99 <- get_quantile_cap(test_matrix, 0.99)
   
   # Higher quantiles should generally give higher or equal values
   expect_true(result_90[1] >= result_75[1])
