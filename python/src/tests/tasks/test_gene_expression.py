@@ -113,3 +113,58 @@ class TestGeneExpression:
 
         with pytest.raises(Exception):  # raise_for_status raises HTTPError
             GeneExpression(self.correct_request).compute()
+
+    def test_format_request_sets_cell_ids_to_none_without_downsample_settings(
+        self,
+    ):
+        task = GeneExpression(self.correct_request)
+        request = task._format_request()
+        assert request["cellIds"] is None
+
+    def test_format_request_uses_provided_cell_ids(self):
+        msg = {
+            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "timeout": "2099-12-31 00:00:00",
+            "body": {
+                "name": "GeneExpression",
+                "genes": ["Tpt1"],
+                "downsampleSettings": {
+                    "cellIds": [1, 2, 3],
+                    "selectedCellSet": "louvain",
+                    "groupedTracks": ["sample"],
+                },
+            },
+        }
+        task = GeneExpression(msg)
+        request = task._format_request()
+        assert request["cellIds"] == [1, 2, 3]
+
+    def test_format_request_fetches_bucketed_cells_when_no_cell_ids(self):
+        msg = {
+            "experimentId": "e52b39624588791a7889e39c617f669e",
+            "timeout": "2099-12-31 00:00:00",
+            "body": {
+                "name": "GeneExpression",
+                "genes": ["Tpt1"],
+                "downsampleSettings": {
+                    "selectedCellSet": "louvain",
+                    "groupedTracks": ["sample"],
+                },
+            },
+        }
+        bucketed_ids = [10, 20, 30]
+        with mock.patch(
+            "worker.tasks.gene_expression.get_cell_sets",
+            return_value=cell_sets_from_s3["cellSets"],
+        ), mock.patch(
+            "worker.tasks.gene_expression.get_bucketed_heatmap_cells",
+            return_value=bucketed_ids,
+        ) as mock_bucketed:
+            task = GeneExpression(msg)
+            request = task._format_request()
+            mock_bucketed.assert_called_once_with(
+                "louvain",
+                ["sample"],
+                cell_sets_from_s3["cellSets"],
+            )
+            assert request["cellIds"] == bucketed_ids

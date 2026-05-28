@@ -27,7 +27,8 @@ runExpression <- function(req, data) {
   }
 
   gene_subset <- gene_subset[, c("input", "name")]
+  cell_ids <- req$body$cellIds
 
   # Always return full expression data
-  return(getGeneExpression(data, gene_subset))
+  get_gene_expression(data, gene_subset, cell_ids)
 }

@@ -39,6 +39,9 @@
       [1] 80  2
       
       
+      $cellIds
+      NULL
+      
 
 # Expression task keeps order regardless of the request received.
 
@@ -81,6 +84,9 @@
       [1] 80  2
       
       
+      $cellIds
+      NULL
+      
     Code
       rev_res
     Output
@@ -119,5 +125,8 @@
       $rawExpression$size
       [1] 80  2
       
+      
+      $cellIds
+      NULL
       
 
