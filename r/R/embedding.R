@@ -90,11 +90,7 @@ get_tissue_coords <- function(img_name, scdata) {
 
 get_img_scale <- function(img_name, scdata) {
   dims <- dim(scdata[[img_name]]@image)
-  ifelse(
-    dims[1] < 2000 & dims[2] < 2000,
-    "lowres",
-    "hires"
-  )
+  ifelse(any(dims <= 600), "lowres", "hires")
 }
 
 
