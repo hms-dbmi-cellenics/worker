@@ -38,7 +38,7 @@ runEmbedding <- function(req, data) {
 
   if (method == "images") {
     img_names <- Seurat::Images(data)
-    df_embeddings <- lapply(img_names, get_rotated_tissue_coords, data)
+    df_embeddings <- lapply(img_names, get_tissue_coords, data)
     df_embedding <- do.call(rbind, df_embeddings)
 
   } else {
@@ -80,16 +80,21 @@ runEmbedding <- function(req, data) {
   )
 }
 
-# for Visium, data are flipped and rotated before SpatialDimPlot.
-# returns the rotated/flipped tissue Coordinates from a Seurat object.
-get_rotated_tissue_coords <- function(img_name, scdata) {
-  coord_spot <- SeuratObject::GetTissueCoordinates(
+get_tissue_coords <- function(img_name, scdata) {
+  SeuratObject::GetTissueCoordinates(
     scdata,
     img_name,
-    scale = "lowres"
-  )[, 2:1] # rotation
-  colnames(coord_spot) <- c("x", "y")
-  return(coord_spot)
+    scale = get_img_scale(img_name, scdata)
+  )[, 1:2]
+}
+
+get_img_scale <- function(img_name, scdata) {
+  dims <- dim(scdata[[img_name]]@image)
+  ifelse(
+    dims[1] < 2000 & dims[2] < 2000,
+    "lowres",
+    "hires"
+  )
 }
 
 
