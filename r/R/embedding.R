@@ -41,6 +41,11 @@ runEmbedding <- function(req, data) {
     df_embeddings <- lapply(img_names, get_tissue_coords, data)
     df_embedding <- do.call(rbind, df_embeddings)
 
+  } else if (method == "polygons") {
+    img_names <- Seurat::Images(data)
+    df_embeddings <- lapply(img_names, get_polygon_coords, data)
+    df_embedding <- do.call(rbind, df_embeddings)
+
   } else {
 
     if (!use_saved) {
@@ -54,43 +59,50 @@ runEmbedding <- function(req, data) {
     }
 
     df_embedding <- Seurat::Embeddings(data, reduction = method)
+    df_embedding <- as.data.frame(df_embedding)
+    colnames(df_embedding) <- c("x", "y")
+    df_embedding$cell <- row.names(df_embedding)
   }
 
   # Order embedding by cells id in ascending form
   meta <- data@meta.data
-  df_embedding <- as.data.frame(df_embedding)
-  df_embedding$cells_id <- meta[row.names(df_embedding), "cells_id"]
-  df_embedding <- df_embedding[order(df_embedding$cells_id), ]
-  df_embedding <- df_embedding |>
-    tidyr::complete(cells_id = seq(0, max(meta$cells_id))) |>
-    dplyr::select(-"cells_id")
+  df_embedding$cells_id <- meta[df_embedding$cell, "cells_id"]
+  df_embedding <- dplyr::arrange(df_embedding, cells_id)
 
-  map2_fun <- function(x, y) {
-    if (is.na(x)) {
-      NULL
-    } else {
-      c(x, y)
-    }
-  }
+  data.table::setDT(df_embedding)
+  result <- vector("list", max(meta$cells_id) + 1L)
 
-  purrr::map2(
-    df_embedding[[1]],
-    df_embedding[[2]],
-    map2_fun
-  )
+  pairs <- df_embedding[,
+    .(v = list(c(rbind(x, y)))),
+    by = cells_id
+  ]
+
+  result[pairs$cells_id + 1L] <- pairs$v
+  result
+}
+
+get_polygon_coords <- function(img_name, scdata) {
+  img <- scdata[[img_name]]
+  coords <- img$segmentations@sf.data
+  scale <- get_img_scale(img_name, scdata)
+  scale.factor <- Seurat::ScaleFactors(img)[[scale]]
+  coords[, c("x", "y")] <- coords[, c("x", "y")] * scale.factor
+  return(coords)
 }
 
 get_tissue_coords <- function(img_name, scdata) {
-  SeuratObject::GetTissueCoordinates(
+  coords <- SeuratObject::GetTissueCoordinates(
     scdata,
     img_name,
     scale = get_img_scale(img_name, scdata)
-  )[, 1:2]
+  )
+  coords$cell <- row.names(coords)
+  coords
 }
 
 get_img_scale <- function(img_name, scdata) {
   dims <- dim(scdata[[img_name]]@image)
-  ifelse(any(dims <= 600), "lowres", "hires")
+  ifelse(any(dims[1:2] <= 600), "lowres", "hires")
 }
 
 
