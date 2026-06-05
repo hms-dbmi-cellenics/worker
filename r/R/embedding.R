@@ -83,7 +83,7 @@ runEmbedding <- function(req, data) {
 
 get_polygon_coords <- function(img_name, scdata) {
   img <- scdata[[img_name]]
-  coords <- img[["simplified.segmentations"]]@sf.data
+  coords <- img[["segmentations"]]@sf.data
   scale <- get_img_scale(img_name, scdata)
   scale.factor <- Seurat::ScaleFactors(img)[[scale]]
   coords[, c("x", "y")] <- coords[, c("x", "y")] * scale.factor
