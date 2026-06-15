@@ -226,6 +226,92 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
 })
 
 
+test_that("format_cell_sets_object consumes palette in sorted cluster order", {
+  # the palette (e.g. from Spaco) is ordered to match sort(unique(cluster))
+  cell_sets <- data.frame(
+    cluster = c(2, 2, 1, 3),
+    cell_ids = c(10, 11, 20, 30)
+  )
+  palette <- c("#aaaaaa", "#bbbbbb", "#cccccc")
+
+  res <- format_cell_sets_object(cell_sets, "louvain", palette)
+  assigned <- vapply(res$children, function(x) x$color, character(1))
+
+  # clusters iterate as 1, 2, 3 and take palette[1], palette[2], palette[3]
+  expect_equal(assigned, palette)
+})
+
+
+test_that("get_spaco_color_map returns NULL when there are no slices", {
+  # no images -> returns before any distance/embedding work
+  data <- mock_scdata()
+  cell_sets <- mock_cellset_object(100, 4)
+
+  mockery::stub(
+    get_spaco_color_map, "spatial_distance_r",
+    function(...) stop("should not compute distances without slices")
+  )
+  expect_null(get_spaco_color_map(data, cell_sets))
+})
+
+
+mock_spatial_grid <- function(side, n_clusters) {
+  coords <- as.matrix(expand.grid(x = seq_len(side), y = seq_len(side)))
+  labels <- as.character(rep(seq_len(n_clusters), length.out = nrow(coords)))
+  list(coords = coords, labels = labels)
+}
+
+
+test_that("spatial_distance_r returns a symmetric zero-diagonal matrix", {
+  grid <- mock_spatial_grid(10, 4)
+  m <- spatial_distance_r(grid$coords, grid$labels, radius = 5)
+
+  expect_equal(dim(m), c(4, 4))
+  expect_equal(rownames(m), as.character(1:4))
+  expect_true(isSymmetric(unname(m)))
+  expect_equal(unname(diag(m)), rep(0, 4))
+})
+
+
+test_that("spatial_distance_r matches Spaco's interlacement on a grid", {
+  # spatial_distance_r is a port of spaco.distance.spatial_distance; check the
+  # score for a known layout (cluster A and B interlaced in a checkerboard)
+  coords <- as.matrix(expand.grid(x = 1:6, y = 1:6))
+  labels <- ifelse((coords[, 1] + coords[, 2]) %% 2 == 0, "A", "B")
+  m <- spatial_distance_r(coords, labels, radius = 1.5, n_cells = 1L)
+
+  # checkerboard: every neighbour within radius 1.5 is the other cluster, so
+  # A-B interlacement is non-zero and the diagonal is zero
+  expect_gt(m["A", "B"], 0)
+  expect_equal(m["A", "B"], m["B", "A"])
+  expect_equal(unname(diag(m)), c(0, 0))
+})
+
+
+test_that("embed_graph_r returns one hex color per cluster", {
+  grid <- mock_spatial_grid(12, 6)
+  m <- spatial_distance_r(grid$coords, grid$labels, radius = 4)
+  cols <- embed_graph_r(m)
+
+  expect_named(cols, rownames(m))
+  expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", cols)))
+  expect_equal(length(unique(cols)), length(cols))
+})
+
+
+test_that("merge_cluster_distances sums slices aligned to the cluster set", {
+  m1 <- matrix(c(0, 1, 1, 0), 2, dimnames = list(c("1", "2"), c("1", "2")))
+  m2 <- matrix(c(0, 2, 2, 0), 2, dimnames = list(c("2", "3"), c("2", "3")))
+
+  merged <- merge_cluster_distances(list(m1, m2), c("1", "2", "3"))
+
+  expect_equal(dim(merged), c(3, 3))
+  expect_equal(merged["1", "2"], 1)
+  expect_equal(merged["2", "3"], 2)
+  expect_equal(merged["1", "3"], 0)
+})
+
+
 test_that("runClusters does not crash with less than 10 dimensions available", {
   algos <- c("louvain", "leiden")
   scdata <- mock_scdata()
