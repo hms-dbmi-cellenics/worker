@@ -59,7 +59,7 @@ runEmbedding <- function(req, data) {
     }
 
     df_embedding <- Seurat::Embeddings(data, reduction = method)
-    df_embedding <- as.data.frame(df_embedding)
+    df_embedding <- as.data.frame(df_embedding[, 1:2])
     colnames(df_embedding) <- c("x", "y")
     df_embedding$cell <- row.names(df_embedding)
   }
