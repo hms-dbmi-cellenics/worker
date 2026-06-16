@@ -299,6 +299,15 @@ test_that("embed_graph_r returns one hex color per cluster", {
 })
 
 
+test_that("embed_graph_r errors for too few clusters to embed", {
+  # with 2 clusters n_neighbors collapses to 1 and uwot's spectral init errors;
+  # get_spaco_color_map's tryCatch turns this into a fall back to the color pool
+  grid <- mock_spatial_grid(12, 2)
+  m <- spatial_distance_r(grid$coords, grid$labels, radius = 4)
+  expect_error(embed_graph_r(m))
+})
+
+
 test_that("merge_cluster_distances sums slices aligned to the cluster set", {
   m1 <- matrix(c(0, 1, 1, 0), 2, dimnames = list(c("1", "2"), c("1", "2")))
   m2 <- matrix(c(0, 2, 2, 0), 2, dimnames = list(c("2", "3"), c("2", "3")))
