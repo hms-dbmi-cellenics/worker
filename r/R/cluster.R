@@ -279,7 +279,8 @@ get_spaco_color_map <- function(scdata, cell_sets) {
 
       # per-slice cluster interlacement distance graphs
       per_slice <- lapply(img_names, function(img) {
-        coords <- get_tissue_coords(img, scdata)
+        scale <- get_img_scale(img, scdata)
+        coords <- SeuratObject::GetTissueCoordinates(scdata, img, scale = scale)
         labels <- as.character(cell_sets[coords$cell, "cluster"])
         keep <- !is.na(labels)
         if (!is.null(cells_use)) keep <- keep & coords$cell %in% cells_use

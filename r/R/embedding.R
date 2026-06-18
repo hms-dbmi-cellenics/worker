@@ -38,12 +38,10 @@ runEmbedding <- function(req, data) {
 
   if (method == "images") {
     img_names <- Seurat::Images(data)
-    df_embeddings <- lapply(img_names, get_tissue_coords, data)
-    df_embedding <- do.call(rbind, df_embeddings)
-
-  } else if (method == "polygons") {
-    img_names <- Seurat::Images(data)
-    df_embeddings <- lapply(img_names, get_polygon_coords, data)
+    df_embeddings <- lapply(img_names, function(img_name) {
+      scale <- get_img_scale(img_name, data)
+      SeuratObject::GetTissueCoordinates(data, img_name, scale = scale)
+    })
     df_embedding <- do.call(rbind, df_embeddings)
 
   } else {
@@ -67,6 +65,7 @@ runEmbedding <- function(req, data) {
   # Order embedding by cells id in ascending form
   meta <- data@meta.data
   df_embedding$cells_id <- meta[df_embedding$cell, "cells_id"]
+
   df_embedding <- dplyr::arrange(df_embedding, cells_id)
 
   data.table::setDT(df_embedding)
@@ -81,28 +80,24 @@ runEmbedding <- function(req, data) {
   result
 }
 
-get_polygon_coords <- function(img_name, scdata) {
-  img <- scdata[[img_name]]
-  coords <- img[["segmentations"]]@sf.data
-  scale <- get_img_scale(img_name, scdata)
-  scale.factor <- Seurat::ScaleFactors(img)[[scale]]
-  coords[, c("x", "y")] <- coords[, c("x", "y")] * scale.factor
-  return(coords)
-}
-
-get_tissue_coords <- function(img_name, scdata) {
-  coords <- SeuratObject::GetTissueCoordinates(
-    scdata,
-    img_name,
-    scale = get_img_scale(img_name, scdata)
-  )
-  coords$cell <- row.names(coords)
-  coords
-}
-
 get_img_scale <- function(img_name, scdata) {
+  # Xenium FOVs have no scale step; Visium HD applies the hires/lowres factor.
+  if (is_scaleless_spatial(scdata)) return(NULL)
+
   dims <- dim(scdata[[img_name]]@image)
   ifelse(any(dims[1:2] <= 600), "lowres", "hires")
+}
+
+# Spatial technologies whose coordinates have no pixel->coord scale step (the
+# accessors return micron coords directly). Dispatch on the technology persisted
+# onto the object during create-seurat (data@misc$technology), not on object
+# introspection: the worker loads the saved Seurat object, not the pipeline
+# config, so the persisted technology is the authoritative signal.
+SCALELESS_SPATIAL_TECHNOLOGIES <- c("xenium")
+
+is_scaleless_spatial <- function(scdata) {
+  technology <- scdata@misc$technology
+  !is.null(technology) && technology %in% SCALELESS_SPATIAL_TECHNOLOGIES
 }
 
 
