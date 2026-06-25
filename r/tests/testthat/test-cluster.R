@@ -321,6 +321,56 @@ test_that("merge_cluster_distances sums slices aligned to the cluster set", {
 })
 
 
+# Build the (cell_sets, coords) pair get_spaco_color_map consumes from a grid:
+# cell_sets is the data.frame indexed by cell position, coords is what a stubbed
+# GetTissueCoordinates returns (a cell/x/y frame in the same order).
+mock_spaco_inputs <- function(side, n_clusters) {
+  grid <- mock_spatial_grid(side, n_clusters)
+  n <- nrow(grid$coords)
+  list(
+    cell_sets = data.frame(cluster = as.integer(grid$labels), cell_ids = seq_len(n)),
+    coords = data.frame(cell = seq_len(n), x = grid$coords[, "x"], y = grid$coords[, "y"])
+  )
+}
+
+
+test_that("get_spaco_color_map returns one hex colour per cluster on the happy path", {
+  fixtures <- mock_spaco_inputs(12, 6)
+  data <- mock_scdata()
+
+  # stub the slice accessors so no real FOV/VisiumV2 object is needed; the
+  # distance/embedding maths (spatial_distance_r -> embed_graph_r) runs for real
+  mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
+  mockery::stub(get_spaco_color_map, "get_img_scale", function(...) NULL)
+  mockery::stub(
+    get_spaco_color_map, "SeuratObject::GetTissueCoordinates",
+    function(...) fixtures$coords
+  )
+
+  colors <- get_spaco_color_map(data, fixtures$cell_sets)
+
+  expect_length(colors, 6)
+  expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", colors)))
+})
+
+
+test_that("get_spaco_color_map falls back to NULL when embedding fails", {
+  # 2 clusters collapse uwot's spectral init -> embed_graph_r errors -> the
+  # tryCatch returns NULL so runClusters keeps the default colour pool
+  fixtures <- mock_spaco_inputs(12, 2)
+  data <- mock_scdata()
+
+  mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
+  mockery::stub(get_spaco_color_map, "get_img_scale", function(...) NULL)
+  mockery::stub(
+    get_spaco_color_map, "SeuratObject::GetTissueCoordinates",
+    function(...) fixtures$coords
+  )
+
+  expect_null(get_spaco_color_map(data, fixtures$cell_sets))
+})
+
+
 test_that("runClusters does not crash with less than 10 dimensions available", {
   algos <- c("louvain", "leiden")
   scdata <- mock_scdata()
