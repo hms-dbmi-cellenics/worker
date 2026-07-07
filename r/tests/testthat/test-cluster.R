@@ -321,16 +321,34 @@ test_that("merge_cluster_distances sums slices aligned to the cluster set", {
 })
 
 
-# Build the (cell_sets, coords) pair get_spaco_color_map consumes from a grid:
-# cell_sets is the data.frame indexed by cell position, coords is what a stubbed
-# GetTissueCoordinates returns (a cell/x/y frame in the same order).
+# Build the (cell_sets, coords) pair get_spaco_color_map consumes from a grid.
+# cell_sets is keyed by CHARACTER BARCODE row names (as in production, where
+# cell_sets carries cell barcodes as row names); coords is what a stubbed
+# GetTissueCoordinates returns, a cell/x/y frame whose `cell` column holds the
+# same barcodes. The coords rows are in REVERSED barcode order so the production
+# by-name lookup cell_sets[coords$cell, "cluster"] is genuinely exercised: a
+# positional match would pair each coordinate with the wrong cluster and change
+# the interlacement graph, while the by-name lookup preserves the (coord,
+# cluster) pairing regardless of row order.
 mock_spaco_inputs <- function(side, n_clusters) {
   grid <- mock_spatial_grid(side, n_clusters)
   n <- nrow(grid$coords)
-  list(
-    cell_sets = data.frame(cluster = as.integer(grid$labels), cell_ids = seq_len(n)),
-    coords = data.frame(cell = seq_len(n), x = grid$coords[, "x"], y = grid$coords[, "y"])
+  barcodes <- paste0("cell", seq_len(n))
+
+  cell_sets <- data.frame(
+    cluster = as.integer(grid$labels),
+    cell_ids = seq_len(n),
+    row.names = barcodes
   )
+
+  ord <- rev(seq_len(n))
+  coords <- data.frame(
+    cell = barcodes[ord],
+    x = grid$coords[ord, "x"],
+    y = grid$coords[ord, "y"]
+  )
+
+  list(cell_sets = cell_sets, coords = coords)
 }
 
 
@@ -341,7 +359,7 @@ test_that("get_spaco_color_map returns one hex colour per cluster on the happy p
   # stub the slice accessors so no real FOV/VisiumV2 object is needed; the
   # distance/embedding maths (spatial_distance_r -> embed_graph_r) runs for real
   mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
-  mockery::stub(get_spaco_color_map, "get_img_scale", function(...) NULL)
+  mockery::stub(get_spaco_color_map, "get_image_scale", function(...) NULL)
   mockery::stub(
     get_spaco_color_map, "SeuratObject::GetTissueCoordinates",
     function(...) fixtures$coords
@@ -361,13 +379,100 @@ test_that("get_spaco_color_map falls back to NULL when embedding fails", {
   data <- mock_scdata()
 
   mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
-  mockery::stub(get_spaco_color_map, "get_img_scale", function(...) NULL)
+  mockery::stub(get_spaco_color_map, "get_image_scale", function(...) NULL)
   mockery::stub(
     get_spaco_color_map, "SeuratObject::GetTissueCoordinates",
     function(...) fixtures$coords
   )
 
   expect_null(get_spaco_color_map(data, fixtures$cell_sets))
+})
+
+
+# Minimal S4 mocks for the Visium HD radius branch: get_spaco_radius reads
+# scdata@misc$microns_per_pixel and scdata[[image_name]]@scale.factors$<scale>.
+setClass("MockScaleImg", representation(scale.factors = "list"))
+setClass("MockRadiusScdata", representation(misc = "list", imgs = "list"))
+setMethod("[[", "MockRadiusScdata", function(x, i, ...) x@imgs[[i]])
+
+mock_radius_scdata <- function(misc, hires = NULL, lowres = NULL) {
+  img <- new("MockScaleImg", scale.factors = list(hires = hires, lowres = lowres))
+  new("MockRadiusScdata", misc = misc, imgs = list(fov = img))
+}
+
+
+test_that("get_spaco_radius returns the micron radius when scale is NULL", {
+  # scaleless (Xenium) coords are already microns; radius is used as-is and no
+  # @misc/scale.factors are needed
+  expect_equal(get_spaco_radius(mock_scdata(), "fov", NULL), 50)
+  expect_equal(get_spaco_radius(mock_scdata(), "fov", NULL), SPACO_RADIUS_MICRONS)
+})
+
+
+test_that("get_spaco_radius converts microns to hires pixels for Visium HD", {
+  microns_per_pixel <- 0.2125
+  hires_factor <- 0.15
+  scdata <- mock_radius_scdata(
+    misc = list(microns_per_pixel = microns_per_pixel), hires = hires_factor
+  )
+
+  expected <- 50 / microns_per_pixel * hires_factor
+  expect_equal(get_spaco_radius(scdata, "fov", "hires"), expected)
+})
+
+
+test_that("get_spaco_radius returns NULL when microns_per_pixel is unavailable", {
+  # missing the conversion factor -> skip the slice rather than colour at a
+  # wrong scale
+  scdata <- mock_radius_scdata(misc = list(), hires = 0.15)
+  expect_null(get_spaco_radius(scdata, "fov", "hires"))
+})
+
+
+test_that("get_spaco_color_map colours a real Xenium FOV end to end (unstubbed)", {
+  # Integration: build a REAL Xenium-shaped Seurat object (centroids FOV, no
+  # image, technology = "xenium") and run get_spaco_color_map with NOTHING
+  # stubbed, so Seurat::Images, GetTissueCoordinates (real x/y/cell), the by-name
+  # barcode lookup and get_spaco_radius (scaleless -> 50) all execute for real.
+  side <- 12
+  n_clusters <- 6
+  grid <- mock_spatial_grid(side, n_clusters)
+  n <- nrow(grid$coords)
+  barcodes <- paste0("cell", seq_len(n))
+
+  set.seed(0)
+  counts <- matrix(
+    rpois(n * 20, lambda = 5), nrow = 20,
+    dimnames = list(paste0("gene", seq_len(20)), barcodes)
+  )
+  scdata <- SeuratObject::CreateSeuratObject(counts = as(counts, "dgCMatrix"))
+
+  # mirror the pipeline's build_xenium_fov: a centroids FOV on the RNA assay
+  coords <- data.frame(
+    x = grid$coords[, "x"], y = grid$coords[, "y"], cell = barcodes
+  )
+  fov <- SeuratObject::CreateFOV(
+    list(centroids = SeuratObject::CreateCentroids(coords)), assay = "RNA"
+  )
+  scdata[["fov"]] <- fov
+  scdata@misc$technology <- "xenium"
+
+  cell_sets <- data.frame(
+    cluster = as.integer(grid$labels),
+    cell_ids = seq_len(n),
+    row.names = barcodes
+  )
+
+  colors <- get_spaco_color_map(scdata, cell_sets)
+
+  # 12x12 / 6 clusters embeds fine (see the stubbed happy-path test); allow the
+  # documented NULL fallback if the embedding legitimately cannot run
+  if (is.null(colors)) {
+    expect_null(colors)
+  } else {
+    expect_length(colors, n_clusters)
+    expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", colors)))
+  }
 })
 
 

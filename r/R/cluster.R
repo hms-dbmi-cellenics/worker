@@ -259,6 +259,39 @@ format_cell_sets_object <-
 #'  slice has cluster-labelled cells or anything fails.
 #' @export
 #'
+
+# Spaco neighbourhood radius, in microns (the Spaco paper's default). Applied
+# directly to Xenium (micron coords); converted to image pixels for Visium HD.
+SPACO_RADIUS_MICRONS <- 50
+
+#' Neighbourhood radius for \code{spatial_distance_r}, in the coordinate units
+#' returned by \code{GetTissueCoordinates(scdata, image_name, scale = scale)}.
+#'
+#' Mirrors the pipeline's \code{get_spaco_radius}. The Spaco radius is defined in
+#' microns. Xenium coords are already microns (\code{scale} is NULL) so it's used
+#' as-is; Visium HD coords are image pixels at the hires/lowres scale, so convert
+#' microns -> fullres pixels (via \code{microns_per_pixel}, persisted onto
+#' \code{@misc} by the pipeline) -> scaled pixels (via the image scale factor).
+#' Returns \code{NULL} when the factor is unavailable so the caller skips the
+#' slice rather than running the neighbourhood graph at the wrong scale.
+get_spaco_radius <- function(scdata, image_name, scale) {
+  if (is.null(scale)) {
+    return(SPACO_RADIUS_MICRONS)
+  }
+
+  microns_per_pixel <- scdata@misc$microns_per_pixel
+  scale_factor <- switch(scale,
+    hires = scdata[[image_name]]@scale.factors$hires,
+    lowres = scdata[[image_name]]@scale.factors$lowres,
+    NULL
+  )
+  if (is.null(microns_per_pixel) || is.null(scale_factor)) {
+    return(NULL)
+  }
+
+  SPACO_RADIUS_MICRONS / microns_per_pixel * scale_factor
+}
+
 get_spaco_color_map <- function(scdata, cell_sets) {
   tstart <- Sys.time()
   tryCatch(
@@ -279,7 +312,7 @@ get_spaco_color_map <- function(scdata, cell_sets) {
 
       # per-slice cluster interlacement distance graphs
       per_slice <- lapply(img_names, function(img) {
-        scale <- get_img_scale(img, scdata)
+        scale <- get_image_scale(img, scdata)
         coords <- SeuratObject::GetTissueCoordinates(scdata, img, scale = scale)
         labels <- as.character(cell_sets[coords$cell, "cluster"])
         keep <- !is.na(labels)
@@ -287,7 +320,15 @@ get_spaco_color_map <- function(scdata, cell_sets) {
         if (sum(keep) < 4) {
           return(NULL)
         }
-        spatial_distance_r(as.matrix(coords[keep, c("x", "y")]), labels[keep])
+        # 50um neighbourhood in this slice's coordinate units; skip the slice if
+        # the micron->pixel factor is missing rather than colour at a wrong scale
+        radius <- get_spaco_radius(scdata, img, scale)
+        if (is.null(radius)) {
+          return(NULL)
+        }
+        spatial_distance_r(
+          as.matrix(coords[keep, c("x", "y")]), labels[keep], radius = radius
+        )
       })
       per_slice <- Filter(Negate(is.null), per_slice)
       if (length(per_slice) == 0) {
@@ -305,7 +346,15 @@ get_spaco_color_map <- function(scdata, cell_sets) {
         round(difftime(Sys.time(), tstart, units = "secs"), 2),
         " seconds for ", length(clusters), " clusters"
       )
-      unname(color_map[clusters])
+
+      palette <- unname(color_map[clusters])
+      # every cluster should get a colour; if any is missing (e.g. a cluster
+      # absent from the interlacement graph) fall back rather than hand an NA
+      # colour to format_cell_sets_object (mirrors the pipeline's spaco_palette)
+      if (anyNA(palette)) {
+        return(NULL)
+      }
+      palette
     },
     error = function(e) {
       message(
@@ -328,12 +377,14 @@ get_spaco_color_map <- function(scdata, cell_sets) {
 #'
 #' @param coords numeric matrix of spatial coordinates (n cells x 2)
 #' @param labels character vector of cluster labels (length n)
-#' @param radius,n_neighbors,n_cells Spaco neighbourhood parameters
+#' @param radius,n_neighbors,n_cells Spaco neighbourhood parameters. \code{radius}
+#'  is in the same units as \code{coords}; real callers pass a value derived from
+#'  \code{\link{get_spaco_radius}} (50um converted to the coords' scale).
 #'
 #' @return symmetric cluster x cluster matrix with cluster labels as dimnames
 #'
 spatial_distance_r <- function(
-  coords, labels, radius = 90, n_neighbors = 16L, n_cells = 3L
+  coords, labels, radius = SPACO_RADIUS_MICRONS, n_neighbors = 16L, n_cells = 3L
 ) {
   clusters <- sort(unique(labels))
   k_clusters <- length(clusters)

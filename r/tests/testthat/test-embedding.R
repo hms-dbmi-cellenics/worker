@@ -231,7 +231,7 @@ test_that("can request saved embedding result", {
 # Minimal S4 mocks that mimic the slots/accessors used by the spatial scale
 # helpers in embedding.R, so we don't need to construct a full VisiumV2/FOV
 # object. MockScdata exposes @misc (for is_scaleless_spatial) and [[ (to fetch
-# the per-image @image array that get_img_scale measures).
+# the per-image @image array that get_image_scale measures).
 setClass("MockImg", representation(image = "ANY"))
 setClass("MockScdata", representation(misc = "list", imgs = "list"))
 setMethod("[[", "MockScdata", function(x, i, ...) x@imgs[[i]])
@@ -258,28 +258,28 @@ test_that("is_scaleless_spatial is FALSE when no technology is persisted", {
   expect_false(is_scaleless_spatial(mock_spatial_scdata(technology = NULL)))
 })
 
-# ── get_img_scale ───────────────────────────────────────────────────────────
-test_that("get_img_scale bypasses the scale lookup for Xenium (returns NULL)", {
+# ── get_image_scale ───────────────────────────────────────────────────────────
+test_that("get_image_scale bypasses the scale lookup for Xenium (returns NULL)", {
   # imgs is empty: proves the scaleless branch returns before touching @image,
   # matching a real Xenium FOV which has no image slot.
   scdata <- new("MockScdata", misc = list(technology = "xenium"), imgs = list())
-  expect_null(get_img_scale("fov1", scdata))
+  expect_null(get_image_scale("fov1", scdata))
 })
 
-test_that("get_img_scale returns lowres when an image dim is <= 600 (non-scaleless)", {
+test_that("get_image_scale returns lowres when an image dim is <= 600 (non-scaleless)", {
   scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(500, 500, 3))
-  expect_equal(get_img_scale("fov1", scdata), "lowres")
+  expect_equal(get_image_scale("fov1", scdata), "lowres")
 })
 
-test_that("get_img_scale returns hires when both image dims are > 600", {
+test_that("get_image_scale returns hires when both image dims are > 600", {
   scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(2000, 2000, 3))
-  expect_equal(get_img_scale("fov1", scdata), "hires")
+  expect_equal(get_image_scale("fov1", scdata), "hires")
 })
 
-test_that("get_img_scale only considers the first two (spatial) dims", {
+test_that("get_image_scale only considers the first two (spatial) dims", {
   # 3rd dim (channels) is small but must be ignored
   scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(1000, 1000, 3))
-  expect_equal(get_img_scale("fov1", scdata), "hires")
+  expect_equal(get_image_scale("fov1", scdata), "hires")
 })
 
 # ── runEmbedding (images) ───────────────────────────────────────────────────
@@ -303,7 +303,7 @@ test_that("runEmbedding (images) returns cells_id-ordered pairs, NULL gaps for f
 
   stub(runEmbedding, "Seurat::Images", function(...) "fov1")
   # Xenium dispatch: scale is NULL (no hires/lowres lookup)
-  stub(runEmbedding, "get_img_scale", function(...) NULL)
+  stub(runEmbedding, "get_image_scale", function(...) NULL)
   stub(runEmbedding, "SeuratObject::GetTissueCoordinates", function(...) coords)
 
   req <- list(body = list(type = "images", use_saved = TRUE, config = list()))

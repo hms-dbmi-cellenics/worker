@@ -39,7 +39,7 @@ runEmbedding <- function(req, data) {
   if (method == "images") {
     img_names <- Seurat::Images(data)
     df_embeddings <- lapply(img_names, function(img_name) {
-      scale <- get_img_scale(img_name, data)
+      scale <- get_image_scale(img_name, data)
       SeuratObject::GetTissueCoordinates(data, img_name, scale = scale)
     })
     df_embedding <- do.call(rbind, df_embeddings)
@@ -80,7 +80,7 @@ runEmbedding <- function(req, data) {
   result
 }
 
-get_img_scale <- function(img_name, scdata) {
+get_image_scale <- function(img_name, scdata) {
   # Xenium FOVs have no scale step; Visium HD applies the hires/lowres factor.
   if (is_scaleless_spatial(scdata)) return(NULL)
 
