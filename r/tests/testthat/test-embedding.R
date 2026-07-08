@@ -224,6 +224,104 @@ test_that("can request saved embedding result", {
   expect_equal(res,expected_res$PCS)
 })
 
+# ---------------------------------------------------------------------------
+# Spatial embedding helpers (init-spatial)
+# ---------------------------------------------------------------------------
+
+# Minimal S4 mocks that mimic the slots/accessors used by the spatial scale
+# helpers in embedding.R, so we don't need to construct a full VisiumV2/FOV
+# object. MockScdata exposes @misc (for is_scaleless_spatial) and [[ (to fetch
+# the per-image @image array that get_image_scale measures).
+setClass("MockImg", representation(image = "ANY"))
+setClass("MockScdata", representation(misc = "list", imgs = "list"))
+setMethod("[[", "MockScdata", function(x, i, ...) x@imgs[[i]])
+
+mock_img <- function(dims = c(500, 500, 3)) {
+  new("MockImg", image = array(0, dim = dims))
+}
+
+mock_spatial_scdata <- function(technology = NULL, dims = c(500, 500, 3)) {
+  misc <- if (is.null(technology)) list() else list(technology = technology)
+  new("MockScdata", misc = misc, imgs = list(fov1 = mock_img(dims)))
+}
+
+# ── is_scaleless_spatial ────────────────────────────────────────────────────
+test_that("is_scaleless_spatial is TRUE only for scaleless spatial techs", {
+  expect_true(is_scaleless_spatial(mock_spatial_scdata(technology = "xenium")))
+})
+
+test_that("is_scaleless_spatial is FALSE for Visium HD (it has a scale step)", {
+  expect_false(is_scaleless_spatial(mock_spatial_scdata(technology = "visium_hd")))
+})
+
+test_that("is_scaleless_spatial is FALSE when no technology is persisted", {
+  expect_false(is_scaleless_spatial(mock_spatial_scdata(technology = NULL)))
+})
+
+# ── get_image_scale ───────────────────────────────────────────────────────────
+test_that("get_image_scale bypasses the scale lookup for Xenium (returns NULL)", {
+  # imgs is empty: proves the scaleless branch returns before touching @image,
+  # matching a real Xenium FOV which has no image slot.
+  scdata <- new("MockScdata", misc = list(technology = "xenium"), imgs = list())
+  expect_null(get_image_scale("fov1", scdata))
+})
+
+test_that("get_image_scale returns lowres when an image dim is <= 600 (non-scaleless)", {
+  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(500, 500, 3))
+  expect_equal(get_image_scale("fov1", scdata), "lowres")
+})
+
+test_that("get_image_scale returns hires when both image dims are > 600", {
+  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(2000, 2000, 3))
+  expect_equal(get_image_scale("fov1", scdata), "hires")
+})
+
+test_that("get_image_scale only considers the first two (spatial) dims", {
+  # 3rd dim (channels) is small but must be ignored
+  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(1000, 1000, 3))
+  expect_equal(get_image_scale("fov1", scdata), "hires")
+})
+
+# ── runEmbedding (images) ───────────────────────────────────────────────────
+test_that("runEmbedding (images) returns cells_id-ordered pairs, NULL gaps for filtered cells", {
+  # coords are out of cells_id order to exercise the ordering logic, and only
+  # cover 3 of the object's cells so the rest read as filtered (NULL gaps).
+  # Seurat accessors are stubbed; meta.data comes from a real Seurat object.
+  scdata <- mock_scdata()
+  cells <- colnames(scdata)[1:3]
+  # assign known, shuffled cells_id to the first 3 cells
+  scdata@meta.data[cells, "cells_id"] <- c(2, 0, 1)
+
+  # GetTissueCoordinates returns x/y/cell directly (a FOV includes the cell
+  # column); the worker no longer wraps it in get_tissue_coords.
+  coords <- data.frame(
+    x = c(10, 20, 30),
+    y = c(11, 21, 31),
+    cell = cells,
+    row.names = cells
+  )
+
+  stub(runEmbedding, "Seurat::Images", function(...) "fov1")
+  # Xenium dispatch: scale is NULL (no hires/lowres lookup)
+  stub(runEmbedding, "get_image_scale", function(...) NULL)
+  stub(runEmbedding, "SeuratObject::GetTissueCoordinates", function(...) coords)
+
+  req <- list(body = list(type = "images", use_saved = TRUE, config = list()))
+  res <- runEmbedding(req, scdata)
+
+  # length is max(cells_id) + 1 across the whole object
+  expect_equal(length(res), max(scdata@meta.data$cells_id) + 1L)
+
+  # matched by cell name: cells_id 0 is cells[2] -> (20,21)
+  expect_equal(res[[1]], c(20, 21))
+  # cells_id 1 is cells[3] -> (30,31)
+  expect_equal(res[[2]], c(30, 31))
+  # cells_id 2 is cells[1] -> (10,11)
+  expect_equal(res[[3]], c(10, 11))
+  # a cell with no coordinates (QC-filtered) is a NULL gap, not an error
+  expect_null(res[[4]])
+})
+
 test_that("empty named list encodes consistently across JSON encoders", {
   # Test that empty named list (structure(list(), names = character(0)))
   # encodes identically in both jsonlite and yyjsonr for backward compatibility

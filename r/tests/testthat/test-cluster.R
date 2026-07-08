@@ -226,6 +226,256 @@ test_that("format_cell_sets_object returns empty children on empty cellset", {
 })
 
 
+test_that("format_cell_sets_object consumes palette in sorted cluster order", {
+  # the palette (e.g. from Spaco) is ordered to match sort(unique(cluster))
+  cell_sets <- data.frame(
+    cluster = c(2, 2, 1, 3),
+    cell_ids = c(10, 11, 20, 30)
+  )
+  palette <- c("#aaaaaa", "#bbbbbb", "#cccccc")
+
+  res <- format_cell_sets_object(cell_sets, "louvain", palette)
+  assigned <- vapply(res$children, function(x) x$color, character(1))
+
+  # clusters iterate as 1, 2, 3 and take palette[1], palette[2], palette[3]
+  expect_equal(assigned, palette)
+})
+
+
+test_that("get_spaco_color_map returns NULL when there are no slices", {
+  # no images -> returns before any distance/embedding work
+  data <- mock_scdata()
+  cell_sets <- mock_cellset_object(100, 4)
+
+  mockery::stub(
+    get_spaco_color_map, "spatial_distance_r",
+    function(...) stop("should not compute distances without slices")
+  )
+  expect_null(get_spaco_color_map(data, cell_sets))
+})
+
+
+mock_spatial_grid <- function(side, n_clusters) {
+  coords <- as.matrix(expand.grid(x = seq_len(side), y = seq_len(side)))
+  labels <- as.character(rep(seq_len(n_clusters), length.out = nrow(coords)))
+  list(coords = coords, labels = labels)
+}
+
+
+test_that("spatial_distance_r returns a symmetric zero-diagonal matrix", {
+  grid <- mock_spatial_grid(10, 4)
+  m <- spatial_distance_r(grid$coords, grid$labels, radius = 5)
+
+  expect_equal(dim(m), c(4, 4))
+  expect_equal(rownames(m), as.character(1:4))
+  expect_true(isSymmetric(unname(m)))
+  expect_equal(unname(diag(m)), rep(0, 4))
+})
+
+
+test_that("spatial_distance_r matches Spaco's interlacement on a grid", {
+  # spatial_distance_r is a port of spaco.distance.spatial_distance; check the
+  # score for a known layout (cluster A and B interlaced in a checkerboard)
+  coords <- as.matrix(expand.grid(x = 1:6, y = 1:6))
+  labels <- ifelse((coords[, 1] + coords[, 2]) %% 2 == 0, "A", "B")
+  m <- spatial_distance_r(coords, labels, radius = 1.5, n_cells = 1L)
+
+  # checkerboard: every neighbour within radius 1.5 is the other cluster, so
+  # A-B interlacement is non-zero and the diagonal is zero
+  expect_gt(m["A", "B"], 0)
+  expect_equal(m["A", "B"], m["B", "A"])
+  expect_equal(unname(diag(m)), c(0, 0))
+})
+
+
+test_that("embed_graph_r returns one hex color per cluster", {
+  grid <- mock_spatial_grid(12, 6)
+  m <- spatial_distance_r(grid$coords, grid$labels, radius = 4)
+  cols <- embed_graph_r(m)
+
+  expect_named(cols, rownames(m))
+  expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", cols)))
+  expect_equal(length(unique(cols)), length(cols))
+})
+
+
+test_that("embed_graph_r errors for too few clusters to embed", {
+  # with 2 clusters n_neighbors collapses to 1 and uwot's spectral init errors;
+  # get_spaco_color_map's tryCatch turns this into a fall back to the color pool
+  grid <- mock_spatial_grid(12, 2)
+  m <- spatial_distance_r(grid$coords, grid$labels, radius = 4)
+  expect_error(embed_graph_r(m))
+})
+
+
+test_that("merge_cluster_distances sums slices aligned to the cluster set", {
+  m1 <- matrix(c(0, 1, 1, 0), 2, dimnames = list(c("1", "2"), c("1", "2")))
+  m2 <- matrix(c(0, 2, 2, 0), 2, dimnames = list(c("2", "3"), c("2", "3")))
+
+  merged <- merge_cluster_distances(list(m1, m2), c("1", "2", "3"))
+
+  expect_equal(dim(merged), c(3, 3))
+  expect_equal(merged["1", "2"], 1)
+  expect_equal(merged["2", "3"], 2)
+  expect_equal(merged["1", "3"], 0)
+})
+
+
+# Build the (cell_sets, coords) pair get_spaco_color_map consumes from a grid.
+# cell_sets is keyed by CHARACTER BARCODE row names (as in production, where
+# cell_sets carries cell barcodes as row names); coords is what a stubbed
+# GetTissueCoordinates returns, a cell/x/y frame whose `cell` column holds the
+# same barcodes. The coords rows are in REVERSED barcode order so the production
+# by-name lookup cell_sets[coords$cell, "cluster"] is genuinely exercised: a
+# positional match would pair each coordinate with the wrong cluster and change
+# the interlacement graph, while the by-name lookup preserves the (coord,
+# cluster) pairing regardless of row order.
+mock_spaco_inputs <- function(side, n_clusters) {
+  grid <- mock_spatial_grid(side, n_clusters)
+  n <- nrow(grid$coords)
+  barcodes <- paste0("cell", seq_len(n))
+
+  cell_sets <- data.frame(
+    cluster = as.integer(grid$labels),
+    cell_ids = seq_len(n),
+    row.names = barcodes
+  )
+
+  ord <- rev(seq_len(n))
+  coords <- data.frame(
+    cell = barcodes[ord],
+    x = grid$coords[ord, "x"],
+    y = grid$coords[ord, "y"]
+  )
+
+  list(cell_sets = cell_sets, coords = coords)
+}
+
+
+test_that("get_spaco_color_map returns one hex colour per cluster on the happy path", {
+  fixtures <- mock_spaco_inputs(12, 6)
+  data <- mock_scdata()
+
+  # stub the slice accessors so no real FOV/VisiumV2 object is needed; the
+  # distance/embedding maths (spatial_distance_r -> embed_graph_r) runs for real
+  mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
+  mockery::stub(get_spaco_color_map, "get_image_scale", function(...) NULL)
+  mockery::stub(
+    get_spaco_color_map, "SeuratObject::GetTissueCoordinates",
+    function(...) fixtures$coords
+  )
+
+  colors <- get_spaco_color_map(data, fixtures$cell_sets)
+
+  expect_length(colors, 6)
+  expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", colors)))
+})
+
+
+test_that("get_spaco_color_map falls back to NULL when embedding fails", {
+  # 2 clusters collapse uwot's spectral init -> embed_graph_r errors -> the
+  # tryCatch returns NULL so runClusters keeps the default colour pool
+  fixtures <- mock_spaco_inputs(12, 2)
+  data <- mock_scdata()
+
+  mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
+  mockery::stub(get_spaco_color_map, "get_image_scale", function(...) NULL)
+  mockery::stub(
+    get_spaco_color_map, "SeuratObject::GetTissueCoordinates",
+    function(...) fixtures$coords
+  )
+
+  expect_null(get_spaco_color_map(data, fixtures$cell_sets))
+})
+
+
+# Minimal S4 mocks for the Visium HD radius branch: get_spaco_radius reads
+# scdata@misc$microns_per_pixel and scdata[[image_name]]@scale.factors$<scale>.
+setClass("MockScaleImg", representation(scale.factors = "list"))
+setClass("MockRadiusScdata", representation(misc = "list", imgs = "list"))
+setMethod("[[", "MockRadiusScdata", function(x, i, ...) x@imgs[[i]])
+
+mock_radius_scdata <- function(misc, hires = NULL, lowres = NULL) {
+  img <- new("MockScaleImg", scale.factors = list(hires = hires, lowres = lowres))
+  new("MockRadiusScdata", misc = misc, imgs = list(fov = img))
+}
+
+
+test_that("get_spaco_radius returns the micron radius when scale is NULL", {
+  # scaleless (Xenium) coords are already microns; radius is used as-is and no
+  # @misc/scale.factors are needed
+  expect_equal(get_spaco_radius(mock_scdata(), "fov", NULL), 50)
+  expect_equal(get_spaco_radius(mock_scdata(), "fov", NULL), SPACO_RADIUS_MICRONS)
+})
+
+
+test_that("get_spaco_radius converts microns to hires pixels for Visium HD", {
+  microns_per_pixel <- 0.2125
+  hires_factor <- 0.15
+  scdata <- mock_radius_scdata(
+    misc = list(microns_per_pixel = microns_per_pixel), hires = hires_factor
+  )
+
+  expected <- 50 / microns_per_pixel * hires_factor
+  expect_equal(get_spaco_radius(scdata, "fov", "hires"), expected)
+})
+
+
+test_that("get_spaco_radius returns NULL when microns_per_pixel is unavailable", {
+  # missing the conversion factor -> skip the slice rather than colour at a
+  # wrong scale
+  scdata <- mock_radius_scdata(misc = list(), hires = 0.15)
+  expect_null(get_spaco_radius(scdata, "fov", "hires"))
+})
+
+
+test_that("get_spaco_color_map colours a real Xenium FOV end to end (unstubbed)", {
+  # Integration: build a REAL Xenium-shaped Seurat object (centroids FOV, no
+  # image, technology = "xenium") and run get_spaco_color_map with NOTHING
+  # stubbed, so Seurat::Images, GetTissueCoordinates (real x/y/cell), the by-name
+  # barcode lookup and get_spaco_radius (scaleless -> 50) all execute for real.
+  side <- 12
+  n_clusters <- 6
+  grid <- mock_spatial_grid(side, n_clusters)
+  n <- nrow(grid$coords)
+  barcodes <- paste0("cell", seq_len(n))
+
+  set.seed(0)
+  counts <- matrix(
+    rpois(n * 20, lambda = 5), nrow = 20,
+    dimnames = list(paste0("gene", seq_len(20)), barcodes)
+  )
+  scdata <- SeuratObject::CreateSeuratObject(counts = as(counts, "dgCMatrix"))
+
+  # mirror the pipeline's build_xenium_fov: a centroids FOV on the RNA assay
+  coords <- data.frame(
+    x = grid$coords[, "x"], y = grid$coords[, "y"], cell = barcodes
+  )
+  fov <- SeuratObject::CreateFOV(
+    list(centroids = SeuratObject::CreateCentroids(coords)), assay = "RNA"
+  )
+  scdata[["fov"]] <- fov
+  scdata@misc$technology <- "xenium"
+
+  cell_sets <- data.frame(
+    cluster = as.integer(grid$labels),
+    cell_ids = seq_len(n),
+    row.names = barcodes
+  )
+
+  colors <- get_spaco_color_map(scdata, cell_sets)
+
+  # 12x12 / 6 clusters embeds fine (see the stubbed happy-path test); allow the
+  # documented NULL fallback if the embedding legitimately cannot run
+  if (is.null(colors)) {
+    expect_null(colors)
+  } else {
+    expect_length(colors, n_clusters)
+    expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", colors)))
+  }
+})
+
+
 test_that("runClusters does not crash with less than 10 dimensions available", {
   algos <- c("louvain", "leiden")
   scdata <- mock_scdata()

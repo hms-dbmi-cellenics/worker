@@ -38,7 +38,10 @@ runEmbedding <- function(req, data) {
 
   if (method == "images") {
     img_names <- Seurat::Images(data)
-    df_embeddings <- lapply(img_names, get_rotated_tissue_coords, data)
+    df_embeddings <- lapply(img_names, function(img_name) {
+      scale <- get_image_scale(img_name, data)
+      SeuratObject::GetTissueCoordinates(data, img_name, scale = scale)
+    })
     df_embedding <- do.call(rbind, df_embeddings)
 
   } else {
@@ -54,42 +57,47 @@ runEmbedding <- function(req, data) {
     }
 
     df_embedding <- Seurat::Embeddings(data, reduction = method)
+    df_embedding <- as.data.frame(df_embedding[, 1:2])
+    colnames(df_embedding) <- c("x", "y")
+    df_embedding$cell <- row.names(df_embedding)
   }
 
   # Order embedding by cells id in ascending form
   meta <- data@meta.data
-  df_embedding <- as.data.frame(df_embedding)
-  df_embedding$cells_id <- meta[row.names(df_embedding), "cells_id"]
-  df_embedding <- df_embedding[order(df_embedding$cells_id), ]
-  df_embedding <- df_embedding |>
-    tidyr::complete(cells_id = seq(0, max(meta$cells_id))) |>
-    dplyr::select(-"cells_id")
+  df_embedding$cells_id <- meta[df_embedding$cell, "cells_id"]
 
-  map2_fun <- function(x, y) {
-    if (is.na(x)) {
-      NULL
-    } else {
-      c(x, y)
-    }
-  }
+  df_embedding <- dplyr::arrange(df_embedding, cells_id)
 
-  purrr::map2(
-    df_embedding[[1]],
-    df_embedding[[2]],
-    map2_fun
-  )
+  data.table::setDT(df_embedding)
+  result <- vector("list", max(meta$cells_id) + 1L)
+
+  pairs <- df_embedding[,
+    .(v = list(c(rbind(x, y)))),
+    by = cells_id
+  ]
+
+  result[pairs$cells_id + 1L] <- pairs$v
+  result
 }
 
-# for Visium, data are flipped and rotated before SpatialDimPlot.
-# returns the rotated/flipped tissue Coordinates from a Seurat object.
-get_rotated_tissue_coords <- function(img_name, scdata) {
-  coord_spot <- SeuratObject::GetTissueCoordinates(
-    scdata,
-    img_name,
-    scale = "lowres"
-  )[, 2:1] # rotation
-  colnames(coord_spot) <- c("x", "y")
-  return(coord_spot)
+get_image_scale <- function(img_name, scdata) {
+  # Xenium FOVs have no scale step; Visium HD applies the hires/lowres factor.
+  if (is_scaleless_spatial(scdata)) return(NULL)
+
+  dims <- dim(scdata[[img_name]]@image)
+  ifelse(any(dims[1:2] <= 600), "lowres", "hires")
+}
+
+# Spatial technologies whose coordinates have no pixel->coord scale step (the
+# accessors return micron coords directly). Dispatch on the technology persisted
+# onto the object during create-seurat (data@misc$technology), not on object
+# introspection: the worker loads the saved Seurat object, not the pipeline
+# config, so the persisted technology is the authoritative signal.
+SCALELESS_SPATIAL_TECHNOLOGIES <- c("xenium")
+
+is_scaleless_spatial <- function(scdata) {
+  technology <- scdata@misc$technology
+  !is.null(technology) && technology %in% SCALELESS_SPATIAL_TECHNOLOGIES
 }
 
 
