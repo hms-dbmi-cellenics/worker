@@ -3,3 +3,10 @@
 .Rdata
 .httr-oauth
 .DS_Store
+
+# CASSIA OpenRouter API key (do not commit)
+cassia_openrouter_key.txt
+
+# CASSIA local pipeline run output
+data-raw/cassia_results/
+cell_type_analysis_results*

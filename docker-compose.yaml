@@ -19,6 +19,8 @@ services:
     environment:
       - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - DEBUG_STEP=${DEBUG_STEP}
+      # OpenRouter key for CASSIA; read from your shell env (see below)
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
   python:
     container_name: "biomage-worker-python"
     platform: linux/amd64

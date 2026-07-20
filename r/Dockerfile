@@ -76,6 +76,20 @@ RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which pytho
     R -q -e "reticulate::virtualenv_install('r-reticulate', c('setuptools==68.2.2', 'umap-learn==0.5.3', 'numpy<2'), pip_options='--no-cache-dir --upgrade')"
 
 # ---------------------------------------------------
+# CASSIA (LLM-based cell type annotation)
+# Installed from source at the very end so it doesn't invalidate the expensive
+# renv / BPCells layers above. CASSIA is a reticulate wrapper around a bundled
+# Python backend, so it needs its python deps AND the R package from source.
+# The python deps go into the same r-reticulate venv the worker already binds
+# (reticulate binds a single Python per process); numpy is kept <2 for umap-learn.
+# ---------------------------------------------------
+RUN R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'pandas', 'openai', 'anthropic', 'requests', 'matplotlib', 'seaborn', 'mygene'), pip_options='--no-cache-dir')"
+
+# CASSIA R package source (vendored under vendor/CASSIA, bundles inst/python)
+COPY vendor/CASSIA /src/cassia_pkg
+RUN R -q -e "install.packages('/src/cassia_pkg', repos = NULL, type = 'source')"
+
+# ---------------------------------------------------
 # PRODUCTION BUILD
 # ---------------------------------------------------
 FROM common AS prod
