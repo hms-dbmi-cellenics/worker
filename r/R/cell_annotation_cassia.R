@@ -28,12 +28,14 @@ CASSIAAnnotate <- function(req, data) {
   cell_sets <- req$body$cellSets
   species <- req$body$species
   tissue <- req$body$tissue
+  # Optional free-text study context (e.g. "3 colorectal tumor + 2 normal
+  # adjacent tissue samples"), passed to the CASSIA agents to inform annotation.
+  additional_info <- req$body$additionalInfo
   experiment_id <- req$body$experimentId
   task_name <- req$body$name
 
-  # OpenRouter LLM used for all CASSIA agents
-  # (annotation, scoring, boost, merge)
-  model <- "deepseek/deepseek-v3.2"
+  # Bedrock model used for all CASSIA agents (annotation, scoring, boost, merge)
+  model <- "qwen.qwen3-next-80b-a3b"
 
   # Phase progress is written to a shared file that the python worker polls to
   # emit UI heartbeats (see helpers/task_progress.py). The prep phases are fast
@@ -42,8 +44,9 @@ CASSIAAnnotate <- function(req, data) {
   progress_file <- worker_progress_file(experiment_id, task_name)
   on.exit(clear_worker_progress(experiment_id, task_name), add = TRUE)
 
-  # load the OpenRouter API key from env / uncommitted key file
-  set_cassia_api_key()
+  # Authenticate to Bedrock with the worker's IAM role (no static API key) and
+  # get the OpenAI-compatible Bedrock endpoint to use as the CASSIA provider.
+  provider <- set_cassia_bedrock_auth()
 
   # add cluster info to the metadata and set louvain clusters as active ident
   write_worker_progress(experiment_id, task_name, "Preparing clusters")
@@ -70,7 +73,8 @@ CASSIAAnnotate <- function(req, data) {
     "Running CASSIA annotation (this can take several minutes)"
   )
   data <- run_cassia(
-    data, markers, tissue, species, model,
+    data, markers, tissue, species, model, provider,
+    additional_info = additional_info,
     cluster_col = "cassia_cluster",
     progress_file = progress_file
   )
@@ -108,49 +112,55 @@ CASSIAAnnotate <- function(req, data) {
 }
 
 
-#' Load the OpenRouter API key for CASSIA
+#' Authenticate CASSIA to Amazon Bedrock using the worker's IAM role
 #'
-#' CASSIA talks to LLMs through OpenRouter, which needs the `OPENROUTER_API_KEY`
-#' environment variable set (this is what
-#' `setLLMApiKey(provider = "openrouter")` does under the hood). The key is a
-#' secret and must never be committed, so it is read from the
-#' `OPENROUTER_API_KEY` env var if present, otherwise from an uncommitted
-#' `cassia_openrouter_key.txt` file (git-ignored). See the worker README /
-#'  .gitignore for details.
+#' CASSIA calls Bedrock through its OpenAI-compatible endpoint
+#' (`https://bedrock-runtime.<region>.amazonaws.com/openai/v1`), which
+#' authenticates with a bearer token. Rather than a static API key, we mint a
+#' short-term Bedrock bearer token from the worker's own IAM credentials (IRSA
+#' role in-cluster, default AWS credential chain locally) using
+#' `aws_bedrock_token_generator`. The token is generated client-side (no network
+#' call) and is valid for up to 12h — far longer than a single annotation task.
 #'
-#' @return invisibly, the api key that was set
+#' The token is written straight into Python's `os.environ` as
+#' `CUSTOMIZED_API_KEY` (the var CASSIA's custom-HTTP provider reads). We set it
+#' in Python directly because reticulate snapshots `os.environ` when it boots the
+#' interpreter, so R's `Sys.setenv` would not propagate to CASSIA.
+#'
+#' @return the OpenAI-compatible Bedrock endpoint URL to pass as the CASSIA
+#'  provider (`overall_provider`)
 #' @export
 #'
-set_cassia_api_key <- function() {
+set_cassia_bedrock_auth <- function() {
   # CASSIA reuses the worker's existing reticulate virtualenv instead of its
   # default "cassia_env", so the long-lived R process binds a single Python.
   # Must be set before CASSIA's namespace loads (i.e. before any CASSIA:: call).
   options(CASSIA.env_name = "r-reticulate")
 
-  api_key <- Sys.getenv("OPENROUTER_API_KEY", unset = "")
+  region <- Sys.getenv(
+    "AWS_REGION",
+    unset = Sys.getenv("AWS_DEFAULT_REGION", unset = "us-east-1")
+  )
 
-  if (!nzchar(api_key)) {
-    key_file_candidates <- c(
-      "cassia_openrouter_key.txt", # cwd == worker/r (docker + Rscript work.R)
-      "../cassia_openrouter_key.txt", # cwd == worker/r/data-raw (local scripts)
-      "/src/worker/cassia_openrouter_key.txt",
-      path.expand("~/.cassia/openrouter_key.txt")
-    )
-    key_file <- key_file_candidates[file.exists(key_file_candidates)]
-    if (length(key_file) > 0) {
-      api_key <- trimws(readLines(key_file[1], warn = FALSE)[1])
-    }
-  }
-
-  if (!nzchar(api_key)) {
+  token <- tryCatch({
+    gen <- reticulate::import("aws_bedrock_token_generator")
+    gen$provide_token(region = region)
+  }, error = function(e) {
     stop(generateErrorMessage(
       error_codes$CASSIA_ERROR,
-      "OpenRouter API key not found. Set the OPENROUTER_API_KEY env var or create an uncommitted cassia_openrouter_key.txt."
+      paste0(
+        "Could not mint a Bedrock bearer token from the worker's IAM ",
+        "credentials (region ", region, "). Check that the worker role has ",
+        "Bedrock access and that AWS credentials are available: ",
+        conditionMessage(e)
+      )
     ))
-  }
+  })
 
-  CASSIA::setLLMApiKey(api_key, provider = "openrouter", persist = FALSE)
-  invisible(api_key)
+  os <- reticulate::import("os")
+  os$environ$update(list(CUSTOMIZED_API_KEY = token))
+
+  sprintf("https://bedrock-runtime.%s.amazonaws.com/openai/v1", region)
 }
 
 
@@ -438,7 +448,11 @@ add_marker_gene_symbols <- function(markers, data) {
 #' @param markers data.frame of markers from [get_cassia_markers()]
 #' @param tissue string. Free text tissue type
 #' @param species string. Free text species
-#' @param model string. OpenRouter model id used for every CASSIA agent
+#' @param model string. Bedrock model id used for every CASSIA agent
+#' @param provider string. CASSIA provider — the OpenAI-compatible Bedrock
+#'  endpoint URL (see [set_cassia_bedrock_auth()])
+#' @param additional_info string or NULL. Optional free-text study context passed
+#'  to the CASSIA agents; blank/whitespace is treated as no context
 #' @param cluster_col string. Metadata column whose labels match the marker
 #'  `cluster` column, used to map CASSIA predictions back onto cells
 #' @param progress_file character. When set, CASSIA's per-cluster batch progress
@@ -449,10 +463,16 @@ add_marker_gene_symbols <- function(markers, data) {
 #' @export
 #'
 run_cassia <- function(
-  data, markers, tissue, species, model,
+  data, markers, tissue, species, model, provider,
+  additional_info = NULL,
   cluster_col = "seurat_clusters",
   progress_file = NULL
 ) {
+  # Treat blank/whitespace context as "none" so CASSIA doesn't inject an empty
+  # additional-info line into the prompts.
+  if (!is.null(additional_info) && !nzchar(trimws(additional_info))) {
+    additional_info <- NULL
+  }
   output_dir <- tempfile("cassia_results_")
   dir.create(output_dir)
   on.exit(unlink(output_dir, recursive = TRUE, force = TRUE), add = TRUE)
@@ -467,18 +487,26 @@ run_cassia <- function(
     on.exit(disable_cassia_batch_progress(), add = TRUE)
   }
 
+  # One worker per cluster so all clusters annotate concurrently.
+  n_clusters <- length(unique(markers$cluster))
+
   tryCatch(
     CASSIA::runCASSIA_pipeline(
       output_file_name = "results",
       tissue = tissue,
       species = species,
       marker = markers,
-      max_workers = 8,
+      additional_info = additional_info,
+      max_workers = n_clusters,
+      overall_provider = provider,
       annotation_model = model,
       annotationboost_model = model,
       score_model = model,
       merge_model = model,
-      output_dir = output_dir
+      output_dir = output_dir,
+      # The pre-flight check tests a hard-coded non-Bedrock validation model
+      # that this endpoint does not serve; auth is already established above.
+      validate_api_keys_before_start = FALSE
     ),
     error = function(e) {
       stop(generateErrorMessage(error_codes$CASSIA_ERROR, e$message))
