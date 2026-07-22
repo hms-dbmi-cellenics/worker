@@ -137,10 +137,10 @@ set_cassia_bedrock_auth <- function() {
   # Must be set before CASSIA's namespace loads (i.e. before any CASSIA:: call).
   options(CASSIA.env_name = "r-reticulate")
 
-  region <- Sys.getenv(
-    "AWS_REGION",
-    unset = Sys.getenv("AWS_DEFAULT_REGION", unset = "us-east-1")
-  )
+  # Treat an unset OR empty region env var as "use the default".
+  region <- Sys.getenv("AWS_REGION", unset = "")
+  if (!nzchar(region)) region <- Sys.getenv("AWS_DEFAULT_REGION", unset = "")
+  if (!nzchar(region)) region <- "us-east-1"
 
   token <- tryCatch({
     gen <- reticulate::import("aws_bedrock_token_generator")
@@ -487,8 +487,10 @@ run_cassia <- function(
     on.exit(disable_cassia_batch_progress(), add = TRUE)
   }
 
-  # One worker per cluster so all clusters annotate concurrently.
+  # One worker per cluster so all clusters annotate concurrently, capped at 50
+  # to stay within Bedrock's per-model throughput limits on large datasets.
   n_clusters <- length(unique(markers$cluster))
+  max_workers <- min(n_clusters, 50)
 
   tryCatch(
     CASSIA::runCASSIA_pipeline(
@@ -497,7 +499,7 @@ run_cassia <- function(
       species = species,
       marker = markers,
       additional_info = additional_info,
-      max_workers = n_clusters,
+      max_workers = max_workers,
       overall_provider = provider,
       annotation_model = model,
       annotationboost_model = model,
