@@ -38,6 +38,7 @@ RUN Rscript restore_renv.R
 # deactivate so that above .libPaths used
 RUN R -q -e "renv::deactivate()"
 RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
+RUN R -q -e "remotes::install_github('ElliotXie/CASSIA/CASSIA_R@7a77067f2af4ac89e68e8424a80ccd5e3dc8c334')"
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -73,27 +74,8 @@ RUN echo "python3-pip python3-venv python3-dev zstd" >> sysdeps_run.txt && \
 
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
-    R -q -e "reticulate::virtualenv_install('r-reticulate', c('setuptools==68.2.2', 'umap-learn==0.5.3', 'numpy<2'), pip_options='--no-cache-dir --upgrade')"
-
-# ---------------------------------------------------
-# CASSIA (LLM-based cell type annotation)
-# Installed at the very end so it doesn't invalidate the expensive renv /
-# BPCells layers above. CASSIA is a reticulate wrapper around a bundled Python
-# backend, so it needs its python deps AND the R package (from GitHub below).
-# The python deps go into the same r-reticulate venv the worker already binds
-# (reticulate binds a single Python per process); numpy is kept <2 for umap-learn.
-# ---------------------------------------------------
-# boto3 + aws-bedrock-token-generator let the worker mint a short-term Bedrock
-# bearer token from its IAM role (IRSA) at runtime, so no static API key is
-# needed. openai is the client CASSIA's custom provider uses to call Bedrock's
-# OpenAI-compatible endpoint.
-RUN R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'pandas', 'openai', 'anthropic', 'requests', 'matplotlib', 'seaborn', 'mygene', 'boto3', 'aws-bedrock-token-generator'), pip_options='--no-cache-dir')"
-
-# CASSIA R package (reticulate wrapper + bundled python backend), pinned commit.
-# GITHUB_PAT avoids the unauthenticated GitHub API rate limit during install.
-ARG GITHUB_PAT
-ENV GITHUB_PAT=$GITHUB_PAT
-RUN R -q -e "remotes::install_github('ElliotXie/CASSIA/CASSIA_R@7a77067f2af4ac89e68e8424a80ccd5e3dc8c334')"
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('setuptools==68.2.2', 'umap-learn==0.5.3', 'numpy<2'), pip_options='--no-cache-dir --upgrade')" && \
+    R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'pandas', 'openai', 'anthropic', 'requests', 'matplotlib', 'seaborn', 'mygene', 'boto3', 'aws-bedrock-token-generator'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
