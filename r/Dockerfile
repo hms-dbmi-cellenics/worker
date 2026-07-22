@@ -83,11 +83,17 @@ RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which pytho
 # The python deps go into the same r-reticulate venv the worker already binds
 # (reticulate binds a single Python per process); numpy is kept <2 for umap-learn.
 # ---------------------------------------------------
-RUN R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'pandas', 'openai', 'anthropic', 'requests', 'matplotlib', 'seaborn', 'mygene'), pip_options='--no-cache-dir')"
+# boto3 + aws-bedrock-token-generator let the worker mint a short-term Bedrock
+# bearer token from its IAM role (IRSA) at runtime, so no static API key is
+# needed. openai is the client CASSIA's custom provider uses to call Bedrock's
+# OpenAI-compatible endpoint.
+RUN R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'pandas', 'openai', 'anthropic', 'requests', 'matplotlib', 'seaborn', 'mygene', 'boto3', 'aws-bedrock-token-generator'), pip_options='--no-cache-dir')"
 
-# CASSIA R package source (vendored under vendor/CASSIA, bundles inst/python)
-COPY vendor/CASSIA /src/cassia_pkg
-RUN R -q -e "install.packages('/src/cassia_pkg', repos = NULL, type = 'source')"
+# CASSIA R package (reticulate wrapper + bundled python backend), pinned commit.
+# GITHUB_PAT avoids the unauthenticated GitHub API rate limit during install.
+ARG GITHUB_PAT
+ENV GITHUB_PAT=$GITHUB_PAT
+RUN R -q -e "remotes::install_github('ElliotXie/CASSIA/CASSIA_R@7a77067f2af4ac89e68e8424a80ccd5e3dc8c334')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD
