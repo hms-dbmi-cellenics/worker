@@ -6,3 +6,4 @@ data/test/**
 !data/test/*.gz
 .Rproj.user
 r/cache_marker_genes
+.positai
