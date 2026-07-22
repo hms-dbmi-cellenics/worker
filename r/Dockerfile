@@ -77,9 +77,9 @@ RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which pytho
 
 # ---------------------------------------------------
 # CASSIA (LLM-based cell type annotation)
-# Installed from source at the very end so it doesn't invalidate the expensive
-# renv / BPCells layers above. CASSIA is a reticulate wrapper around a bundled
-# Python backend, so it needs its python deps AND the R package from source.
+# Installed at the very end so it doesn't invalidate the expensive renv /
+# BPCells layers above. CASSIA is a reticulate wrapper around a bundled Python
+# backend, so it needs its python deps AND the R package (from GitHub below).
 # The python deps go into the same r-reticulate venv the worker already binds
 # (reticulate binds a single Python per process); numpy is kept <2 for umap-learn.
 # ---------------------------------------------------
