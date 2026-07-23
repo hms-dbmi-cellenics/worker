@@ -289,6 +289,13 @@ create_app <- function(last_modified, data, fpath) {
     }
   )
   app$add_post(
+    path = "/v0/CASSIAAnnotate",
+    FUN = function(req, res) {
+      result <- run_post(req, CASSIAAnnotate, data)
+      res$set_body(result)
+    }
+  )
+  app$add_post(
     path = "/v0/DownloadAnnotSeuratObject",
     FUN = function(req, res) {
       result <- run_post(req, DownloadAnnotSeuratObject, data)

@@ -38,6 +38,7 @@ RUN Rscript restore_renv.R
 # deactivate so that above .libPaths used
 RUN R -q -e "renv::deactivate()"
 RUN R -q -e "remotes::install_github('bnprks/BPCells/r@c293a0a')"
+RUN R -q -e "remotes::install_github('ElliotXie/CASSIA/CASSIA_R@7a77067f2af4ac89e68e8424a80ccd5e3dc8c334')"
 
 # determine system run-time deps
 COPY setup/get_sysdeps_run.R .
@@ -74,6 +75,10 @@ RUN echo "python3-pip python3-venv python3-dev zstd" >> sysdeps_run.txt && \
 ENV WORKON_HOME=/src/.virtualenvs
 RUN R -q -e "reticulate::virtualenv_create('r-reticulate', python='$(which python3)')" && \
     R -q -e "reticulate::virtualenv_install('r-reticulate', c('setuptools==68.2.2', 'umap-learn==0.5.3', 'numpy<2'), pip_options='--no-cache-dir --upgrade')"
+
+# CASSIA deps, pinned for reproducible builds. numpy is kept <2 (not pinned) so
+# it stays compatible with umap-learn above; the pinned packages all work on it.
+RUN R -q -e "reticulate::virtualenv_install('r-reticulate', c('numpy<2', 'pandas==2.3.3', 'openai==2.47.0', 'anthropic==0.118.0', 'requests==2.34.2', 'matplotlib==3.10.9', 'seaborn==0.13.2', 'mygene==3.2.2', 'boto3==1.43.54', 'aws-bedrock-token-generator==1.1.0'), pip_options='--no-cache-dir')"
 
 # ---------------------------------------------------
 # PRODUCTION BUILD

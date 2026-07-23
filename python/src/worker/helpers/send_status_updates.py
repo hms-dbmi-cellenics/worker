@@ -1,3 +1,5 @@
+import re
+
 from worker_status_codes import (
     DOWNLOAD_EXPERIMENT,
     LOAD_EXPERIMENT,
@@ -18,12 +20,15 @@ def format_task_name(request):
     # Remove "Get" from the name
     name_without_get = task_name.replace("Get", "")
 
-    # Insert a space before capital letters, then strip leading/trailing spaces
-    final_name = "".join(
-        [c if not c.isupper() else f" {c}" for c in name_without_get]
-    ).strip()
+    # Split into words at camelCase / acronym boundaries, keeping acronyms
+    # intact, e.g. "CASSIAAnnotate" -> "CASSIA Annotate",
+    # "ScTypeAnnotate" -> "Sc Type Annotate". Without this, inserting a space
+    # before every capital would spell acronyms out letter by letter
+    # ("C A S S I A Annotate").
+    spaced = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", name_without_get)
+    spaced = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", spaced)
 
-    return final_name
+    return spaced.strip()
 
 
 def format_user_message(status_code, request):

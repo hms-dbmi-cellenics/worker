@@ -19,6 +19,16 @@ services:
     environment:
       - EXPERIMENT_ID=${EXPERIMENT_ID-test}
       - DEBUG_STEP=${DEBUG_STEP}
+      # AWS creds for CASSIA -> Amazon Bedrock. The worker mints a short-term
+      # Bedrock bearer token from these via IAM (no static API key). Export real
+      # creds in your shell first (inframock/localstack creds will NOT work
+      # against real Bedrock), e.g. with SSO:
+      #   aws sso login --profile <profile>
+      #   eval "$(aws configure export-credentials --profile <profile> --format env)"
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - AWS_REGION=${AWS_REGION-us-east-1}
   python:
     container_name: "biomage-worker-python"
     platform: linux/amd64

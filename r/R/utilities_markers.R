@@ -18,49 +18,14 @@
 #' @export
 #'
 getTopMarkerGenes <- function(
-  nfeatures, data, cell_sets_ids, auc_min = 0.3, pct_in_min = 20, pct_out_max = 70
+  nfeatures,
+  data,
+  cell_sets_ids,
+  auc_min = 0.3,
+  pct_in_min = 20,
+  pct_out_max = 70
 ) {
-  object_ids <- data$cells_id
-
-  # build cell-to-group mapping using data.table for speed
-  cell_group_map <- data.table::rbindlist(
-    lapply(seq_along(cell_sets_ids), function(i) {
-      data.table::data.table(
-        cell_id = unlist(cell_sets_ids[[i]]),
-        group = i
-      )
-    })
-  )
-
-  # join to assign marker groups to all cells
-  dt <- data.table::data.table(cell_id = object_ids)
-  dt <- cell_group_map[dt, on = "cell_id"]
-  marker_groups <- dt$group
-
-  # for speed: take at most 1000 cells per cluster
-  set.seed(0)
-
-  # Create temp data frame for sampling
-  keep_cell_ids <- data@meta.data |>
-    dplyr::mutate(marker_groups = marker_groups) |>
-    dplyr::group_by(marker_groups) |>
-    dplyr::slice_sample(n = 1000, replace = FALSE) |>
-    dplyr::ungroup() |>
-    dplyr::pull(cells_id)
-
-  # Extract and subset matrix
-  mat <- data[["RNA"]]$data
-  keep_indices <- match(keep_cell_ids, object_ids)
-  marker_groups_subset <- marker_groups[keep_indices]
-  mat_subset <- mat[, keep_indices]
-  mat_subset <- as(mat_subset, "dgCMatrix")
-
-  all_markers <- presto::wilcoxauc(
-    mat_subset,
-    y = marker_groups_subset
-  )
-
-  all_markers$group <- as.numeric(all_markers$group)
+  all_markers <- computeMarkerStats(data, cell_sets_ids)$markers
 
   # may not return nfeatures markers per cluster if values are too stringent
   filtered_markers <- all_markers |>
@@ -81,6 +46,83 @@ getTopMarkerGenes <- function(
     dplyr::arrange(group)
 
   return(top_markers)
+}
+
+#' computeMarkerStats
+#'
+#' Factored out of [getTopMarkerGenes()]: downsamples the cells (for speed) and
+#' runs presto::wilcoxauc to compute one-vs-rest statistics for every gene in
+#' each group. Returns the raw wilcoxauc table together with the subsetted count
+#' matrix and per-cell group labels, so callers can compute additional
+#' statistics (e.g. Seurat-style fold changes) on the exact same cells.
+#'
+#' Groups are numbered 1..length(cell_sets_ids) in the order of `cell_sets_ids`.
+#'
+#' @param data SeuratObject
+#' @param cell_sets_ids list of cell sets (vectors of cell ids) to split for
+#'  marker gene selection
+#' @param downsample_n int max number of cells sampled per group
+#' @param seed int RNG seed for the downsampling
+#'
+#' @return list with:
+#'  \code{markers} data.frame from presto::wilcoxauc (group as numeric),
+#'  \code{mat} dgCMatrix of the subsetted `data` layer (genes x sampled cells),
+#'  \code{groups} numeric vector of group labels for the sampled cells
+#' @export
+#'
+computeMarkerStats <- function(
+  data,
+  cell_sets_ids,
+  downsample_n = 1000,
+  seed = 0
+) {
+  object_ids <- data$cells_id
+
+  # build cell-to-group mapping using data.table for speed
+  cell_group_map <- data.table::rbindlist(
+    lapply(seq_along(cell_sets_ids), function(i) {
+      data.table::data.table(
+        cell_id = unlist(cell_sets_ids[[i]]),
+        group = i
+      )
+    })
+  )
+
+  # join to assign marker groups to all cells
+  dt <- data.table::data.table(cell_id = object_ids)
+  dt <- cell_group_map[dt, on = "cell_id"]
+  marker_groups <- dt$group
+
+  # for speed: take at most downsample_n cells per cluster
+  set.seed(seed)
+
+  # Create temp data frame for sampling
+  keep_cell_ids <- data@meta.data |>
+    dplyr::mutate(marker_groups = marker_groups) |>
+    dplyr::group_by(marker_groups) |>
+    dplyr::slice_sample(n = downsample_n, replace = FALSE) |>
+    dplyr::ungroup() |>
+    dplyr::pull(cells_id)
+
+  # Extract and subset matrix
+  mat <- data[["RNA"]]$data
+  keep_indices <- match(keep_cell_ids, object_ids)
+  marker_groups_subset <- marker_groups[keep_indices]
+  mat_subset <- mat[, keep_indices]
+  mat_subset <- as(mat_subset, "dgCMatrix")
+
+  all_markers <- presto::wilcoxauc(
+    mat_subset,
+    y = marker_groups_subset
+  )
+
+  all_markers$group <- as.numeric(all_markers$group)
+
+  return(list(
+    markers = all_markers,
+    mat = mat_subset,
+    groups = marker_groups_subset
+  ))
 }
 
 getMarkerNames <- function(data, all_markers) {

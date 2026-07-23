@@ -7,6 +7,7 @@ from ..result import Result
 from ..tasks import Task
 from .background_expressed_genes import GetBackgroundExpressedGenes
 from .batch_differential_expression import BatchDifferentialExpression
+from .cell_annotation_cassia import CASSIAAnnotate
 from .cell_annotation_sctype import ScTypeAnnotate
 from .cell_cycle_scoring import CellCycleScoring
 from .cluster_cells import ClusterCells
@@ -50,6 +51,7 @@ class TaskFactory:
             GetExpressionCellSets,
             GetNormalizedExpression,
             ScTypeAnnotate,
+            CASSIAAnnotate,
             CellCycleScoring,
             DownloadAnnotSeuratObject
         )
