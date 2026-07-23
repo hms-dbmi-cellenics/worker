@@ -132,3 +132,81 @@ test_that("set_cassia_bedrock_auth raises a CASSIA error when the token can't be
 
   expect_error(set_cassia_bedrock_auth(), "Bedrock")
 })
+
+# --- CASSIAAnnotate (orchestration) -----------------------------------------
+
+# A CASSIA work request. Cluster parsing and the CASSIA pipeline are stubbed in
+# the test, so only the request shape CASSIAAnnotate reads matters here.
+mock_cassia_req <- function(data, additional_info = "3 tumor, 2 normal") {
+  list(body = list(
+    cellSets = list(louvain = list(
+      key = "louvain", name = "louvain clusters", rootNode = TRUE,
+      type = "cellSets",
+      children = list(list(key = "louvain-0", name = "Cluster 0",
+                           cellIds = unname(data$cells_id)))
+    )),
+    species = "Human",
+    tissue = "Large Intestine",
+    additionalInfo = additional_info,
+    experimentId = "exp-1",
+    name = "CASSIAAnnotate",
+    apiUrl = "http://api",
+    authJwt = "jwt"
+  ))
+}
+
+test_that("CASSIAAnnotate authenticates, runs, and saves one cell class per merged grouping", {
+  data <- mock_scdata()
+  req <- mock_cassia_req(data)
+
+  captured <- new.env()
+  updates <- new.env()
+  updates$n <- 0L
+
+  # run_cassia returns the data with the three merged-grouping columns CASSIA
+  # would produce, and records the args it was called with.
+  fake_run_cassia <- function(data, markers, tissue, species, model, provider,
+                              additional_info = NULL, ...) {
+    captured$provider <- provider
+    captured$additional_info <- additional_info
+    captured$model <- model
+    for (g in 1:3) {
+      data@meta.data[[paste0("CASSIA_merged_grouping_", g)]] <- "Cell type"
+    }
+    data
+  }
+
+  # Isolate CASSIAAnnotate's orchestration by stubbing its collaborators.
+  mockery::stub(CASSIAAnnotate, "set_cassia_bedrock_auth",
+                function() "https://fake/openai/v1")
+  mockery::stub(CASSIAAnnotate, "parse_cellsets", function(...) NULL)
+  mockery::stub(CASSIAAnnotate, "add_clusters", function(data, ...) {
+    data@meta.data$seurat_clusters <- factor(
+      rep(c(1, 2), length.out = nrow(data@meta.data))
+    )
+    data
+  })
+  mockery::stub(CASSIAAnnotate, "get_cassia_markers",
+                function(...) data.frame(cluster = 1, gene = "A"))
+  mockery::stub(CASSIAAnnotate, "run_cassia", fake_run_cassia)
+  mockery::stub(CASSIAAnnotate, "format_cassia_cell_sets",
+                function(data, species, tissue, grouping) {
+                  list(key = paste0("CASSIA-", grouping))
+                })
+  mockery::stub(CASSIAAnnotate, "updateCellSetsThroughApi",
+                function(...) updates$n <- updates$n + 1L)
+  # progress helpers touch a shared file; no-op them
+  mockery::stub(CASSIAAnnotate, "worker_progress_file", function(...) tempfile())
+  mockery::stub(CASSIAAnnotate, "write_worker_progress", function(...) invisible())
+  mockery::stub(CASSIAAnnotate, "clear_worker_progress", function(...) invisible())
+
+  res <- CASSIAAnnotate(req, data)
+
+  # provider comes from the IAM auth helper; study context is forwarded verbatim
+  expect_equal(captured$provider, "https://fake/openai/v1")
+  expect_equal(captured$additional_info, "3 tumor, 2 normal")
+  expect_equal(captured$model, "qwen.qwen3-next-80b-a3b")
+  # one cell class saved per merged grouping
+  expect_equal(updates$n, 3L)
+  expect_length(res, 3)
+})
