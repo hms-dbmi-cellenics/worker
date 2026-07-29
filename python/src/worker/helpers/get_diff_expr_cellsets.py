@@ -12,8 +12,12 @@ def get_diff_expr_cellsets(
     second_cell_set_name,
     all_cell_sets,
 ):
+    # "all", "background" and "rest" are matched exactly, not as substrings:
+    # cell set keys can be derived from user facing names, so they can contain
+    # those words (e.g. a cell type called "Small intestine")
+
     # Check if the comparsion is between all the cells or within a cluster
-    if not basis_name or ("all" in basis_name.lower()):
+    if not basis_name or basis_name.lower() == "all":
         # In not filtering by a cluster we leave the set empty
         filtered_set = set()
     else:
@@ -25,7 +29,7 @@ def get_diff_expr_cellsets(
 
     # mark cells of second set
     # check if the second set is composed by the "All other cells"
-    if second_cell_set_name == "background" or "all" in second_cell_set_name.lower():
+    if second_cell_set_name.lower() in ("background", "all"):
         # Retrieve all cells (not necessarily at the same hierarchy level)
         complete_cell_set = set(find_all_cell_ids_in_cell_sets(all_cell_sets))
         # Filter with those that are not in the first cell set
@@ -68,7 +72,7 @@ def get_cells_in_set(first_cell_set_name, second_cell_set_name, all_cell_sets):
 
     # If "rest", then get all cells in the same hierarchy as the first cell set
     #  that arent part of "first"
-    if "rest" in second_cell_set_name.lower():
+    if second_cell_set_name.lower() == "rest":
         cells = find_cell_ids_in_same_hierarchy(first_cell_set_name, all_cell_sets)
     else:
         cells = find_cells_by_set_id(second_cell_set_name, all_cell_sets)
