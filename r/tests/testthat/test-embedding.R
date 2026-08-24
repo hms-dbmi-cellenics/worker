@@ -120,6 +120,116 @@ test_that("RunTSNE uses the correct params", {
 
 })
 
+test_that("run_umap uses the params uwot documents as needed for reproducibility", {
+
+  data <- suppressWarnings(mock_scdata())
+
+  fake_embedding <- matrix(
+    0,
+    nrow = ncol(data),
+    ncol = 2,
+    dimnames = list(colnames(data), NULL)
+  )
+  mock_umap2 <- mock(fake_embedding)
+  stub(run_umap, "uwot::umap2", mock_umap2)
+
+  config <- list(minimumDistance = 0.1, distanceMetric = "cosine")
+
+  run_umap(
+    data,
+    reduction_model = "umap",
+    reduction = "pca",
+    config = config,
+    num_pcs = 10
+  )
+
+  expect_equal(length(mock_umap2), 1)
+  args <- mock_args(mock_umap2)[[1]]
+
+  expect_equal(args$n_neighbors, 30L)
+  expect_equal(args$min_dist, config$minimumDistance)
+  expect_equal(args$metric, config$distanceMetric)
+  # the reproducibility knobs
+  expect_true(args$batch)
+  expect_false(args$fast_sgd)
+  expect_equal(args$rng_type, "deterministic")
+  expect_equal(args$seed, as.integer(ULTIMATE_SEED))
+
+  # neighbours are computed by us, not by uwot's multithreaded index build
+  expect_named(args$nn_method, c("idx", "dist"))
+  expect_equal(dim(args$nn_method$idx), c(ncol(data), 30L))
+})
+
+test_that("the umap nn index build is single threaded and its search is not", {
+
+  data <- suppressWarnings(mock_scdata())
+  red_data <- as.matrix(Seurat::Embeddings(data, reduction = "pca")[, 1:10])
+
+  mock_build <- mock(TRUE)
+  mock_search <- mock(list(idx = matrix(1L), dist = matrix(0)))
+  stub(build_umap_nn_index, "RcppHNSW::hnsw_build", mock_build)
+  stub(search_umap_nn_index, "RcppHNSW::hnsw_search", mock_search)
+
+  build_umap_nn_index(red_data, "cosine")
+  search_umap_nn_index(red_data, "index", "cosine")
+
+  expect_equal(mock_args(mock_build)[[1]]$n_threads, 1)
+  expect_gt(mock_args(mock_search)[[1]]$n_threads, 0)
+  expect_equal(mock_args(mock_search)[[1]]$k, 30L)
+})
+
+test_that("euclidean umap neighbours use the l2 index and undo the squaring", {
+
+  mock_build <- mock(TRUE)
+  mock_search <- mock(list(idx = matrix(1L), dist = matrix(c(4, 9))))
+  stub(build_umap_nn_index, "RcppHNSW::hnsw_build", mock_build)
+  stub(search_umap_nn_index, "RcppHNSW::hnsw_search", mock_search)
+
+  build_umap_nn_index(matrix(0, nrow = 2, ncol = 2), "euclidean")
+  res <- search_umap_nn_index(matrix(0, nrow = 2, ncol = 2), "index", "euclidean")
+
+  expect_equal(mock_args(mock_build)[[1]]$distance, "l2")
+  expect_equal(as.vector(res$dist), c(2, 3))
+})
+
+test_that("uwot embedding is reproducible across runs", {
+
+  config <- list(minimumDistance = 0.1, distanceMetric = "cosine")
+
+  # one object, embedded twice: mock_scdata's PCA is itself unseeded, so a
+  # freshly built object can differ by a sign flip and would test the fixture
+  # rather than uwot.
+  data <- suppressWarnings(mock_scdata())
+
+  embed_once <- function() {
+    Seurat::Embeddings(
+      getEmbedding(config, "umap", "pca", 10, data),
+      reduction = "umap"
+    )
+  }
+
+  # NOTE: fixture-scale runs can be deterministic even when production-scale
+  # runs are not, so this guards the params, not the guarantee.
+  expect_equal(embed_once(), embed_once())
+})
+
+test_that("uwot embedding is reproducible when projecting from a sketch", {
+
+  config <- list(minimumDistance = 0.1, distanceMetric = "cosine")
+
+  data <- mock_scdata(use_bpcells = TRUE, nreps = 10)
+  data <- suppressWarnings(mock_sketch(data))
+
+  embed_once <- function() {
+    Seurat::Embeddings(
+      getEmbedding(config, "umap", "pca", 10, data),
+      reduction = "umap"
+    )
+  }
+
+  expect_equal(embed_once(), embed_once())
+})
+
 test_that("assignEmbedding assigns embedding correctly for UMAP", {
 
   # given an embedding, which is ordered by cell id

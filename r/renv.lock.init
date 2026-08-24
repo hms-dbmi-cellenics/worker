@@ -3777,7 +3777,7 @@
     },
     "uwot": {
       "Package": "uwot",
-      "Version": "0.2.2",
+      "Version": "0.2.4",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3791,7 +3791,7 @@
         "irlba",
         "methods"
       ],
-      "Hash": "f693a0ca6d34b02eb432326388021805"
+      "Hash": "c2dbb84cebdc10be7cf7f0af0efb10a0"
     },
     "vctrs": {
       "Package": "vctrs",
