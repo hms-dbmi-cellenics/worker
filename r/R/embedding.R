@@ -155,29 +155,96 @@ getEmbedding <- function(config, method, reduction_type, num_pcs, data) {
   return(data)
 }
 
-# use umap-learn via reticulate to fit sketch and project to full
-# avoids uwot Docker segfault (Seurat forces uwot if return.model=TRUE)
+# Number of neighbours used to build the UMAP graph. uwot's default is 15;
+# 30 is Seurat's, which is what the platform has always used.
+UMAP_N_NEIGHBORS <- 30L
+
+# HNSW index parameters, matching the defaults uwot::umap2 uses internally
+# (uwot:::hnsw_nn) so that computing the neighbours here is only a change of
+# who runs the build, not of what gets built.
+HNSW_M <- 16
+HNSW_EF_CONSTRUCTION <- 200
+HNSW_EF <- 10
+
+# uwot builds its HNSW index with as many threads as it is given, and a
+# multithreaded build is not reproducible: the same input gives a different
+# neighbour graph on each run. Building single threaded is the one lever that
+# makes it deterministic (~10s at 47k cells x 28 dims, against ~2s
+# multithreaded), and it is a build-only cost: search stays multithreaded.
+build_umap_nn_index <- function(x, metric) {
+  RcppHNSW::hnsw_build(
+    x,
+    distance = hnsw_distance(metric),
+    M = HNSW_M,
+    ef = HNSW_EF_CONSTRUCTION,
+    n_threads = 1,
+    verbose = FALSE
+  )
+}
+
+# Nearest neighbours of x in an index, in the list form uwot accepts for
+# nn_method. Used both to fit (x is the fitted data) and to project a sketch
+# model onto the full data (x is the full data, index built on the sketch).
+search_umap_nn_index <- function(x, index, metric) {
+  res <- RcppHNSW::hnsw_search(
+    X = x,
+    k = UMAP_N_NEIGHBORS,
+    ann = index,
+    ef = HNSW_EF,
+    n_threads = parallel::detectCores(),
+    verbose = FALSE
+  )
+
+  # uwot indexes euclidean data with the squared L2 metric, so undo it here too
+  if (metric == "euclidean") res$dist <- sqrt(res$dist)
+
+  list(idx = res$idx, dist = res$dist)
+}
+
+# RcppHNSW has no euclidean class, uwot uses l2 and square roots the distances
+hnsw_distance <- function(metric) {
+  if (metric == "euclidean") "l2" else metric
+}
+
+# uwot implementation of UMAP, and the only one that can fit on a sketch and
+# project onto the full dataset (Seurat forces uwot when return.model = TRUE).
 run_umap <- function(
   object, reduction_model, reduction, config, num_pcs, has_sketch = FALSE
 ) {
 
-  red_data <- Seurat::Embeddings(object, reduction = reduction)[, 1:num_pcs]
+  red_data <- as.matrix(
+    Seurat::Embeddings(object, reduction = reduction)[, 1:num_pcs]
+  )
+  metric <- config$distanceMetric
 
   tstart_umap <- Sys.time()
   message("Fitting UMAP on ", reduction, " data via uwot...")
 
   # NOTE: uwot::umap2 with RcppHNSW installed used as faster and
   # avoids segfaults seen from RcppAnnoy with n_threads != 0
+  #
+  # Reproducibility: the seed, batch = TRUE, fast_sgd = FALSE and
+  # rng_type = "deterministic" (uwot >= 0.2.3) cover the optimisation phase, but
+  # they are not enough on their own: uwot builds its HNSW index with n_threads
+  # and a multithreaded build gives a different neighbour graph - and so a
+  # different layout - on every run. uwot's own n_build_threads is not in CRAN
+  # 0.2.4, so we build the index single threaded ourselves and hand uwot the
+  # neighbours. Index search is deterministic, so it keeps every thread.
+  nn_index <- build_umap_nn_index(red_data, metric)
+
   set.seed(ULTIMATE_SEED)
   umap_res <- uwot::umap2(
-    X = as.matrix(red_data),
-    n_neighbors = 30L,
+    X = red_data,
+    nn_method = search_umap_nn_index(red_data, nn_index, metric),
+    n_neighbors = UMAP_N_NEIGHBORS,
     min_dist = config$minimumDistance,
-    metric = config$distanceMetric,
+    metric = metric,
     ret_model = has_sketch,
     n_threads = parallel::detectCores(),
     n_sgd_threads = "auto",
     batch = TRUE,
+    fast_sgd = FALSE,
+    rng_type = "deterministic",
     seed = as.integer(ULTIMATE_SEED)
   )
 
@@ -190,22 +257,32 @@ run_umap <- function(
     full_embedding <- umap_res
 
   } else {
-    full_data <- Seurat::Embeddings(
-      object,
-      reduction = gsub("[.]sketch$", "", reduction)
-    )[, 1:num_pcs]
+    full_data <- as.matrix(
+      Seurat::Embeddings(
+        object,
+        reduction = gsub("[.]sketch$", "", reduction)
+      )[, 1:num_pcs]
+    )
 
     message("Projecting full dataset...")
     tstart_project <- Sys.time()
 
+    # the model carries no index (it was fit from neighbours we computed), so
+    # the full data is searched against the same single threaded index here.
+    # rng_type comes from the model; batch/seed still have to be passed.
     full_embedding <- uwot::umap_transform(
-      X = as.matrix(full_data),
+      nn_method = search_umap_nn_index(full_data, nn_index, metric),
       model = umap_res,
       n_threads = parallel::detectCores(),
       n_sgd_threads = "auto",
       batch = TRUE,
       seed = as.integer(ULTIMATE_SEED)
     )
+
+    # projecting from neighbours rather than from X means uwot has no cell
+    # names to carry over, and CreateDimReducObject requires them
+    rownames(full_embedding) <- rownames(full_data)
+
     message(
       "UMAP projection time: ",
       round(difftime(Sys.time(), tstart_project, units = "secs"), 2), " seconds"
