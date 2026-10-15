@@ -271,6 +271,41 @@ get_feature_types <- function(annot) {
 }
 
 
+#' Assign colors to the categories of a cell annotation
+#'
+#' For spatial data, uses Spaco (see \code{\link{get_spaco_color_map}}) so that
+#' spatially interlaced categories get distinct colors. Otherwise, or on Spaco
+#' failure, takes colors from the start of the color pool in order, so
+#' categories get the pool's most distinct colors without repeats.
+#'
+#' @param data Seurat object with \code{cells_id} metadata and
+#'  \code{misc$color_pool}
+#' @param labels vector of category labels, one per cell in \code{data}
+#'
+#' @return named character vector of hex colors, one per non-NA category
+#' @export
+#'
+get_annotation_colors <- function(data, labels) {
+  cell_sets <- data.frame(
+    cluster = labels,
+    cell_ids = data@meta.data$cells_id,
+    row.names = rownames(data@meta.data)
+  )
+  # same ordering get_spaco_color_map returns its palette in
+  categories <- as.character(sort(unique(labels)))
+
+  colors <- NULL
+  if (length(Seurat::Images(data)) > 0) {
+    colors <- get_spaco_color_map(data, cell_sets)
+  }
+  if (is.null(colors)) {
+    colors <- rep_len(data@misc$color_pool, length(categories))
+  }
+
+  stats::setNames(colors, categories)
+}
+
+
 #' Formats ScType cell sets object for patching through the API
 #'
 #' This function is used to format ScType cellsets. Converting from
@@ -296,6 +331,8 @@ format_sctype_cell_sets <-
         children = list()
       )
 
+    colors <- get_annotation_colors(data, data@meta.data$customclassif)
+
     for (i in 1:length(unique(data@meta.data$customclassif))) {
       cell_set_key <- unique(data@meta.data$customclassif)[[i]]
 
@@ -304,7 +341,7 @@ format_sctype_cell_sets <-
         name = cell_set_key,
         rootNode = FALSE,
         type = "cellSets",
-        color = sample(data@misc$color_pool, 1),
+        color = colors[[cell_set_key]],
         cellIds = data@meta.data[data@meta.data$customclassif == cell_set_key, "cells_id"]
       )
       cell_class$children <- append(cell_class$children, list(new_cell_set))

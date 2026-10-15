@@ -298,6 +298,12 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
     x$name
   }), expected_classes)
 
+  colors <- sapply(formatted_cell_class$children, `[[`, "color")
+  expect_equal(
+    unname(colors[order(expected_classes)]),
+    data@misc$color_pool[seq_along(expected_classes)]
+  )
+
   for (i in 1:length(expected_classes)) {
     expect_equal(
       sapply(formatted_cell_class$children, function(x) {x$cellIds})[[i]],
@@ -567,4 +573,60 @@ test_that("get_quantile_cap handles high quantiles correctly", {
   
   # For column with sparse values, even high quantiles should not return 0 if any non-zero exists
   expect_true(result_99[2] > 0)
+})
+
+
+test_that("get_annotation_colors takes pool colors in order for non-spatial data", {
+  data <- mock_scdata()
+  labels <- rep(c("b", "a", "c"), length.out = nrow(data@meta.data))
+  labels[1] <- NA
+
+  colors <- get_annotation_colors(data, labels)
+
+  expect_equal(names(colors), c("a", "b", "c"))
+  expect_equal(unname(colors), data@misc$color_pool[1:3])
+})
+
+
+test_that("get_annotation_colors recycles the pool when there are more categories than colors", {
+  data <- mock_scdata()
+  data@misc$color_pool <- mock_color_pool(2)
+  labels <- rep(c("a", "b", "c"), length.out = nrow(data@meta.data))
+
+  colors <- get_annotation_colors(data, labels)
+
+  expect_equal(unname(colors), c("color_1", "color_2", "color_1"))
+})
+
+
+test_that("get_annotation_colors uses Spaco colors for spatial data", {
+  data <- mock_scdata()
+  labels <- rep(c("b", "a"), length.out = nrow(data@meta.data))
+
+  captured <- new.env()
+  mockery::stub(get_annotation_colors, "Seurat::Images", function(...) "fov")
+  mockery::stub(get_annotation_colors, "get_spaco_color_map", function(data, cell_sets) {
+    captured$cell_sets <- cell_sets
+    c("#111111", "#222222")
+  })
+
+  colors <- get_annotation_colors(data, labels)
+
+  expect_equal(colors, c(a = "#111111", b = "#222222"))
+  # Spaco looks cells up by barcode
+  expect_equal(rownames(captured$cell_sets), rownames(data@meta.data))
+  expect_equal(captured$cell_sets$cluster, labels)
+})
+
+
+test_that("get_annotation_colors falls back to the pool when Spaco fails", {
+  data <- mock_scdata()
+  labels <- rep(c("b", "a"), length.out = nrow(data@meta.data))
+
+  mockery::stub(get_annotation_colors, "Seurat::Images", function(...) "fov")
+  mockery::stub(get_annotation_colors, "get_spaco_color_map", function(...) NULL)
+
+  colors <- get_annotation_colors(data, labels)
+
+  expect_equal(colors, c(a = "color_1", b = "color_2"))
 })
