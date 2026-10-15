@@ -298,6 +298,12 @@ test_that("format_sctype_cell_sets correctly format cellset to be sent to the AP
     x$name
   }), expected_classes)
 
+  colors <- sapply(formatted_cell_class$children, `[[`, "color")
+  expect_equal(
+    unname(colors[order(expected_classes)]),
+    data@misc$color_pool[seq_along(expected_classes)]
+  )
+
   for (i in 1:length(expected_classes)) {
     expect_equal(
       sapply(formatted_cell_class$children, function(x) {x$cellIds})[[i]],

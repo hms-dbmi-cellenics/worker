@@ -575,6 +575,7 @@ format_cassia_cell_sets <- function(data, species, tissue, grouping) {
   annotations <- data@meta.data[[annotation_column]]
   unique_annotations <- unique(annotations)
   unique_annotations <- unique_annotations[!is.na(unique_annotations)]
+  colors <- get_annotation_colors(data, annotations)
 
   for (annotation in unique_annotations) {
     new_cell_set <- list(
@@ -582,7 +583,7 @@ format_cassia_cell_sets <- function(data, species, tissue, grouping) {
       name = annotation,
       rootNode = FALSE,
       type = "cellSets",
-      color = sample(data@misc$color_pool, 1),
+      color = colors[[annotation]],
       cellIds = data@meta.data[which(annotations == annotation), "cells_id"]
     )
     cell_class$children <- append(cell_class$children, list(new_cell_set))

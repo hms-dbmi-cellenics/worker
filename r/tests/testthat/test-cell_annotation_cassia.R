@@ -210,3 +210,29 @@ test_that("CASSIAAnnotate authenticates, runs, and saves one cell class per merg
   expect_equal(updates$n, 3L)
   expect_length(res, 3)
 })
+
+# --- format_cassia_cell_sets ---------------------------------------------------
+
+test_that("format_cassia_cell_sets gives each cell type a distinct pool color", {
+  data <- mock_scdata()
+  n_cells <- nrow(data@meta.data)
+  annotations <- rep(c("T cell", "B cell", "NK cell"), length.out = n_cells)
+  annotations[1] <- NA
+  data@meta.data$CASSIA_merged_grouping_1 <- annotations
+
+  res <- format_cassia_cell_sets(data, "human", "PBMC", 1)
+
+  expect_equal(res$name, "CASSIA-1")
+  names <- sapply(res$children, `[[`, "name")
+  colors <- sapply(res$children, `[[`, "color")
+  expect_setequal(names, c("T cell", "B cell", "NK cell"))
+  # colors come from the head of the pool, in sorted name order, without repeats
+  expect_equal(unname(colors[order(names)]), data@misc$color_pool[1:3])
+
+  for (child in res$children) {
+    expect_equal(
+      child$cellIds,
+      data@meta.data[which(annotations == child$name), "cells_id"]
+    )
+  }
+})

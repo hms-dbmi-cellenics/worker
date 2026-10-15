@@ -331,6 +331,8 @@ format_sctype_cell_sets <-
         children = list()
       )
 
+    colors <- get_annotation_colors(data, data@meta.data$customclassif)
+
     for (i in 1:length(unique(data@meta.data$customclassif))) {
       cell_set_key <- unique(data@meta.data$customclassif)[[i]]
 
@@ -339,7 +341,7 @@ format_sctype_cell_sets <-
         name = cell_set_key,
         rootNode = FALSE,
         type = "cellSets",
-        color = sample(data@misc$color_pool, 1),
+        color = colors[[cell_set_key]],
         cellIds = data@meta.data[data@meta.data$customclassif == cell_set_key, "cells_id"]
       )
       cell_class$children <- append(cell_class$children, list(new_cell_set))
