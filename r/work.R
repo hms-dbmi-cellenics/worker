@@ -141,17 +141,19 @@ create_app <- function(last_modified, data, fpath) {
 
   encode_decode_middleware <- RestRserve::EncodeDecodeMiddleware$new()
 
-  # the json encoder by default is not precise enough
-  # so we set a custom one without precision limit (digits=NA)
+  # the json encoder by default is not precise enough, so we set a custom one.
+  # Precision is limited by round_json_doubles (6 significant digits, whole
+  # numbers untouched) rather than an encoder option: yyjsonr 0.1.20 ignores
+  # `digits_signif`, and the option in later versions also rounds whole-number
+  # doubles such as cell ids.
   # yyjsonr is 2-10x faster than jsonlite
   encode_decode_middleware$ContentHandlers$set_encode(
     "application/json",
     function(x, unbox = TRUE)  {
       yyjsonr::write_json_str(
-        x,
+        round_json_doubles(x),
         opts = list(
           dataframe = "columns",
-          digits_signif = 4,
           auto_unbox = unbox
         )
       )
