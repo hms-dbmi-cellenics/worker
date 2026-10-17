@@ -349,3 +349,31 @@ format_sctype_cell_sets <-
 
     return(cell_class)
   }
+
+#' Round non-whole doubles to a number of significant digits
+#'
+#' Applied to every work result before JSON encoding. Full double precision
+#' (~17 digits) is far more than any result needs and barely compresses (it made
+#' embeddings of large experiments ~2.3x bigger). Whole-number doubles are left
+#' exactly as they are: cell ids and counts are often stored as doubles in R.
+#' Integers, strings, factors and dates are untouched.
+#'
+#' @param x a work result: vector, matrix, data.frame or (nested) list
+#' @param digits significant digits to keep
+#'
+#' @return \code{x} with non-whole doubles rounded
+#'
+round_json_doubles <- function(x, digits = 6) {
+  round_doubles <- function(v) {
+    if (!is.double(v)) return(v)
+    frac <- is.finite(v) & v != trunc(v)
+    if (any(frac)) v[frac] <- signif(v[frac], digits)
+    v
+  }
+
+  if (is.list(x)) {
+    return(rapply(x, round_doubles, classes = c("numeric", "matrix", "array"), how = "replace"))
+  }
+  if (inherits(x, c("numeric", "matrix", "array"))) return(round_doubles(x))
+  x
+}
