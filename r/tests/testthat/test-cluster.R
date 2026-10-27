@@ -288,23 +288,55 @@ test_that("spatial_distance_r matches Spaco's interlacement on a grid", {
 })
 
 
-test_that("embed_graph_r returns one hex color per cluster", {
-  grid <- mock_spatial_grid(12, 6)
-  m <- spatial_distance_r(grid$coords, grid$labels, radius = 4)
-  cols <- embed_graph_r(m)
+HEX_POOL <- c("#77aadd", "#ee8866", "#eedd88", "#ffaabb", "#99ddff", "#44bb99", "#bbcc33", "#999900")
 
-  expect_named(cols, rownames(m))
-  expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", cols)))
-  expect_equal(length(unique(cols)), length(cols))
+
+test_that("assign_spaco_palette gives the most interlaced clusters the most distinct colors", {
+  clusters <- c("A", "B", "C")
+  interlacement <- matrix(0, 3, 3, dimnames = list(clusters, clusters))
+  interlacement["A", "B"] <- interlacement["B", "A"] <- 10
+  interlacement["B", "C"] <- interlacement["C", "B"] <- 1
+
+  # the first two colors are nearly the same red
+  palette <- c("#ff0000", "#f80808", "#0000ff")
+  colors <- assign_spaco_palette(interlacement, palette)
+
+  expect_named(colors, clusters)
+  expect_setequal(colors, palette)
+  # A and B touch the most, so they can't both be red
+  expect_true("#0000ff" %in% colors[c("A", "B")])
 })
 
 
-test_that("embed_graph_r errors for too few clusters to embed", {
-  # with 2 clusters n_neighbors collapses to 1 and uwot's spectral init errors;
-  # get_spaco_color_map's tryCatch turns this into a fall back to the color pool
-  grid <- mock_spatial_grid(12, 2)
+test_that("SPACO_COLOR_POOL matches the pipeline's", {
+  # mirrors the pipeline's SPACO_COLOR_POOL: the first 20 of the default pool,
+  # then distinct colors
+  expect_length(SPACO_COLOR_POOL, 100)
+  expect_equal(SPACO_COLOR_POOL[1:3], c("#77aadd", "#ee8866", "#eedd88"))
+  expect_equal(anyDuplicated(SPACO_COLOR_POOL), 0)
+})
+
+
+test_that("assign_spaco_palette gives unconnected clusters the pool in order", {
+  clusters <- as.character(1:4)
+  interlacement <- matrix(0, 4, 4, dimnames = list(clusters, clusters))
+
+  colors <- assign_spaco_palette(interlacement, HEX_POOL)
+
+  expect_equal(unname(colors), HEX_POOL[1:4])
+})
+
+
+test_that("assign_spaco_palette is deterministic and recycles a short pool", {
+  grid <- mock_spatial_grid(12, 6)
   m <- spatial_distance_r(grid$coords, grid$labels, radius = 4)
-  expect_error(embed_graph_r(m))
+  palette <- HEX_POOL[1:4]
+
+  colors <- assign_spaco_palette(m, palette)
+
+  expect_identical(colors, assign_spaco_palette(m, palette))
+  expect_length(colors, 6)
+  expect_setequal(colors, palette)
 })
 
 
@@ -352,12 +384,12 @@ mock_spaco_inputs <- function(side, n_clusters) {
 }
 
 
-test_that("get_spaco_color_map returns one hex colour per cluster on the happy path", {
+test_that("get_spaco_color_map returns one pool colour per cluster on the happy path", {
   fixtures <- mock_spaco_inputs(12, 6)
   data <- mock_scdata()
 
   # stub the slice accessors so no real FOV/VisiumV2 object is needed; the
-  # distance/embedding maths (spatial_distance_r -> embed_graph_r) runs for real
+  # distance/assignment maths (spatial_distance_r -> assign_spaco_palette) runs for real
   mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
   mockery::stub(get_spaco_color_map, "get_image_scale", function(...) NULL)
   mockery::stub(
@@ -368,16 +400,18 @@ test_that("get_spaco_color_map returns one hex colour per cluster on the happy p
   colors <- get_spaco_color_map(data, fixtures$cell_sets)
 
   expect_length(colors, 6)
-  expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", colors)))
+  expect_true(all(colors %in% SPACO_COLOR_POOL))
+  expect_equal(length(unique(colors)), 6)
 })
 
 
-test_that("get_spaco_color_map falls back to NULL when embedding fails", {
-  # 2 clusters collapse uwot's spectral init -> embed_graph_r errors -> the
-  # tryCatch returns NULL so runClusters keeps the default colour pool
+test_that("get_spaco_color_map falls back to NULL when colouring fails", {
+  # colouring errors -> the tryCatch returns NULL so runClusters keeps the
+  # default colour pool
   fixtures <- mock_spaco_inputs(12, 2)
   data <- mock_scdata()
 
+  mockery::stub(get_spaco_color_map, "assign_spaco_palette", function(...) stop("failed"))
   mockery::stub(get_spaco_color_map, "Seurat::Images", function(...) "fov")
   mockery::stub(get_spaco_color_map, "get_image_scale", function(...) NULL)
   mockery::stub(
