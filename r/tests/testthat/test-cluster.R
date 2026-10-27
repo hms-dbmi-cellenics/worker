@@ -309,11 +309,12 @@ test_that("assign_spaco_palette gives the most interlaced clusters the most dist
 
 
 test_that("SPACO_COLOR_POOL matches the pipeline's", {
-  # mirrors the pipeline's SPACO_COLOR_POOL: the first 20 of the default pool,
-  # then distinct colors
+  # mirrors the pipeline's SPACO_COLOR_POOL: the first 20 of the default pool
+  # except those close to the background, then distinct colors
   expect_length(SPACO_COLOR_POOL, 100)
   expect_equal(SPACO_COLOR_POOL[1:3], c("#77aadd", "#ee8866", "#eedd88"))
   expect_equal(anyDuplicated(SPACO_COLOR_POOL), 0)
+  expect_false("#99ddff" %in% SPACO_COLOR_POOL)
 })
 
 
