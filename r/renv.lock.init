@@ -769,7 +769,7 @@
     },
     "SeuratObject": {
       "Package": "SeuratObject",
-      "Version": "5.0.2",
+      "Version": "5.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -791,8 +791,7 @@
         "stats",
         "tools",
         "utils"
-      ],
-      "Hash": "e9b70412b7e04571b46101f5dcbaacad"
+      ]
     },
     "SeuratWrappers": {
       "Package": "SeuratWrappers",
