@@ -20,7 +20,7 @@ SYM_SYM <- "sym_sym"
 IDS_SYM <- "ids_sym"
 IDS_IDS <- "ids_ids"
 
-RDS_PATH <- "/data/processed.rds"
+DOWNLOAD_ZIP_PATH <- "/data/processed.zip"
 
 TMP_RESULTS_PATH_GZ <- "/data/rResult.gz"
 
@@ -31,7 +31,7 @@ usethis::use_data(error_codes,
                   SYM_SYM,
                   IDS_SYM,
                   IDS_IDS,
-                  RDS_PATH,
+                  DOWNLOAD_ZIP_PATH,
                   TMP_RESULTS_PATH_GZ,
                   internal = TRUE,
                   overwrite = TRUE)

@@ -144,33 +144,48 @@ mock_req <- function(data, reduction = "umap") {
   return(req)
 }
 
-stub_saveRDS <- function(data, fpath) {
-  rdir <- file.path(tempdir(), "data")
-  if (!dir.exists(rdir)) {
-    dir.create(rdir, recursive = TRUE)
-  }
-  fpath <- file.path(rdir, "processed.rds")
-  saveRDS(data, fpath)
-}
+# write the download to a temp zip instead of DOWNLOAD_ZIP_PATH
+download_zip <- file.path(tempdir(), "processed.zip")
 
 mockery::stub(
   DownloadAnnotSeuratObject,
-  "saveRDS",
-  stub_saveRDS
+  "save_download_zip",
+  function(data, zip_path) save_download_zip(data, download_zip)
 )
 
 stubbed_DownloadAnnotSeuratObject <- function(req, data) {
   DownloadAnnotSeuratObject(req, data)
 }
 
-test_that("DownloadAnnotSeuratObject saves the Seurat object using the correct path", {
+# extract the download zip to a new folder, as a user would
+unzip_download <- function() {
+  out_dir <- withr::local_tempdir(.local_envir = parent.frame())
+  utils::unzip(download_zip, exdir = out_dir)
+  out_dir
+}
+
+# run the zip's load_object.R from the folder it was extracted to
+run_load_script <- function(out_dir) {
+  env <- new.env()
+  withr::with_dir(out_dir, sys.source("load_object.R", envir = env))
+  env$scdata
+}
+
+test_that("DownloadAnnotSeuratObject saves a zip with the Seurat object and a load script", {
   data <- mock_scdata(with_umap = TRUE)
   req <- mock_req(data)
 
   res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
+  expect_equal(res, DOWNLOAD_ZIP_PATH)
 
-  expect_type(res, "character")
-  expect_equal(res, RDS_PATH)
+  out_dir <- unzip_download()
+  # in-memory counts: no matrix dir to ship
+  expect_setequal(list.files(out_dir), c("object.rds", "load_object.R"))
+
+  loaded_data <- readRDS(file.path(out_dir, "object.rds"))
+  expect_true(is(loaded_data, "Seurat"))
+  expect_true("seurat_clusters" %in% colnames(loaded_data@meta.data))
+  expect_true("umap" %in% names(loaded_data@reductions))
 })
 
 
@@ -182,103 +197,44 @@ test_that("DownloadAnnotSeuratObject works with Seurat projects", {
 
   res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
 
-  expect_type(res, "character")
-  expect_equal(res, RDS_PATH)
+  expect_equal(res, DOWNLOAD_ZIP_PATH)
+  expect_true(file.exists(download_zip))
 })
 
 
-test_that("DownloadAnnotSeuratObject works with BPCells disk-backed objects", {
+test_that("DownloadAnnotSeuratObject keeps BPCells counts disk-backed with their matrix dir", {
   data <- mock_scdata(with_umap = TRUE, use_bpcells = TRUE)
   req <- mock_req(data)
 
-  res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
+  suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
 
-  expect_type(res, "character")
-  expect_equal(res, RDS_PATH)
+  out_dir <- unzip_download()
+  expect_setequal(list.files(out_dir), c("object.rds", "load_object.R", "matrix_dir"))
+  expect_setequal(list.files(file.path(out_dir, "matrix_dir")), list.files(get_matrix_dirs(data)))
+
+  # counts are not read into memory
+  loaded_data <- readRDS(file.path(out_dir, "object.rds"))
+  expect_true(is(loaded_data[["RNA"]]$counts, "IterableMatrix"))
 })
 
-test_that("DownloadAnnotSeuratObject maintains BPCells functionality after save/load", {
+
+test_that("the download load script loads the disk-backed object from where it was extracted", {
   data <- mock_scdata(with_umap = TRUE, use_bpcells = TRUE)
   req <- mock_req(data)
+  expected_counts <- as(data[["RNA"]]$counts, "dgCMatrix")
 
-  # call DownloadAnnotSeuratObject which will save the file
-  res <- suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
+  suppressWarnings(stubbed_DownloadAnnotSeuratObject(req, data))
+  out_dir <- unzip_download()
 
-  # attempt to load the saved RDS file
-  loaded_data <- tryCatch(
-    {
-      readRDS(file.path(tempdir(), "data", "processed.rds"))
-    },
-    error = function(e) {
-      NULL
-    }
+  # the worker's matrix dir is gone: the counts must come from the zip's matrix_dir
+  unlink(get_matrix_dirs(data), recursive = TRUE)
+
+  scdata <- run_load_script(out_dir)
+
+  expect_true(is(scdata, "Seurat"))
+  expect_equal(
+    normalizePath(get_matrix_dirs(scdata)),
+    normalizePath(file.path(out_dir, "matrix_dir"))
   )
-
-  # verify the loaded data maintains structure
-  expect_false(is.null(loaded_data))
-  expect_true(is(loaded_data, "Seurat"))
-
-  # check that we can access metadata that was added by add_clusters
-  expect_true("seurat_clusters" %in% colnames(loaded_data@meta.data))
-
-  # check that we can access the UMAP embedding that was added
-  expect_true("umap" %in% names(loaded_data@reductions))
+  expect_equal(as(scdata[["RNA"]]$counts, "dgCMatrix"), expected_counts)
 })
-
-
-test_that("DownloadAnnotSeuratObject converts IterableMatrix to dgCMatrix", {
-    # create BPCells object
-    data <- mock_scdata(with_umap = TRUE, use_bpcells = TRUE)
-    req <- mock_req(data)
-
-    # verify the original object has IterableMatrix
-    expect_true(
-      is(data@assays$RNA$counts, "IterableMatrix"),
-      label = "Original should have IterableMatrix"
-    )
-
-    # call DownloadAnnotSeuratObject which should save converted data
-    res <- suppressWarnings(
-      stubbed_DownloadAnnotSeuratObject(req, data)
-    )
-
-    # load the saved file
-    loaded_data <- readRDS(file.path(tempdir(), "data", "processed.rds"))
-
-    # verify loaded object exists
-    expect_true(is(loaded_data, "Seurat"))
-
-    # delete the original matrix_dir to ensure matrices aren't disk-backed
-    matrix_dir <- get_matrix_dirs(data)
-
-    expect_true(dir.exists(matrix_dir))
-    unlink(matrix_dir, recursive = TRUE)
-    expect_false(dir.exists(matrix_dir))
-
-    # verify all matrix slots are accessible and are dgCMatrix
-    # (not IterableMatrix which would require disk access)
-
-    # Check counts matrix
-    expect_true(
-      is(loaded_data@assays$RNA$counts, "dgCMatrix"),
-      label = "counts should be dgCMatrix after load"
-    )
-
-    # Check data matrix (normalized)
-    expect_true(
-      is(loaded_data@assays$RNA$data, "dgCMatrix"),
-      label = "data should be dgCMatrix after load"
-    )
-
-    # Check scale.data matrix
-    expect_true(
-      is(loaded_data@assays$RNA$scale.data, "dgCMatrix"),
-      label = "scale.data should be dgCMatrix after load"
-    )
-
-    # verify we can actually access data without errors
-    expect_no_error(loaded_data@assays$RNA$counts[1:10, 1:10])
-    expect_no_error(loaded_data@assays$RNA$data[1:10, 1:10])
-    expect_no_error(loaded_data@assays$RNA$scale.data[1:10, 1:10])
-  }
-)

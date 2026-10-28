@@ -63,5 +63,5 @@ class DownloadAnnotSeuratObject(Task):
         result = response.json()
         raise_if_error(result)
 
-        return self._format_result(config.RDS_PATH)
+        return self._format_result(config.DOWNLOAD_ZIP_PATH)
     

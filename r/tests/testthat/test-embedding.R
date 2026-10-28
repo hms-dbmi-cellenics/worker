@@ -342,17 +342,22 @@ test_that("can request saved embedding result", {
 # helpers in embedding.R, so we don't need to construct a full VisiumV2/FOV
 # object. MockScdata exposes @misc (for is_scaleless_spatial) and [[ (to fetch
 # the per-image @image array that get_image_scale measures).
-setClass("MockImg", representation(image = "ANY"))
+setClass("MockImg", representation(image = "ANY", scale.factors = "list"))
 setClass("MockScdata", representation(misc = "list", imgs = "list"))
 setMethod("[[", "MockScdata", function(x, i, ...) x@imgs[[i]])
 
-mock_img <- function(dims = c(500, 500, 3)) {
-  new("MockImg", image = array(0, dim = dims))
+mock_img <- function(dims = c(500, 500, 3), hires = 0.1) {
+  new("MockImg", image = array(0, dim = dims), scale.factors = list(hires = hires))
 }
 
 mock_spatial_scdata <- function(technology = NULL, dims = c(500, 500, 3)) {
   misc <- if (is.null(technology)) list() else list(technology = technology)
   new("MockScdata", misc = misc, imgs = list(fov1 = mock_img(dims)))
+}
+
+# full-resolution cell coordinates spanning [0, max_coord] in x and y
+mock_tissue_coords <- function(max_coord) {
+  function(...) data.frame(x = c(0, max_coord), y = c(0, max_coord))
 }
 
 # ── is_scaleless_spatial ────────────────────────────────────────────────────
@@ -376,20 +381,25 @@ test_that("get_image_scale bypasses the scale lookup for Xenium (returns NULL)",
   expect_null(get_image_scale("fov1", scdata))
 })
 
-test_that("get_image_scale returns lowres when an image dim is <= 600 (non-scaleless)", {
-  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(500, 500, 3))
-  expect_equal(get_image_scale("fov1", scdata), "lowres")
-})
-
-test_that("get_image_scale returns hires when both image dims are > 600", {
+test_that("get_image_scale returns hires when cells fit the image at the hires scale", {
+  # 20000 * 0.1 = 2000px fits a 2000px image
+  stub(get_image_scale, "Seurat::GetTissueCoordinates", mock_tissue_coords(20000))
   scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(2000, 2000, 3))
   expect_equal(get_image_scale("fov1", scdata), "hires")
 })
 
-test_that("get_image_scale only considers the first two (spatial) dims", {
-  # 3rd dim (channels) is small but must be ignored
-  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(1000, 1000, 3))
+test_that("get_image_scale returns hires for a hires image cropped below 600px", {
+  # crop_to_capture_area can shrink a hires image below lowres size
+  stub(get_image_scale, "Seurat::GetTissueCoordinates", mock_tissue_coords(2200))
+  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(223, 224, 3))
   expect_equal(get_image_scale("fov1", scdata), "hires")
+})
+
+test_that("get_image_scale returns lowres when cells don't fit the image at the hires scale", {
+  # 25000 * 0.1 = 2500px is well past a 500px (lowres) image
+  stub(get_image_scale, "Seurat::GetTissueCoordinates", mock_tissue_coords(25000))
+  scdata <- mock_spatial_scdata(technology = "visium_hd", dims = c(500, 500, 3))
+  expect_equal(get_image_scale("fov1", scdata), "lowres")
 })
 
 # ── runEmbedding (images) ───────────────────────────────────────────────────
